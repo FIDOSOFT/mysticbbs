@@ -1,15 +1,6 @@
-{
-  Mystic Software Development Library
-  ===========================================================================
-  File    | M_STRINGS.PAS
-  Desc    | String related functions
-  Created | August 22, 2002
-  ---------------------------------------------------------------------------
-}
+Unit m_Strings;
 
 {$I M_OPS.PAS}
-
-Unit m_Strings;
 
 Interface
 
