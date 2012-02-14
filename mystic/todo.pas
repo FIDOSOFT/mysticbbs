@@ -7,6 +7,8 @@ IDEAS
 - New ANSI template system
 - Online ANSI file viewer (integrate with art gallery)
 - Online ANSI help system
+- Finish System Configuration rewrite
+- Finish Data structure review
 
 BUGS
 ====
