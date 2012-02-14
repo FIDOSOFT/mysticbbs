@@ -163,8 +163,8 @@ Type
     MShowHeader     : Boolean;                            // re-show msg header after pause
     MShowBases      : Boolean;
     MaxAutoSig      : Byte;
-    qwkMaxBase      : SmallInt;
-    qwkMaxPacket    : SmallInt;
+    qwkMaxBase      : Word;
+    qwkMaxPacket    : Word;
     qwkArchive      : String[4];
     qwkBBSID        : String[8];
     qwkWelcome      : String[mysMaxPathSize];
