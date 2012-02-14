@@ -3784,3 +3784,6 @@
 
  ! Mystic should now properly copy Welcome, News, and Goodbye files if they
    exist into QWK packets.
+
+ + Mystic now strips out pipe color codes from the headers of the allfiles
+   or newfiles export in the file bases and in QWK packets.
