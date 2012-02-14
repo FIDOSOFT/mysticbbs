@@ -1,3 +1,7 @@
+// ====================================================================
+// Mystic BBS Software               Copyright 1997-2012 By James Coyle
+// ====================================================================
+//
 // This file is part of Mystic BBS.
 //
 // Mystic BBS is free software: you can redistribute it and/or modify
@@ -12,8 +16,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Mystic BBS.  If not, see <http://www.gnu.org/licenses/>.
+//
+// ====================================================================
 
-Program MP;
+Program MystPack;
 
 { when DELETEing a message, the pointers are one less than they should be }
 { should be fixed, but may cause other problems. commented out the last }
@@ -397,6 +403,7 @@ Begin
 
       If MsgHdr.TextLen > 65000 Then MsgHdr.TextLen := 65000;
       // Why did I put this limitation here?  Prob should be removed
+      // need to be tested.
 
       Seek       (OldTxtFile, MsgHdr.TextOfs);
       BlockRead  (OldTxtFile, TxtBuf^, MsgHdr.TextLen);
