@@ -11,3 +11,5 @@ IDEAS
 BUGS
 ====
 - QWK does not copy welcome files
+- MIDE needs copyright year updates
+- MAKELANG needs renamed to MAKETHEME and copyright update
