@@ -2922,9 +2922,10 @@ Begin
     End;
   End;
 
-  Write (tFile, Config.qwkWelcome + CRLF);
-  Write (tFile, Config.qwkNews + CRLF);
-  Write (tFile, Config.qwkGoodbye + CRLF);
+  Write (tFile, JustFile(Config.qwkWelcome) + CRLF);
+  Write (tFile, JustFile(Config.qwkNews) + CRLF);
+  Write (tFile, JustFile(Config.qwkGoodbye) + CRLF);
+
   Close (tFile);
 End;
 
@@ -3131,6 +3132,7 @@ Begin
 
   BlockRead (DataFile, Temp[1], 128);
   Temp[0] := #128;
+
   If Pos(strUpper(Config.qwkBBSID), strUpper(Temp)) = 0 Then Begin
     Session.io.OutFullLn (Session.GetPrompt(239));
     Close (DataFile);
@@ -3270,6 +3272,10 @@ Begin
     Session.io.OutFullLn (Session.GetPrompt(234));
 
     Session.io.PromptInfo[1] := Temp;
+
+    If FileExist(Config.QwkWelcome) Then CopyFile(Config.qwkWelcome, Session.TempPath + JustFile(Config.qwkWelcome));
+    If FileExist(Config.QwkNews)    Then CopyFile(Config.qwkNews,    Session.TempPath + JustFile(Config.qwkNews));
+    If FileExist(Config.QwkGoodbye) Then CopyFile(Config.qwkGoodbye, Session.TempPath + JustFile(Config.qwkGoodbye));
 
     If Session.LocalMode Then Begin
       Session.FileBase.ExecuteArchive (Config.QWKPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + FileMask, 1);

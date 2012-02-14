@@ -3781,3 +3781,6 @@
 
  + MIS now passes both the IP and HOST command lines when creating a telnet
    session.
+
+ ! Mystic should now properly copy Welcome, News, and Goodbye files if they
+   exist into QWK packets.
