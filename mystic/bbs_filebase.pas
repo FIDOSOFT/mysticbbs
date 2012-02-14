@@ -487,9 +487,9 @@ Begin
       AreaSize  := 0;
 
       WriteLn (TF, '');
-      WriteLn (TF, '.-' + strRep('-', Length(FBase.Name)) + '-.');
-      WriteLn (TF, '| ' + FBase.Name + ' |');
-      WriteLn (TF, '`-' + strRep('-', Length(FBase.Name)) + '-''');
+      WriteLn (TF, '.-' + strRep('-', Length(strStripPipe(FBase.Name))) + '-.');
+      WriteLn (TF, '| ' + strStripPipe(FBase.Name) + ' |');
+      WriteLn (TF, '`-' + strRep('-', Length(strStripPipe(FBase.Name))) + '-''');
       WriteLn (TF, '.' + strRep('-', 77) + '.');
       WriteLn (TF, '| File     Size    Date    Description                                        |');
       WriteLn (TF, '`' + strRep('-', 77) + '''');
