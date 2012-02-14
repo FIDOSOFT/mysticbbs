@@ -1,6 +1,9 @@
 {$I M_OPS.PAS}
 
-Unit MIS_Client_POP3;
+Unit MIS_Client_HTTP;
+
+// placeholder for HTTP server if Mystic needs one?
+// based off off initial POP3 server footprint
 
 Interface
 
