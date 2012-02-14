@@ -206,9 +206,10 @@ Begin
               Case Res of
                 'S' : Configuration_SysPaths;
                 'L' : Configuration_LoginMatrix;
-                'E' : If Configuration_EchoMailAddress(True) = 1 Then;
+                'E' : Configuration_EchoMailAddress(True);
                 '3' : Configuration_OptionalFields;
                 'F' : Configuration_FileSettings;
+                'O' : Configuration_QWKSettings;
                 'X' : Break;
               Else
                 MenuPtr := 0;

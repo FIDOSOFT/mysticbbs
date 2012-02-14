@@ -9,6 +9,7 @@ Procedure Configuration_LoginMatrix;
 Procedure Configuration_OptionalFields;
 Function  Configuration_EchomailAddress (Edit: Boolean) : Byte;
 Procedure Configuration_FileSettings;
+Procedure Configuration_QWKSettings;
 
 Implementation
 
@@ -91,7 +92,6 @@ Begin
 
   Box.Close;
   Box.Free;
-
 End;
 
 Procedure Configuration_OptionalFields;
@@ -250,6 +250,41 @@ Begin
 
   Box.Close;
   Box.Free;
+End;
+
+Procedure Configuration_QWKSettings;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09Offline Mail|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Header := ' Offline Mail ';
+
+  Box.Open (8, 7, 74, 18);
+
+  VerticalLine (31, 9, 16);
+
+  Form.AddPath ('L', ' Local QWK Path',         15,  9, 33,  9, 16, 40, mysMaxPathSize,        @Config.QWKPath,     Topic + 'Directory for local QWK packets');
+  Form.AddStr  ('I', ' QWK Packet ID',          16, 10, 33, 10, 15,  8, 8, @Config.QwkBBSID, Topic + 'QWK packet filename');
+  Form.AddStr  ('A', ' QWK Archive',            18, 11, 33, 11, 13,  4, 4, @Config.QwkArchive, Topic + 'QWK Archive');
+  Form.AddWord ('P', ' Max Messages/Packet',    10, 12, 33, 12, 21,  5, 0, 65535, @Config.QwkMaxPacket, Topic + 'Max messages per packet (0/Unlimited)');
+  Form.AddWord ('B', ' Max Messages/Base',      12, 13, 33, 13, 19,  5, 0, 65535, @Config.QwkMaxBase, Topic + 'Max message per base (0/Unlimited)');
+  Form.AddStr  ('W', ' Welcome File',           17, 14, 33, 14, 14, 40, mysMaxPathSize, @Config.QWKWelcome, Topic + 'Welcome filename');
+  Form.AddStr  ('N', ' News File',              20, 15, 33, 15, 11, 40, mysMaxPathSize, @Config.QWKNews, Topic + 'New filename');
+  Form.AddStr  ('G', ' Goodbye File',           17, 16, 33, 16, 14, 40, mysMaxPathSize, @Config.QWKGoodbye, Topic + 'Goodbye filename');
+
+  Form.Execute;
+
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+
 End;
 
 End.
