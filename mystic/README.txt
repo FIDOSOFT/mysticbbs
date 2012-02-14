@@ -21,5 +21,9 @@ The author can be contacted at this time through e-mail at mysticbbs@gmail.com. 
 encouraged that fixes and additions be coordinated with the current authors.
 
 The current code here reflects the latest 1.10 alphas and is not yet compatible with 1.09 or
-previous 1.10 alphas.  With the 1.10 official release, the code will branch off to current
-stable and development release code bases.
+previous 1.10 alphas.
+
+With the 1.10 final/stable release we will be officially annoucing Mystic as a GPL program and
+at that time we will branch off to a current stable and development code base.  In the
+meantime we are using the end of this development cycle to get the project integrated with
+SourceForge.
