@@ -1,0 +1,502 @@
+// ====================================================================
+// Mystic BBS Software               Copyright 1997-2012 By James Coyle
+// ====================================================================
+//
+// This file is part of Mystic BBS.
+//
+// Mystic BBS is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Mystic BBS is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Mystic BBS.  If not, see <http://www.gnu.org/licenses/>.
+//
+// ====================================================================
+
+Program Mystic;
+
+{$I M_OPS.PAS}
+
+Uses
+  {$IFDEF DEBUG}
+    HeapTrc,
+    LineInfo,
+  {$ENDIF}
+  {$IFDEF UNIX}
+    BaseUnix,
+  {$ENDIF}
+  m_FileIO,
+  m_Strings,
+  m_DateTime,
+  m_Output,
+  m_Input,
+  bbs_Common,
+  bbs_Core,
+  bbs_NodeInfo,
+  bbs_Cfg_Main;
+
+Procedure InitClasses;
+Begin
+  Assign (ConfigFile, 'mystic.dat');
+  if ioReset(ConfigFile, SizeOf(RecConfig), fmReadWrite + fmDenyNone) Then Begin
+    Read (ConfigFile, Config);
+    Close (ConfigFile);
+  End Else Begin
+    WriteLn('ERROR: Unable to read mystic.dat');
+    Halt(1);
+  End;
+
+  If Config.DataChanged <> mysDataChanged Then Begin
+    WriteLn('ERROR: Data files are not current and must be upgraded');
+    Halt(1);
+  End;
+
+  Screen  := TOutput.Create(True);
+  Input   := TInput.Create;
+  Session := TBBSCore.Create;
+End;
+
+Procedure DisposeClasses;
+Begin
+  Session.Free;
+  Input.Free;
+  Screen.Free;
+End;
+
+Var
+  ExitSave : Pointer;
+
+Procedure ExitHandle;
+Begin
+  Set_Node_Action('');
+
+  Session.UpdateHistory;
+
+  ExitProc := ExitSave;
+
+  If ErrorAddr <> NIL Then Begin
+    Session.io.OutFull('|CR|12System Error #' + strI2S(ExitCode));
+    Session.SystemLog ('ERROR #' + strI2S(ExitCode));
+    ExitCode := 1;
+  End;
+
+  If Session.User.UserNum <> -1 Then Begin
+    Session.User.ThisUser.LastOn := CurDateDos;
+
+    If Session.TimerOn Then
+      If (Session.TimeOffset > 0) and (Session.TimeSaved > Session.TimeOffset) Then
+        Session.User.ThisUser.TimeLeft := Session.TimeSaved - (Session.TimeOffset - Session.TimeLeft)
+      Else
+        Session.User.ThisUser.TimeLeft := Session.TimeLeft;
+
+    Reset (Session.User.UserFile);
+    Seek  (Session.User.UserFile, Session.User.UserNum - 1);
+    Write (Session.User.UserFile, Session.User.ThisUser);
+    Close (Session.User.UserFile);
+  End;
+
+  If Session.EventExit or Session.EventRunAfter Then Begin
+    Reset (Session.EventFile);
+    While Not Eof(Session.EventFile) Do Begin
+      Read (Session.EventFile, Session.Event);
+      If Session.Event.Name = Session.NextEvent.Name Then Begin
+        Session.Event.LastRan := CurDateDos;
+        Seek  (Session.EventFile, FilePos(Session.EventFile) - 1);
+        Write (Session.EventFile, Session.Event);
+      End;
+    End;
+    Close (Session.EventFile);
+  End;
+
+  If Session.ExitLevel <> 0 Then ExitCode := Session.ExitLevel;
+  If Session.EventRunAfter  Then ExitCode := Session.NextEvent.ErrLevel;
+
+  CleanDirectory (Session.TempPath, '');
+
+  {$IFNDEF UNIX}
+    Screen.TextAttr := 14;
+    Screen.SetWindow (1, 1, 80, 25, False);
+    Screen.ClearScreen;
+
+    Screen.WriteLine ('Exiting with Errorlevel ' + strI2S(ExitCode));
+  {$ENDIF}
+
+  DisposeClasses;
+
+  Halt (ExitCode);
+End;
+
+Procedure CheckDIR (Dir: String);
+Begin
+  If Not FileDirExists(Dir) Then Begin
+    Screen.WriteLine ('ERROR: ' + Dir + ' does not exist.');
+
+    DisposeClasses;
+
+    Halt(1);
+  End;
+End;
+
+{$IFDEF UNIX}
+Procedure LinuxEventSignal (Sig : LongInt); cdecl;
+Begin
+  Case Sig of
+    SIGHUP  : Halt;
+    SIGTERM : Halt;
+    SIGUSR1 : Session.CheckTimeOut := False;
+    SIGUSR2 : Begin
+                Session.CheckTimeOut := True;
+                Session.TimeOut      := TimerSeconds;
+              End;
+  End;
+End;
+
+Procedure Linux_Init;
+Var
+  Count : Word;
+  TChat : ChatRec;
+Begin
+  Session.NodeNum := 0;
+
+  For Count := 1 to Config.INetTNMax Do Begin
+    Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Count) + '.dat');
+
+    {$I-} Reset(ChatFile); {$I+}
+
+    If IoResult <> 0 Then Begin
+      Session.NodeNum := Count;
+      Break;
+    End;
+
+    Read  (ChatFile, TChat);
+    Close (ChatFile);
+
+    If Not TChat.Active Then Begin
+      Session.NodeNum := Count;
+      Break;
+    End;
+  End;
+
+  If Session.NodeNum = 0 Then Begin
+    WriteLn ('BUSY');
+    DisposeClasses;
+    Halt;
+  End;
+
+  fpSignal (SIGTERM, LinuxEventSignal);
+  fpSignal (SIGHUP,  LinuxEventSignal);
+  // do we need sigusr1 and sigusr2 installed?
+
+  Write (#27 + '(U');
+End;
+{$ENDIF}
+
+Procedure CheckPathsAndDataFiles;
+Var
+  Count : Byte;
+  PR    : PercentRec;
+  MBase : MBaseRec;
+Begin
+  If Not Session.ConfigMode Then Begin
+    CheckDIR (Config.SystemPath);
+    CheckDIR (Config.AttachPath);
+    CheckDIR (Config.DataPath);
+    CheckDIR (Config.MsgsPath);
+    CheckDIR (Config.SemaPath);
+    CheckDIR (Config.QwkPath);
+    CheckDIR (Config.ScriptPath);
+    CheckDIR (Config.LogsPath);
+  End;
+
+  {$I-}
+  MkDir (Config.SystemPath + 'temp' + strI2S(Session.NodeNum));
+  If IoResult <> 0 Then;
+  {$I+}
+
+{ ----------------------- }
+
+  Assign (RoomFile, Config.DataPath + 'chatroom.dat');
+  {$I-} Reset (RoomFile); {$I+}
+  If IoResult <> 0 Then Begin
+    ReWrite (RoomFile);
+    Room.Name := 'None';
+    For Count := 1 to 99 Do
+      Write (RoomFile, Room);
+  End;
+  Close (RoomFile);
+
+  Assign (Session.LangFile, Config.DataPath + 'language.dat');
+  {$I-} Reset (Session.LangFile); {$I+}
+  If IoResult <> 0 Then Begin
+    Session.Lang.Desc       := 'Default';
+    Session.Lang.FileName   := 'default';
+    Session.Lang.TextPath   := Config.SystemPath + 'text' + PathChar;
+    Session.Lang.MenuPath   := Config.SystemPath + 'menus' + PathChar;
+    Session.Lang.BarYN      := True;
+    Session.Lang.FieldCol1  := 31;
+    Session.Lang.FieldCol2  := 25;
+    Session.Lang.FieldChar  := ' ';
+    Session.Lang.QuoteColor := 31;
+    Session.Lang.EchoCh     := '*';
+    Session.Lang.TagCh      := 'û';
+    Session.Lang.okASCII    := True;
+    Session.Lang.okANSI     := True;
+    Session.Lang.FileHi     := 112;
+    Session.Lang.FileLo     := 11;
+    Session.Lang.NewMsgChar := 'N';
+
+    PR.BarLen := 15;
+    PR.LoChar := '°';
+    PR.LoAttr := 8;
+    PR.HiChar := 'Û';
+    PR.HiAttr := 9;
+
+    Session.Lang.VotingBar  := PR;
+    Session.Lang.FileBar    := PR;
+    Session.Lang.MsgBar     := PR;
+    Session.Lang.GalleryBar := PR;
+
+    ReWrite (Session.LangFile);
+    Write   (Session.LangFile, Session.Lang);
+  End;
+  Close (Session.LangFile);
+
+  If Not Session.LoadThemeData(Config.DefThemeFile) Then Begin
+    Screen.WriteLine ('ERROR: Default theme prompts not found [' + Config.DefThemeFile + '.lng]');
+
+    DisposeClasses;
+
+    Halt(1);
+  End;
+
+  Assign (Session.User.UserFile, Config.DataPath + 'users.dat');
+  {$I-} Reset (Session.User.UserFile); {$I+}
+  If IoResult <> 0 Then Begin
+    If FileExist(Config.DataPath + 'users.dat') Then Begin
+      Screen.WriteLine ('ERROR: Unable to access USERS.DAT');
+      DisposeClasses;
+      Halt(1);
+    End;
+    ReWrite(Session.User.UserFile);
+  End;
+
+  Close (Session.User.UserFile);
+
+  Assign (Session.FileBase.FBaseFile, Config.DataPath + 'fbases.dat');
+  {$I-} Reset(Session.FileBase.FBaseFile); {$I+}
+  If IoResult <> 0 Then ReWrite(Session.FileBase.FBaseFile);
+  Close (Session.FileBase.FBaseFile);
+
+  Assign (Session.Msgs.MBaseFile, Config.DataPath + 'mbases.dat');
+  {$I-} Reset(Session.Msgs.MBaseFile); {$I+}
+  If IoResult <> 0 Then Begin
+    ReWrite (Session.Msgs.MBaseFile);
+
+    MBase.Name      := 'E-mail';
+    MBase.QWKName   := 'Email';
+    MBase.FileName  := 'email';
+    MBase.Path      := Config.MsgsPath;
+    MBase.BaseType  := 0;
+    MBase.NetType   := 0;
+    MBase.PostType  := 1;
+    MBase.ACS       := '%';
+    MBase.ReadACS   := '';
+    MBase.PostACS   := '';
+    MBase.SysopACS  := 's255';
+    MBase.Password  := '';
+    MBase.ColQuote  := Config.ColorQuote;
+    MBase.ColText   := Config.ColorText;
+    MBase.ColTear   := Config.ColorTear;
+    MBase.ColOrigin := Config.ColorOrigin;
+    MBase.NetAddr   := 1;
+    MBase.Origin    := Config.Origin;
+    MBase.UseReal   := False;
+    MBase.DefNScan  := 1;
+    MBase.DefQScan  := 1;
+    MBase.MaxMsgs   := 0;
+    MBase.MaxAge    := 0;
+    MBase.Header    := '';
+    MBase.Index     := 1;
+
+    Write (Session.Msgs.MBaseFile, MBase);
+  End;
+  Close (Session.Msgs.MBaseFile);
+
+  Assign (Session.Msgs.GroupFile, Config.DataPath + 'groups_g.dat');
+  {$I-} Reset (Session.Msgs.GroupFile); {$I-}
+  If IoResult <> 0 Then ReWrite(Session.Msgs.GroupFile);
+  Close (Session.Msgs.GroupFile);
+
+  Assign (Session.FileBase.FGroupFile, Config.DataPath + 'groups_f.dat');
+  {$I-} Reset (Session.FileBase.FGroupFile); {$I+}
+  If IoResult <> 0 Then ReWrite (Session.FileBase.FGroupFile);
+  Close (Session.FileBase.FGroupFile);
+
+  Assign (Session.User.SecurityFile, Config.DataPath + 'security.dat');
+  {$I-} Reset (Session.User.SecurityFile); {$I+}
+  If IoResult <> 0 Then Begin
+    ReWrite(Session.User.SecurityFile);
+    For Count := 1 to 255 Do
+      Write (Session.User.SecurityFile, Session.User.Security);
+  End;
+  Close (Session.User.SecurityFile);
+
+  Assign (LastOnFile, Config.DataPath + 'callers.dat');
+  {$I-} Reset(LastOnFile); {$I+}
+  If IoResult <> 0 Then ReWrite(LastOnFile);
+  Close (LastOnFile);
+
+  Assign (Session.FileBase.ArcFile, Config.DataPath + 'archive.dat');
+  {$I-} Reset(Session.FileBase.ArcFile); {$I+}
+  If IoResult <> 0 Then ReWrite(Session.FileBase.ArcFile);
+  Close (Session.FileBase.ArcFile);
+
+  Assign (VoteFile, Config.DataPath + 'votes.dat');
+  {$I-} Reset (VoteFile); {$I+}
+  If IoResult <> 0 Then ReWrite (VoteFile);
+  Close (VoteFile);
+
+  Assign (Session.FileBase.ProtocolFile, Config.DataPath + 'protocol.dat');
+  {$I-} Reset (Session.FileBase.ProtocolFile); {$I+}
+  If IoResult <> 0 Then ReWrite (Session.FileBase.ProtocolFile);
+  Close (Session.FileBase.ProtocolFile);
+
+  Session.FindNextEvent;
+
+  Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
+
+  CleanDirectory(Session.TempPath, '');
+
+  Randomize;
+End;
+
+Var
+  Count    : Byte;
+  Temp     : String[120];
+  UserName : String[30];
+  Password : String[15];
+  Script   : String[120];
+Begin
+  {$IFDEF DEBUG}
+    SetHeapTraceOutput('mystic.mem');
+  {$ENDIF}
+
+  ChangeDir(JustPath(ParamStr(0)));
+
+  InitClasses;
+
+  Screen.TextAttr := 7;
+  Screen.WriteLine('');
+
+  For Count := 1 to ParamCount Do Begin
+    Temp := strUpper(ParamStr(Count));
+
+    If Pos('-TID', Temp) > 0 Then Begin
+      Session.CommHandle := strS2I(Copy(Temp, 5, Length(Temp)));
+      Session.Baud       := 38400;
+    End Else
+    If Pos('-B', Temp) > 0 Then Begin
+      Session.Baud := strS2I(Copy(Temp, 3, Length(Temp)));
+      If Session.Baud = 0 Then Session.LocalMode := True;
+    End Else
+    If Pos('-T', Temp) > 0 Then
+      Session.TimeOffset := strS2I(Copy(Temp, 3, Length(Temp)))
+    Else
+    If Pos('-N', Temp) > 0 Then
+      Session.NodeNum := strS2I(Copy(Temp, 3, Length(Temp)))
+    Else
+    If Pos('-CFG', Temp) > 0 Then Begin
+      Session.ConfigMode := True;
+      Session.LocalMode  := True;
+      Session.NodeNum    := 0;
+    End Else
+    If Pos('-IP', Temp) > 0 Then
+      Session.UserIPInfo := Copy(Temp, 4, Length(Temp))
+    Else
+    If Pos('-UID', Temp) > 0 Then
+      Session.UserHostInfo := Copy(Temp, 5, Length(Temp))
+    Else
+    If Pos('-HOST', Temp) > 0 Then
+      Session.UserHostInfo := Copy(Temp, 6, Length(Temp))
+    Else
+    If Pos('-U', Temp) > 0 Then
+      UserName := strReplace(Copy(Temp, 3, Length(Temp)), '_', ' ')
+    Else
+    If Pos('-P', Temp) > 0 Then
+      Password := Copy(Temp, 3, Length(Temp))
+    Else
+    If Pos('-X', Temp) > 0 Then
+      Script := strReplace(Copy(Temp, 3, Length(Temp)), '_', ' ')
+    Else
+    If Temp = '-L' Then Session.LocalMode := True;
+  End;
+
+  FileMode := 66;
+
+  {$IFDEF UNIX}
+    Linux_Init;
+    Session.Baud := 38400;
+  {$ENDIF}
+
+  CheckPathsAndDataFiles;
+
+  {$IFNDEF UNIX}
+  Session.LocalMode := Session.CommHandle = -1;
+
+  If Not Session.LocalMode Then Begin
+    Session.Client.FSocketHandle := Session.CommHandle;
+
+    Session.io.LocalScreenDisable;
+  End;
+  {$ENDIF}
+
+  ExitSave := ExitProc;
+  ExitProc := @ExitHandle;
+
+  If Session.ConfigMode Then Begin
+    Configuration_MainMenu;
+    Screen.ClearScreen;
+    Screen.BufFlush;
+    Halt(0);
+  End;
+
+  Session.SystemLog ('Node ' + strI2S(Session.NodeNum) + ' online');
+
+  If Session.TimeOffset > 0 Then
+    Session.SetTimeLeft(Session.TimeOffset)
+  Else
+    Session.SetTimeLeft(Config.LoginTime);
+
+  If Session.Baud = -1 Then Session.Baud := 0;
+
+  {$IFNDEF UNIX}
+  Screen.TextAttr := 7;
+  Screen.ClearScreen;
+  {$ENDIF}
+
+  {$IFNDEF UNIX}
+  Update_Status_Line(0, '');
+  {$ENDIF}
+
+  Set_Node_Action (Session.GetPrompt(345));
+
+  Session.User.User_Logon (UserName, Password, Script);
+
+  If Session.TimeOffset > 0 Then
+    Session.TimeSaved := Session.User.ThisUser.TimeLeft;
+
+  If Session.User.ThisUser.StartMenu <> '' Then
+    Session.Menu.MenuName := Session.User.ThisUser.StartMenu
+  Else
+    Session.Menu.MenuName := Config.DefStartMenu;
+
+  Repeat
+    Session.Menu.ExecuteMenu(True, True, False);
+  Until False;
+End.
