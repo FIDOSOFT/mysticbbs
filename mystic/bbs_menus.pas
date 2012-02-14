@@ -137,11 +137,11 @@ Begin
             'V' : AutoSig_View;
           End;
     'D' : Case Cmd[2] of
-            '-' : Exec_Door (0, Data);
-            'C' : Exec_Door (3, Data);
-            'D' : Exec_Door (1, Data);
-            'G' : Exec_Door (2, Data);
-            '3' : Exec_Door (4, Data);
+            '-' : ExecuteDoor (0, Data);
+            'C' : ExecuteDoor (3, Data);
+            'D' : ExecuteDoor (1, Data);
+            'G' : ExecuteDoor (2, Data);
+            '3' : ExecuteDoor (4, Data);
           End;
     'F' : Case Cmd[2] of
             'A' : Session.FileBase.ChangeFileArea(Data);
@@ -149,22 +149,22 @@ Begin
                     Session.io.OutFile ('download', True, 0);
 
                     If (Session.FileBase.BatchNum > 0) and (Session.io.GetYN(Session.GetPrompt(85), True)) Then
-                      Session.FileBase.Download_Batch
+                      Session.FileBase.DownloadBatch
                     Else
                       Session.FileBase.DownloadFile;
                   End;
-            'F' : Session.FileBase.Download_File_List (strUpper(Data));
-            'G' : Session.FileBase.File_Group_Change (Data, True, True);
-            'L' : Session.FileBase.List_Files (1, strUpper(Data));
-            'N' : Session.FileBase.New_File_Scan(UpCase(Data[1]));
-            'P' : Session.FileBase.Set_FileScan_Date;
-            'S' : Session.FileBase.File_Search;
-            'U' : Session.FileBase.Upload_File;
-            'V' : Session.FileBase.View_File;
-            'Z' : Session.FileBase.Toggle_File_NewScan;
-            '1' : Session.FileBase.Mass_Upload;
+            'F' : Session.FileBase.DownloadFileList (strUpper(Data));
+            'G' : Session.FileBase.FileGroupChange (Data, True, True);
+            'L' : Session.FileBase.ListFiles (1, strUpper(Data));
+            'N' : Session.FileBase.NewFileScan(UpCase(Data[1]));
+            'P' : Session.FileBase.SetFileScanDate;
+            'S' : Session.FileBase.FileSearch;
+            'U' : Session.FileBase.UploadFile;
+            'V' : Session.FileBase.ViewFile;
+            'Z' : Session.FileBase.ToggleFileNewScan;
+            '1' : Session.FileBase.MassUpload;
             '2' : Session.FileBase.DirectoryEditor(False, '');
-            '3' : Session.FileBase.Send_File (Data);
+            '3' : Session.FileBase.SendFile (Data);
           End;
     'B' : Case Cmd[2] of
             'A' : Add_BBS_List  (Data);
@@ -182,7 +182,7 @@ Begin
                       If Session.FileBase.BatchNum > 0 Then Begin
                         Session.io.PromptInfo[1] := strI2S(Session.FileBase.BatchNum);
                         If Session.io.GetYN(Session.GetPrompt(121), False) Then
-                          Session.FileBase.Download_Batch;
+                          Session.FileBase.DownloadBatch;
                       End;
                       Session.io.OutFile ('logoff', True, 0);
                     End;
@@ -234,23 +234,23 @@ Begin
           End;
     'M' : Case Cmd[2] of
             'A' : Session.Msgs.ChangeArea(Data);
-            'C' : Session.Msgs.Check_EMail;
-            'D' : Session.Msgs.Set_Message_Pointers;
-            'G' : Session.Msgs.Message_Group_Change (Data, True, True);
+            'C' : Session.Msgs.CheckEMail;
+            'D' : Session.Msgs.SetMessagePointers;
+            'G' : Session.Msgs.MessageGroupChange (Data, True, True);
             'M' : Session.Msgs.SendMassEmail;
-            'N' : Session.Msgs.Message_New_Scan (strUpper(Data));
-            'P' : Session.Msgs.Post_Message (False, Data);
+            'N' : Session.Msgs.MessageNewScan (strUpper(Data));
+            'P' : Session.Msgs.PostMessage (False, Data);
 //            'Q' : Session.Msgs.Message_QuickScan(UpCase(Data[1]));
             'R' : Begin
                     If Data = '' Then Data := ' ';
 
-                    Session.Msgs.Read_Messages(UpCase(Data[1]), '');
+                    Session.Msgs.ReadMessages(UpCase(Data[1]), '');
                   End;
-            'S' : Session.Msgs.Global_Message_Search(UpCase(Data[1]));
-            'V' : Session.Msgs.View_Sent_Email;
-            'W' : Session.Msgs.Post_Message (True, Data);
+            'S' : Session.Msgs.GlobalMessageSearch(UpCase(Data[1]));
+            'V' : Session.Msgs.ViewSentEmail;
+            'W' : Session.Msgs.PostMessage (True, Data);
             'X' : Session.Msgs.PostTextFile(Data, False);
-            'Z' : Session.Msgs.Toggle_NewScan(False);
+            'Z' : Session.Msgs.ToggleNewScan(False);
           End;
     'N' : Case Cmd[2] of
             'A' : Set_Node_Action (Data);
@@ -259,9 +259,9 @@ Begin
             'W' : Show_Whos_Online;
           End;
     'O' : Case Cmd[2] of
-            'S' : Session.Msgs.Toggle_NewScan(True);
-            'D' : Session.Msgs.Download_QWK(Data);
-            'U' : Session.Msgs.Upload_REP;
+            'S' : Session.Msgs.ToggleNewScan(True);
+            'D' : Session.Msgs.DownloadQWK(Data);
+            'U' : Session.Msgs.UploadREP;
           End;
     'Q' : Case Cmd[2] of
             'A' : Session.FileBase.BatchAdd;
