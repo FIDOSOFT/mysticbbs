@@ -45,7 +45,7 @@ Var
 Begin
 	WriteLn;
 	WriteLn ('MAKELANG (' + OSID + ') - Mystic Language Compiler v', mysVersion);
-	WriteLn ('Copyright (C) 1997-2011 By James Coyle.  All Rights Reserved.');
+	WriteLn ('Copyright (C) 1997-2012 By James Coyle.  All Rights Reserved.');
 	WriteLn;
 
 	Assign (ConfigFile, 'mystic.dat');
