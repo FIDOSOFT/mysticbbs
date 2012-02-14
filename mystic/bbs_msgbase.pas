@@ -3316,6 +3316,7 @@ Begin
   Session.User.IgnoreGroup := False;
 
   Close (MBaseFile);
+
   MBase := Old;
 
   CleanDirectory (Session.TempPath, '');
