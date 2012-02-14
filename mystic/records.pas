@@ -38,7 +38,7 @@ Const
 
   mysMaxAcsSize      = 30;        // Max ACS string size
   mysMaxPathSize     = 80;
-  mysMaxMsgLines     = 500;       // Max message base lines
+  mysMaxMsgLines     = 1000;      // Max message base lines
   mysMaxInputHistory = 5;         // Input history stack size
   mysMaxFileDescLen  = 50;
   mysMaxBatchQueue   = 50;
