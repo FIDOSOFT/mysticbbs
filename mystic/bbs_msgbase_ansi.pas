@@ -2,8 +2,6 @@
 
 Unit BBS_MsgBase_Ansi;
 
-// mystic 2 ansi reader
-
 Interface
 
 Uses
@@ -51,14 +49,15 @@ Type
 
     Constructor Create (O: Pointer; Msg: Boolean);
     Destructor  Destroy; Override;
-    Function    ProcessBuf (Var Buf; BufLen: Word) : Boolean;
-    Procedure   WriteLine (Line: Word; Flush: Boolean);
-    Procedure   DrawLine (Y, Line: Word; Flush: Boolean);
-    Procedure   DrawPage (pStart, pEnd, pLine: Word);
+
     Procedure   Clear;
-    Function    GetLineText (Line: Word) : String;
+    Function    ProcessBuf   (Var Buf; BufLen: Word) : Boolean;
+    Procedure   WriteLine    (Line: Word; Flush: Boolean);
+    Procedure   DrawLine     (Y, Line: Word; Flush: Boolean);
+    Procedure   DrawPage     (pStart, pEnd, pLine: Word);
+    Function    GetLineText  (Line: Word) : String;
     Procedure   SetLineColor (Attr, Line: Word);
-    Procedure   RemoveLine (Line: Word);
+    Procedure   RemoveLine   (Line: Word);
   End;
 
 Implementation
@@ -366,6 +365,7 @@ Begin
            GotAnsi := True;
          End Else
            Escape := 0;
+
     2 : CheckCode(Ch);
   Else
     ResetControlCode;
@@ -407,6 +407,7 @@ Begin
 
   For Count := 1 to 79 Do Begin
     Session.io.BufAddStr (Session.io.Attr2Ansi(Data[Line][Count].Attr));
+
     If Data[Line][Count].Ch in [#0, #255] Then
       Session.io.BufAddStr(' ')
     Else
