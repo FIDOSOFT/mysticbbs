@@ -1,33 +1,16 @@
 Unit bbs_Ansi_Help;
 
-// very old online-help class from Genesis Engine (my ansi editor)
-// updated to compile with mystic but needs a lot of touch ups.
-// idea is to template this out and have .hlp files that can be used in
-// all help areas if they exist instead of just a display file.
-// and of course a menu command to active this with ANY hlp files so sysops
-// can use it however they'd like
-//
-// hlp files are text files which can have embedded pipe color codes in them
-// and also have keywords and the ability to link around them, sort of like
-// a very basic HTML system for BBS with an ansi interface to scroll around
-// and follow links.
+// leet online ansi help system (html-like with pipe colors too)
+// ripped from genesis engine (my ansi editor) and slowly port into mystic
 
-// first port to class system from object -- DONE
-// second make sure it even works --- DONE (buggy)
-// then:
-
-// 1. change "<a href=" to "<link="
 // 2. completely redo loading so text is stored in pointer of records...
 //    we can allow larger help files.
-// 3. text file read needs to be buffered
 // 4. needs to use ansi template
 // 5. quickjump/sitemap option
 // 6. add linking to OTHER .hlp files?
 // 7. how to better integrate with the bbs?  execute MPL command? what else?
 //
-// after this is done... port the ansi editor itself for online ansi editing
-// goodness!  and also make file manager for sysops
-// needs to support lines better than 255 characters too
+// needs to support lines longer than 255 characters too
 
 {$I M_OPS.PAS}
 
@@ -71,27 +54,29 @@ Uses
   m_Strings,
   bbs_Core;
 
-function striplinks (s:string):string;
-var
-  a : byte;
-  B : byte;
-begin
-  a := 255;
+Function StripLinks (S: String) : String;
+Var
+  A : Byte;
+  B : Byte;
+Begin
+  A := 255;
 
-  while a > 0 do begin
-    a := pos('<a href=', s);
-    if a > 0 then begin
-      b := 1;
-      while s[a+8+b] <> '>' do inc(b);
-      Delete (S, a, 9 + b);
-      a := Pos('</a>', S);
-      If a = 0 Then a := Length(S);
-      Delete (S, a, 4);
-    end;
-  end;
+  While A > 0 Do Begin
+    A := Pos('<link=', S);
 
-  striplinks := s;
-end;
+    If A > 0 Then Begin
+      B := 1;
+      while S[A+6+B] <> '>' Do Inc(B);
+      Delete (S, A, 7 + B);
+
+      A := Pos('</link>', S);
+      If A = 0 Then A := Length(S);
+      Delete (S, A, 7);
+    End;
+  End;
+
+  Result := S;
+End;
 
 Constructor TAnsiMenuHelp.Create;
 Begin
@@ -144,7 +129,7 @@ Begin
       Str               := strStripPipe(Str);
 
       Repeat
-        Temp1 := Pos('<a href=', Str);
+        Temp1 := Pos('<link=', Str);
 
         If Temp1 = 0 Then Break;
 
@@ -155,14 +140,14 @@ Begin
         Temp2 := 0;
         Key   := '';
 
-        While Str[Temp1 + 8 + Temp2] <> '>' Do Begin
-          Key := Key + Str[Temp1 + 8 + Temp2];
-          Inc(Temp2);
+        While Str[Temp1 + 6 + Temp2] <> '>' Do Begin
+          Key := Key + Str[Temp1 + 6 + Temp2];
+          Inc (Temp2);
         End;
 
-        Delete (Str, Temp1, 9 + Temp2);
-        Temp2 := Pos('</a>', Str);
-        Delete (Str, Temp2, 4);
+        Delete (Str, Temp1, 7 + Temp2);
+        Temp2 := Pos('</link>', Str);
+        Delete (Str, Temp2, 7);
 
         Text[Lines].Link[Text[Lines].Links].LinkLen := Temp2 - Temp1;
         Text[Lines].Link[Text[Lines].Links].Key     := Key;
@@ -204,6 +189,7 @@ Var
     For Count1 := Y1 to WinSize Do Begin
       If TopPage + Count1 - Y1 <= Lines Then Begin
        WriteXYPipe (X1 + 1, (Count1 - Y1) + Y1 + 1, 7, X2 - X1 - 1, Text[TopPage + (Count1 - Y1)].Text);
+
        For Count2 := 1 to Text[TopPage + Count1 - 1].Links Do
          LinkOFF (TopPage + Count1 - 1, Count1 - Y1 + Y1 + 1, Count2);
       End Else
@@ -240,9 +226,8 @@ Var
     If Lines > WinSize Then Begin
       If TopPage + WinSize <= Lines - WinSize Then Begin
         Inc (TopPage, WinSize);
-//        Inc (CurLine, WinSize);
       End Else Begin
-        TopPage := Lines - WinSize + 1; //was - 1
+        TopPage := Lines - WinSize + 1;
         CurLine := WinSize;
       End;
     End Else
@@ -335,7 +320,6 @@ Begin
                     Dec (TopPage, WinSize);
                     DrawPage;
                     UpdateCursor;
-//                    Dec (CurLine, WinSize);
                   End Else If TopPage > 1 Then Begin
                     TopPage := 1;
                     CurLine := 1;
@@ -380,8 +364,8 @@ Begin
         End;
       End Else Begin
         Case Ch of
-          #13 : If Text[CurLine].Links > 0 Then Begin
-                  If Text[CurLine].Link[CurLPos].Key = '@PREV' Then Begin
+          #13 : If Text[TopPage + CurLine - 1].Links > 0 Then Begin
+                  If Text[TopPage + CurLine - 1].Link[CurLPos].Key = '@PREV' Then Begin
                     If LastPos = 0 Then
                       CurKey := 'INDEX'
                     Else Begin
@@ -395,7 +379,8 @@ Begin
                       For Count := 1 to 9 Do LastKey[Count] := LastKey[Count + 1];
 
                     LastKey[LastPos] := CurKey;
-                    CurKey := Text[CurLine].Link[CurLPos].Key;
+
+                    CurKey := Text[TopPage + CurLine - 1].Link[CurLPos].Key;
                   End;
 
                   OK := ReadKeywordData;
