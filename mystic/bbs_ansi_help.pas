@@ -46,6 +46,7 @@ Type
     Destructor  Destroy; Override;
     Procedure   OpenHelp (X1, Y1, X2, Y2: Byte; FN, Keyword: String);
     Function    ReadKeywordData : Boolean;
+    Function    StripLinks (Str: String) : String;
   End;
 
 Implementation
@@ -54,7 +55,7 @@ Uses
   m_Strings,
   bbs_Core;
 
-Function StripLinks (S: String) : String;
+Function TAnsiMenuHelp.StripLinks (Str: String) : String;
 Var
   A : Byte;
   B : Byte;
@@ -62,20 +63,20 @@ Begin
   A := 255;
 
   While A > 0 Do Begin
-    A := Pos('<link=', S);
+    A := Pos('<link=', Str);
 
     If A > 0 Then Begin
       B := 1;
-      while S[A+6+B] <> '>' Do Inc(B);
-      Delete (S, A, 7 + B);
+      while Str[A + 6 + B] <> '>' Do Inc(B);
+      Delete (Str, A, 7 + B);
 
-      A := Pos('</link>', S);
-      If A = 0 Then A := Length(S);
-      Delete (S, A, 7);
+      A := Pos('</link>', Str);
+      If A = 0 Then A := Length(Str);
+      Delete (Str, A, 7);
     End;
   End;
 
-  Result := S;
+  Result := Str;
 End;
 
 Constructor TAnsiMenuHelp.Create;
@@ -106,6 +107,7 @@ Begin
     ReadLn (HelpFile, Str);
 
     Temp1 := Pos('<keyword> ', Str);
+
     If Temp1 = 0 Then Continue;
 
     Key := Copy(Str, Temp1 + 10, Length(Str));
