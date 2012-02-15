@@ -240,9 +240,9 @@ Var
     If Lines > WinSize Then Begin
       If TopPage + WinSize <= Lines - WinSize Then Begin
         Inc (TopPage, WinSize);
-        Inc (CurLine, WinSize);
+//        Inc (CurLine, WinSize);
       End Else Begin
-        TopPage := Lines - WinSize - 1;
+        TopPage := Lines - WinSize + 1; //was - 1
         CurLine := WinSize;
       End;
     End Else
@@ -323,22 +323,25 @@ Begin
                   If (CurLine = 1) and (TopPage > 1) Then Begin
                     Dec (TopPage);
                     DrawPage;
+                    UpdateCursor;
                   End Else If CurLine > 1 Then Begin
                     LinkOFF(TopPage + CurLine - 1, CurLine + 1, CurLPos);
-                    Dec (CurLine)
+                    Dec (CurLine);
+                    UpdateCursor;
                   End;
-                  UpdateCursor;
                 End;
           #73 : Begin
                   If TopPage - WinSize > 0 Then Begin
                     Dec (TopPage, WinSize);
-                    Dec (CurLine, WinSize);
-                  End Else Begin
+                    DrawPage;
+                    UpdateCursor;
+//                    Dec (CurLine, WinSize);
+                  End Else If TopPage > 1 Then Begin
                     TopPage := 1;
                     CurLine := 1;
+                    DrawPage;
+                    UpdateCursor;
                   End;
-                  DrawPage;
-                  UpdateCursor;
                 End;
           #75 : If (CurLPos > 1) and (Text[TopPage + CurLine - 1].Links > 0) Then Begin
                   LinkOFF(TopPage + CurLine - 1, CurLine + 1, CurLPos);
@@ -361,12 +364,13 @@ Begin
                   If (CurLine = WinSize) and (TopPage + WinSize <= Lines) Then Begin
                     Inc(TopPage);
                     DrawPage;
+                    UpdateCursor;
                   End Else
                   If (CurLine < WinSize) And (TopPage + CurLine <= Lines) Then Begin
                     LinkOFF(TopPage + CurLine - 1, CurLine + 1, CurLPos);
                     Inc(CurLine);
+                    UpdateCursor;
                   End;
-                  UpdateCursor;
                 End;
           #81 : Begin
                   PageDown;
