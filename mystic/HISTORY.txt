@@ -3767,8 +3767,8 @@
 
  + Mystic now accepts a -HOST command line which passes the HOST.  The UID
    command line is the same as -HOST and remains only for backwards
-   compatibility.  It make be removed in the future, so if you use the UID
-   command line, its host to switch to HOST.
+   compatibility.  It might be removed in the future, so if you use the UID
+   command line, its best to switch to HOST.
 
  + New MCI code UY returns the IP address (UX returns host)
 
@@ -3786,4 +3786,4 @@
    exist into QWK packets.
 
  + Mystic now strips out pipe color codes from the headers of the allfiles
-   or newfiles export in the file bases and in QWK packets.
+   or newfiles exports in the file bases and in QWK packets.
