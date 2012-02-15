@@ -20,16 +20,16 @@ Uses
   bbs_Ansi_MenuBox;
 
 Const
-  geMaxHelpTest      = 200;
-  geMaxHelpKeyLen    = 20;
-  geMaxHelpLineLinks = 10;
+  mysMaxHelpTest      = 200;
+  mysMaxHelpKeyLen    = 20;
+  mysMaxHelpLineLinks = 10;
 
 Type
   TLineInfoRec = Record  // make into pointer
     Text  : String;  // make into pointer of string
     Links : Byte;
-    Link  : Array[1..geMaxHelpLineLinks] of Record  //make into pointer
-              Key     : String[geMaxHelpKeyLen];
+    Link  : Array[1..mysMaxHelpLineLinks] of Record  //make into pointer
+              Key     : String[mysMaxHelpKeyLen];
               LinkPos : Byte;
               LinkLen : Byte;
             End;
@@ -38,8 +38,8 @@ Type
   TAnsiMenuHelp = Class
     Box      : TAnsiMenuBox;
     HelpFile : Text;
-    CurKey   : String[geMaxHelpKeyLen];
-    Text     : Array[1..geMaxHelpTest] of TLineInfoRec;
+    CurKey   : String[mysMaxHelpKeyLen];
+    Text     : Array[1..mysMaxHelpTest] of TLineInfoRec;
     Lines    : Word;
 
     Constructor Create;
@@ -167,7 +167,7 @@ Var
   CurLPos : Byte;
   WinSize : Integer;
   LastPos : Byte;
-  LastKey : Array[1..10] of String[geMaxHelpKeyLen];
+  LastKey : Array[1..10] of String[mysMaxHelpKeyLen];
 
   Procedure LinkOFF (LineNum: Word; YPos, LPos: Byte);
   Var
@@ -320,7 +320,7 @@ Begin
                     Dec (TopPage, WinSize);
                     DrawPage;
                     UpdateCursor;
-                  End Else If TopPage > 1 Then Begin
+                  End Else If CurLine > 1 Then Begin
                     TopPage := 1;
                     CurLine := 1;
                     DrawPage;
@@ -337,11 +337,16 @@ Begin
                   Inc(CurLPos);
                   LinkON;
                 End;
-          #79 : Begin
+          #79 : If TopPage + WinSize <= Lines Then Begin
                   Repeat
                     PageDown;
                   Until TopPage >= Lines - WinSize - 1;
                   DrawPage;
+                  UpdateCursor;
+                End Else
+                If TopPage + CurLine <= Lines Then Begin
+                  LinkOFF (TopPage + CurLine - 1, CurLine + 1, CurLPos);
+                  CurLine := Lines - TopPage + 1;
                   UpdateCursor;
                 End;
           #80 : Begin
@@ -356,11 +361,17 @@ Begin
                     UpdateCursor;
                   End;
                 End;
-          #81 : Begin
+          #81 : If TopPage + WinSize <= Lines Then Begin
                   PageDown;
                   DrawPage;
                   UpdateCursor;
+                End Else
+                If TopPage + CurLine <= Lines Then Begin
+                  LinkOFF (TopPage + CurLine - 1, CurLine + 1, CurLPos);
+                  CurLine := Lines - TopPage + 1;
+                  UpdateCursor;
                 End;
+
         End;
       End Else Begin
         Case Ch of
