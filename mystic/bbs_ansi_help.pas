@@ -364,10 +364,27 @@ Begin
         End;
       End Else Begin
         Case Ch of
+          #08 : Begin
+                  If LastPos = 0 Then
+                    CurKey := Keyword
+                  Else Begin
+                    CurKey := LastKey[LastPos];
+                    Dec (LastPos);
+                  End;
+
+                  OK := ReadKeywordData;
+
+                  If Not OK Then Begin
+                    CurKey := 'INDEX';
+                    OK     := ReadKeywordData;
+                  End;
+
+                  Break;
+                End;
           #13 : If Text[TopPage + CurLine - 1].Links > 0 Then Begin
                   If Text[TopPage + CurLine - 1].Link[CurLPos].Key = '@PREV' Then Begin
                     If LastPos = 0 Then
-                      CurKey := 'INDEX'
+                      CurKey := Keyword
                     Else Begin
                       CurKey := LastKey[LastPos];
                       Dec (LastPos);
