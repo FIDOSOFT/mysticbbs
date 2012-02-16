@@ -10,6 +10,7 @@ Procedure Configuration_OptionalFields;
 Function  Configuration_EchomailAddress (Edit: Boolean) : Byte;
 Procedure Configuration_FileSettings;
 Procedure Configuration_QWKSettings;
+Procedure Configuration_Internet;
 
 Implementation
 
@@ -285,6 +286,35 @@ Begin
   Box.Close;
   Box.Free;
 
+End;
+
+Procedure Configuration_Internet;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09Internet Servers|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Header := ' Internet Servers ';
+
+  Box.Open (16, 9, 64, 15);
+
+  VerticalLine (31, 11, 13);
+
+  Form.AddStr  ('D', ' Domain',          23, 11, 33, 11,  8, 25, 25, @Config.inetDomain, Topic + 'Internet domain name');
+  Form.AddBol  ('B', ' IP Blocking',     18, 12, 33, 12, 13, 3, @Config.inetIPBlocking, Topic + 'Enable IP blocking');
+  Form.AddBol  ('L', ' IP Logging',      19, 13, 33, 13, 12, 3, @Config.inetIPLogging, Topic + 'Enable IP logging');
+
+  Form.Execute;
+
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
 End;
 
 End.

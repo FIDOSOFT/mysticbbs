@@ -238,6 +238,7 @@ Begin
               End;
             End Else
               Case Res of
+                'I' : Configuration_Internet;
                 'X' : Break;
               Else
                 MenuPtr := 0;
