@@ -13,7 +13,8 @@ Uses
   m_Strings,
   bbs_Common,
   bbs_Ansi_MenuBox,
-  bbs_Ansi_MenuForm;
+  bbs_Ansi_MenuForm,
+  bbs_cfg_Common;
 
 Procedure EditArchive (Var Arc: RecArchive);
 Var
@@ -88,41 +89,43 @@ Begin
 
   Box.Header    := ' Archive Editor ';
   List.NoWindow := True;
-  List.LoChars  := #01#04#13#27;
+  List.LoChars  := #13#27#47;
 
   Box.Open (13, 5, 67, 20);
 
-  WriteXY (15,  6, 112, 'Use  Ext    OSID      Description');
-  WriteXY (15,  7, 112, strRep('Ä', 51));
+  WriteXY (15,  7, 112, 'Use  Ext    OSID      Description');
+  WriteXY (15,  8, 112, strRep('Ä', 51));
   WriteXY (15, 18, 112, strRep('Ä', 51));
-  WriteXY (18, 19, 112, '(CTRL/A) Add   (CTRL/D) Delete   (ENTER) Edit');
+  WriteXY (28, 19, 112, 'Press / for command list');
 
   Repeat
     MakeList;
 
-    List.Open (13, 7, 67, 18);
+    List.Open (13, 8, 67, 18);
     List.Close;
 
     Case List.ExitCode of
-      #04 : If List.Picked < List.ListMax Then
-              If ShowMsgBox(1, 'Delete this entry?') Then Begin
-                F.RecordDelete (List.Picked);
-                MakeList;
-              End;
-      #01 : Begin
-              F.RecordInsert (List.Picked);
+      '/' : Case GetCommandOption(11, 'I-Insert|D-Delete|') of
+              #27 : ;
+              'I' : Begin
+                      F.RecordInsert (List.Picked);
 
-              Arc.OSType := OSType;
-              Arc.Active := False;
-              Arc.Desc   := 'New archive';
-              Arc.Ext    := 'NEW';
-              Arc.Pack   := '';
-              Arc.Unpack := '';
-              Arc.View   := '';
+                      Arc.OSType := OSType;
+                      Arc.Active := False;
+                      Arc.Desc   := 'New archive';
+                      Arc.Ext    := 'NEW';
+                      Arc.Pack   := '';
+                      Arc.Unpack := '';
+                      Arc.View   := '';
 
-              F.Write (Arc);
+                      F.Write (Arc);
 
-              MakeList;
+                      MakeList;
+                    End;
+              'D' : If ShowMsgBox(1, 'Delete this entry?') Then Begin
+                      F.RecordDelete (List.Picked);
+                      MakeList;
+                    End;
             End;
       #13 : If List.Picked <> List.ListMax Then Begin
               F.Seek (List.Picked - 1);
