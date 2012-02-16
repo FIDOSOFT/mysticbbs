@@ -12,6 +12,9 @@ IDEAS
 - NEWAPP.MPS
 - Online text editor / ansi editor?
 - Better theme selection (menu command option to select theme)
+- Externalize remaining prompt data (msg flags, etc)
+- File comments and rating system
 
 BUGS
 ====
+? Validate ARCHIVE extensions are not case sensitive in Mystic
