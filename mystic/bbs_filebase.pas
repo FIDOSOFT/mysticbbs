@@ -3281,6 +3281,7 @@ Var
 
     Assign (DataFile, Config.DataPath + FBase.FileName + '.des');
     {$I-} Reset (DataFile, 1); {$I+}
+
     If IoResult = 0 Then
       Seek (DataFile, FileSize(DataFile))
     Else
@@ -3289,8 +3290,8 @@ Var
     Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
 
     FindFirst(FBase.Path + FileMask, Archive, DirInfo);
-    While DosError = 0 Do Begin
 
+    While DosError = 0 Do Begin
       OldPos := FilePos(FBaseFile);
       Close (FBaseFile);
 
@@ -3341,6 +3342,7 @@ Var
         End;
 
         FDir.Pointer := FileSize(DataFile);
+
         For A := 1 to FDir.Lines Do
           BlockWrite (DataFile, Session.Msgs.MsgText[A][0], Length(Session.Msgs.MsgText[A]) + 1);
 
@@ -3365,11 +3367,14 @@ Var
         End;
 
         {$I-} Reset (FDirFile); {$I+}
+
         If IoResult <> 0 Then ReWrite(FDirFile);
+
         Seek  (FDirFile, FileSize(FDirFile));
         Write (FDirFile, FDir);
         Close (FDirFile);
       End;
+
       FindNext(DirInfo);
     End;
 

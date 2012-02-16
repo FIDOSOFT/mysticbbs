@@ -7,11 +7,11 @@ Interface
 Uses
   m_Types;
 
-Procedure WriteXY        (X, Y, A: Byte; S: String);
-Procedure WriteXYPipe    (X, Y, A, SZ : Byte; S: String);
-Function  InXY           (X, Y, Field, Max, Mode: Byte; Default: String) : String;
-Procedure VerticalLine   (X, Y1, Y2 : Byte);
-Function  ShowMsgBox     (BoxType : Byte; Str : String) : Boolean;
+Procedure WriteXY          (X, Y, A: Byte; S: String);
+Procedure WriteXYPipe      (X, Y, A, SZ : Byte; S: String);
+Function  InXY             (X, Y, Field, Max, Mode: Byte; Default: String) : String;
+Procedure VerticalLine     (X, Y1, Y2 : Byte);
+Function  ShowMsgBox       (BoxType : Byte; Str : String) : Boolean;
 
 Type
   TAnsiMenuBox = Class
