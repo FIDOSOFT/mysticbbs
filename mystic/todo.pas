@@ -81,3 +81,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
   lot nicer using the new ANSI UI.  Combined with the text/ansi editor a
   SysOp would never need to use anything else to draw/maintain their setup
   even from a remote telnet connection in Windows, if desired.
+- MIDE version using the Lazaurs GUI editor [Spec].   Maybe he would be
+  interested in working on that?
+- PCBoard-style "quickscan"?  Yes?  No?
