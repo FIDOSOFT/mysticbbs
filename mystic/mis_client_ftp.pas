@@ -45,8 +45,6 @@ Type
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
 
-//    Procedure   dlog (S:String);
-
     Procedure   ResetSession;
     Procedure   UpdateUserStats (TFBase: FBaseRec; FDir: FDirRec; DirPos: LongInt);
     Function    CheckFileLimits (TempFBase: FBaseRec; FDir: FDirRec) : Byte;
@@ -114,19 +112,6 @@ Begin
 
   Server := Owner;
 End;
-
-(*
-Procedure TFTPServer.dlog (S:String);
-Var
-  T : Text;
-Begin
-  Assign (T, 'd:\code\mystic1\misftp.log');
-  Append (T);
-  If IoResult <> 0 Then Rewrite(T);
-  WriteLn(T, S);
-  Close(T);
-End;
-*)
 
 Procedure TFTPServer.ResetSession;
 Begin
