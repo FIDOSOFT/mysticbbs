@@ -5,12 +5,20 @@ This file showcases the direction of where this software wants to go as it
 continues to expand.  Some things that will probably be mentioned will be
 vague, and serve mostly to remind me of my own ideas.
 
-Some of them are pretty big or impressive things with a simple description
-that doesn't accurately portray what they actually mean as far as usability.
+BUGS AND POSSIBLE ISSUES
+========================
 
-I'll try to be mindful of those things and be more decriptive so long as it
-isn't a huge time sync to bring in more "design" level elements and their
-intentions.
+? Validate ARCHIVE extensions are not case sensitive in Mystic
+! GOTO does not always work properly in MPL (IceDevil)
+! Complex boolean evaluations using numerical variables can sometime fail to
+  compile (IceDevil)
+! After data file review, add missing variables to various MPL Get/Put
+  functions.
+! MYSTPACK has access denied errors (caphood)
+? Reapern66 has expressed that the minimal CPU requirements may be too
+  agressive.  Work with him to sort out his baseline, and potentially reduce
+  the CPU requirement for new versions.  Or just tell people the code is
+  already available GPL and let them compile it if it is a problem?
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
@@ -53,18 +61,23 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
   Linux and OSX peeps that do not have a page sysop function.
 - NNTP server completion
 - MBBSCGI (or PHP DLL) [Grymmjack might have the only MBBSCGI copy]
+- If not the above then finish the HTTP server?
 - Rework code base to compile with newly released FPC (2.6.0).
-
-BUGS AND POSSIBLE ISSUES
-========================
-
-? Validate ARCHIVE extensions are not case sensitive in Mystic
-! GOTO does not always work properly in MPL (IceDevil)
-! Complex boolean evaluations using numerical variables can sometime fail to
-  compile (IceDevil)
-! After data file review, add mission variables to various MPL Get/Put
-  functions.
-! MYSTPACK has access denied errors (caphood)
-? Reapern66 has expressed that the minimal CPU requirements may be too
-  agressive.  Work with him to sort out his baseline, and potentially reduce
-  the CPU requirement for new versions.
+- SDL versions of m_input and m_output and also use SDL if that becomes
+  reality for the ability to play WAV/MP3/MIDI files etc as SysOp
+  notification of events and pages.  Maybe someone else can take on creating
+  a mimic of m_Output_Windows and m_Input_Windows using SDL?  This would
+  benefit the entire FPC community, and not just Mystic.  NetRunner could
+  also have a full screen mode in Windows, Linux, and OSX.
+- Possibility of OS/2 port again?  Need to find a working OS/2 VMware in
+  order to do this.  Once MDL is ported over it should almost just work.
+- How feasible is an Amiga port?  Can an emulator on the PC side be good
+  enough to use as a development environment?  How reliable/complete is FPC
+  for Amiga?  Does anyone even care? :)
+- MBBSTOP rewrite
+- MVIEW rewrite to mimic oldskool AcidView type deals, which would be amazing
+  combined with the SDL stuff if that happens.
+- Mystic-DOS rewrite or just code a file manager which would probably be a
+  lot nicer using the new ANSI UI.  Combined with the text/ansi editor a
+  SysOp would never need to use anything else to draw/maintain their setup
+  even from a remote telnet connection in Windows, if desired.
