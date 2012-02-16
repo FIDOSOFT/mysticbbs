@@ -11,6 +11,9 @@ Unit bbs_Ansi_Help;
 // 7. how to better integrate with the bbs?  execute MPL command? what else?
 //
 // needs to support lines longer than 255 characters too
+//
+// template, percentage bar, what to do with topic?
+// export to text / download
 
 {$I M_OPS.PAS}
 
