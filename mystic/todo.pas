@@ -9,9 +9,9 @@ IDEAS
 - Online ANSI help system
 - Finish System Configuration rewrite
 - Finish Data structure review
+- NEWAPP.MPS
+- Online text editor / ansi editor?
+- Better theme selection (menu command option to select theme)
 
 BUGS
 ====
-- QWK does not copy welcome files
-- MIDE needs copyright year updates
-- MAKELANG needs renamed to MAKETHEME and copyright update

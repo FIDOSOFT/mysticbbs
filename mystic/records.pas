@@ -281,6 +281,7 @@ Const
 //  add script path?
 //  compare to mystic 2 for fallback stuff?
 //  rename to THEME
+//  horizontal/vertical percent bars
 
 Type
   RecUser = Record                     { USERS.DAT }
