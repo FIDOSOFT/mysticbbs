@@ -70,7 +70,7 @@ Var
       Case Arc.OSType of
         0 : OS := 'Windows';
         1 : OS := 'Linux  ';
-        2 : OS := 'OSX';
+        2 : OS := 'OSX    ';
       End;
 
       List.Add (strPadR(YesNoStr[Arc.Active], 5, ' ') + strPadR(Arc.Ext, 7, ' ') + OS + '   ' + Arc.Desc, 0);
