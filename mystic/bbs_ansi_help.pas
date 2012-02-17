@@ -14,6 +14,7 @@ Unit bbs_Ansi_Help;
 //
 // template, percentage bar, what to do with topic?
 // export to text / download
+// history view / jump to history
 
 {$I M_OPS.PAS}
 
