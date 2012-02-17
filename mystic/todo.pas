@@ -19,6 +19,7 @@ BUGS AND POSSIBLE ISSUES
   agressive.  Work with him to sort out his baseline, and potentially reduce
   the CPU requirement for new versions.  Or just tell people the code is
   already available GPL and let them compile it if it is a problem?
+! RAR internal viewer does not work with files that have embedded comments
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
@@ -84,3 +85,4 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - MIDE version using the Lazaurs GUI editor [Spec].   Maybe he would be
   interested in working on that?
 - PCBoard-style "quickscan"?  Yes?  No?
+- Filebase allow anonymous flag for FTP or just use FreeFiles
