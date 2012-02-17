@@ -940,7 +940,7 @@ Begin
     Inc (A);
   End;
 
-  For A := 1 to Config.INetTNMax Do Begin
+  For A := 1 to Config.INetTNNodes Do Begin
     Assign (ChatFile, Config.DataPath + 'chat' + strI2S(A) + '.dat');
     {$I-} Reset (ChatFile); {$I+}
     If IoResult = 0 Then Begin

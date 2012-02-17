@@ -524,10 +524,13 @@ Begin
     Config.FCommentLines  := 10;
     Config.FCommentLen    := 79;
 
-    Config.inetTNMax      := MaxNode;
+    Config.inetTNNodes    := MaxNode;
 
     Config.inetSMTPDupes  := 1;
-    Config.inetPOP3Dupes  := 1;
+
+    Config.inetPOP3Dupes   := 1;
+    Config.inetPOP3Delete  := False;
+    Config.inetPOP3Timeout := 900;
 
     Config.inetNNTPUse    := False;
     Config.inetNNTPPort   := 119;
@@ -690,7 +693,7 @@ Begin
       Sec.AF1 := AF1;
       Sec.AF2 := AF2;
       Sec.Hard := Hard;
-      Sec.StartMNU := StartMNU;
+      Sec.StartMenu := StartMNU;
       Sec.PCRatio := PCRatio;
     End;
 
@@ -958,12 +961,12 @@ Begin
   WarningDisplay;
 
 // comment this out ONLY IF config needs converting
-  Assign (ConfigFile, 'mystic.dat');
-  Reset  (ConfigFile);
-  Read   (ConfigFile, Config);
-  Close  (ConfigFile);
+//  Assign (ConfigFile, 'mystic.dat');
+//  Reset  (ConfigFile);
+//  Read   (ConfigFile, Config);
+//  Close  (ConfigFile);
 
-//  ConvertConfig;  //1.10a11
+  ConvertConfig;  //1.10a11
 //  ConvertUsers; //1.10a11
 //ConvertSecurity; //1.10a11
 
