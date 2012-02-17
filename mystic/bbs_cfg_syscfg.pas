@@ -339,7 +339,7 @@ Begin
   Form.AddWord ('P', ' Server Port',        34, 10, 49, 10, 13,  5, 0, 65535, @Config.inetFTPPort, Topic + 'FTP Server port');
   Form.AddWord ('M', ' Max Connections',    30, 11, 49, 11, 17,  5, 0, 65535, @Config.inetFTPMax, Topic + 'Max concurrent connections');
   Form.AddWord ('C', ' Connection Timeout', 27, 12, 49, 12, 20,  5, 0, 65535, @Config.inetFTPTimeout, Topic + 'Connection timeout (seconds)');
-  Form.AddByte ('D', ' Dupe IP Limit',      32, 13, 49, 13, 15,  3, 0, 255,   @Config.inetFTPDupes, Topic + 'Max connections with same IP');
+  Form.AddByte ('D', ' Dupe IP Limit',      32, 13, 49, 13, 15,  3, 2, 255,   @Config.inetFTPDupes, Topic + 'Max connections with same IP');
   Form.AddWord ('I', ' Data Port Min',      32, 14, 49, 14, 15,  5, 0, 65535, @Config.inetFTPPortMin, Topic + 'Passive port range (minimum)');
   Form.AddWord ('A', ' Data Port Max',      32, 15, 49, 15, 15,  5, 0, 65535, @Config.inetFTPPortMax, Topic + 'Passive port range (maximum)');
   Form.AddBol  ('Y', ' Allow Anonymous',    30, 16, 49, 16, 17,  3, @Config.inetFTPAnon, Topic + 'Allow anonymous users');
