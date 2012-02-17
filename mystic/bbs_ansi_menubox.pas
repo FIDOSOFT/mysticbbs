@@ -479,13 +479,13 @@ Begin
                 Picked := ListMax;
                 Update;
               End;
-        #80 : Begin { down arrow }
-                If Picked < ListMax Then Inc (Picked);
+        #80 : If Picked < ListMax Then Begin
+                Inc (Picked);
                 If Picked > TopPage + WinSize - 1 Then Inc (TopPage);
                 Update;
               End;
         #77,
-        #81 : If ListMax > 0 Then Begin { page down / right arrow }
+        #81 : If (Picked <> ListMax) Then Begin { pgdn/right }
                 If ListMax > WinSize Then Begin
                   If Picked + WinSize > ListMax Then
                     Picked := ListMax
