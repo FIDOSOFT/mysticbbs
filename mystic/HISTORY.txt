@@ -3787,3 +3787,13 @@
 
  + Mystic now strips out pipe color codes from the headers of the allfiles
    or newfiles exports in the file bases and in QWK packets.
+
+ + FTP Server now has minimum and maximum port values for passive and
+   extended passive data ports.  Defaults should be 60000, and 65535
+
+ + FTP Server now has a configurable "per connection" timeout.  Recommended
+   value is at least 300 seconds.
+
+ + FTP server now has a configurable "max connections with same IP" value.
+   This should be set to at least 2, for incoming data connections with
+   the same IP.
