@@ -11,6 +11,7 @@ Function  Configuration_EchomailAddress (Edit: Boolean) : Byte;
 Procedure Configuration_FileSettings;
 Procedure Configuration_QWKSettings;
 Procedure Configuration_Internet;
+Procedure Configuration_FTPServer;
 
 Implementation
 
@@ -311,6 +312,39 @@ Begin
 
   Form.Execute;
 
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
+Procedure Configuration_FTPServer;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09FTP Server|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Header := ' FTP Server ';
+
+  Box.Open (26, 7, 55, 18);
+
+  VerticalLine (47, 9, 16);
+
+  Form.AddBol  ('U', ' Use FTP Server',     31,  9, 49,  9, 16,  3, @Config.inetFTPUse, Topic + 'Enable FTP server');
+  Form.AddWord ('P', ' Server Port',        34, 10, 49, 10, 13,  5, 0, 65535, @Config.inetFTPPort, Topic + 'FTP Server port');
+  Form.AddWord ('M', ' Max Connections',    30, 11, 49, 11, 17,  5, 0, 65535, @Config.inetFTPMax, Topic + 'Max concurrent connections');
+  Form.AddWord ('C', ' Connection Timeout', 27, 12, 49, 12, 20,  5, 0, 65535, @Config.inetFTPTimeout, Topic + 'Connection timeout (seconds)');
+  Form.AddByte ('D', ' Dupe IP Limit',      32, 13, 49, 13, 15,  3, 0, 255,   @Config.inetFTPDupes, Topic + 'Max connections with same IP');
+  Form.AddWord ('I', ' Data Port Min',      32, 14, 49, 14, 15,  5, 0, 65535, @Config.inetFTPPortMin, Topic + 'Passive port range (minimum)');
+  Form.AddWord ('A', ' Data Port Max',      32, 15, 49, 15, 15,  5, 0, 65535, @Config.inetFTPPortMax, Topic + 'Passive port range (maximum)');
+  Form.AddBol  ('Y', ' Allow Anonymous',    30, 16, 49, 16, 17,  3, @Config.inetFTPAnon, Topic + 'Allow anonymous users');
+
+  Form.Execute;
   Form.Free;
 
   Box.Close;

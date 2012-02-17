@@ -239,6 +239,7 @@ Begin
             End Else
               Case Res of
                 'I' : Configuration_Internet;
+                '2' : Configuration_FTPServer;
                 'X' : Break;
               Else
                 MenuPtr := 0;
