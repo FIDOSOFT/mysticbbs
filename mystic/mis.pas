@@ -388,7 +388,7 @@ Begin
     FTPServer := TServerManager.Create(bbsConfig, bbsConfig.InetFTPPort, bbsConfig.inetFTPMax, NodeData, @CreateFTP);
 
     FTPServer.Server.FTelnetServer := False;
-    FTPServer.ClientMaxIPs         := 2;
+    FTPServer.ClientMaxIPs         := bbsConfig.inetFTPDupes;
 //    FTPServer.TextPath             := bbsConfig.DataPath;
 
     Started := True;

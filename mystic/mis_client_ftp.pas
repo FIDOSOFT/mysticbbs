@@ -76,7 +76,6 @@ Type
 Implementation
 
 Const
-  FTPTimeOut     = 120;  // Make this configurabe in MCFG?
   FileBufSize    = 8 * 1024;
 
   re_DataOpen    = '125 Data connection already open';
@@ -418,7 +417,7 @@ Var
   WaitSock : TSocketClass;
 Begin
   If LoggedIn Then Begin
-    DataPort := Random(65535-60000) + 60000;  // make configurable?!
+    DataPort := Random(bbsConfig.inetFTPPortMax - bbsConfig.inetFTPPortMin) + bbsConfig.inetFTPPortMin;
 
     Client.WriteLine(re_PassiveOK + '(' + strReplace(Client.HostIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo) + ').');
 
@@ -712,7 +711,7 @@ Var
 Begin
   If LoggedIn Then Begin
     If Data = '' Then Begin
-      DataPort  := Random(65535 - 60000) + 60000;  // make configuratable
+      DataPort  := Random(bbsConfig.inetFTPPortMax - bbsConfig.inetFTPPortMin) + bbsConfig.inetFTPPortMin;
       IsPassive := True;
 
       Client.WriteLine('229 Entering Extended Passive Mode (|||' + strI2S(DataPort) + '|)');
@@ -752,14 +751,11 @@ Begin
   cmdREIN;
 
   Repeat
-    If Client.WaitForData(FTPTimeOut * 1000) = 0 Then Break;
+    If Client.WaitForData(bbsConfig.inetFTPTimeout * 1000) = 0 Then Break;
 
     If Terminated Then Exit;
 
     If Client.ReadLine(Str) = -1 Then Exit;
-
-//    dlog(Str);
-//server.server.status(str);
 
     Cmd := strUpper(strWordGet(1, Str, ' '));
 
