@@ -221,7 +221,7 @@ Type
     inetPOP3Dupes   : Byte;
     inetTNUse       : Boolean;
     inetTNPort      : Word;
-    inetTNMax       : Byte;
+    inetTNNodes     : Byte;
     inetTNDupes     : Byte;
     inetFTPUse      : Boolean;
     inetFTPPort     : Word;

@@ -25,7 +25,7 @@ Var
 Begin
   Is_User_Online := 0;
 
-  For Count := 1 to Config.INetTNMax Do Begin
+  For Count := 1 to Config.INetTNNodes Do Begin
     Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Count) + '.dat');
     {$I-} Reset(ChatFile); {$I+}
     If IoResult <> 0 Then Continue;
@@ -78,7 +78,7 @@ Var
 Begin
   Session.io.OutFullLn (Session.GetPrompt(138));
 
-  For A := 1 to Config.INetTNMax Do Begin
+  For A := 1 to Config.INetTNNodes Do Begin
     Assign (ChatFile, Config.DataPath + 'chat' + strI2S(A) + '.dat');
     {$I-} Reset(ChatFile); {$I+}
     If IoResult <> 0 Then Continue;
@@ -120,7 +120,7 @@ Begin
 
     ToNode := strS2I(Str);
 
-    If (ToNode < 0) or (ToNode > Config.INetTNMax) Then Begin
+    If (ToNode < 0) or (ToNode > Config.INetTNNodes) Then Begin
       Session.io.OutFullLn (Session.GetPrompt(147));
       Exit;
     End;
@@ -133,7 +133,7 @@ Begin
     Delete (Data, 1, Pos(';', Data));
     If ToNode = 0 Then Begin
       B := 1;
-      C := Config.INetTNMax;
+      C := Config.INetTNNodes;
       If MsgType = 3 Then MsgType := 2;
 { If Not (MsgType in [1, 4..7]) Then MsgType := 2;}
 { used line above comment now... see if that does anything }

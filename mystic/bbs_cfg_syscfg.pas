@@ -12,6 +12,7 @@ Procedure Configuration_FileSettings;
 Procedure Configuration_QWKSettings;
 Procedure Configuration_Internet;
 Procedure Configuration_FTPServer;
+Procedure Configuration_TelnetServer;
 
 Implementation
 
@@ -343,6 +344,35 @@ Begin
   Form.AddWord ('I', ' Data Port Min',      32, 14, 49, 14, 15,  5, 0, 65535, @Config.inetFTPPortMin, Topic + 'Passive port range (minimum)');
   Form.AddWord ('A', ' Data Port Max',      32, 15, 49, 15, 15,  5, 0, 65535, @Config.inetFTPPortMax, Topic + 'Passive port range (maximum)');
   Form.AddBol  ('Y', ' Allow Anonymous',    30, 16, 49, 16, 17,  3, @Config.inetFTPAnon, Topic + 'Allow anonymous users');
+
+  Form.Execute;
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
+Procedure Configuration_TelnetServer;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09Telnet Server|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Header := ' Telnet Server ';
+
+  Box.Open (26, 9, 54, 16);
+
+  VerticalLine (46, 11, 14);
+
+  Form.AddBol  ('U', ' Use Telnet Server',  27, 11, 48, 11, 19, 3, @Config.inetTNUse, Topic + 'Enable Telnet server');
+  Form.AddByte ('N', ' Telnet Nodes',       32, 12, 48, 12, 14, 3, 1, 255, @Config.inetTNNodes, Topic + 'Max telnet nodes to allow');
+  Form.AddWord ('P', ' Server Port',        33, 13, 48, 13, 13, 5, 0, 65535, @Config.inetTNPort, Topic + 'Telnet Server port');
+  Form.AddByte ('D', ' Dupe IP Limit',      31, 14, 48, 14, 15, 3, 1, 255,   @Config.inetTNDupes, Topic + 'Max connections with same IP');
 
   Form.Execute;
   Form.Free;

@@ -86,3 +86,4 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
   interested in working on that?
 - PCBoard-style "quickscan"?  Yes?  No?
 - Filebase allow anonymous flag for FTP or just use FreeFiles
+- Build in "telnetd" STDIO redirection into MIS in Linux/OSX

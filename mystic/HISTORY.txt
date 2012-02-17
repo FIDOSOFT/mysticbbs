@@ -3583,7 +3583,7 @@
 
  - Prompt #315 is no longer used.  I can't remember why.  :)
 
- + Removed MPL Cfg Variable "CfgMaxNodes" and replaced it with "CfgINetTNMax"
+ + Removed MPL Cfg Variable "CfgMaxNodes" and replaced it with "CfgTNNodes"
    variable, which now contains the number of telnet nodes to allow.  These
    are basically interchangable in your MPL code but it is changing to more
    accurately reflect what Mystic is doing.

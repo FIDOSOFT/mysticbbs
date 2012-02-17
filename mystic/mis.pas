@@ -348,13 +348,13 @@ Begin
 
   Console  := TOutput.Create(True);
   Input    := TInput.Create;
-  NodeData := TNodeData.Create(bbsConfig.INetTNMax);
+  NodeData := TNodeData.Create(bbsConfig.INetTNNodes);
 
   Console.SetWindowTitle(WinTitle);
 
   {$IFDEF WINDOWS}
   If bbsConfig.InetTNUse Then Begin
-    TelnetServer := TServerManager.Create(bbsConfig, bbsConfig.InetTNPort, bbsConfig.INetTNMax, NodeData, @CreateTelnet);
+    TelnetServer := TServerManager.Create(bbsConfig, bbsConfig.InetTNPort, bbsConfig.INetTNNodes, NodeData, @CreateTelnet);
 
     TelnetServer.Server.FTelnetServer := True;
 //    TelnetServer.TextPath             := bbsConfig.DataPath;
