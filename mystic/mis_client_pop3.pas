@@ -75,9 +75,6 @@ Type
 Implementation
 
 Const
-  POP3TimeOut  : SmallInt = 900;   { MCFG? }
-  DeleteOnRETR : Boolean  = False; { MCFG? }
-
   re_OK    = '+OK ';
   re_Error = '-ERR ';
 
@@ -258,7 +255,7 @@ Begin
   End;
 
   For Count := 1 to MailSize Do Begin
-    If MailInfo[Count].Deleted or (MailInfo[Count].GotRETR and DeleteOnRETR) Then Begin
+    If MailInfo[Count].Deleted or (MailInfo[Count].GotRETR and bbsConfig.inetPOP3Delete) Then Begin
       MsgBase^.YoursFirst(User.RealName, User.Handle);
 
       While MsgBase^.YoursFound Do Begin
@@ -447,7 +444,7 @@ Begin
   Client.WriteLine(re_Greeting);
 
   Repeat
-    If Client.WaitForData(POP3TimeOut * 1000) = 0 Then Break;
+    If Client.WaitForData(bbsConfig.inetPOP3TimeOut * 1000) = 0 Then Break;
 
     If Terminated Then Exit;
 
