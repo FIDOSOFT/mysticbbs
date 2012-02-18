@@ -23,9 +23,12 @@ Type
     Constructor Create (Var Owner: Pointer);
     Destructor  Destroy; Override;
 
-    Function    LoadMenu       (CheckSec: Boolean; RunCmd: Boolean; Global: Boolean) : Byte;
-    Procedure   ExecuteMenu    (FallBack, Global, View: Boolean);
-    Function    ExecuteCommand (Cmd: String; Data: String) : Boolean; {True if menu is to be reloaded}
+    Function    StripSecurity     (Str : String) : String;
+    Function    ReplaceSecurity   (Str : String) : String;
+    Procedure   ToggleAccessFlags (Data: String; Var Flags: AccessFlagType);
+    Function    LoadMenu          (CheckSec: Boolean; RunCmd: Boolean; Global: Boolean) : Byte;
+    Procedure   ExecuteMenu       (FallBack, Global, View: Boolean);
+    Function    ExecuteCommand    (Cmd: String; Data: String) : Boolean; {True if menu is to be reloaded}
   End;
 
 Implementation
@@ -62,14 +65,14 @@ Begin
   Inherited Destroy;
 End;
 
-Function StripSecurity (Str : String) : String;
+Function TMenuSystem.StripSecurity (Str : String) : String;
 Begin
   Delete (Str, Pos('@S', Str), 2);
 
   Result := Str;
 End;
 
-Function ReplaceSecurity (Str : String) : String;
+Function TMenuSystem.ReplaceSecurity (Str : String) : String;
 Var
   A : Byte;
 Begin
@@ -83,7 +86,7 @@ Begin
   Result := Str;
 End;
 
-Procedure ToggleAccessFlags (Data: String; Var Flags: AccessFlagType);
+Procedure TMenuSystem.ToggleAccessFlags (Data: String; Var Flags: AccessFlagType);
 Var
   A : Byte;
 Begin
