@@ -13,7 +13,8 @@ Uses
   m_Strings,
   bbs_Common,
   bbs_ansi_MenuBox,
-  bbs_ansi_MenuForm;
+  bbs_ansi_MenuForm,
+  bbs_cfg_Common;
 
 Procedure EditProtocol (Var Prot: RecProtocol);
 Var
@@ -88,41 +89,44 @@ Begin
 
   Box.Header    := ' Protocol Editor ';
   List.NoWindow := True;
-  List.LoChars  := #01#04#13#27;
+  List.LoChars  := #13#27#47;
 
   Box.Open (13, 5, 67, 20);
 
-  WriteXY (15,  6, 112, 'Active   OSID     Batch   Key  Description');
-  WriteXY (15,  7, 112, strRep('Ä', 51));
+  WriteXY (15,  7, 112, 'Active   OSID     Batch   Key  Description');
+  WriteXY (15,  8, 112, strRep('Ä', 51));
   WriteXY (15, 18, 112, strRep('Ä', 51));
-  WriteXY (18, 19, 112, '(CTRL/A) Add   (CTRL/D) Delete   (ENTER) Edit');
+  WriteXY (29, 19, 112, 'Press / for command list');
 
   Repeat
     MakeList;
 
-    List.Open (13, 7, 67, 18);
+    List.Open (13, 8, 67, 18);
     List.Close;
 
     Case List.ExitCode of
-      #04 : If List.Picked < List.ListMax Then
-              If ShowMsgBox(1, 'Delete this entry?') Then Begin
-                F.RecordDelete (List.Picked);
-                MakeList;
-              End;
-      #01 : Begin
-              F.RecordInsert (List.Picked);
+      '/' : Case GetCommandOption(11, 'I-Insert|D-Delete|') of
+              #27 : ;
+              'I' : Begin
+                      F.RecordInsert (List.Picked);
 
-              Prot.OSType    := OSType;
-              Prot.Desc    := 'New protocol';
-              Prot.Key     := '!';
-              Prot.Active  := False;
-              Prot.Batch   := False;
-              Prot.SendCmd := '';
-              Prot.RecvCmd := '';
+                      Prot.OSType    := OSType;
+                      Prot.Desc    := 'New protocol';
+                      Prot.Key     := '!';
+                      Prot.Active  := False;
+                      Prot.Batch   := False;
+                      Prot.SendCmd := '';
+                      Prot.RecvCmd := '';
 
-              F.Write (Prot);
+                      F.Write (Prot);
 
-              MakeList;
+                      MakeList;
+                    End;
+              'D' : If List.Picked < List.ListMax Then
+                      If ShowMsgBox(1, 'Delete this entry?') Then Begin
+                        F.RecordDelete (List.Picked);
+                        MakeList;
+                      End;
             End;
       #13 : If List.Picked <> List.ListMax Then Begin
               F.Seek (List.Picked - 1);
