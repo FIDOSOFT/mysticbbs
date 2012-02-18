@@ -72,7 +72,7 @@ Begin
   NI.User   := 'Unknown';
   NI.Action := 'Logging In';
 
-	ND.SetNodeInfo(Num, NI);
+  ND.SetNodeInfo(Num, NI);
 
   FillChar(SI, SizeOf(SI), 0);
   FillChar(PI, SizeOf(PI), 0);
@@ -99,12 +99,9 @@ Var
   Cmd : String;
   Num : LongInt;
   NI  : TNodeInfoRec;
-  PassHandle : LongInt;
 Begin
-  PassHandle := Client.FSocketHandle;
-
   Num := ND.GetFreeNode;
-  Cmd := './mystic -n' + strI2S(Num) + ' -TID' + strI2S(PassHandle) + ' -UID' + Client.FPeerIP;
+  Cmd := './mystic -n' + strI2S(Num) + ' -IP' + Client.FPeerIP + ' -HOST' + Client.FPeerName;
 
   FillChar(NI, SizeOf(NI), 0);
 
@@ -114,9 +111,20 @@ Begin
   NI.User   := 'Unknown';
   NI.Action := 'Logging In';
 
-	ND.SetNodeInfo(Num, NI);
+  ND.SetNodeInfo(Num, NI);
 
-  fpSystem(Cmd);
+  // setup and execute Cmd as defined above, setting up STDIO handles
+
+  fpSystem(Cmd);  // placeholder for above
+
+  // redirection of STDIO psuedocode loop here
+  // NOTE client class already escapes telnet protocol, no need for that.
+  //
+  // while processGoing do begin
+  //   case waitEvent(Input or output)
+  //     input  : push input to Client class
+  //     output : push output to client class
+  // end
 
   NI.Busy   := False;
   NI.IP     := '';
