@@ -169,7 +169,7 @@ Begin
           Else
             WriteXY (Len + Len2 + 7, 14, 30, ' NO ');
 
-          Ch := Session.io.GetKey;
+          Ch := UpCase(Session.io.GetKey);
 
           If Session.io.IsArrow Then
             Case Ch of
