@@ -42,7 +42,7 @@ Begin
   Self.ND := ND;
 End;
 
-{$IFDEF WIN32}
+{$IFDEF WINDOWS}
 Procedure TTelnetServer.Execute;
 Var
   Cmd : String;
@@ -118,11 +118,11 @@ Begin
   fpSystem(Cmd);  // placeholder for above
 
   // redirection of STDIO psuedocode loop here
-  // NOTE client class already escapes telnet protocol, no need for that.
+  // NOTE client class already escapes telnet protocol, no need for that!
   //
   // while processGoing do begin
-  //   case waitEvent(Input, output or close, wait INFINITY)
-  //     input  : push input to Client class
+  //   case waitEvent(Input, output, close, wait INFINITY)
+  //     input  : push input to STDIO handle?
   //     output : push output to client class
   //     close  : break;
   // end
