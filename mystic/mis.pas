@@ -358,7 +358,7 @@ Begin
 
     TelnetServer.Server.FTelnetServer := True;
 //    TelnetServer.TextPath             := bbsConfig.DataPath;
-    TelnetServer.ClientMaxIPs         := 1 {bbsConfig.InetTNIPs};
+    TelnetServer.ClientMaxIPs         := bbsConfig.InetTNDupes;
 
     Started := True;
   End;
@@ -378,7 +378,7 @@ Begin
     POP3Server := TServerManager.Create(bbsConfig, bbsConfig.INetPOP3Port, bbsConfig.inetPOP3Max, NodeData, @CreatePOP3);
 
     POP3Server.Server.FTelnetServer := False;
-    POP3Server.ClientMaxIPs         := 2;
+    POP3Server.ClientMaxIPs         := bbsConfig.inetPOP3Dupes;
 //    POP3Server.TextPath             := bbsConfig.DataPath;
 
     Started := True;
