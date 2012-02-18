@@ -14,7 +14,7 @@ Uses
   bbs_MsgBase_Squish;
 
 Type
- TMsgBase = Class
+  TMsgBase = Class
     MBaseFile : File of MBaseRec;
     MScanFile : File of MScanRec;
     GroupFile : File of RecGroup;
@@ -436,9 +436,12 @@ Var
     Session.io.OutFullLn (Session.GetPrompt(92));
 
     Total := 0;
+
     Reset (MBaseFile);
+
     While Not Eof(MBaseFile) Do Begin
       Read (MBaseFile, MBase);
+
       If Session.User.Access(MBase.ACS) Then Begin
         Inc (Total);
 
@@ -474,7 +477,9 @@ Var
     B : Word;
   Begin
     B := 0;
+
     Reset (MBaseFile);
+
     Repeat
       Read (MBaseFile, MBase);
       If Session.User.Access(MBase.ACS) Then Inc(B);
@@ -690,6 +695,7 @@ Begin
       Total := 0;
 
       Reset (GroupFile);
+
       Repeat
         Read (GroupFile, Group);
         If Not Group.Hidden And Session.User.Access(Group.ACS) Then Inc(Total);
@@ -701,8 +707,8 @@ Begin
       If Intro Then Session.io.OutFile ('group' + strI2S(Session.User.ThisUser.LastMGroup), True, 0);
 
       Session.User.ThisUser.LastMBase := 1;
-      ChangeArea('+');
 
+      ChangeArea('+');
     End Else
       Group := tGroup;
   End;
