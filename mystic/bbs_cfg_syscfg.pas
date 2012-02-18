@@ -13,6 +13,7 @@ Procedure Configuration_QWKSettings;
 Procedure Configuration_Internet;
 Procedure Configuration_FTPServer;
 Procedure Configuration_TelnetServer;
+Procedure Configuration_POP3Server;
 
 Implementation
 
@@ -373,6 +374,37 @@ Begin
   Form.AddByte ('N', ' Telnet Nodes',       32, 12, 48, 12, 14, 3, 1, 255, @Config.inetTNNodes, Topic + 'Max telnet nodes to allow');
   Form.AddWord ('P', ' Server Port',        33, 13, 48, 13, 13, 5, 0, 65535, @Config.inetTNPort, Topic + 'Telnet Server port');
   Form.AddByte ('D', ' Dupe IP Limit',      31, 14, 48, 14, 15, 3, 1, 255,   @Config.inetTNDupes, Topic + 'Max connections with same IP');
+
+  Form.Execute;
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
+Procedure Configuration_POP3Server;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09POP3 Server|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Header := ' POP3 Server ';
+
+  Box.Open (27, 8, 53, 17);
+
+  VerticalLine (45, 10, 15);
+
+  Form.AddBol  ('U', ' Use Server',      33, 10, 47, 10, 12, 3, @Config.inetPOP3Use, Topic + 'Enable POP3 server');
+  Form.AddWord ('P', ' Server Port',     32, 11, 47, 11, 13, 5, 0, 65535, @Config.inetPOP3Port, Topic + 'POP3 Server port');
+  Form.AddByte ('N', ' Max Connections', 28, 12, 47, 12, 17, 3, 1, 255, @Config.inetPOP3Max, Topic + 'Max Connections');
+  Form.AddByte ('I', ' Dupe IP Limit',   30, 13, 47, 13, 15, 3, 1, 255,   @Config.inetPOP3Dupes, Topic + 'Max connections with same IP');
+  Form.AddWord ('T', ' Timeout',         36, 14, 47, 14,  9, 5, 0, 65535, @Config.inetPOP3Timeout, Topic + 'Connection timeout (seconds)');
+  Form.AddBol  ('D', ' Delete',          37, 15, 47, 15,  8, 3, @Config.inetPOP3Delete, Topic + 'Delete email on retreive');
 
   Form.Execute;
   Form.Free;
