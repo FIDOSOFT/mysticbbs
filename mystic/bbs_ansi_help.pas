@@ -59,6 +59,16 @@ Uses
   m_Strings,
   bbs_Core;
 
+Constructor TAnsiMenuHelp.Create;
+Begin
+  Inherited Create;
+End;
+
+Destructor TAnsiMenuHelp.Destroy;
+Begin
+  Inherited Destroy;
+End;
+
 Function TAnsiMenuHelp.StripLinks (Str: String) : String;
 Var
   A : Byte;
@@ -83,15 +93,6 @@ Begin
   Result := Str;
 End;
 
-Constructor TAnsiMenuHelp.Create;
-Begin
-  Inherited Create;
-End;
-
-Destructor TAnsiMenuHelp.Destroy;
-Begin
-  Inherited Destroy;
-End;
 
 Function TAnsiMenuHelp.ReadKeywordData : Boolean;
 Var
