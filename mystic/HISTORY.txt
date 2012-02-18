@@ -3797,3 +3797,6 @@
  + FTP server now has a configurable "max connections with same IP" value.
    This should be set to at least 2, for incoming data connections with
    the same IP.
+
+ + Added configurable POP3 server options for connection Timeout and for
+   Delete Mail on Retrieve.
