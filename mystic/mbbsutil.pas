@@ -363,11 +363,10 @@ Begin
     FindNext(Dir);
   End;
 
-  {$IFNDEF MSDOS}
-    FindClose(Dir);
-  {$ENDIF}
+  FindClose(Dir);
 
   Update_Status ('Completed');
+
   WriteLn;
 End;
 
@@ -444,9 +443,7 @@ Begin
       FindNext(Dir);
     End;
 
-    {$IFNDEF MSDOS}
-      FindClose(Dir);
-    {$ENDIF}
+    FindClose(Dir);
   End Else
     SortList;
 
@@ -507,9 +504,7 @@ Begin
       FindNext(Dir);
     End;
 
-    {$IFNDEF MSDOS}
-      FindClose(Dir);
-    {$ENDIF}
+    FindClose(Dir);
   End Else
     PackFile;
 
@@ -839,7 +834,7 @@ Begin
   TextAttr := 7;
   WriteLn;
   WriteLn ('MBBSUTIL: ', mysSoftwareID, ' BBS Utilities Version ', mysVersion, ' (', OSID, ')');
-  WriteLn ('Copyright (C) 1997-2011 By James Coyle.  All Rights Reserved.');
+  WriteLn ('Copyright (C) 1997-2012 By James Coyle.  All Rights Reserved.');
   WriteLn;
 
   FileMode := 66;
