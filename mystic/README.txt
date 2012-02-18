@@ -11,7 +11,7 @@ each source file that compiles to an executable.
 
 Current build options used with Free Pascal are as follows:
 
-fpc -CX -XX -Xs -O3 -B -OpPENTIUM4 -OoREGVAR -OoSTACKFRAME -OoPEEPHOLE -OoASMCSE -WN <source file>
+fpc -CX -XX -Xs -O3 -B -OpPENTIUM3 -OoREGVAR -OoSTACKFRAME -OoPEEPHOLE -OoASMCSE -WN <source file>
 
 Mystic BBS project can be found at mysticbbs.sourceforge.net
 
