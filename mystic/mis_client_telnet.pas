@@ -7,8 +7,9 @@ Interface
 Uses
   {$IFDEF UNIX}
     Unix,
+    //TPROCESS unit?
   {$ENDIF}
-  {$IFDEF WIN32}
+  {$IFDEF WINDOWS}
     Windows,
   {$ENDIF}
   m_Strings,
@@ -122,10 +123,13 @@ Begin
   //
   // while processGoing do begin
   //   case waitEvent(Input, output, close, wait INFINITY)
-  //     input  : push input to STDIO handle?
-  //     output : push output to client class
+  //     input  : push input from client to STDIO handle
+  //     output : push output from STDIO to client class
   //     close  : break;
   // end
+
+  // it seems there might be a TProcess in FCL with FPC that can do this
+  // already... research!
 
   NI.Busy   := False;
   NI.IP     := '';
