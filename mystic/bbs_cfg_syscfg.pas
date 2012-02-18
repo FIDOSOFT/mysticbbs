@@ -36,9 +36,9 @@ Begin
 
   Box.Header := ' System Directories ';
 
-  Box.Open (5, 7, 75, 18);
+  Box.Open (5, 7, 75, 17);
 
-  VerticalLine (27, 8, 17);
+  VerticalLine (27, 8, 16);
 
   Form.AddPath ('S', ' System Path',       13,  8, 29,  8, 13, 45, mysMaxPathSize, @Config.SystemPath,   Topic + 'Root Mystic BBS directory');
   Form.AddPath ('D', ' Data File Path',    10,  9, 29,  9, 16, 45, mysMaxPathSize, @Config.DataPath,     Topic + 'Data file directory');
@@ -48,8 +48,8 @@ Begin
   Form.AddPath ('E', ' Semaphore Path',    10, 13, 29, 13, 16, 45, mysMaxPathSize, @Config.SemaPath,     Topic + 'Semaphore file directory');
   Form.AddPath ('U', ' Menu File Path',    10, 14, 29, 14, 16, 45, mysMaxPathSize, @Config.MenuPath,     Topic + 'Default menu file directory');
   Form.AddPath ('T', ' Text File Path',    10, 15, 29, 15, 16, 45, mysMaxPathSize, @Config.TextPath,     Topic + 'Default display file directory');
-  Form.AddPath ('P', ' Template Path',     11, 16, 29, 16, 15, 45, mysMaxPathSize, @Config.TemplatePath, Topic + 'Default template file directory');
-  Form.AddPath ('R', ' Script Path',       13, 17, 29, 17, 13, 45, mysMaxPathSize, @Config.ScriptPath,   Topic + 'Default script (MPL) directory');
+//  Form.AddPath ('P', ' Template Path',     11, 16, 29, 16, 15, 45, mysMaxPathSize, @Config.TemplatePath, Topic + 'Default template file directory');
+  Form.AddPath ('R', ' Script Path',       13, 16, 29, 16, 13, 45, mysMaxPathSize, @Config.ScriptPath,   Topic + 'Default script (MPL) directory');
 
   Form.Execute;
 
