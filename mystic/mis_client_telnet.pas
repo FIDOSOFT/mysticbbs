@@ -121,9 +121,10 @@ Begin
   // NOTE client class already escapes telnet protocol, no need for that.
   //
   // while processGoing do begin
-  //   case waitEvent(Input or output)
+  //   case waitEvent(Input, output or close, wait INFINITY)
   //     input  : push input to Client class
   //     output : push output to client class
+  //     close  : break;
   // end
 
   NI.Busy   := False;
