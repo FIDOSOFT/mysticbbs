@@ -256,64 +256,67 @@ Var
   Temp2 : Byte;
 Begin
   Case Ch of
-    '0'..'9', ';', '?' : Code := Code + Ch;
-    'H', 'f'      : MoveCursor;
-    'A'           : MoveUP;
-    'B'           : MoveDOWN;
-    'C'           : MoveRIGHT;
-    'D'           : MoveLEFT;
-    'J'           : Begin
-                      {ClearScreenData;}
-                      ResetControlCode;
-                    End;
-    'K'           : Begin
-                      Temp1 := CurX;
-                      For Temp2 := CurX To 80 Do
-                        AddChar(' ');
-                      MoveXY (Temp1, CurY);
-                      ResetControlCode;
-                    End;
-    'h'           : ResetControlCode;
-    'm'           : Begin
-                      While Length(Code) > 0 Do Begin
-                        Case ParseNumber(Code) of
-                          0 : Attr := 7;
-                          1 : Attr := Attr OR $08;
-                          5 : Attr := Attr OR $80;
-                          7 : Begin
-                                Attr := Attr AND $F7;
-                                Attr := ((Attr AND $70) SHR 4) + ((Attr AND $7) SHL 4) + Attr AND $80;
-                              End;
-                          30: Attr := (Attr AND $F8) + 0;
-                          31: Attr := (Attr AND $F8) + 4;
-                          32: Attr := (Attr AND $F8) + 2;
-                          33: Attr := (Attr AND $F8) + 6;
-                          34: Attr := (Attr AND $F8) + 1;
-                          35: Attr := (Attr AND $F8) + 5;
-                          36: Attr := (Attr AND $F8) + 3;
-                          37: Attr := (Attr AND $F8) + 7;
-                          40: SetBack (0);
-                          41: SetBack (4);
-                          42: SetBack (2);
-                          43: SetBack (6);
-                          44: SetBack (1);
-                          45: SetBack (5);
-                          46: SetBack (3);
-                          47: SetBack (7);
-                        End;
-                      End;
+    '0'..
+    '9',
+    ';',
+    '?' : Code := Code + Ch;
+    'H',
+    'f' : MoveCursor;
+    'A' : MoveUP;
+    'B' : MoveDOWN;
+    'C' : MoveRIGHT;
+    'D' : MoveLEFT;
+    'J' : ResetControlCode;
+    'K' : Begin
+            Temp1 := CurX;
 
-                      ResetControlCode;
+            For Temp2 := CurX To 80 Do
+              AddChar(' ');
+
+            MoveXY (Temp1, CurY);
+            ResetControlCode;
+          End;
+    'h' : ResetControlCode;
+    'm' : Begin
+            While Length(Code) > 0 Do Begin
+              Case ParseNumber(Code) of
+                0 : Attr := 7;
+                1 : Attr := Attr OR $08;
+                5 : Attr := Attr OR $80;
+                7 : Begin
+                      Attr := Attr AND $F7;
+                      Attr := ((Attr AND $70) SHR 4) + ((Attr AND $7) SHL 4) + Attr AND $80;
                     End;
-    's'           : Begin
-                      SavedX := CurX;
-                      SavedY := CurY;
-                      ResetControlCode;
-                    End;
-    'u'           : Begin
-                      MoveXY (SavedX, SavedY);
-                      ResetControlCode;
-                    End;
+                30: Attr := (Attr AND $F8) + 0;
+                31: Attr := (Attr AND $F8) + 4;
+                32: Attr := (Attr AND $F8) + 2;
+                33: Attr := (Attr AND $F8) + 6;
+                34: Attr := (Attr AND $F8) + 1;
+                35: Attr := (Attr AND $F8) + 5;
+                36: Attr := (Attr AND $F8) + 3;
+                37: Attr := (Attr AND $F8) + 7;
+                40: SetBack (0);
+                41: SetBack (4);
+                42: SetBack (2);
+                43: SetBack (6);
+                44: SetBack (1);
+                45: SetBack (5);
+                46: SetBack (3);
+                47: SetBack (7);
+              End;
+            End;
+
+            ResetControlCode;
+          End;
+    's' : Begin
+            SavedX := CurX;
+            SavedY := CurY;
+            ResetControlCode;
+          End;
+    'u' : Begin
+            MoveXY (SavedX, SavedY);
+            ResetControlCode;
+          End;
   Else
     ResetControlCode;
   End;
