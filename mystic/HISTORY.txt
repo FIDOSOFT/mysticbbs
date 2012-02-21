@@ -3830,3 +3830,6 @@
 
  + CTRL-X now moves down one line the same as the down arrow key in the
    full screen editor.
+
+ + CTRL-W now deletes the word to the left of the cursor in the full
+   screen editor.
