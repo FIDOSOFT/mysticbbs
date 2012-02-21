@@ -681,7 +681,7 @@ Var
                                   If View Then Exit;
                                   If Listed = 0 Then Session.io.OutRawLn('');
                                   Listed := A;
-                                  If ExecuteCommand (MenuList[A].Command, MenuList[A].Data) Then;
+                                  ExecuteCommand (MenuList[A].Command, MenuList[A].Data);
                                   Done := True;
                                 End;
                             End;
@@ -790,7 +790,7 @@ Begin
 
     Set_Node_Action (Session.GetPrompt(346));
 
-    If Check_Node_Message Then;
+    Check_Node_Message;
 
     Keys    := #13;
     ExtKeys := '';

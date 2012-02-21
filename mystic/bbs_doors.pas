@@ -330,19 +330,19 @@ Begin
     If Format = 4 Then
       Shell_DOOR32(Temp)
     Else
-      If ShellDOS ('', Temp) = 0 Then;
+      ShellDOS ('', Temp);
   {$ELSE}
-    If ShellDOS ('', Temp) = 0 Then;
+    ShellDOS ('', Temp);
   {$ENDIF}
 
   { Check to see if event was missed while user was in door }
 
   If Session.NextEvent.Active Then
     If (TimerMinutes < A) and (A < Session.NextEvent.ExecTime) Then Begin { midnight roll over }
-      If Session.MinutesUntilEvent(Session.NextEvent.ExecTime) = 0 Then;
+      Session.MinutesUntilEvent(Session.NextEvent.ExecTime);
     End Else
     If (A < Session.NextEvent.ExecTime) and (TimerMinutes > Session.NextEvent.ExecTime) Then
-      If Session.MinutesUntilEvent(Session.NextEvent.ExecTime) = 0 Then;
+      Session.MinutesUntilEvent(Session.NextEvent.ExecTime);
 End;
 
 End.

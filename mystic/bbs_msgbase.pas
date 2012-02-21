@@ -1156,7 +1156,7 @@ Var
             MsgNew^.DoStringLn(Str);
           End;
 
-          If MsgNew^.WriteMsg <> 0 Then;
+          MsgNew^.WriteMsg;
 
           MsgNew^.CloseMsgBase;
 
@@ -1400,7 +1400,7 @@ Var
     Ansi_View_Message := False;
 
     Repeat
-      If Check_Node_Message Then;
+      Check_Node_Message;
 
       Set_Node_Action (Session.GetPrompt(348));
 
@@ -1534,7 +1534,7 @@ Var
                       MsgBase^.SeekFirst(A);
                       If Not SeekNextMsg(True, False) Then Begin
                         MsgBase^.SeekFirst(CurMsg);
-                        If SeekNextMsg(True, False) Then;
+                        SeekNextMsg(True, False);
                       End;
                     End;
                     Break;
@@ -1688,7 +1688,8 @@ Var
 
     Procedure FullReDraw;
     Begin
-      If Check_Node_Message Then;
+      Check_Node_Message;
+
       Session.io.OutFile ('ansimlst', True, 0);
 
       PageSize := Session.io.ScreenInfo[2].Y - Session.io.ScreenInfo[1].Y + 1;
@@ -1892,7 +1893,7 @@ end;
           Case Ch of
             #13 : Begin
                     MsgBase^.SeekFirst(MsgInfo[PagePos].Num);
-                    If SeekNextMsg (True, False) Then;
+                    SeekNextMsg (True, False);
                     If Ansi_View_Message Then Break;
 
                     MsgBase^.SeekFirst(MsgInfo[1].Num);
@@ -2055,7 +2056,7 @@ end;
                     MsgBase^.SeekFirst(A);
                     If Not SeekNextMsg(True, False) Then Begin
                       MsgBase^.SeekFirst(B);
-                      If Not SeekNextMsg(True, False) Then;
+                      SeekNextMsg(True, False);
                     End;
                   End;
                   Break;
@@ -2416,7 +2417,7 @@ Begin
 
     AppendMessageText (MsgBase, Lines, '');
 
-    If MsgBase^.WriteMsg <> 0 Then;
+    MsgBase^.WriteMsg;
 
     MsgBase^.CloseMsgBase;
 
@@ -2729,7 +2730,7 @@ Var
 
     AppendMessageText (MsgBase, Lines, '');
 
-    If MsgBase^.WriteMsg <> 0 Then;
+    MsgBase^.WriteMsg;
   End;
 
 Begin
@@ -3198,7 +3199,8 @@ Begin
             MsgBase^.DoStringLn(' * Origin: ' + ResolveOrigin(MBase) + ' (' + strAddr2Str(Config.NetAddress[MBase.NetAddr]) + ')');
           End;
 
-          If MsgBase^.WriteMsg <> 0 Then;
+          MsgBase^.WriteMsg;
+
           MsgBase^.CloseMsgBase;
 
           Inc (Session.User.ThisUser.Posts);

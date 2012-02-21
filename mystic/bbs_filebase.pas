@@ -59,7 +59,7 @@ Type
     Function    SelectProtocol        (Batch : Boolean) : Char;
     Function    WildcardMatch         (Wildcard, FName: String) : Boolean;
     Procedure   CheckFileNameLength   (FPath : String; Var FName : String);
-    Procedure   GetFileDescription    (FN : String);
+    Procedure   GetFileDescription    (FN: String);
     Function    CheckFileLimits       (DL: Byte; DLK: Integer) : Byte;
     Function    ArchiveList           (FName : String) : Boolean; { was string }
     Function    ImportDIZ             (FN: String) : Boolean;
@@ -449,7 +449,6 @@ Begin
 End;
 
 Function TFileBase.ExportFileList (NewFiles : Boolean; Qwk: Boolean) : Boolean;
-{ ADD: templates for file listing }
 Var
   TF         : Text;
   DF         : File;
@@ -711,7 +710,7 @@ Begin
                   Case CheckFileLimits (1, GetFileSize(Session.TempPath + Mask) DIV 1024) of
                     0 : If SendFile (Session.TempPath + Mask) Then Begin;
                           Session.SystemLog ('Download from ' + FName + ': ' + Mask);
-{ make a temp var that is fdir.size div 1024 here?? smaller/faster!?}
+
                           Inc (Session.User.ThisUser.DLs);
                           Inc (Session.User.ThisUser.DLsToday);
                           Inc (Session.User.ThisUser.DLk, FDir.Size DIV 1024);
@@ -762,9 +761,12 @@ Var
     Session.io.OutFullLn (Session.GetPrompt(200));
 
     Total  := 0;
+
     Reset (FBaseFile);
+
     While Not Eof(FBaseFile) Do Begin
       Read (FBaseFile, FBase);
+
       If Session.User.Access(FBase.ListACS) Then Begin
         Inc (Total);
         Session.io.PromptInfo[1] := strI2S(Total);
@@ -776,6 +778,7 @@ Var
         Session.io.OutFull (Session.GetPrompt(201));
         If (Total MOD 2 = 0) And (Total > 0) Then Session.io.OutRawLn('');
       End;
+
       If EOF(FBaseFile) and (Total MOD 2 <> 0) Then Session.io.OutRawLn('');
 
       If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
@@ -1005,7 +1008,7 @@ Begin
     Inc(A);
   End;
 
-  If ShellDOS ('', Temp) = 0 Then;
+  ShellDOS ('', Temp);
 End;
 
 (*************************************************************************)
@@ -1278,16 +1281,19 @@ Begin
 
   While Not Eof(FGroupFile) Do Begin
     Read (FGroupFile, FGroup);
+
     If Not FGroup.Hidden And Session.User.Access(FGroup.ACS) Then Begin
 
       Areas := 0;
       Session.User.ThisUser.LastFGroup := FilePos(FGroupFile);
 
       Reset (FBaseFile);
+
       While Not Eof(FBaseFile) Do Begin
         Read (FBaseFile, tFBase);
         If Session.User.Access(tFBase.ListACS) Then Inc(Areas);
       End;
+
       Close (FBaseFile);
 
       Inc (Total);
@@ -1312,21 +1318,28 @@ Begin
     Session.io.OutFullLn (Session.GetPrompt(216))
   Else Begin
     Session.io.OutFull (Session.GetPrompt(217));
+
     A := strS2I(Session.io.GetInput(4, 4, 11, ''));
+
     If (A > 0) and (A <= Total) Then Begin
       Total := 0;
+
       Reset (FGroupFile);
+
       Repeat
         Read (FGroupFile, FGroup);
         If Not FGroup.Hidden And Session.User.Access(FGroup.ACS) Then Inc(Total);
         If A = Total Then Break;
       Until False;
+
       Session.User.ThisUser.LastFGroup := FilePos(FGroupFile);
       If Intro Then Session.io.OutFile ('fgroup' + strI2S(Session.User.ThisUser.LastFGroup), True, 0);
 
       Session.User.ThisUser.LastFBase := 0;
+
       ChangeFileArea ('+');
-    End Else FGroup := tGroup;
+    End Else
+      FGroup := tGroup;
   End;
 
   Close (FGroupFile);
@@ -1345,6 +1358,7 @@ Begin
 
   While Not Eof(FBaseFile) Do Begin
     Read (FBaseFile, FBase);
+
     If Session.User.Access(FBase.ListACS) Then Begin
       Inc (Listed);
       If Listed = 1 Then Session.io.OutFullLn (Session.GetPrompt(33));
@@ -1369,6 +1383,7 @@ Begin
 
       If (Listed MOD Config.FColumns = 0) and (Listed > 0) Then Session.io.OutRawLn('');
     End;
+
     If EOF(FBaseFile) and (Listed MOD Config.FColumns <> 0) Then Session.io.OutRawLn('');
 
     If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
@@ -1447,6 +1462,7 @@ Begin
 
   If A > 0 Then Begin
     Reset (FBaseFile);
+
     If A <= FileSize(FBaseFile) Then Begin
       Seek (FBaseFile, A-1);
       Read (FBaseFile, FBase);
@@ -1457,7 +1473,9 @@ Begin
       End Else
         FBase := Old;
     End;
+
     Close (FBaseFile);
+
     Exit;
   End;
 
@@ -1704,6 +1722,7 @@ Var
     Session.io.OutFull (Session.GetPrompt(N));
     Session.io.AnsiGotoXY (1, Session.io.ScreenInfo[3].Y);
     Session.io.AnsiClrEOL;
+
     If Session.User.Access(FBase.SysopACS) Then
       Session.io.OutFull (Session.GetPrompt(339))
     Else
@@ -1740,7 +1759,6 @@ Var
   End;
 
   Function GetFileListSize : String;
-  { ADD: text into prompts or lang config }
   Var
     A : LongInt;
   Begin
@@ -1823,6 +1841,7 @@ Var
         Session.io.PromptInfo[6] := strI2S(FDir.DLs);
 
         List[ListSize + 1].Batch := False;
+
         For A := 1 to BatchNum Do
           If Batch[A].FileName = FDir.FileName Then Begin
             List[ListSize + 1].Batch := True;
@@ -2132,6 +2151,7 @@ Var
 
     Repeat
       Session.io.OutFull (Session.GetPrompt(44));
+
       Case Session.io.OneKey(#13'FNPQV', True) of
         #13,
         'N' : If LastPage Then
@@ -2150,10 +2170,13 @@ Var
               End;
         'V' : Begin
                 Session.io.OutFull (Session.GetPrompt(358));
+
                 A := strS2I(Session.io.GetInput(2, 2, 12, ''));
+
                 If (A > 0) and (A <= ListSize) Then
                   If Not ArchiveView (FBase.Path + List[A].FileName) Then
                     Session.io.OutFullLn(Session.GetPrompt(191));
+
                 DrawPage;
               End;
         'F' : Begin
@@ -2181,7 +2204,9 @@ Var
 
                       For B := A to BatchNum Do
                         Batch[B] := Batch[B + 1];
+
                       Dec (BatchNum);
+
                       okSave := 2;
                     End;
 
@@ -2196,16 +2221,21 @@ Var
                   If okSave = 1 Then Begin
                     Session.io.PromptInfo[1] := FDir.FileName;
                     Session.io.PromptInfo[2] := strComma(FDir.Size);
+
                     Session.io.OutFullLn (Session.GetPrompt(50));
+
                     Inc (BatchNum);
+
                     Batch[BatchNum].FileName := FDir.FileName;
                     Batch[BatchNum].Size     := FDir.Size;
+
                     If Mode = 1 Then
                       Batch[BatchNum].Area := Session.User.ThisUser.LastFBase
                     Else
                       Batch[BatchNum].Area := FilePos(FBaseFile);
                   End;
               Until False;
+
               DrawPage;
             End;
       End;
@@ -2690,8 +2720,8 @@ Begin
                 Dir := FBase.Path;
 
               If SendFile(Dir + FName) Then Begin
-{ make tempvar which is size div 1024 or maybe 'updatefilestats' proc? }
                 Session.SystemLog ('Downloaded: ' + FDir.FileName);
+
                 Inc (Session.User.ThisUser.DLs);
                 Inc (Session.User.ThisUser.DLsToday);
                 Inc (Session.User.ThisUser.DLk, FDir.Size DIV 1024);
@@ -2699,11 +2729,11 @@ Begin
                 Inc (FDir.DLs);
                 Inc (Session.HistoryDLs);
                 Inc (Session.HistoryDLKB, FDir.Size DIV 1024);
-                Seek (FDirFile, FilePos(FDirFile)-1);
+
+                Seek  (FDirFile, FilePos(FDirFile) - 1);
                 Write (FDirFile, FDir);
-              End Else Begin
+              End Else
                 Session.SystemLog ('Download of ' + FDir.FileName + ' FAILED');
-              End;
 
               FileErase(Session.TempPath + FName);
             End;
@@ -2711,10 +2741,12 @@ Begin
         2 : Session.io.OutFullLn (Session.GetPrompt(58));
         3 : Session.io.OutFullLn (Session.GetPrompt(211));
       End;
+
       Close (FDirFile);
       Exit;
     End;
   End;
+
   Close (FDirFile);
 
   Session.io.OutFullLn (Session.GetPrompt(51));
@@ -2722,14 +2754,15 @@ End;
 
 Procedure TFileBase.DownloadBatch;
 Var
-  A    : Byte;
-  K    : LongInt;
-  M    : Integer;
-  Dir  : String[40];
-  Old  : FBaseRec;
-  FL   : Text;
+  A   : Byte;
+  K   : LongInt;
+  M   : Integer;
+  Dir : String[40];
+  Old : FBaseRec;
+  FL  : Text;
 Begin
   K := 0;
+
   For A := 1 to BatchNum Do Inc (K, Batch[A].Size);
 
   GetTransferTime (K, M, A);
@@ -2774,19 +2807,25 @@ Begin
     Session.io.PromptInfo[1] := Batch[A].FileName;
     If dszSearch (Batch[A].FileName) Then Begin
       Session.SystemLog ('Download: ' + Batch[A].FileName);
+
       Session.io.OutFullLn (Session.GetPrompt(385));
+
       Inc (Session.User.ThisUser.DLs);
       Inc (Session.User.ThisUser.DLsToday);
       Inc (Session.User.ThisUser.DLk,      Batch[A].Size DIV 1024);
       Inc (Session.User.ThisUser.DLkToday, Batch[A].Size DIV 1024);
       Inc (Session.HistoryDLs);
       Inc (Session.HistoryDLKB, Batch[A].Size DIV 1024);
+
       Seek (FBaseFile, Batch[A].Area - 1);
       Read (FBaseFile, Old);
+
       Assign (FDirFile, Config.DataPath + Old.FileName + '.dir');
       Reset  (FDirFile);
+
       While Not Eof(FDirFile) Do Begin
         Read (FDirFile, FDir);
+
         If (FDir.FileName = Batch[A].FileName) And (FDir.Flags And FDirDeleted = 0) Then Begin
           Inc (FDir.DLs);
           Seek  (FDirFile, FilePos(FDirFile) - 1);
@@ -2794,12 +2833,12 @@ Begin
           Break;
         End;
       End;
+
       Close (FDirFile);
     End Else Begin
       Session.SystemLog ('Download: ' + Batch[A].FileName + ' FAILED');
       Session.io.OutFullLn (Session.GetPrompt(386));
     End;
-
   End;
 
   Close (FBaseFile);
@@ -2844,6 +2883,7 @@ Begin
 
   Session.io.OutFull (Session.GetPrompt(196));
   Str := Session.io.GetInput(40, 40, 12, '');
+
   If Str = '' Then Exit;
 
   Session.SystemLog ('File search: "' + Str + '"');
@@ -2853,12 +2893,14 @@ Begin
 
   If All Then Begin
     Session.io.OutRawLn ('');
+
     Reset (FBaseFile);
     While (Not Eof(FBaseFile)) and (Not Done) Do Begin
       Found := False;
       Read (FBaseFile, FBase);
       If Session.User.Access(FBase.ListACS) Then Scan_Base;
     End;
+
     Close (FBaseFile);
   End Else Begin
     Session.io.OutRawLn ('');
@@ -2866,10 +2908,12 @@ Begin
     Scan_Base;
     Close (FBaseFile);
   End;
+
   If Not Found Then Session.io.OutFullLn('|CR');
+
   Session.io.OutFullLn (Session.GetPrompt(198));
 
-  FBase       := Old;
+  FBase := Old;
   Session.User.IgnoreGroup := False;
 End;
 
@@ -2929,11 +2973,13 @@ Begin
 
   If Global Then Begin
     Reset (FBaseFile);
+
     While (Not Eof(FBaseFile)) And (Not Done) Do Begin;
       Read (FBaseFile, FBase);
       GetFileScan;
       If (FScan.NewScan > 0) and Session.User.Access(FBase.ListACS) Then Scan_Current_Base;
     End;
+
     Close (FBaseFile);
   End Else Begin
     If FBase.FileName = '' Then
@@ -2954,7 +3000,7 @@ Begin
     Session.io.OutFullLn (Session.GetPrompt(88));
 
   Session.User.IgnoreGroup := False;
-  FBase       := TempFBase;
+  FBase := TempFBase;
 End;
 
 (**************************************************************************)
@@ -2971,12 +3017,14 @@ Begin
   Old := FDir;
   Pos := FilePos(FDirFile);
 
-  Get_Next_File := True;
+  Result := True;
+
   Repeat
     If (Eof(FDirFile) And Not Back) or ((FilePos(FDirFile) = 1) and Back) Then Begin
       FDir := Old;
-      Seek (FDirFile, Pos); (* this may need {I-}  and/or Pos-1 *)
-      Get_Next_File := False;
+
+      Seek (FDirFile, Pos);
+      Result := False;
       Exit;
     End;
     If Back Then Seek (FDirFile, FilePos(FDirFile) - 2);
@@ -3063,6 +3111,7 @@ Begin
       Session.io.OutFullLn ('|08|$D79Ä');
 
       Seek (DataFile, FDir.Pointer);
+
       For A := 1 to 11 Do Begin
         Temp := '';
         If A <= FDir.Lines Then Begin
@@ -3080,6 +3129,7 @@ Begin
 
       Session.io.OutFull ('|09([) Previous (]) Next         (D) Delete     (I) Import DIZ     (U) Update DIZ' +
             '|CR(M) Move     (V) View Archive (E) Email ULer (Q) Quit: ');
+
       Case Session.io.OneKey('123456[]DEIMQUV!', True) of
         '1' : Begin
                 Temp := Session.io.InXY (4, 3, 70, 70, 11, FDir.FileName);
@@ -3104,7 +3154,7 @@ Begin
                 Seek  (FDirFile, FilePos(FDirFile) - 1);
                 Write (FDirFile, FDir);
               End;
-        'E' : If Session.Menu.ExecuteCommand ('MW', '/TO:' + strReplace(FDir.Uploader, ' ', '_')) Then;
+        'E' : Session.Menu.ExecuteCommand ('MW', '/TO:' + strReplace(FDir.Uploader, ' ', '_'));
         'I' : Begin
                 Session.io.OutFullLn ('|CR|14Importing file_id.diz...');
                 If ImportDIZ(FDir.FileName) Then Begin
@@ -3156,11 +3206,13 @@ Begin
                       Seek (DataFile, FDir.Pointer);
                       FDir.Pointer := FileSize(DataFile2);
                       Seek (DataFile2, FDir.Pointer);
+
                       For B := 1 to FDir.Lines Do Begin
                         BlockRead  (DataFile, Temp[0], 1);
                         BlockRead  (DataFile, Temp[1], Ord(Temp[0]));
                         BlockWrite (DataFile2, Temp[0], Length(Temp) + 1);
                       End;
+
                       Close (DataFile2);
                       Seek  (FDirFile, FileSize(FDirFile));
                       Write (FDirFile, FDir);
@@ -3175,6 +3227,7 @@ Begin
 
                       FDir.Flags := FDir.Flags Or FDirDeleted;
                     End;
+
                     Close (FBaseFile);
                     Break;
                   End;
@@ -3193,11 +3246,13 @@ Begin
                 Assign (TF, Session.TempPath + 'file_id.diz');
                 ReWrite (TF);
                 Seek (DataFile, FDir.Pointer);
+
                 For B := 1 to FDir.Lines Do Begin
                   BlockRead (DataFile, Temp[0], 1);
                   BlockRead (DataFile, Temp[1], Ord(Temp[0]));
                   WriteLn (TF, Temp);
                 End;
+
                 Close (TF);
 
                 ExecuteArchive (FBase.Path + FDir.FileName, '', Session.TempPath + 'file_id.diz', 1);
@@ -3208,16 +3263,19 @@ Begin
         '[' : Begin
                 Seek  (FDirFile, FilePos(FDirFile) - 1);
                 Write (FDirFile, FDir);
-                If Not Get_Next_File(True) Then;
+
+                Get_Next_File(True);
               End;
         ']' : Begin
                 Seek  (FDirFile, FilePos(FDirFile) - 1);
                 Write (FDirFile, FDir);
-                If Not Get_Next_File(False) Then;
+
+                Get_Next_File(False);
               End;
         '!' : Begin
                 Seek (DataFile, FDir.Pointer);
                 If FDir.Lines > Config.MaxFileDesc Then FDir.Lines := Config.MaxFileDesc;
+
                 For A := 1 to FDir.Lines Do Begin
                   BlockRead (DataFile, Session.Msgs.MsgText[A][0], 1);
                   BlockRead (DataFile, Session.Msgs.MsgText[A][1], Ord(Session.Msgs.MsgText[A][0]));
@@ -3395,7 +3453,7 @@ Begin
 
   Reset (FBaseFile);
 
-  If Session.io.GetYN('|CR|12Upload files in all directories? |11', True) Then Begin
+  If Session.io.GetYN('|CR|12Upload files in all directories? |11', True) Then Begin {++lang}
     While Not Done and Not Eof(FBaseFile) Do Begin
       Read (FBaseFile, FBase);
       Pos := FilePos(FBaseFile);
