@@ -1,30 +1,5 @@
 Unit bbs_Edit_Full;
 
-{ this editor really should be rewritten from scratch again, since i wrote }
-{ it sooo many years ago.  i'm sure i could do a better job now!  in any   }
-{ case, some things which could be added or included in new editor:        }
-{                                                                          }
-{ 1. cut/paste line functions                                              }
-{ 2. move word left/right commands                                         }
-{ 3. optional spell checker?                                               }
-{ 4. reformat paragraph command                                            }
-{ 5. tag lines?                                                            }
-{ 6. ability to show embedded ansi/pipes }
-{ 7. ability to toggle off word wrap? }
-{ 8. ability to set foreground/background color }
-{ 9. ability to change extended character sets }
-{ 10. maybe remove Squish msgbase support and add a OWNER field to each }
-{     message.  Owners can be assigned by Sysop ACS or the original poster }
-{     Ownership allows message editing but not deleting.  this combined with }
-{     the above allows artists to collaborate ANSIs in the message bases with}
-{     the FSE.  totally badass feature no one has ever done. }
-{     CTRL-A = change attribute  CTRL-C change character set?  CTRL-W on off}
-{     then ahve a PUBLISH feature which can allow downloads or moving to the}
-{     ANSI gallery? }
-{     add SAUCE editor if this happens too }
-{     how will message quoting work though? has to strip colors }
-{     hmm what happens if two users want to work together though? }
-
 {$I M_OPS.PAS}
 
 Interface
@@ -74,10 +49,11 @@ Procedure UpdatePosition;
 Begin
   If CurLine > TotalLine Then TotalLine := CurLine;
   If CurX > Length(Session.Msgs.MsgText[CurLine]) Then CurX := Length(Session.Msgs.MsgText[CurLine]) + 1;
+
   Session.io.AnsiGotoXY (CurX, CurY);
 End;
 
-Procedure ReFresh_Part;
+Procedure ScreenRefreshPart;
 Var
   A,
   B : Integer;
@@ -101,14 +77,11 @@ Begin
   UpdatePosition;
 End;
 
-Procedure Refresh_Text;
+Procedure ScreenRefreshFull;
 Var
   A,
   B  : Integer;
 Begin
-  { b    = first line at top of window }
-  { cury = yposition of last line.     }
-
   CurY := WinStart + 5;
   B    := CurLine  - 5;
 
@@ -132,7 +105,7 @@ Begin
   UpdatePosition;
 End;
 
-Procedure Insert_Line (Num: Integer);
+Procedure InsertLine (Num: Integer);
 Var
   A : Integer;
 Begin
@@ -144,14 +117,26 @@ Begin
   Session.Msgs.MsgText[Num] := '';
 End;
 
-Procedure Format_Text;
+Procedure DeleteLine (Num: Integer);
 Var
-  OldStr  : String; { holds the line text to be wrapped }
+  Count : Integer;
+Begin
+  For Count := Num To TotalLine - 1 Do
+    Session.Msgs.MsgText[Count] := Session.Msgs.MsgText[Count + 1];
+
+  Session.Msgs.MsgText[TotalLine] := '';
+
+  Dec (TotalLine);
+End;
+
+Procedure TextReformat;
+Var
+  OldStr  : String;
   NewStr  : String;
-  Line    : Integer;   { holds current line number being wrapped }
+  Line    : Integer;
   A       : Integer;
-  NewY    : Integer;   { holds new y position on screen }
-  NewLine : Integer;   { holds new line number }
+  NewY    : Integer;
+  NewLine : Integer;
   Moved   : Boolean;
 Begin
   If TotalLine = MaxLines Then Exit;
@@ -164,8 +149,8 @@ Begin
 
   Repeat
       If Pos(' ', OldStr) = 0 Then Begin
-        Inc         (Line);
-        Insert_Line (Line);
+        Inc        (Line);
+        InsertLine (Line);
 
         Session.Msgs.MsgText[Line]      := Copy(OldStr, CurX, Length(OldStr));
         Session.Msgs.MsgText[Line-1][0] := Chr(CurX - 1);
@@ -176,12 +161,12 @@ Begin
           CurX := 1;
         End;
 
-        If NewY <= WinEnd Then Refresh_Part;
+        If NewY <= WinEnd Then ScreenRefreshPart;
 
         CurY    := NewY;
         CurLine := NewLine;
 
-        If CurY > WinEnd Then Refresh_Text Else UpdatePosition;
+        If CurY > WinEnd Then ScreenRefreshFull Else UpdatePosition;
 
         Exit;
       End Else Begin
@@ -198,7 +183,7 @@ Begin
         Inc (Line);
 
         If (Session.Msgs.MsgText[Line] = '') or ((Pos(' ', Session.Msgs.MsgText[Line]) = 0) And (Length(Session.Msgs.MsgText[Line]) >= WrapPos)) Then Begin
-          Insert_Line(Line);
+          InsertLine(Line);
           OldStr := NewStr;
         End Else
           OldStr := NewStr + ' ' + Session.Msgs.MsgText[Line];
@@ -224,24 +209,26 @@ Begin
     Until False;
   End;
 
+  Session.io.BufFlush;
+
   CurY    := NewY;
   CurLine := NewLine;
 
-  If CurY > WinEnd Then Refresh_Text Else UpdatePosition;
+  If CurY > WinEnd Then ScreenRefreshFull Else UpdatePosition;
 End;
 
-Procedure Do_Enter;
+Procedure keyEnter;
 Begin
   If TotalLine = MaxLines Then Exit;
 
-  Insert_Line (CurLine + 1);
+  InsertLine (CurLine + 1);
 
   If CurX < Length(Session.Msgs.MsgText[CurLine]) + 1 Then Begin
     Session.Msgs.MsgText[CurLine+1] := Copy(Session.Msgs.MsgText[CurLine], CurX, Length(Session.Msgs.MsgText[CurLine]));
     Delete (Session.Msgs.MsgText[CurLine], CurX, Length(Session.Msgs.MsgText[CurLine]));
   End;
 
-  If CurY + 1 > WinEnd Then Refresh_Text Else Refresh_Part;
+  If CurY + 1 > WinEnd Then ScreenRefreshFull Else ScreenRefreshPart;
 
   CurX := 1;
 
@@ -251,12 +238,12 @@ Begin
   UpdatePosition;
 End;
 
-Procedure Down_Key;
+Procedure keyDownArrow;
 Begin
   If CurLine = TotalLine Then Exit;
 
   If CurY = WinEnd Then
-    ReFresh_Text
+    ScreenRefreshFull
   Else Begin
     Inc (CurY);
     Inc (CurLine);
@@ -264,11 +251,8 @@ Begin
   End;
 End;
 
-Procedure Up_Key (EOL: Boolean);
+Procedure keyUpArrow (EOL: Boolean);
 Begin
-{ if curline = 1 then exit;}
-{ appearently, exit is larger and slower than the statement below: }
-
   If CurLine > 1 Then Begin
     If EOL then begin
       CurX := Length(Session.Msgs.MsgText[CurLine - 1]) + 1;
@@ -276,7 +260,7 @@ Begin
     End;
 
     If CurY = WinStart Then
-      Refresh_Text
+      ScreenRefreshFull
     Else Begin
       Dec (CurY);
       Dec (CurLine);
@@ -285,18 +269,7 @@ Begin
   End;
 End;
 
-Procedure Delete_Line (Num : Integer);
-Var
-  A : Integer;
-Begin
-  For A := Num To TotalLine - 1 Do
-    Session.Msgs.MsgText[A] := Session.Msgs.MsgText[A + 1];
-
-  Session.Msgs.MsgText[TotalLine] := '';
-  Dec (TotalLine);
-End;
-
-Procedure Backspace;
+Procedure keyBackspace;
 Var
   A : Integer;
 Begin
@@ -313,10 +286,10 @@ Begin
     If Length(Session.Msgs.MsgText[CurLine - 1]) + Length(Session.Msgs.MsgText[CurLine]) <= WrapPos Then Begin
       CurX := Length(Session.Msgs.MsgText[CurLine - 1]) + 1;
       Session.Msgs.MsgText[CurLine - 1] := Session.Msgs.MsgText[CurLine - 1] + Session.Msgs.MsgText[CurLine];
-      Delete_Line (CurLine);
+      DeleteLine (CurLine);
       Dec (CurLine);
       Dec (CurY);
-      If CurY < WinStart Then Refresh_Text Else Refresh_Part;
+      If CurY < WinStart Then ScreenRefreshFull Else ScreenRefreshPart;
     End Else
     If Pos(' ', Session.Msgs.MsgText[CurLine]) > 0 Then Begin
       For A := Length(Session.Msgs.MsgText[CurLine]) DownTo 1 Do
@@ -326,35 +299,35 @@ Begin
           Delete (Session.Msgs.MsgText[CurLine], 1, A);
           Dec (CurLine);
           Dec (CurY);
-          If CurY < WinStart Then Refresh_Text Else Refresh_Part;
+          If CurY < WinStart Then ScreenRefreshFull Else ScreenRefreshPart;
           Exit;
         End;
-      Up_Key(True);
+      keyUpArrow(True);
     End;
   End;
 End;
 
-procedure left_key;
+Procedure keyLeftArrow;
 begin
   if curx > 1 then Begin
     Dec (CurX);
     UpdatePosition;
   end else
-    up_key(true);
+    keyUpArrow(true);
 End;
 
-procedure right_key;
+Procedure keyRightArrow;
 Begin
   if curx < length(Session.Msgs.MsgText[curline])+1 then begin
     Inc (CurX);
     UpdatePosition;
-  end else begin
-    if curY < totalline then curx := 1;
-    down_key;
-  end;
+  End Else Begin
+    If CurY < TotalLine Then CurX := 1;
+    keyDownArrow;
+  End;
 End;
 
-Procedure Insert_Ch (Ch: Char);
+Procedure AddChar (Ch: Char);
 Begin
   If InsertMode Then Begin
     Insert (Ch, Session.Msgs.MsgText[Curline], CurX);
@@ -372,8 +345,8 @@ Procedure ToggleInsert (Toggle: Boolean);
 Begin
   If Toggle Then InsertMode := Not InsertMode;
 
-  Session.io.AnsiColor (Session.io.ScreenInfo[3].A);
-  Session.io.AnsiGotoXY   (Session.io.ScreenInfo[3].X, Session.io.ScreenInfo[3].Y);
+  Session.io.AnsiColor  (Session.io.ScreenInfo[3].A);
+  Session.io.AnsiGotoXY (Session.io.ScreenInfo[3].X, Session.io.ScreenInfo[3].Y);
 
   If InsertMode Then Print('INS') else Print('OVR'); { ++lang }
 
@@ -381,7 +354,7 @@ Begin
   Session.io.AnsiColor (tColor);
 End;
 
-Procedure Draw_Screen;
+Procedure FullReDraw;
 Begin
   If TEdit Then Session.io.OutFile ('ansitext', True, 0) Else Session.io.OutFile ('ansiedit', True, 0);
 
@@ -391,7 +364,7 @@ Begin
 
   ToggleInsert (False);
 
-  Refresh_Text;
+  ScreenRefreshFull;
 End;
 
 Procedure Quote;
@@ -453,7 +426,7 @@ Begin
       If TotalLine = mysMaxMsgLines Then Break;
       If Session.Msgs.MsgText[CurLine] <> '' Then Begin
         Inc (CurLine);
-        Insert_Line (CurLine);
+        InsertLine (CurLine);
       End;
       Session.Msgs.MsgText[CurLine] := Text[NumLines];
     End;
@@ -525,7 +498,7 @@ Begin
     Session.io.AnsiColor(tColor);
     Temp1  := WinEnd;
     WinEnd := Session.io.ScreenInfo[1].Y;
-    Refresh_Text;
+    ScreenRefreshFull;
     WinEnd := Temp1;
   End;
 
@@ -607,7 +580,7 @@ Begin
 
                 If QuoteTopPage + QuoteCurLine = QuoteLines Then NoMore := True;
 
-                Insert_Line (CurLine);
+                InsertLine (CurLine);
                 Session.Msgs.MsgText[CurLine] := QText[QuoteTopPage + QuoteCurLine];
                 Inc (CurLine);
 
@@ -616,11 +589,11 @@ Begin
                 Temp1  := WinEnd;
                 WinEnd := Session.io.ScreenInfo[1].Y;
                 If CurLine - Scroll + WinStart + 4 >= WinEnd Then Begin
-                  Refresh_Text;
+                  ScreenRefreshFull;
                   Scroll := CurLine;
                 End Else Begin
                   Dec (CurLine);
-                  Refresh_Part;
+                  ScreenRefreshPart;
                   Inc (CurLine);
                   Inc (CurY);
                 End;
@@ -695,26 +668,37 @@ Begin
   Until Done;
 End;
 
-Procedure Page_Up;
+Procedure keyPageUp;
 Begin
   If CurLine > 1 Then Begin
     If LongInt(CurLine - (WinEnd - WinStart)) >= 1 Then
       Dec (CurLine, (WinEnd - WinStart)) {scroll one page up}
     Else
       CurLine := 1;
-    Refresh_Text;
+    ScreenRefreshFull;
   End;
 End;
 
-Procedure Page_Down;
+Procedure keyPageDown;
 Begin
   If CurLine < TotalLine Then Begin
+
     If CurLine + (WinEnd - WinStart) <= TotalLine Then
       Inc (CurLine, (WinEnd - WinStart))
     Else
       CurLine := TotalLine;
-    Refresh_Text;
+
+    ScreenRefreshFull;
   End;
+End;
+
+Procedure keyEnd;
+Begin
+  CurX := Length(Session.Msgs.MsgText[CurLine]) + 1;
+
+  If CurX > WrapPos Then CurX := WrapPos + 1;
+
+  UpdatePosition;
 End;
 
 Var
@@ -722,42 +706,40 @@ Var
 Begin
   QuoteCurLine := 0;
   QuoteTopPage := 1;
+  CurLine      := Lines;
 
-  CurLine := Lines;
   If Lines = 0 Then CurLine := 1;
-  Done    := False;
-  CurX    := 1;
-  CurY    := WinStart;
+
+  Done      := False;
+  CurX      := 1;
+  CurY      := WinStart;
   TotalLine := CurLine;
 
-  Dec (WrapPos);   { Kludge to make sure text length = WrapPos length }
+  Dec (WrapPos);
 
-  For A := Lines + 1 to mysMaxMsgLines Do Session.Msgs.MsgText[A] := '';
+  FillChar(Session.Msgs.MsgText, SizeOf(Session.Msgs.MsgText), #0);
 
-  Draw_Screen;
+  FullReDraw;
 
   Session.io.AllowArrow := True;
 
   Repeat
     Ch := Session.io.GetKey;
+
     If Session.io.IsArrow Then Begin
       Case Ch of
         #71 : Begin
                 CurX := 1;
                 UpdatePosition;
               End;
-        #72 : Up_Key(False);
-        #73 : Page_Up;
-        #75 : Left_Key;
-        #77 : Right_Key;
-        #79 : Begin
-                CurX := Length(Session.Msgs.MsgText[CurLine]) + 1;
-                If CurX > WrapPos Then CurX := WrapPos + 1; {since we DEC(WrapPos) on start}
-                UpdatePosition;
-              End;
-        #80 : Down_Key;
-        #81 : Page_Down;
-        #82 : ToggleInsert (True);
+        #72 : keyUpArrow(False);
+        #73 : keyPageUp;
+        #75 : keyLeftArrow;
+        #77 : keyRightArrow;
+        #79 : keyEnd;
+        #80 : keyDownArrow;
+        #81 : keyPageDown;
+        #82 : ToggleInsert(True);
         #83 : If CurX <= Length(Session.Msgs.MsgText[CurLine]) Then Begin
                 Delete (Session.Msgs.MsgText[CurLine], CurX, 1);
                 Print (Copy(Session.Msgs.MsgText[CurLine], CurX, Length(Session.Msgs.MsgText[CurLine])) + ' ');
@@ -765,20 +747,20 @@ Begin
               End Else
               If CurLine < TotalLine Then
                 If (Session.Msgs.MsgText[CurLine] = '') and (TotalLine > 1) Then Begin
-                  Delete_Line (CurLine);
-                  Refresh_Part;
+                  DeleteLine (CurLine);
+                  ScreenRefreshPart;
                 End Else
                 If TotalLine > 1 Then
                   If Length(Session.Msgs.MsgText[CurLine]) + Length(Session.Msgs.MsgText[CurLine + 1]) <= WrapPos Then Begin
                     Session.Msgs.MsgText[CurLine] := Session.Msgs.MsgText[CurLine] + Session.Msgs.MsgText[CurLine + 1];
-                    Delete_Line (CurLine + 1);
-                    Refresh_Part;
+                    DeleteLine (CurLine + 1);
+                    ScreenRefreshPart;
                   End Else
                     For A := Length(Session.Msgs.MsgText[CurLine + 1]) DownTo 1 Do
                       If (Session.Msgs.MsgText[CurLine + 1][A] = ' ') and (Length(Session.Msgs.MsgText[CurLine]) + A <= WrapPos) Then Begin
                         Session.Msgs.MsgText[CurLine] := Session.Msgs.MsgText[CurLine] + Copy(Session.Msgs.MsgText[CurLine + 1], 1, A - 1);
                         Delete (Session.Msgs.MsgText[CurLine + 1], 1, A);
-                        Refresh_Part;
+                        ScreenRefreshPart;
                       End;
       End;
     End Else
@@ -787,44 +769,104 @@ Begin
               Done := True;
               Save := False;
             End;
-{B}   #2  : Draw_Screen;
-      #8  : Backspace;
-{I}   #9,
-      #13 : Begin
-              Session.io.PurgeInputBuffer;
-              Do_Enter;
+      ^B  : FullReDraw;
+      ^D  : keyRightArrow;
+      ^E  : keyUpArrow(False);
+      ^F  : Begin
+              CurX := 1;
+              UpdatePosition;
             End;
+      ^G  : keyEnd;
+      ^H  : keyBackspace;
+      ^I  : If CurX <= WrapPos Then Begin
+              Repeat
+                If (CurX < WrapPos) and (CurX = Length(Session.Msgs.MsgText[CurLine]) + 1) Then
+                  Session.Msgs.MsgText[CurLine] := Session.Msgs.MsgText[CurLine] + ' ';
+
+                Inc (CurX);
+              Until (CurX MOD 5 = 0) or (CurX = WrapPos);
+
+              UpdatePosition;
+            End;
+      ^J  : Begin
+              Session.Msgs.MsgText[CurLine] := '';
+
+              CurX := 1;
+
+              UpdatePosition;
+
+              Session.io.AnsiClrEOL;
+            End;
+      ^K  : ; // cuttext
+      ^L,
+      ^M  : Begin
+              Session.io.PurgeInputBuffer;
+              keyEnter;
+            End;
+      ^N  : keyPageDown;
+      ^O  : Begin
+              Session.io.OutFile('fshelp', True, 0);
+              FullReDraw;
+            End;
+      ^P  : keyPageUp;
       ^Q  : Begin
               If Session.User.ThisUser.UseLBQuote Then
                 QuoteWindow
               Else
                 Quote;
-              Draw_Screen;
+
+              FullReDraw;
+            End;
+      ^R  : ; // paste
+      ^T  : If CurX > 1 Then Begin
+              While (CurX > 1) and (Session.Msgs.MsgText[CurLine][CurX] <> ' ') Do Dec(CurX);
+              While (CurX > 1) and (Session.Msgs.MsgText[CurLine][CurX] =  ' ') Do Dec(CurX);
+              While (CurX > 1) and (Session.Msgs.MsgText[CurLine][CurX] <> ' ') Do Dec(CurX);
+
+              If CurX > 1 Then Inc (CurX);
+
+              UpdatePosition;
+            End;
+      ^U  : Begin
+              While CurX < Length(Session.Msgs.MsgText[CurLine]) + 1 Do Begin
+                Inc (CurX);
+
+                If Session.Msgs.MsgText[CurLine][CurX] = ' ' Then Begin
+                  If CurX < Length(Session.Msgs.MsgText[CurLine]) + 1 Then Inc(CurX);
+                  Break;
+                End;
+              End;
+
+              UpdatePosition;
             End;
       ^V  : ToggleInsert (True);
-{Y}   #25 : begin
-              delete_line (curline);
-              refresh_part;
-            end;
-      #27 : Begin
+      ^W  : ; // delete word left
+      ^X  : keyDownArrow;
+      ^Y  : Begin
+              DeleteLine (curline);
+              ScreenRefreshPart;
+            End;
+      ^[  : Begin
               Commands;
-              If (Not Save) and (Not Done) Then Draw_Screen;
-              Session.io.AllowArrow := True; { just in case... }
+
+              If (Not Save) and (Not Done) Then FullReDraw;
+
+              Session.io.AllowArrow := True;
             End;
       #32..
       #254: Begin
               If Length(Session.Msgs.MsgText[CurLine]) >= WrapPos Then begin
                 If TotalLine < MaxLines Then Begin
-                  insert_ch (ch);
-                  format_text;
+                  AddChar (Ch);
+                  TextReformat;
                 End;
               End Else
-              If (CurX = 1) and (Ch = '/') Then begin
+              If (CurX = 1) and (Ch = '/') Then Begin
                 Commands;
-                If (Not Save) and (Not Done) Then Draw_Screen;
-                Session.io.AllowArrow := True; { just in case ... }
+                If (Not Save) and (Not Done) Then FullReDraw;
+                Session.io.AllowArrow := True;
               End Else
-                insert_ch (ch);
+                AddChar (Ch);
             End;
     End;
   Until Done;
@@ -840,9 +882,9 @@ Begin
     Lines := TotalLine;
   End;
 
-  AnsiEditor := (Save = True);
+  Result := (Save = True);
+
   Session.io.AnsiGotoXY (1, Session.User.ThisUser.ScreenSize);
-{ Session.io.AnsiGotoXY (1, WinEnd + 1);}
 End;
 
 End.
