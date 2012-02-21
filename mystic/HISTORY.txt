@@ -3800,3 +3800,33 @@
 
  + Added configurable POP3 server options for connection Timeout and for
    Delete Mail on Retrieve.
+
+ + TAB key now works in the full screen editor.  Tab stop is 5 spaces.
+
+ + CTRL-D now functions the same as the right arrow in the full screen
+   editor.
+
+ + CTRL-E now functions the same as the up arrow in the full screen
+   editor.
+
+ + CTRL-F now moves the beginning of the current line in the full screen
+   editor.
+
+ + CTRL-G now moves to the end of the current line (same as end key)
+
+ + CTRL-J now erases the current line in the full screen editor.  It does
+   not completely remove the line as CTRL-Y does, it just erases.
+
+ + CTRL-N now does a page down in the full screen editor.
+
+ + CTRL-O now displays the full screen editor help screen in the full
+   screen editor.
+
+ + CTRL-P now does a page up in the full screen editor.
+
+ + CTRL-T now moves one word to the left in the full screen editor.
+
+ + CTRL-U now moves one word to the right in the full screen editor.
+
+ + CTRL-X now moves down one line the same as the down arrow key in the
+   full screen editor.
