@@ -56,6 +56,8 @@ Const
   AppInputSize         = 128;
   SDLAppWindowX : Word = 800;
   SDLAppWindowY : Word = 600;
+  SDLFontSize   : Byte = 16;
+  SDLFontSpace  : Byte = 16;
 
 Type
   TSDLScreenMode = (mode_80x25, mode_80x50, mode_132x50);
@@ -82,21 +84,21 @@ Type
     TextAttr    : Byte;
 
     // INIT STUFF
-    Constructor Create        (InitMode: TSDLScreenMode);
-    Destructor  Destroy;      Override;
-
+    Constructor Create           (InitMode: TSDLScreenMode);
+    Destructor  Destroy;         Override;
     // INTERNAL STUFF
-    Procedure   PushInput     (Ch: Char);
-    Procedure   PushExt       (Ch: Char);
-    Procedure   PushStr       (Str: String);
+    Procedure   PushInput        (Ch: Char);
+    Procedure   PushExt          (Ch: Char);
+    Procedure   PushStr          (Str: String);
     Procedure   ProcessEvent;
-
+//    Function    GetDosForeground (Color: Byte) : TSDL_Color;
+//    Function    GetDosBackground (Color: Byte) : TSDL_Color;
     // FUNCTIONAL
-    Function    KeyPressed    : Boolean;
-    Function    ReadKey       : Char;
-    Procedure   Delay         (MS: LongInt);
-    Procedure   SetTitle      (Title: String);
-
+    Function    KeyPressed       : Boolean;
+    Function    ReadKey          : Char;
+    Procedure   Delay            (MS: LongInt);
+    Procedure   SetTitle         (Title: String);
+    Procedure   ShowBuffer;
     //NONSENSE
     Procedure   TestStuff;
   End;
@@ -120,19 +122,38 @@ Const
     (SDL:SDLK_SLASH;  Key:'/';   Shift:'?';   Alt:'/';   CTRL:'/')
   );
 
+  SDLDosColor : Array[0..15] of TSDL_Color = (
+    (R:000;   G:000;   B:000;  Unused: 0), //00
+    (R:000;   G:000;   B:128;  Unused: 0), //01
+    (R:000;   G:128;   B:000;  Unused: 0), //02
+    (R:000;   G:128;   B:128;  Unused: 0), //03
+    (R:170;   G:000;   B:000;  Unused: 0), //04
+    (R:128;   G:000;   B:128;  Unused: 0), //05
+    (R:128;   G:128;   B:000;  Unused: 0), //06
+    (R:192;   G:192;   B:192;  Unused: 0), //07
+    (R:128;   G:128;   B:128;  Unused: 0), //08
+    (R:000;   G:000;   B:255;  Unused: 0), //09
+    (R:000;   G:255;   B:000;  Unused: 0), //10
+    (R:000;   G:255;   B:255;  Unused: 0), //11
+    (R:255;   G:000;   B:000;  Unused: 0), //12
+    (R:255;   G:000;   B:255;  Unused: 0), //13
+    (R:255;   G:255;   B:000;  Unused: 0), //14
+    (R:255;   G:255;   B:255;  Unused: 0)  //15
+  );
+
 Constructor TSDLConsole.Create (InitMode: TSDLScreenMode);
 Begin
   Inherited Create;
 
   SDL_INIT(SDL_INIT_VIDEO);
 
-  Screen := SDL_SetVideoMode(SDLAppWindowX, SDLAppWindowY, 32, SDL_HWSURFACE AND SDL_FULLSCREEN);
+  Screen := SDL_SetVideoMode(SDLAppWindowX, SDLAppWindowY, 32, SDL_HWSURFACE or SDL_FULLSCREEN);
 
   If Screen = NIL Then Halt;
 
   If TTF_Init = -1 Then Halt;
 
-  Font := TTF_OpenFont('ASCII.ttf', 16);
+  Font := TTF_OpenFont('ASCII.ttf', SDLFontSize);
 
   If Font = NIL Then Halt;
 
@@ -285,29 +306,41 @@ End;
 
 Procedure TSDLConsole.TestStuff;
 Var
-  ColorFG : TSDL_Color = (R:255; G:0; B:0; Unused:0);
-  ColorBG : TSDL_Color = (R:0; G:0; B:0; Unused:0);
   Rect    : TSDL_Rect  = (X:0; Y:0; W:0; H:0);
   Surface : PSDL_Surface;
   Text    : String;
+  Count   : Byte;
 Begin
-  Text := #176 + '2345678901234567890123456789012345678901234567890123456789012345678901234567890';
-
-//  Surface := TTF_RenderUTF8_Solid (Font, PChar(@Text[1]), ColorFG);
-  Surface := TTF_RenderText_Shaded (Font, PChar(@Text[1]), ColorFG, ColorBG);
-
-  SDL_BlitSurface (Surface, NIL, Screen, @Rect);
-  SDL_FreeSurface (Surface);
-
   Text := #176 + 'SDL Demo!  Press Escape to quit!' + #0;
 
-  Surface := TTF_RenderText_Shaded (Font, PChar(@Text[1]), ColorFG, ColorBG);
-
-  Rect.Y := 1 * 16 + 1;
+  Surface := TTF_RenderText_Shaded (Font, PChar(@Text[1]), SDLDosColor[7], SDLDosColor[0]);
 
   SDL_BlitSurface (Surface, NIL, Screen, @Rect);
   SDL_FreeSurface (Surface);
 
+  For Count := 3 to 17 Do Begin
+    Text    := #219 + '2345678901234567890123456789012345678901234567890123456789012345678901234567890';
+    Rect.Y  := (Count - 1) * SDLFontSize + SDLFontSpace;
+    Surface := TTF_RenderText_Shaded (Font, PChar(@Text[1]), SDLDosColor[Count-2], SDLDosColor[0]);
+
+    SDL_BlitSurface (Surface, NIL, Screen, @Rect);
+    SDL_FreeSurface (Surface);
+  End;
+
+  For Count := 18 to 25 Do Begin
+    Text    := #219 + '2345678901234567890123456789012345678901234567890123456789012345678901234567890';
+    Rect.Y  := (Count - 1) * SDLFontSize + SDLFontSpace;
+    Surface := TTF_RenderText_Shaded (Font, PChar(@Text[1]), SDLDosColor[7], SDLDosColor[0]);
+
+    SDL_BlitSurface (Surface, NIL, Screen, @Rect);
+    SDL_FreeSurface (Surface);
+  End;
+
+  SDL_Flip(Screen);
+End;
+
+Procedure TSDLConsole.ShowBuffer;
+Begin
   SDL_Flip(Screen);
 End;
 
