@@ -57,7 +57,8 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Ability to save a message post if a user is disconnected while posting.
 - Ability to save file queue if a user is disconnected with a queue.
 - User 2 User chat system and private split screen/normal chat.  For the
-  Linux and OSX peeps that do not have a page sysop function.
+  Linux and OSX peeps that do not have a page sysop function.  Forced ACS
+  and remote screen restore afterwards.
 - NNTP server completion
 - MBBSCGI (or PHP DLL) [Grymmjack might have the only MBBSCGI copy]
 - If not the above then finish the HTTP server?
@@ -88,3 +89,4 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Template system similar to Mystic 2 (ansiedit.ans ansiedit.ans.cfg)
 - Rename Template filenames to allow more than 8 characters (for clarity)
 - Does anyone use Version 7 compiled nodelists?  Worth supporting?
+- Ignore user inactivity flag per user
