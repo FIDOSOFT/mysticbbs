@@ -357,7 +357,6 @@ Begin
     TelnetServer := TServerManager.Create(bbsConfig, bbsConfig.InetTNPort, bbsConfig.INetTNNodes, NodeData, @CreateTelnet);
 
     TelnetServer.Server.FTelnetServer := True;
-//    TelnetServer.TextPath             := bbsConfig.DataPath;
     TelnetServer.ClientMaxIPs         := bbsConfig.InetTNDupes;
 
     Started := True;
@@ -369,7 +368,6 @@ Begin
 
     SMTPServer.Server.FTelnetServer := False;
     SMTPServer.ClientMaxIPs         := 1;
-//    SMTPServer.TextPath             := bbsConfig.DataPath;
 
     Started := True;
   End;
@@ -379,7 +377,6 @@ Begin
 
     POP3Server.Server.FTelnetServer := False;
     POP3Server.ClientMaxIPs         := bbsConfig.inetPOP3Dupes;
-//    POP3Server.TextPath             := bbsConfig.DataPath;
 
     Started := True;
   End;
@@ -389,7 +386,6 @@ Begin
 
     FTPServer.Server.FTelnetServer := False;
     FTPServer.ClientMaxIPs         := bbsConfig.inetFTPDupes;
-//    FTPServer.TextPath             := bbsConfig.DataPath;
 
     Started := True;
   End;
@@ -416,9 +412,7 @@ Begin
     Halt(10);
   End;
 
-//  BarPos  := 1;
-//  TopPage := 1;
-  Count   := 0;
+  Count := 0;
 
   DrawStatusScreen;
 
@@ -429,10 +423,6 @@ Begin
     If Input.KeyWait(1000) Then
       Case Input.ReadKey of
         #00 : Case Input.ReadKey of
-//                #37 : If (FocusPtr <> NIL) And (FocusPtr.ClientList[BarPos - 1] <> NIL) Then Begin
-//                        TServerClient(FocusPtr.ClientList[BarPos - 1]).Client.Disconnect;
-//                        UpdateConnectionList;
-//                			End;
                 #72 : If BarPos > TopPage Then Begin
                         Dec(BarPos);
                         UpdateConnectionList;

@@ -442,7 +442,7 @@ Begin
 	While Not Eof(FBaseFile) Do Begin
 		Read (FBaseFile, FBase);
 
-                FBase.Path := Config.SystemPath + 'files' + PathChar + FBase.FileName + PathChar;
+    FBase.Path := Config.SystemPath + 'files' + PathChar + FBase.FileName + PathChar;
 
 		Seek	(FBaseFile, FilePos(FBaseFile) - 1);
 		Write (FBaseFile, FBase);
@@ -473,7 +473,7 @@ Begin
 	ClearDisplay;
 	CreateDirectories;
 
-        ExtractFile (14, '|08[|15û|08] |07Installing root files|08...',    'install_data', 'ROOT',   Config.SystemPath);
+  ExtractFile (14, '|08[|15û|08] |07Installing root files|08...',    'install_data', 'ROOT',   Config.SystemPath);
 	ExtractFile (15, '|08[|15û|08] |07Installing display files|08...', 'install_data', 'TEXT',   Lang.TextPath);
 	ExtractFile (16, '|08[|15û|08] |07Installing menu files|08...',    'install_data', 'MENUS',  Lang.MenuPath);
 	ExtractFile (17, '|08[|15û|08] |07Installing script files|08...',  'install_data', 'SCRIPT', Config.ScriptPath);
@@ -564,18 +564,19 @@ Begin
 	Pos := 1;
 
 	{$IFDEF UNIX}
-                Config.SystemPath          := '/mystic/';
-        {$ELSE}
-                Config.SystemPath          := 'c:\mystic\';
-        {$ENDIF}
-                Config.DataPath         := Config.SystemPath + 'data' + PathChar;
-                Lang.TextPath           := Config.SystemPath + 'text' + PathChar;
-                Lang.MenuPath           := Config.SystemPath + 'menus' + PathChar;
-                Config.MsgsPath         := Config.SystemPath + 'msgs' + PathChar;
-                Config.SemaPath         := Config.SystemPath + 'semaphore' + PathChar;
-                Config.ScriptPath := Config.SystemPath + 'scripts' + PathChar;
-                Config.AttachPath := Config.SystemPath + 'attach' + PathChar;
-                Config.LogsPath         := Config.SystemPath + 'logs' + PathChar;
+    Config.SystemPath := '/mystic/';
+  {$ELSE}
+    Config.SystemPath := 'c:\mystic\';
+  {$ENDIF}
+
+  Config.DataPath   := Config.SystemPath + 'data' + PathChar;
+  Lang.TextPath     := Config.SystemPath + 'text' + PathChar;
+  Lang.MenuPath     := Config.SystemPath + 'menus' + PathChar;
+  Config.MsgsPath   := Config.SystemPath + 'msgs' + PathChar;
+  Config.SemaPath   := Config.SystemPath + 'semaphore' + PathChar;
+  Config.ScriptPath := Config.SystemPath + 'scripts' + PathChar;
+  Config.AttachPath := Config.SystemPath + 'attach' + PathChar;
+  Config.LogsPath   := Config.SystemPath + 'logs' + PathChar;
 
 	Repeat
     Screen.WriteXY (30, 13, 15, strPadR(Config.SystemPath,    40, ' '));
@@ -590,24 +591,25 @@ Begin
 
 		Case Pos of
 			1 : Begin
-                                                Str := Path(Input(30, 13, 40, 40, Config.SystemPath));
-                                                If Str <> Config.SystemPath Then Begin
+            Str := Path(Input(30, 13, 40, 40, Config.SystemPath));
+
+            If Str <> Config.SystemPath Then Begin
 							Config.DataPath 	:= Change(Config.DataPath);
 							Lang.TextPath 		:= Change(Lang.TextPath);
 							Lang.MenuPath 		:= Change(Lang.MenuPath);
 							Config.MsgsPath 	:= Change(Config.MsgsPath);
-                                                        Config.SemaPath         := Change(Config.SemaPath);
+              Config.SemaPath   := Change(Config.SemaPath);
 							Config.ScriptPath := Change(Config.ScriptPath);
 							Config.AttachPath := Change(Config.AttachPath);
 							Config.LogsPath 	:= Change(Config.LogsPath);
-                                                        Config.SystemPath    := Str;
+              Config.SystemPath := Str;
 						End;
 					End;
 			2 : Config.DataPath 	:= Path(Input(30, 14, 40, 40, Config.DataPath));
 			3 : Lang.TextPath 		:= Path(Input(30, 15, 40, 40, Lang.TextPath));
 			4 : Lang.MenuPath 		:= Path(Input(30, 16, 40, 40, Lang.MenuPath));
 			5 : Config.MsgsPath 	:= Path(Input(30, 17, 40, 40, Config.MsgsPath));
-                        6 : Config.SemaPath     := Path(Input(30, 18, 40, 40, Config.SemaPath));
+      6 : Config.SemaPath   := Path(Input(30, 18, 40, 40, Config.SemaPath));
 			7 : Config.ScriptPath := Path(Input(30, 19, 40, 40, Config.ScriptPath));
 			8 : Config.AttachPath := Path(Input(30, 20, 40, 40, Config.AttachPath));
 			9 : Config.LogsPath 	:= Path(Input(30, 21, 40, 40, Config.LogsPath));
