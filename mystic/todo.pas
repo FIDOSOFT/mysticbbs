@@ -30,7 +30,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Ability to override listing type per file base (same as above)
 - Ability to list files in a base that is not the current file base
 - MCI code to show how many files are in current filebase
-- New ANSI template system
 - Online ANSI file viewer (integrate with art gallery)
 - Online ANSI help system
 - Finish System Configuration rewrite
@@ -74,7 +73,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - How feasible is an Amiga port?  Can an emulator on the PC side be good
   enough to use as a development environment?  How reliable/complete is FPC
   for Amiga?  Does anyone even care? :)
-- MBBSTOP rewrite
+- MBBSTOP rewrite [Sudden Death might have done similar]
 - MVIEW rewrite to mimic oldskool AcidView type deals, which would be amazing
   combined with the SDL stuff if that happens.
 - Mystic-DOS rewrite or just code a file manager which would probably be a
@@ -86,3 +85,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - PCBoard-style "quickscan"?  Yes?  No?
 - Filebase allow anonymous flag for FTP or just use FreeFiles
 - Build in "telnetd" STDIO redirection into MIS in Linux/OSX
+- Template system similar to Mystic 2 (ansiedit.ans ansiedit.ans.cfg)
+- Rename Template filenames to allow more than 8 characters (for clarity)
+- Does anyone use Version 7 compiled nodelists?  Worth supporting?
