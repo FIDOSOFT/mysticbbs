@@ -997,7 +997,7 @@ End;
 
 Procedure TInterpEngine.FileWriteLine (Var F: File; Str: String);
 Begin
-  {$IFDEF WIN32}
+  {$IFDEF WINDOWS}
     Str := Str + #13#10;
   {$ENDIF}
   {$IFDEF UNIX}

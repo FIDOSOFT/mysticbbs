@@ -9,7 +9,7 @@ Procedure ExecuteDoor (Format: Byte; Cmd: String);
 Implementation
 
 Uses
-  {$IFDEF WIN32}
+  {$IFDEF WINDOWS}
     Windows,
   {$ENDIF}
   m_Types,
@@ -206,7 +206,7 @@ Begin
   Close (tFile);
 End;
 
-{$IFDEF WIN32}
+{$IFDEF WINDOWS}
 Procedure Shell_DOOR32 (Cmd : String);
 Var
   PI         : TProcessInformation;
@@ -326,7 +326,7 @@ Begin
   {$ENDIF}
   End;
 
-  {$IFDEF WIN32}
+  {$IFDEF WINDOWS}
     If Format = 4 Then
       Shell_DOOR32(Temp)
     Else

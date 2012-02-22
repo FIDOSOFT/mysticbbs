@@ -70,7 +70,7 @@ Begin
   Write  (ChatFile, Chat);
   Close  (ChatFile);
 
-  {$IFDEF WIN32}
+  {$IFDEF WINDOWS}
     Screen.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum) + ' - ' + Session.User.ThisUser.Handle + ' - ' + Action);
   {$ENDIF}
 End;

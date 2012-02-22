@@ -356,7 +356,7 @@ Begin
     Screen.SetRawMode(True);
   {$ENDIF}
 
-  {$IFDEF WIN32}
+  {$IFDEF WINDOWS}
     Screen.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum));
   {$ENDIF}
 
