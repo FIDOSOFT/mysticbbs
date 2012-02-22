@@ -1,0 +1,81 @@
+     .------------------------.
+     | PCB2MBBS Documentation |-------------------------------------------
+     `------------------------'
+
+      What is PCB2MBBS?
+      -----------------
+
+      PCB2MBBS is a program which will convert PCBoard style file
+      listings to Mystic BBS.  This is useful for importing CD-ROMs
+      into Mystic BBS, since most CD-ROMs that are BBS ready include
+      at least PCBoard file listings.  It may also be useful for
+      automatically importing files on a file network if your software
+      can maintain a PCBoard-type file listing.
+
+      Using PCB2MBBS
+      --------------
+
+      Usage PCB2MBBS is fairly easy, but sometimes time consuming if you
+      are importing an entire CD-ROM with many directories.  The command
+      line parameters are as follows:
+
+         PCB2MBBS: <PCBoard Name>  <Mystic BBS Name>  <-DUPE>
+
+         <-DUPE> is the command line option to turn on duplicate file
+         searching.  This is needed if you have a 3rd party program keeping
+         a list of files in PCBoard format, and you only need to import
+         files which aren't yet added into Mystic.  PCB2MBBS will search
+         each file in the file listing to see if it already exists in your
+         Mystic file base.
+
+         <PCBoard Name> is the full path and filename of the PCBoard file
+         listing to convert to Mystic BBS format.
+
+         <Mystic BBS Name> is the full path and filename of the Mystic BBS
+         file which will be created.  The file extention does not need to
+         be supplied, since PCB2MBBS will just strip it.  Two files are
+         outputted for each file directory converted:
+
+              <FileName>.DIR : Holds the file information for this base.
+              <FileName>.DES : Holds the file descriptions for this base.
+
+         These files either need to be created in the DATA directory, or
+         copied to the data directory after created.
+
+         An example of running PCB2MBBS.EXE if the PCBoard files list was
+         "D:\BBSDESC\DIR1.LST" and the path to the Mystic BBS data directory
+         was "C:\MYSTIC\DATA\" :
+
+         PCB2MBBS.EXE D:\BBSDESC\DIR1.LST C:\MYSTIC\DATA\DIR1
+
+         The above command line parameter will convert the PCBoard file list
+         located in "D:\BBSDESC\DIR1.LST" into the Mystic BBS data directory
+         under the filename "DIR1".
+
+         After a file base has been converted, you need to go into the
+         Mystic BBS file base editor and add the file base to go along with
+         the data files that you've just converted.  The "FileName" field
+         of this added file base should be "DIR1" since that was the filename
+         that you told PCB2MBBS to use.  The following is a screen capture
+         of the File Base Editor.  Option [B] should now be changed to "DIR1"
+         Option [H] should be changed to the path on the CD-ROM which stores
+         the files which you've just imported.  
+
+              File Base 1 of 1
+
+              A. Name           : Directory 1 of CD-ROM
+              B. Filename       : DIR1
+              C. Display File   :
+              D. ACS            : s20
+              E. List ACS       : s20
+              F. Upload ACS     : s255
+              G. Download ACS   : s20
+              H. Storage Path   : D:\DIR1\
+              I. Password       :
+              J. Show Uploader  : Yes
+              K. Default NewScan: Yes
+
+              Command (Q/Quit):
+
+      --------------------------------------------------------------------
+         Any suggestions/bug reports?  E-mail: mysticbbs@geocities.com
