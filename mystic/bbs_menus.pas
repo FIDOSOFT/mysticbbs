@@ -199,7 +199,7 @@ Begin
                     Result   := True;
                   End;
             'N' : One_Liners (Data);
-            'P' : {$IFNDEF UNIX} Page_For_Chat (Pos('/F', strUpper(Data)) > 0) {$ENDIF};
+            'P' : {$IFNDEF UNIX} PageForSysopChat (Pos('/F', strUpper(Data)) > 0) {$ENDIF};
             'R' : Begin
                     If StackNum > 0 Then Begin
                       MenuOld  := MenuName;
@@ -305,7 +305,7 @@ Begin
                     Result                := True;
                   End;
             'P' : {$IFNDEF UNIX} If Session.User.GetMatrixUser Then
-                    Page_For_Chat (Pos('/F', strUpper(Data)) > 0) {$ENDIF};
+                    PageForSysopChat (Pos('/F', strUpper(Data)) > 0) {$ENDIF};
           End;
     '*' : Begin
             If Not Session.io.GetPW ('|CR|09Sysop Password: ', Session.GetPrompt(417), Config.SysopPW) Then Exit; {++lang}

@@ -3833,3 +3833,9 @@
 
  + CTRL-W now deletes the word to the left of the cursor in the full
    screen editor.
+
+ ! SysOp Chat Page in Windows now properly updates the user's terminal
+   during the page.
+
+ + Sysop Chat Page in Windows now plays the "default beep" sound as
+   configured in Windows.

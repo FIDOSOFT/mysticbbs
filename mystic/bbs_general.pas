@@ -12,6 +12,7 @@ Uses
   m_Strings,
   m_DateTime,
   {$IFNDEF UNIX}
+    Windows,
     bbs_SysopChat,
   {$ENDIF}
   bbs_Common,
@@ -27,9 +28,6 @@ Procedure AutoSig_Edit;
 Procedure AutoSig_View;
 
 Procedure List_Users (Data: String);
-{$IFNDEF UNIX}
-  Procedure Page_For_Chat (Forced: Boolean);
-{$ENDIF}
 Procedure Last_Callers;
 Procedure Add_TimeBank;
 Procedure Get_TimeBank;
@@ -41,6 +39,10 @@ Procedure Voting_Result (Data : Integer);
 Procedure Voting_Booth_New;
 Procedure View_History (LastDays: Word);
 Procedure View_Directory (Data: String; ViewType: Byte);
+
+{$IFNDEF UNIX}
+  Procedure PageForSysopChat (Forced: Boolean);
+{$ENDIF}
 
 Implementation
 
@@ -434,55 +436,13 @@ Begin
         End;
     End;
   End;
-  Close  (Session.User.UserFile);
+
+  Close (Session.User.UserFile);
+
   Session.io.PromptInfo[1] := strI2S(Total);
+
   Session.io.OutFull (Session.GetPrompt(31));
 End;
-
-{$IFNDEF UNIX}
-Procedure Page_For_Chat (Forced: Boolean);
-Var
-  Temp : String;
-  A, B : Integer;
-Begin
-  If Forced or ((TimerMinutes >= Config.ChatStart) and (TimerMinutes <= Config.ChatEnd)) Then Begin
-    Session.io.OutFull (Session.GetPrompt(23));
-    Temp := Session.io.GetInput(50, 50, 11, '');
-    If Temp = '' Then Exit;
-
-    Session.SystemLog('Chat Page: ' + Temp);
-
-    Update_Status_Line (0, ' ' + strPadR(Session.User.ThisUser.Handle, 17, ' ') + ' ' + strPadR(Temp, 40, ' ') + ' ALT+(S)plit (C)Line');
-
-    Session.io.OutFull(Session.GetPrompt(24));
-
-    For A := 1 to 10 Do Begin
-      Session.io.OutFull(Session.GetPrompt(25));
-
-      For B := 0 to 6 Do Begin
-        //SysBeepEx(523, 50);
-        //SysBeepEx(659, 50);
-      End;
-      If Input.KeyPressed Then If Input.ReadKey = #0 Then Begin
-        Case Input.ReadKey of
-          #31 : OpenChat(True);
-          #46 : OpenChat(False);
-        End;
-        Exit;
-      End;
-      WaitMS(1000);
-    End;
-  End;
-
-  Update_Status_line (StatusPtr, '');
-
-  Session.io.OutFull (Session.GetPrompt(28));
-
-  If Config.ChatFeedback Then
-    If Session.io.GetYN(Session.GetPrompt(178), False) Then
-      Session.Msgs.PostMessage (True, '/TO:' + strReplace(Config.SysopName, ' ', '_') + ' /SUBJ:Chat_Feedback');
-End;
-{$ENDIF}
 
 Procedure Last_Callers;
 Begin
@@ -1385,6 +1345,54 @@ Begin
   For Count := DirCount DownTo 1 Do
     Dispose (DirList[Count]);
 End;
+
+{$IFNDEF UNIX}
+Procedure PageForSysopChat (Forced: Boolean);
+Var
+  Temp  : String;
+  Count : Integer;
+Begin
+  If Forced or ((TimerMinutes >= Config.ChatStart) and (TimerMinutes <= Config.ChatEnd)) Then Begin
+    Session.io.OutFull (Session.GetPrompt(23));
+
+    Temp := Session.io.GetInput(50, 50, 11, '');
+
+    If Temp = '' Then Exit;
+
+    Session.SystemLog('Chat Page: ' + Temp);
+
+    Update_Status_Line (0, ' ' + strPadR(Session.User.ThisUser.Handle, 17, ' ') + ' ' + strPadR(Temp, 40, ' ') + ' ALT+(S)plit (C)Line');
+
+    Session.io.OutFull(Session.GetPrompt(24));
+
+    For Count := 1 to 10 Do Begin
+      Session.io.OutFull(Session.GetPrompt(25));
+      Session.io.BufFlush;
+
+      MessageBeep(0);
+
+      If Input.KeyPressed Then If Input.ReadKey = #0 Then Begin
+        Case Input.ReadKey of
+          #31 : OpenChat(True);
+          #46 : OpenChat(False);
+        End;
+
+        Exit;
+      End;
+
+      WaitMS(1000);
+    End;
+  End;
+
+  Update_Status_line (StatusPtr, '');
+
+  Session.io.OutFull (Session.GetPrompt(28));
+
+  If Config.ChatFeedback Then
+    If Session.io.GetYN(Session.GetPrompt(178), False) Then
+      Session.Msgs.PostMessage (True, '/TO:' + strReplace(Config.SysopName, ' ', '_') + ' /SUBJ:Chat_Feedback');
+End;
+{$ENDIF}
 
 (* MYSTIC 2's ANSIVIEWER
 - needs to be intergrated with the msgbases.  there should NOT be a msgtext AND this
