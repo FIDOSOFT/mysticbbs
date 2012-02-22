@@ -790,7 +790,7 @@ Begin
 
     Set_Node_Action (Session.GetPrompt(346));
 
-    Check_Node_Message;
+    CheckNodeMessages;
 
     Keys    := #13;
     ExtKeys := '';

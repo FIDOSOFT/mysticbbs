@@ -1460,7 +1460,7 @@ Var
     ReDraw;
   End;
 
-  Procedure Add_Char (Ch : Char);
+  Procedure AddChar (Ch : Char);
   Begin
     If CurPos > Field then ScrollRight;
 
@@ -1487,8 +1487,13 @@ Begin
   xPos    := Screen.CursorX;
   FieldCh := ' ';
 
+  // this is poorly implemented but to expand on it will require MPL
+  // programs to change. :(  we are stuck at the cap for input types
+  // because of this.
+
   If Mode > 10 Then Begin
     Dec (Mode, 10);
+
     If UseInField and (Graphics = 1) Then Begin
       FieldCh := TBBSCore(Core).Lang.FieldChar;
       AnsiColor (TBBSCore(Core).Lang.FieldCol2);
@@ -1523,6 +1528,7 @@ Begin
 
   Repeat
     Ch := GetKey;
+
     If IsArrow Then Begin
       Case Ch of
         #71 : If StrPos > 1 Then Begin
@@ -1586,8 +1592,9 @@ Begin
       Case Ch of
         #02 : ReDraw;
         #08 : If StrPos > 1 Then Begin
-                Dec (StrPos);
+                Dec    (StrPos);
                 Delete (S, StrPos, 1);
+
                 If CurPos = 1 Then
                   ScrollLeft
                 Else
@@ -1613,44 +1620,45 @@ Begin
         #32..
         #254: If Length(S) < Max Then
               Case Mode of
-                1 : Add_Char (Ch);
-                2 : Add_Char (UpCase(Ch));
+                1 : AddChar (Ch);
+                2 : AddChar (UpCase(Ch));
                 3 : Begin
                       If (CurPos = 1) or (S[StrPos-1] in [' ', '.']) Then
                         Ch := UpCase(Ch)
                       Else
                         Ch := LoCase(Ch);
-                      Add_Char(Ch);
+
+                      AddChar(Ch);
                     End;
                 4 : If (Ord(Ch) > 47) and (Ord(Ch) < 58) Then
                       Case StrPos of
                         4,8 : Begin
-                                Add_Char ('-');
-                                Add_Char (Ch);
+                                AddChar ('-');
+                                AddChar (Ch);
                               End;
                         3,7 : Begin
-                                Add_Char (Ch);
-                                Add_Char ('-');
+                                AddChar (Ch);
+                                AddChar ('-');
                               End;
                       Else
-                        Add_Char(Ch);
+                        AddChar(Ch);
                       End;
                 5 : If (Ord(Ch) > 47) and (Ord(Ch) < 58) Then
                       Case StrPos of
                         2,5 : Begin
-                                Add_Char (Ch);
-                                Add_Char ('/');
+                                AddChar (Ch);
+                                AddChar ('/');
                               End;
                         3,6 : Begin
-                                Add_Char ('/');
-                                Add_Char (Ch);
+                                AddChar ('/');
+                                AddChar (Ch);
                               End;
                       Else
-                        Add_Char (Ch);
+                        AddChar (Ch);
                       End;
-                6 : Add_Char(UpCase(Ch));
-                7 : Add_Char(LoCase(Ch));
-                9 : Add_Char(Ch);
+                6 : AddChar(UpCase(Ch));
+                7 : AddChar(LoCase(Ch));
+                9 : AddChar(Ch);
               End;
       End;
   Until False;
@@ -1729,8 +1737,8 @@ Begin
     End;
   End;
 
-  Session.io.AnsiColor(Image.CursorA);
-  Session.io.AnsiGotoXY(Image.CursorX, Image.CursorY);
+  Session.io.AnsiColor  (Image.CursorA);
+  Session.io.AnsiGotoXY (Image.CursorX, Image.CursorY);
 
   Session.io.BufFlush;
 End;
@@ -1761,8 +1769,8 @@ Begin
     End;
   End;
 
-  Session.io.AnsiColor(Image.CursorA);
-  Session.io.AnsiGotoXY(Image.CursorX, Image.CursorY);
+  Session.io.AnsiColor  (Image.CursorA);
+  Session.io.AnsiGotoXY (Image.CursorX, Image.CursorY);
 
   Session.io.BufFlush;
 End;

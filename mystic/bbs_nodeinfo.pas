@@ -8,6 +8,7 @@ Function  Is_User_Online (Name : String) : Word;
 Procedure Set_Node_Action (Action: String);
 Procedure Show_Whos_Online;
 Procedure Send_Node_Message (MsgType: Byte; Data: String; Room: Byte);
+Function  CheckNodeMessages : Boolean;
 
 Implementation
 
@@ -191,6 +192,55 @@ Begin
       End;
     End;
   End;
+End;
+
+Function CheckNodeMessages : Boolean;
+Var
+  Str : String;
+Begin
+  Result   := False;
+  FileMode := 66;
+
+  Assign (NodeMsgFile, Session.TempPath + 'chat.tmp');
+
+  {$I-} Reset (NodeMsgFile); {$I+}
+
+  If IoResult <> 0 Then Exit;
+
+  // 2 = system broadcast message (ie, not from user, from mystic)
+  // 3 = user to user node message
+
+  While Not Eof(NodeMsgFile) Do Begin
+    Result := True;
+
+    Read (NodeMsgFile, NodeMsg);
+
+    Session.io.PromptInfo[1] := NodeMsg.FromWho;
+    Session.io.PromptInfo[2] := strI2S(NodeMsg.FromNode);
+
+    Case NodeMsg.MsgType of
+      2 : Begin
+            Session.io.OutFullLn (Session.GetPrompt(179) + NodeMsg.Message);
+            Session.io.OutFullLn (Session.GetPrompt(180));
+          End;
+      3 : Begin
+            Session.io.OutFullLn (Session.GetPrompt(144) + '|CR' + NodeMsg.Message);
+            Session.io.OutFull (Session.GetPrompt(145));
+          End;
+    End;
+  End;
+
+  Close (NodeMsgFile);
+  Erase (NodeMsgFile);
+
+  If Result And (NodeMsg.MsgType = 3) Then
+    If Session.io.OneKey(#13 + 'R', True) = 'R' Then Begin
+      Session.io.OutFullLn(Session.GetPrompt(360));
+
+      Str := Session.io.GetInput(79, 79, 11, '');
+
+      If Str <> '' Then Send_Node_Message(3, Session.io.PromptInfo[2] + ';' + Str, 0);
+    End;
 End;
 
 End.

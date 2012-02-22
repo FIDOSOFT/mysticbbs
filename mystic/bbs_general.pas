@@ -40,7 +40,6 @@ Procedure Voting_Booth (Forced: Boolean; Num: Integer);
 Procedure Voting_Result (Data : Integer);
 Procedure Voting_Booth_New;
 Procedure View_History (LastDays: Word);
-Function  Check_Node_Message : Boolean;
 Procedure View_Directory (Data: String; ViewType: Byte);
 
 Implementation
@@ -890,56 +889,6 @@ Begin
 
     Session.io.OutFullLn (Session.GetPrompt(457));
   End;
-End;
-
-Function Check_Node_Message : Boolean;
-Var
-  Res : Boolean;
-  Str : String;
-Begin
-  Check_Node_Message := False;
-  Res                := False;
-
-  Assign (NodeMsgFile, Session.TempPath + 'chat.tmp');
-  FileMode := 66;
-  {$I-} Reset (NodeMsgFile); {$I+}
-  If IoResult <> 0 Then Exit;
-
-{ checks for non-teleconference node messages:
-  2 = system broadcast message (ie, not from user, from mystic)
-  3 = user to user node message }
-
-  While Not Eof(NodeMsgFile) Do Begin
-    Res := True;
-
-    Read (NodeMsgFile, NodeMsg);
-
-    Session.io.PromptInfo[1] := NodeMsg.FromWho;
-    Session.io.PromptInfo[2] := strI2S(NodeMsg.FromNode);
-
-    Case NodeMsg.MsgType of
-      2 : Begin
-            Session.io.OutFullLn (Session.GetPrompt(179) + NodeMsg.Message);
-            Session.io.OutFullLn (Session.GetPrompt(180));
-          End;
-      3 : Begin
-            Session.io.OutFullLn (Session.GetPrompt(144) + '|CR' + NodeMsg.Message);
-            Session.io.OutFull (Session.GetPrompt(145));
-          End;
-    End;
-  End;
-
-  Close (NodeMsgFile);
-  Erase (NodeMsgFile);
-
-  If Res And (NodeMsg.MsgType = 3) Then
-    If Session.io.OneKey(#13 + 'R', True) = 'R' Then Begin
-      Session.io.OutFullLn(Session.GetPrompt(360));
-      Str := Session.io.GetInput(79, 79, 11, '');
-      If Str <> '' Then Send_Node_Message(3, Session.io.PromptInfo[2] + ';' + Str, 0);
-    End;
-
-  Check_Node_Message := Res;
 End;
 
 Procedure View_Directory (Data: String; ViewType: Byte);

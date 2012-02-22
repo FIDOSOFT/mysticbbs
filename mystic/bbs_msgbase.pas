@@ -1400,7 +1400,7 @@ Var
     Ansi_View_Message := False;
 
     Repeat
-      Check_Node_Message;
+      CheckNodeMessages;
 
       Set_Node_Action (Session.GetPrompt(348));
 
@@ -1688,7 +1688,7 @@ Var
 
     Procedure FullReDraw;
     Begin
-      Check_Node_Message;
+      CheckNodeMessages;
 
       Session.io.OutFile ('ansimlst', True, 0);
 
@@ -2017,7 +2017,7 @@ end;
       Session.io.AllowPause := False;
 
       Repeat
-        Check_Node_Message;
+        CheckNodeMessages;
 
         Session.io.PromptInfo[1]  := strI2S(MsgBase^.GetMsgNum);
         Session.io.PromptInfo[2]  := strI2S(MsgBase^.GetHighMsgNum);
