@@ -36,7 +36,8 @@ Goals:
 Interface
 
 Uses
-  SDL;
+  SDL,
+  SDL_TTF;
 
 Const
   keyENTER             = #13;
@@ -68,22 +69,36 @@ Type
   End;
 
   TSDLConsole = Class
+    InputEvent  : pSDL_EVENT;
+    Screen      : pSDL_SURFACE;
+    Font        : pTTF_Font;
+
     InputBuffer : Array[1..AppInputSize] of Char;
     InputPos    : Integer;
     InputSize   : Integer;
-    InputEvent  : pSDL_EVENT;
-    Screen      : pSDL_SURFACE;
 
+    CursorX     : Byte;
+    CursorY     : Byte;
+    TextAttr    : Byte;
+
+    // INIT STUFF
     Constructor Create        (InitMode: TSDLScreenMode);
-    Destructor  Destroy; Override;
+    Destructor  Destroy;      Override;
 
+    // INTERNAL STUFF
     Procedure   PushInput     (Ch: Char);
     Procedure   PushExt       (Ch: Char);
     Procedure   PushStr       (Str: String);
     Procedure   ProcessEvent;
+
+    // FUNCTIONAL
     Function    KeyPressed    : Boolean;
     Function    ReadKey       : Char;
     Procedure   Delay         (MS: LongInt);
+    Procedure   SetTitle      (Title: String);
+
+    //NONSENSE
+    Procedure   TestStuff;
   End;
 
 Implementation
@@ -111,19 +126,32 @@ Begin
 
   SDL_INIT(SDL_INIT_VIDEO);
 
-  Screen := SDL_SetVideoMode(SDLAppWindowX, SDLAppWindowY, 32, SDL_SWSURFACE);
+  Screen := SDL_SetVideoMode(SDLAppWindowX, SDLAppWindowY, 32, SDL_HWSURFACE AND SDL_FULLSCREEN);
 
   If Screen = NIL Then Halt;
+
+  If TTF_Init = -1 Then Halt;
+
+  Font := TTF_OpenFont('ASCII.ttf', 16);
+
+  If Font = NIL Then Halt;
 
   New (InputEvent);
 
   InputSize := 0;
   InputPos  := 0;
+  CursorX   := 1;
+  CursorY   := 1;
+  TextAttr  := 7;
 End;
 
 Destructor TSDLConsole.Destroy;
 Begin
   Dispose (InputEvent);
+
+  TTF_CloseFont(Font);
+
+  TTF_Quit;
 
   SDL_QUIT;
 
@@ -188,7 +216,7 @@ Begin
                       SDLK_PAGEUP   : PushExt(keyPGUP);
                       SDLK_PAGEDOWN : PushExt(keyPGDN);
                       SDLK_NUMLOCK..
-                      SDLK_COMPOSE  : ;
+                      SDLK_COMPOSE  : //ignore mod keys;
                     Else
                       Found := False;
 
@@ -218,14 +246,8 @@ Begin
 End;
 
 Function TSDLConsole.KeyPressed : Boolean;
-Var
-  Queued : LongInt;
 Begin
-  Result := False;
-
-  Queued := SDL_PollEvent(InputEvent);
-
-  If Queued > 0 Then
+  If SDL_PollEvent(InputEvent) > 0 Then
     ProcessEvent;
 
   Result := InputPos <> InputSize;
@@ -252,6 +274,41 @@ End;
 Procedure TSDLConsole.Delay (MS: LongInt);
 Begin
   SDL_DELAY(MS);
+End;
+
+Procedure TSDLConsole.SetTitle (Title: String);
+Begin
+  Title := Title + #0;
+
+  SDL_WM_SetCaption(PChar(@Title[1]), PChar(@Title[1]));
+End;
+
+Procedure TSDLConsole.TestStuff;
+Var
+  ColorFG : TSDL_Color = (R:255; G:0; B:0; Unused:0);
+  ColorBG : TSDL_Color = (R:0; G:0; B:0; Unused:0);
+  Rect    : TSDL_Rect  = (X:0; Y:0; W:0; H:0);
+  Surface : PSDL_Surface;
+  Text    : String;
+Begin
+  Text := #176 + '2345678901234567890123456789012345678901234567890123456789012345678901234567890';
+
+//  Surface := TTF_RenderUTF8_Solid (Font, PChar(@Text[1]), ColorFG);
+  Surface := TTF_RenderText_Shaded (Font, PChar(@Text[1]), ColorFG, ColorBG);
+
+  SDL_BlitSurface (Surface, NIL, Screen, @Rect);
+  SDL_FreeSurface (Surface);
+
+  Text := #176 + 'SDL Demo!  Press Escape to quit!' + #0;
+
+  Surface := TTF_RenderText_Shaded (Font, PChar(@Text[1]), ColorFG, ColorBG);
+
+  Rect.Y := 1 * 16 + 1;
+
+  SDL_BlitSurface (Surface, NIL, Screen, @Rect);
+  SDL_FreeSurface (Surface);
+
+  SDL_Flip(Screen);
 End;
 
 End.

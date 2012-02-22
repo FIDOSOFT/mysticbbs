@@ -9,6 +9,10 @@ Var
 Begin
   Console := TSDLConsole.Create(Mode_80x25);
 
+  Console.SetTitle('SDL TEST Program [ESC/Quit]');
+
+  Console.TestStuff;
+
   Repeat
     Ch := Console.ReadKey;
 
