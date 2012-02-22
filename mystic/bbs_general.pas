@@ -4,10 +4,6 @@ Unit bbs_General;
 
 Interface
 
-// more ancient come from my teenage years lol this stuff needs to be
-// sorted out / cleaned up and passed a session pointer or relocate to
-// one of the classes
-
 Uses
   m_Strings,
   m_DateTime,
@@ -27,17 +23,18 @@ Procedure Add_BBS_List (Name : String);
 Procedure AutoSig_Edit;
 Procedure AutoSig_View;
 
-Procedure List_Users (Data: String);
-Procedure Last_Callers;
+Procedure ShowUserList     (Data: String);
+Procedure ShowLastCallers;
+Procedure ShowBBSHistory   (LastDays: Word);
+Procedure ShowOneLiners    (Data: String);
+Procedure ShowRandomQuote;
+
 Procedure Add_TimeBank;
 Procedure Get_TimeBank;
-Procedure One_Liners (Data : String);
-Procedure Display_Quote;
 Procedure Add_Booth;
 Procedure Voting_Booth (Forced: Boolean; Num: Integer);
-Procedure Voting_Result (Data : Integer);
+Procedure Voting_Result (Data: Integer);
 Procedure Voting_Booth_New;
-Procedure View_History (LastDays: Word);
 Procedure View_Directory (Data: String; ViewType: Byte);
 
 {$IFNDEF UNIX}
@@ -110,10 +107,12 @@ Begin
   If Session.User.ThisUser.SigLength > 0 Then Begin
     Reset (DF, 1);
     Seek  (DF, Session.User.ThisUser.SigOffset);
+
     For Lines := 1 to Session.User.ThisUser.SigLength Do Begin
       BlockRead (DF, Session.Msgs.MsgText[Lines][0], 1);
       BlockRead (DF, Session.Msgs.MsgText[Lines][1], Ord(Session.Msgs.MsgText[Lines][0]));
     End;
+
     Close (DF);
   End Else
     Lines := 0;
@@ -122,12 +121,17 @@ Begin
 
   If Editor (Lines, 78, Config.MaxAutoSig, True, False, Str) Then Begin
     {$I-} Reset (DF, 1); {$I+}
+
     If IoResult <> 0 Then ReWrite (DF, 1);
+
     Session.User.ThisUser.SigLength := Lines;
     Session.User.ThisUser.SigOffset := FileSize(DF);
+
     Seek (DF, Session.User.ThisUser.SigOffset);
+
     For Lines := 1 to Lines Do
       BlockWrite (DF, Session.Msgs.MsgText[Lines][0], Length(Session.Msgs.MsgText[Lines]) + 1);
+
     Close (DF);
   End;
 End;
@@ -146,6 +150,7 @@ Begin
     For A := 1 to Session.User.ThisUser.SigLength Do Begin
       BlockRead (DF, S[0], 1);
       BlockRead (DF, S[1], Ord(S[0]));
+
       Session.io.OutFullLn (S);
     End;
 
@@ -154,22 +159,26 @@ Begin
     Session.io.OutFull (Session.GetPrompt(336));
 End;
 
-Procedure Display_Quote;
+Procedure ShowRandomQuote;
 Var
   TF     : Text;
-  TxtBuf : Array[1..1024] of Char;
-  Total,
+  TxtBuf : Array[1..2048] of Char;
+  Total  : Integer;
   Count  : Integer;
   Str    : String;
 Begin
-  Assign (TF, Config.DataPath + 'quotes.dat');
-  {$I-} Reset (TF); {$I+}
-  If IoResult <> 0 Then Exit;
+  Assign     (TF, Config.DataPath + 'quotes.dat');
   SetTextBuf (TF, TxtBuf);
 
+  {$I-} Reset (TF); {$I+}
+
+  If IoResult <> 0 Then Exit;
+
   Total := 0;
+
   While Not Eof(TF) Do Begin
     ReadLn (TF, Str);
+
     If Str[1] = '*' Then Inc(Total);
   End;
 
@@ -182,6 +191,7 @@ Begin
   Total := 0;
 
   Reset (TF);
+
   While Total <> Count Do Begin
     ReadLn (TF, Str);
     If Str[1] = '*' Then Inc(Total);
@@ -191,6 +201,7 @@ Begin
     ReadLn (TF, Str);
     If Str[1] = '*' Then Break Else Session.io.OutFullLn (Str);
   End;
+
   Close (TF);
 End;
 
@@ -367,6 +378,7 @@ Begin
           'Q' : Break;
           'V' : If Session.io.GetYN(Session.GetPrompt(266), False) Then Begin
                   BBSList.Verified := CurDateDos;
+
                   Seek  (BBSFile, FilePos(BBSFile) - 1);
                   Write (BBSFile, BBSList);
                 End;
@@ -382,16 +394,17 @@ Begin
       End;
     End;
   End;
+
   Close (BBSFile);
 
   If Not Long Then
     Session.io.OutFullLn (Session.GetPrompt(262));
 End;
 
-Procedure List_Users (Data : String);
+Procedure ShowUserList (Data: String);
 Var
-  Total : Integer;
-  tUser : RecUser;
+  Total    : Integer;
+  TempUser : RecUser;
 Begin
   If Data = 'SEARCH' Then Begin
     Session.io.OutFull (Session.GetPrompt(32));
@@ -408,24 +421,24 @@ Begin
   Total := 0;
 
   While Not Eof(Session.User.UserFile) Do Begin
-    Read (Session.User.UserFile, tUser);
+    Read (Session.User.UserFile, TempUser);
 
-    If tUser.Flags AND UserDeleted <> 0 Then Continue;
+    If TempUser.Flags AND UserDeleted <> 0 Then Continue;
 
-    Session.io.PromptInfo[1]  := tUser.Handle;
-    Session.io.PromptInfo[2]  := tUser.City;
-    Session.io.PromptInfo[3]  := DateDos2Str(tUser.LastOn, Session.User.ThisUser.DateType);
-    Session.io.PromptInfo[4]  := tUser.Gender;
-    Session.io.PromptInfo[5]  := strI2S(tUser.Security);
-    Session.io.PromptInfo[6]  := tUser.Address;
-    Session.io.PromptInfo[7]  := strI2S(DaysAgo(tUser.Birthday) DIV 365);
-    Session.io.PromptInfo[8]  := tUser.Email;
-    Session.io.PromptInfo[9]  := tUser.UserInfo;
-    Session.io.PromptInfo[10] := tUser.Optional[1];
-    Session.io.PromptInfo[11] := tUser.Optional[2];
-    Session.io.PromptInfo[12] := tUser.Optional[3];
+    Session.io.PromptInfo[1]  := TempUser.Handle;
+    Session.io.PromptInfo[2]  := TempUser.City;
+    Session.io.PromptInfo[3]  := DateDos2Str(TempUser.LastOn, Session.User.ThisUser.DateType);
+    Session.io.PromptInfo[4]  := TempUser.Gender;
+    Session.io.PromptInfo[5]  := strI2S(TempUser.Security);
+    Session.io.PromptInfo[6]  := TempUser.Address;
+    Session.io.PromptInfo[7]  := strI2S(DaysAgo(TempUser.Birthday) DIV 365);
+    Session.io.PromptInfo[8]  := TempUser.Email;
+    Session.io.PromptInfo[9]  := TempUser.UserInfo;
+    Session.io.PromptInfo[10] := TempUser.Optional[1];
+    Session.io.PromptInfo[11] := TempUser.Optional[2];
+    Session.io.PromptInfo[12] := TempUser.Optional[3];
 
-    If (Data = '') or (Pos(Data, strUpper(tUser.Handle)) > 0) Then Begin
+    If (Data = '') or (Pos(Data, strUpper(TempUser.Handle)) > 0) Then Begin
       Session.io.OutFullLn (Session.GetPrompt(30));
       Inc (Total);
 
@@ -444,12 +457,15 @@ Begin
   Session.io.OutFull (Session.GetPrompt(31));
 End;
 
-Procedure Last_Callers;
+Procedure ShowLastCallers;
 Begin
   Session.io.OutFullLn (Session.GetPrompt(141));
+
   Reset (LastOnFile);
+
   While Not Eof(LastOnFile) Do Begin
     Read (LastOnFile, LastOn);
+
     Session.io.PromptInfo[1]  := LastOn.Handle;
     Session.io.PromptInfo[2]  := strI2S(LastOn.Node);
     Session.io.PromptInfo[3]  := LastOn.City;
@@ -463,9 +479,12 @@ Begin
     Session.io.PromptInfo[11] := LastOn.Option1;
     Session.io.PromptInfo[12] := LastOn.Option2;
     Session.io.PromptInfo[13] := LastOn.Option3;
+
     Session.io.OutFullLn (Session.GetPrompt(142));
   End;
+
   Close (LastOnFile);
+
   Session.io.OutFull (Session.GetPrompt(143));
 End;
 
@@ -474,14 +493,18 @@ Var
   A : Integer;
 Begin
   Session.io.OutFull (Session.GetPrompt(172));
+
   A := strS2I(Session.io.GetInput(4, 4, 11, ''));
+
   If A > 0 Then
     If (A < Session.TimeLeft - 4) Then Begin
       If (Session.User.Security.MaxTB > 0) and (Session.User.ThisUser.TimeBank + A > Session.User.Security.MaxTB) Then Begin
         Session.io.OutFullLn (Session.GetPrompt(209));
         Exit;
       End;
+
       Inc (Session.User.ThisUser.TimeBank, A);
+
       Session.SetTimeLeft (Session.TimeLeft - A);
     End Else
       Session.io.OutFullLn (Session.GetPrompt(210));
@@ -492,14 +515,17 @@ Var
   A : Integer;
 Begin
   Session.io.OutFull (Session.GetPrompt(173));
+
   A := strS2I(Session.io.GetInput(4, 4, 11, ''));
+
   If (A > 0) and (A <= Session.User.ThisUser.TimeBank) Then Begin
     Dec (Session.User.ThisUser.TimeBank, A);
+
     Session.SetTimeLeft (Session.TimeLeft + A);
   End;
 End;
 
-Procedure One_Liners (Data : String);
+Procedure ShowOneLiners (Data : String);
 Const
   MaxLines : Byte = 9;
   MaxLen   : Byte = 75;
@@ -511,16 +537,20 @@ Var
   A           : Byte;
 Begin
   A := Pos(';', Data);
+
   If A > 0 Then Begin
     MaxLines := strS2I(Copy(Data, 1, A - 1)) - 1;
+
     Delete (Data, 1, A);
     A := Pos(';', Data);
+
     MaxLen   := strS2I(Copy(Data, 1, A - 1));
     MaxField := strS2I(Copy(Data, A + 1, Length(Data)));
   End;
 
   Assign (OneLineFile, Config.DataPath + 'oneliner.dat');
   {$I-} Reset (OneLineFile); {$I+}
+
   If IoResult <> 0 Then ReWrite (OneLineFile);
 
   Repeat
@@ -529,17 +559,22 @@ Begin
 
     While Not Eof(OneLineFile) Do Begin
       Read (OneLineFile, OneLine);
+
       Session.io.PromptInfo[1] := OneLine.Text;
       Session.io.PromptInfo[2] := OneLine.From;
       Session.io.PromptInfo[3] := OneLine.From[1];
+
       If Pos(' ', OneLine.From) > 0 Then
         Session.io.PromptInfo[3] := Session.io.PromptInfo[3] + OneLine.From[Pos(' ', OneLine.From) + 1];
+
       Session.io.OutFullLn (Session.GetPrompt(337));
     End;
 
     If Session.io.GetYN(Session.GetPrompt(189), False) Then Begin
       Session.io.OutFull (Session.GetPrompt(190));
+
       Str := Session.io.GetInput (MaxField, MaxLen, 11, '');
+
       If Str <> '' Then Begin
         If FileSize(OneLineFile) > MaxLines Then
           KillRecord (OneLineFile, 1, SizeOf(OneLineRec));
@@ -800,13 +835,14 @@ Begin
   If Session.io.GetYN (Session.GetPrompt(248), True) Then Voting_Result(VPos);
 End;
 
-Procedure View_History (LastDays: Word);
+Procedure ShowBBSHistory (LastDays: Word);
 Var
   Temp : HistoryRec;
   Days : Word;
 Begin
   Assign (Session.HistoryFile, Config.DataPath + 'history.dat');
   {$I-} Reset(Session.HistoryFile); {$I+}
+
   If IoResult <> 0 Then
     Session.io.OutFullLn (Session.GetPrompt(454))
   Else Begin
@@ -1371,14 +1407,15 @@ Begin
 
       MessageBeep(0);
 
-      If Input.KeyPressed Then If Input.ReadKey = #0 Then Begin
-        Case Input.ReadKey of
-          #31 : OpenChat(True);
-          #46 : OpenChat(False);
-        End;
+      If Input.KeyPressed Then
+        If Input.ReadKey = #0 Then Begin
+          Case Input.ReadKey of
+            #31 : OpenChat(True);
+            #46 : OpenChat(False);
+          End;
 
-        Exit;
-      End;
+          Exit;
+        End;
 
       WaitMS(1000);
     End;

@@ -547,7 +547,7 @@ Begin
     'Q' : Case Code[2] of
             'A' : LastMCIValue := TBBSCore(Core).User.ThisUser.Archive;
             'L' : LastMCIValue := OutYN (TBBSCore(Core).User.ThisUser.QwkFiles);
-            'O' : Display_Quote;
+            'O' : ShowRandomQuote;
           End;
     'R' : Case Code[2] of
             'D' : LastMCIValue := strI2S(TBBSCore(Core).User.Security.DLRatio);

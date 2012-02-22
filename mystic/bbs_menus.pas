@@ -175,7 +175,7 @@ Begin
             'S' : View_BBS_List (False, Data);
           End;
     'G' : Case Cmd[2] of
-            '1' : View_History(strS2I(Data));
+            '1' : ShowBBSHistory(strS2I(Data));
             'A' : View_Directory(Data, 0);
             'D' : Session.io.OutFile (Data, True, 0);
             'E' : Session.User.Edit_User_Settings(strS2I(Data));
@@ -192,13 +192,13 @@ Begin
                     Session.SystemLog ('User logged off');
                     Halt(0);
                   End;
-            'L' : Last_Callers;
+            'L' : ShowLastCallers;
             'O' : Begin
                     MenuOld  := MenuName;
                     MenuName := Data;
                     Result   := True;
                   End;
-            'N' : One_Liners (Data);
+            'N' : ShowOneLiners (Data);
             'P' : {$IFNDEF UNIX} PageForSysopChat (Pos('/F', strUpper(Data)) > 0) {$ENDIF};
             'R' : Begin
                     If StackNum > 0 Then Begin
@@ -226,7 +226,7 @@ Begin
                     Result              := True;
                   End;
             'T' : Session.io.OutFull (Data);
-            'U' : List_Users (strUpper(Data));
+            'U' : ShowUserList (strUpper(Data));
             'X' : Result := ExecuteMPL(NIL, Data) = 2;
             '?' : Begin
                     // online ANSI help system (BBSHTML) prototype

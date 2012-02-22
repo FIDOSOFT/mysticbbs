@@ -1,18 +1,5 @@
 Unit bbs_SysOpChat;
 
-(* some ideas for chat:
-
-split chat additions:
-
-- scroll half window instead of just the last line
-- allow full arrow key movement in chat windows...
-  kinda like a full screen editor...
-- ctrl-k brings up a command menu, which has:
-  OutFull file
-  display file
-  dos drop?  add mini-dos internal to mystic?
-
-*)
 {$I M_OPS.PAS}
 
 Interface
@@ -215,16 +202,18 @@ End;
 
 Procedure Line_Chat;
 Var
-  Ch     : Char;
-  Str1,
-  Str2   : String;
+  Ch   : Char;
+  Str1 : String[160];
+  Str2 : String[160];
 Begin
-  Str1   := '';
-  Str2   := '';
+  Str1 := '';
+  Str2 := '';
+
   Session.io.OutFullLn (Session.GetPrompt(26));
 
   Repeat
     Ch := Session.io.GetKey;
+
     Case Ch of
       #27 : If Session.io.LocalInput Then Break;
       #13 : Begin
@@ -238,13 +227,17 @@ Begin
             End;
       Else
         Str1 := Str1 + Ch;
+
         Session.io.BufAddChar(Ch);
+
         If Length(Str1) > 78 Then Begin
           strWrap (Str1, Str2, 78);
           Session.io.OutBS(Length(Str2), True);
           Session.io.OutRawLn ('');
           Session.io.OutRaw (Str2);
+
           If Config.ChatLogging Then WriteLn (tFile, Str1);
+
           Str1 := Str2;
         End;
       End;
@@ -253,7 +246,7 @@ Begin
   Session.io.OutFull (Session.GetPrompt(27));
 End;
 
-Procedure OpenChat (Split : Boolean);
+Procedure OpenChat (Split: Boolean);
 Var
 	Image : TConsoleImageRec;
 Begin
@@ -281,8 +274,8 @@ Begin
 	  Close (tFile);
 	End;
 
-  Session.User.InChat  := False;
-  Session.TimeOut := TimerSeconds;
+  Session.User.InChat := False;
+  Session.TimeOut     := TimerSeconds;
 
   Session.io.RemoteRestore(Image);
 
