@@ -79,6 +79,8 @@ Type
 
 Function ShellDOS (ExecPath: String; Command: String) : LongInt;
 Begin
+  // needs to save/restore screen
+
   If ExecPath <> '' Then DirChange(ExecPath);
 
   {$IFDEF UNIX}
@@ -104,9 +106,12 @@ Var
   ArcFile : File of RecArchive;
   Arc     : RecArchive;
 Begin
-  Temp := JustFileExt(FName);
+  Temp := strUpper(JustFileExt(FName));
 
-  Reset (ArcFile);
+  Assign (ArcFile, Config.DataPath + 'archive.dat');
+  {$I-} Reset (ArcFile); {$I+}
+
+  If IoResult <> 0 Then Exit;
 
   Repeat
     If Eof(ArcFile) Then Begin
@@ -118,7 +123,7 @@ Begin
 
     If (Not Arc.Active) or (Arc.OSType <> OSType) Then Continue;
 
-    If Arc.Ext = Temp Then Break;
+    If strUpper(Arc.Ext) = Temp Then Break;
   Until False;
 
   Close (ArcFile);

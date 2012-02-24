@@ -975,7 +975,7 @@ Begin
       'L' : Temp := 'LZH';
       'R' : Temp := 'RAR';
       'Z' : Temp := 'ZIP';
-      '?' : Temp := strUpper(Copy(FName, Succ(Pos('.', FName)), Length(FName)));  //get ext function
+      '?' : Temp := strUpper(JustFileExt(FName));
     End;
 
   Reset (ArcFile);
@@ -985,9 +985,12 @@ Begin
       Close (ArcFile);
       Exit;
     End;
+
     Read (ArcFile, Arc);
+
     If (Not Arc.Active) or (Arc.OSType <> OSType) Then Continue;
-    If Arc.Ext = Temp Then Break;
+
+    If strUpper(Arc.Ext) = Temp Then Break;
   Until False;
 
   Close (ArcFile);
