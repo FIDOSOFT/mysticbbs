@@ -481,21 +481,23 @@ Const
   FDirFree    = $10;
 
 Type
-  FDirRec = Record                     { *.DIR                              }
-    FileName : String[70];             { File name                          }
-    Size     : LongInt;                { File size (in bytes)               }
-    DateTime : LongInt;                { Date and time of upload            }
-    Uploader : String[30];             { User name who uploaded the file    }
-    Flags    : Byte;                   { Set of FDIRFLAGS (see above)       }
-    Pointer  : LongInt;                { Pointer to file description        }
-    Lines    : Byte;                   { Number of description lines        }
-    DLs      : Word;                   { # of times this file was downloaded}
+  RecFileList = Record
+    FileName  : String[70];
+    Size      : LongInt;
+    DateTime  : LongInt;
+    Uploader  : String[30];
+    Flags     : Byte;
+    Downloads : LongInt;
+    Rating    : Byte;
+    DescPtr   : LongInt;
+    DescLines : Byte;
   End;
 
-  FDirCommentRec = Record              { .FCI and .FCT in DATA directory }
+  RecFileComment = Record              { .FCI and .FCT in DATA directory }
     UserName : String[30];
     Rating   : Byte;
     Date     : LongInt;
+    Pointer  : LongInt;
     Lines    : Word;
   End;
 

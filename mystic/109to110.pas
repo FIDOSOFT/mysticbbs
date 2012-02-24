@@ -6,11 +6,24 @@ Program UP110;
 
 Uses
   CRT,
-  m_Strings;
+  DOS,
+  m_Strings,
+  m_FileIO;
 
 {$I RECORDS.PAS}
 
 Type
+  OldFDirRec = Record                  { *.DIR                              }
+    FileName : String[70];             { File name                          }
+    Size     : LongInt;                { File size (in bytes)               }
+    DateTime : LongInt;                { Date and time of upload            }
+    Uploader : String[30];             { User name who uploaded the file    }
+    Flags    : Byte;                   { Set of FDIRFLAGS (see above)       }
+    Pointer  : LongInt;                { Pointer to file description        }
+    Lines    : Byte;                   { Number of description lines        }
+    DLs      : Word;                   { # of times this file was downloaded}
+  End;
+
   ExtAddrType = Record
     Zone,
     Net,
@@ -955,20 +968,71 @@ Begin
   End;
 End;
 
+Procedure ConvertFileLists;
+Var
+  DirInfo  : SearchRec;
+  OldList  : OlDFDirRec;
+  OldFile  : File of OldFDirRec;
+  List     : RecFileList;
+  ListFile : File of RecFileList;
+  FN       : String;
+Begin
+  WriteLn ('[-] Updating file listings...');
+
+  FindFirst (Config.DataPath + '*.dir', AnyFile, DirInfo);
+
+  While DosError = 0 Do Begin
+    FN := Config.DataPath + JustFile(DirInfo.Name) + '.old';
+
+    RenameFile (Config.DataPath + DirInfo.Name, FN);
+
+    Assign (OldFile, FN);
+    Reset  (OldFile);
+
+    Assign  (ListFile, Config.DataPath + DirInfo.Name);
+    ReWrite (ListFile);
+
+    While Not Eof(OldFile) Do Begin
+      Read (OldFile, OldList);
+
+      List.FileName  := OldList.FileName;
+      List.Size      := OldList.Size;
+      List.DateTime  := OldList.DateTime;
+      List.Uploader  := OldList.Uploader;
+      List.Flags     := OldList.Flags;
+      List.Downloads := OldList.DLs;
+      List.Rating    := 0;
+      List.DescPtr   := OldList.Pointer;
+      List.DescLines := OldList.Lines;
+
+      Write (ListFile, List);
+    End;
+
+    Close (OldFile);
+    Close (ListFile);
+
+    DeleteFile (FN);
+    FindNext   (DirInfo);
+  End;
+
+  FindClose(DirInfo);
+End;
+
 Var
   ConfigFile : File of RecConfig;
 Begin
   WarningDisplay;
 
-// comment this out ONLY IF config needs converting
-//  Assign (ConfigFile, 'mystic.dat');
-//  Reset  (ConfigFile);
-//  Read   (ConfigFile, Config);
-//  Close  (ConfigFile);
+// COMMENT this out if mystic.dat is being converted:
+  Assign (ConfigFile, 'mystic.dat');
+  Reset  (ConfigFile);
+  Read   (ConfigFile, Config);
+  Close  (ConfigFile);
 
-  ConvertConfig;  //1.10a11
+//  ConvertConfig;  //1.10a11
 //  ConvertUsers; //1.10a11
 //ConvertSecurity; //1.10a11
+ConvertFileLists;  //1.10a11
 
 //  ConvertArchives; //1.10a1
 //  ConvertGroups;   //1.10a1

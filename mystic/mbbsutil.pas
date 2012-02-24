@@ -133,9 +133,9 @@ Var
   SortList  : TQuickSort;
   FBaseFile : File of FBaseRec;
   FBase     : FBaseRec;
-  FDirFile  : File of FDirRec;
-  TFDirFile : File of FDirRec;
-  FDir      : FDirRec;
+  FDirFile  : File of RecFileList;
+  TFDirFile : File of RecFileList;
+  FDir      : RecFileList;
   A         : Word;
 Begin
   Write ('Sorting File Bases   : ');
@@ -194,9 +194,9 @@ Procedure Pack_File_Bases;
 Var
   A           : Byte;
   Temp        : String[50];
-  FDirFile    : File of FDirRec;
-  TFDirFile   : File of FDirRec;
-  FDir        : FDirRec;
+  FDirFile    : File of RecFileList;
+  TFDirFile   : File of RecFileList;
+  FDir        : RecFileList;
   DataFile    : File;
   TDataFile   : File;
   FBaseFile   : File of FBaseRec;
@@ -232,11 +232,11 @@ Begin
         While Not Eof(FDirFile) Do Begin
           Read (FDirFile, FDir);
           If FDir.Flags AND FDirDeleted = 0 Then Begin
-            Seek (TDataFile, FDir.Pointer);
+            Seek (TDataFile, FDir.DescPtr);
 
-            FDir.Pointer := FilePos(DataFile);
+            FDir.DescPtr := FilePos(DataFile);
 
-            For A := 1 to FDir.Lines Do Begin
+            For A := 1 to FDir.DescLines Do Begin
               BlockRead (TDataFile, Temp[0], 1);
               BlockRead (TDataFile, Temp[1], Ord(Temp[0]));
 
@@ -267,9 +267,9 @@ Procedure Check_File_Bases;
 Var
   FBaseFile : File of FBaseRec;
   FBase     : FBaseRec;
-  FDirFile  : File of FDirRec;
-  FDir      : FDirRec;
-  TFDirFile : File of FDirRec;
+  FDirFile  : File of RecFileList;
+  FDir      : RecFileList;
+  TFDirFile : File of RecFileList;
   DF        : File of Byte;
 Begin
   Write ('Checking File Bases  : ');

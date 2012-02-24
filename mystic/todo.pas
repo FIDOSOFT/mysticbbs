@@ -2,7 +2,8 @@ This file showcases the direction of where this software wants to go as it
 continues to expand.  Some things that will probably be mentioned will be
 vague, and serve mostly to remind me of my own ideas.
 
-The scope of this file is to document bugs and future enhancements/ideas.
+The scope of this file is to document bugs, future enhancements/ideas and
+design elements/issues.
 
 BUGS AND POSSIBLE ISSUES
 ========================
@@ -84,9 +85,107 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - MIDE version using the Lazaurs GUI editor [Spec].   Maybe he would be
   interested in working on that?
 - PCBoard-style "quickscan"?  Yes?  No?
+- This line intentionally means nothing.
 - Filebase allow anonymous flag for FTP or just use FreeFiles
 - Build in "telnetd" STDIO redirection into MIS in Linux/OSX
 - Template system similar to Mystic 2 (ansiedit.ans ansiedit.ans.cfg)
 - Rename Template filenames to allow more than 8 characters (for clarity)
 - Does anyone use Version 7 compiled nodelists?  Worth supporting?
 - Ignore user inactivity flag per user
+- HOME and END keys added to lightbar file listings
+
+RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
+===========================================
+
+-------------------------------------------------------------------------
+Disconnect while posting design:
+
+1. Before msg post or msg reply Session.Msgs.Posting is set to that bases
+   Index.
+2. All editors reset this value on any save/abort
+3. Any disconnect checks that value.
+4. If disconnect while value is set:
+     a. Save MSGTMP from node's TEMP dir into DATA as msg_<UID>.tmp
+          overwrite if exists
+     b. Save MsgText into DATA as msg_<UID>.txt with format:
+          Line 1: Base perm index
+          Line 2: Msg From
+          Line 3: Msg To
+          Line 4: Msg Subj
+          Line 5: Network address (or blank if none)
+          Line 6: MsgText
+             overwrite if exists
+5. During LOGIN, check for msg_<UID>.txt
+6. If exists, process and prompt user:
+
+     You were recently disconnected while posting a message:
+
+       Base: Clever Message Base Name
+         To: MOM JOKEZ R FUNNY LOLZ
+       Subj: I eat hot coal.
+
+     (R)esume post, (D)elete, or (A)sk me later?
+
+7. Case result:
+     Resume:
+        Copy msg_UID.tmp if exists to MSGTMP in temp node directory
+        Populate MsgText and execute editor with the other values
+        Execute editor
+        If save... save... this will be the hard part. :(
+        If abort... delete msg_UID* since they aborted?
+        What happens if they disconnect while continuing?  lol
+           make sure this is handled appropriately.
+     Delete:
+        Delete msg_UID* in data.
+     Ask later:
+        Do nothing.  Keep files so Mystic asks on next login.
+
+PROBLEM: When we localize MsgText for the ANSI viewer integration...
+how will this work?  I am not sure it really can work without it being
+global.  We cannot save what we do not have access to from a class.
+
+SOLUTION: Actual MsgText should be separate from Attributes in the msg
+base ANSI class.  Memory requirements almost double though for MsgText
+storage if it remains global = 1000 lines x 80. 80,000 bytes memory per
+node.  But attributes are only really required while READING.  So maybe
+somehow it can be separated so attributes are specific to reading and
+the entire class is "unused" until then?
+
+-----------------------------------------------------------------------
+
+CHANGE to support 50 line mode
+
+1. terminal "screen length" is no longer an option of lines but a
+   selection:
+
+     80x25
+     80x50
+     132x50
+
+2. all display files and templates will have this logic added:
+
+      if 132 mode .132.ans is the extention
+      if  50 mode .50.ans is the extention
+      if  25 mode then .ans is the extention
+
+-----------------------------------------------------------------------
+
+NEW TEMPLATE system
+
+templates will be .cfg files with various things defined within them
+based on the template.  no more "injecting" screeninfo codes (|!X) into
+files.  Extentions for random ANSI templates:
+
+ansiflst.ans = ansiflist.ans.cfg
+ansiflst.an1 = ansiflist.an1.cfg
+
+50 line mode template examples with random selected templates
+
+ansiflst.50.ans = ansiflist.50.ans.cfg
+ansiflst.50.an1 = ansiflist.50.an1.cfg
+
+-----------------------------------------------------------------------
+
+FILE rating system
+
+-----------------------------------------------------------------------

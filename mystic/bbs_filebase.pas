@@ -24,7 +24,7 @@ Type
 
   TFileBase = Class
     FBaseFile    : File of FBaseRec;
-    FDirFile     : File of FDirRec;
+    FDirFile     : File of RecFileList;
     FScanFile    : File of FScanRec;
     ProtocolFile : File of RecProtocol;
     FGroupFile   : File of RecGroup;
@@ -32,7 +32,7 @@ Type
     FBase        : FBaseRec;
     FGroup       : RecGroup;
     FScan        : FScanRec;
-    FDir         : FDirRec;
+    FDir         : RecFileList;
     Arc          : RecArchive;
     Protocol     : RecProtocol;
     BatchNum     : Byte;
@@ -261,12 +261,12 @@ Function TFileBase.ImportDIZ (FN: String) : Boolean;
   Var
     A : Byte;
   Begin
-    For A := Num To FDir.Lines - 1 Do
+    For A := Num To FDir.DescLines - 1 Do
       Session.Msgs.Msgtext[A] := Session.Msgs.MsgText[A + 1];
 
-    Session.Msgs.MsgText[FDir.Lines] := '';
+    Session.Msgs.MsgText[FDir.DescLines] := '';
 
-    Dec (FDir.Lines);
+    Dec (FDir.DescLines);
   End;
 
 Var
@@ -280,26 +280,26 @@ Begin
   {$I-} Reset (tFile); {$I+}
 
   If IoResult = 0 Then Begin
-    Result     := True;
-    FDir.Lines := 0;
+    Result         := True;
+    FDir.DescLines := 0;
 
     While Not Eof(tFile) Do Begin
-      Inc (FDir.Lines);
-      ReadLn (tFile, Session.Msgs.MsgText[FDir.Lines]);
-      Session.Msgs.MsgText[FDir.Lines] := strStripLOW(Session.Msgs.MsgText[FDir.Lines]);
-      If Length(Session.Msgs.MsgText[FDir.Lines]) > mysMaxFileDescLen Then Session.Msgs.MsgText[FDir.Lines][0] := Chr(mysMaxFileDescLen);
-      If FDir.Lines = Config.MaxFileDesc Then Break;
+      Inc (FDir.DescLines);
+      ReadLn (tFile, Session.Msgs.MsgText[FDir.DescLines]);
+      Session.Msgs.MsgText[FDir.DescLines] := strStripLOW(Session.Msgs.MsgText[FDir.DescLines]);
+      If Length(Session.Msgs.MsgText[FDir.DescLines]) > mysMaxFileDescLen Then Session.Msgs.MsgText[FDir.DescLines][0] := Chr(mysMaxFileDescLen);
+      If FDir.DescLines = Config.MaxFileDesc Then Break;
     End;
 
     Close (tFile);
 
     FileErase(Session.TempPath + 'file_id.diz');
 
-    While (Session.Msgs.MsgText[1] = '') and (FDir.Lines > 0) Do
+    While (Session.Msgs.MsgText[1] = '') and (FDir.DescLines > 0) Do
       RemoveLine(1);
 
-    While (Session.Msgs.MsgText[FDir.Lines] = '') And (FDir.Lines > 0) Do
-      Dec (FDir.Lines);
+    While (Session.Msgs.MsgText[FDir.DescLines] = '') And (FDir.DescLines > 0) Do
+      Dec (FDir.DescLines);
   End;
 End;
 
@@ -510,8 +510,8 @@ Begin
               WriteLn (TF, FDir.FileName);
               Write   (TF, ' `- ' + strPadL(strComma(FDir.Size), 11, ' ') + '  ' + DateDos2Str(FDir.DateTime, Session.User.ThisUser.DateType) + '  ');
 
-              Seek (DF, FDir.Pointer);
-              For A := 1 to FDir.Lines Do Begin
+              Seek (DF, FDir.DescPtr);
+              For A := 1 to FDir.DescLines Do Begin
                 BlockRead (DF, Temp[0], 1);
                 BlockRead (DF, Temp[1], Ord(Temp[0]));
                 If A = 1 Then WriteLn (TF, Temp) Else WriteLn (TF, strRep(' ', 27) + Temp);
@@ -1349,7 +1349,7 @@ Function TFileBase.ListFileAreas (Compress: Boolean) : Integer;
 Var
   Total    : Word = 0;
   Listed   : Word = 0;
-  tDirFile : File of FDirRec;
+  tDirFile : File of RecFileList;
 Begin
   Reset (FBaseFile);
 
@@ -1588,8 +1588,8 @@ Var
       3 : Begin
             T2 := Bool_Search(Data, FDir.FileName);
             If Not T2 Then Begin
-              Seek (DataFile, FDir.Pointer);
-              For A := 1 to FDir.Lines Do Begin
+              Seek (DataFile, FDir.DescPtr);
+              For A := 1 to FDir.DescLines Do Begin
                 BlockRead (DataFile, Temp[0], 1);
                 BlockRead (DataFile, Temp[1], Length(Temp));
                 If Bool_Search(Data, Temp) Then Begin
@@ -1696,11 +1696,11 @@ Var
       If Not OkFile Then Continue;
 
       If TopDesc > 0 Then Begin
-        Inc (Count, FDir.Lines - (FDir.Lines - TopDesc + 1) + 1);
-        If TopDesc = FDir.Lines + 2 Then Dec(Count);
+        Inc (Count, FDir.DescLines - (FDir.DescLines - TopDesc + 1) + 1);
+        If TopDesc = FDir.DescLines + 2 Then Dec(Count);
         TopDesc := 0;
       End Else Begin
-        Inc (Count, FDir.Lines + 1);
+        Inc (Count, FDir.DescLines + 1);
         If FBase.ShowUL Then Inc(Count);
       End;
     End;
@@ -1838,7 +1838,7 @@ Var
         Session.io.PromptInfo[3] := ' ';
         Session.io.PromptInfo[4] := GetFileListSize;
         Session.io.PromptInfo[5] := DateDos2Str(FDir.DateTime, Session.User.ThisUser.DateType);
-        Session.io.PromptInfo[6] := strI2S(FDir.DLs);
+        Session.io.PromptInfo[6] := strI2S(FDir.Downloads);
 
         List[ListSize + 1].Batch := False;
 
@@ -1864,10 +1864,10 @@ Var
       End Else
         HeaderCheck;
 
-      If BotDesc <= FDir.Lines + 2 Then Begin { skip if 1st line is uler }
-        Seek (DataFile, FDir.Pointer);
+      If BotDesc <= FDir.DescLines + 2 Then Begin { skip if 1st line is uler }
+        Seek (DataFile, FDir.DescPtr);
 
-        For A := 1 to FDir.Lines Do Begin
+        For A := 1 to FDir.DescLines Do Begin
           BlockRead (DataFile, Str[0], 1);
           BlockRead (DataFile, Str[1], Ord(Str[0]));
 
@@ -1878,7 +1878,7 @@ Var
           If A = 1 Then Begin
             Session.io.PromptInfo[1] := GetFileListSize;
             Session.io.PromptInfo[2] := DateDos2Str(FDir.DateTime, Session.User.ThisUser.DateType);
-            Session.io.PromptInfo[3] := strI2S(FDir.DLs);
+            Session.io.PromptInfo[3] := strI2S(FDir.Downloads);
             Session.io.PromptInfo[4] := Str;
             Session.io.PromptInfo[5] := FDir.Uploader;
             OK := ShowText(strDesc);
@@ -1891,7 +1891,7 @@ Var
         End;
       End;
 
-      If BotDesc > FDir.Lines Then Begin
+      If BotDesc > FDir.DescLines Then Begin
         If FBase.ShowUL Then Begin
           OK := ShowText(strUploader);
           If OK Then
@@ -2334,8 +2334,8 @@ Var
 
   Procedure Check_Area;
   Var
-    TempFile : File of FDirRec;
-    Temp     : FDirRec;
+    TempFile : File of RecFileList;
+    Temp     : RecFileList;
   Begin
     Assign (TempFile, Config.DataPath + FBase.FileName + '.dir');
     {$I-} Reset (TempFile); {$I+}
@@ -2382,21 +2382,21 @@ Begin
 
   Session.io.OutFullLn (Session.GetPrompt(72));
 
-  FDir.Lines := Config.MaxFileDesc;
+  FDir.DescLines := Config.MaxFileDesc;
 
   For A := 1 to Config.MaxFileDesc Do Begin
     Session.io.PromptInfo[1] := strZero(A);
     Session.io.OutFull (Session.GetPrompt(207));
     Session.Msgs.MsgText[A] := Session.io.GetInput(mysMaxFileDescLen, mysMaxFileDescLen, 11, '');
     If Session.Msgs.MsgText[A] = '' Then Begin
-      FDir.Lines := Pred(A);
+      FDir.DescLines := Pred(A);
       Break;
     End;
   End;
 
-  If FDir.Lines = 0 Then Begin
+  If FDir.DescLines = 0 Then Begin
     Session.Msgs.MsgText[1] := Session.GetPrompt(208);
-    FDir.Lines := 1;
+    FDir.DescLines := 1;
   End;
 End;
 
@@ -2533,11 +2533,12 @@ Begin
         Session.SystemLog ('Uploaded: ' + FileName + ' to ' + strStripMCI(FBase.Name));
         Session.io.OutFull (Session.GetPrompt(83));
 
-        FDir.FileName := FileName;
-        FDir.DateTime := CurDateDos;
-        FDir.Uploader := Session.User.ThisUser.Handle;
-        FDir.Flags    := 0;
-        FDir.DLs      := 0;
+        FDir.FileName  := FileName;
+        FDir.DateTime  := CurDateDos;
+        FDir.Uploader  := Session.User.ThisUser.Handle;
+        FDir.Flags     := 0;
+        FDir.Downloads := 0;
+        FDir.Rating    := 0;
 
         If Config.FDupeScan > 0 Then Begin
           Session.io.OutFull (Session.GetPrompt(377));
@@ -2592,9 +2593,9 @@ Begin
         End Else
           GetFileDescription(FileName);
 
-        FDir.Pointer := FileSize(DataFile);
+        FDir.DescPtr := FileSize(DataFile);
 
-        For A := 1 to FDir.Lines Do
+        For A := 1 to FDir.DescLines Do
           BlockWrite (DataFile, Session.Msgs.MsgText[A][0], Length(Session.Msgs.MsgText[A]) + 1);
 
         Assign (TempFile, FBase.Path + FileName);
@@ -2705,7 +2706,7 @@ Begin
               Session.io.PromptInfo[2] := strComma(FDir.Size);
               Session.io.PromptInfo[3] := FDir.Uploader;
               Session.io.PromptInfo[4] := DateDos2Str(FDir.DateTime, Session.User.ThisUser.DateType);
-              Session.io.PromptInfo[5] := strI2S(FDir.DLs);
+              Session.io.PromptInfo[5] := strI2S(FDir.Downloads);
 
               GetTransferTime (FDir.Size, Min, Sec);
 
@@ -2726,7 +2727,7 @@ Begin
                 Inc (Session.User.ThisUser.DLsToday);
                 Inc (Session.User.ThisUser.DLk, FDir.Size DIV 1024);
                 Inc (Session.User.ThisUser.DLkToday, FDir.Size DIV 1024);
-                Inc (FDir.DLs);
+                Inc (FDir.Downloads);
                 Inc (Session.HistoryDLs);
                 Inc (Session.HistoryDLKB, FDir.Size DIV 1024);
 
@@ -2827,7 +2828,7 @@ Begin
         Read (FDirFile, FDir);
 
         If (FDir.FileName = Batch[A].FileName) And (FDir.Flags And FDirDeleted = 0) Then Begin
-          Inc (FDir.DLs);
+          Inc (FDir.Downloads);
           Seek  (FDirFile, FilePos(FDirFile) - 1);
           Write (FDirFile, FDir);
           Break;
@@ -3011,7 +3012,7 @@ Procedure TFileBase.DirectoryEditor (Edit : Boolean; Mask: String);
 
 Function Get_Next_File (Back: Boolean): Boolean;
 Var
-  Old : FDirRec;
+  Old : RecFileList;
   Pos : LongInt;
 Begin
   Old := FDir;
@@ -3091,7 +3092,7 @@ Begin
               '|033) Uploader  : |11' + FDir.Uploader);
 
       Session.io.OutFullLn ('|034) File Date : |11' + strPadR(DateDos2Str(FDir.DateTime, Session.User.ThisUser.DateType), 19, ' ') +
-              '|035) Downloads : |11' + strI2S(FDir.DLs));
+              '|035) Downloads : |11' + strI2S(FDir.Downloads));
 
       Session.io.OutFull   ('|036) Status    : |11');
 
@@ -3110,11 +3111,11 @@ Begin
       Session.io.OutFullLn (Temp);
       Session.io.OutFullLn ('|08|$D79Ä');
 
-      Seek (DataFile, FDir.Pointer);
+      Seek (DataFile, FDir.DescPtr);
 
       For A := 1 to 11 Do Begin
         Temp := '';
-        If A <= FDir.Lines Then Begin
+        If A <= FDir.DescLines Then Begin
           BlockRead (DataFile, Temp[0], 1);
           BlockRead (DataFile, Temp[1], Ord(Temp[0]));
         End;
@@ -3158,9 +3159,9 @@ Begin
         'I' : Begin
                 Session.io.OutFullLn ('|CR|14Importing file_id.diz...');
                 If ImportDIZ(FDir.FileName) Then Begin
-                  FDir.Pointer := FileSize(DataFile);
-                  Seek (DataFile, FDir.Pointer);
-                  For A := 1 to FDir.Lines Do
+                  FDir.DescPtr := FileSize(DataFile);
+                  Seek (DataFile, FDir.DescPtr);
+                  For A := 1 to FDir.DescLines Do
                     BlockWrite (DataFile, Session.Msgs.MsgText[A][0], Length(Session.Msgs.MsgText[A]) + 1);
                 End;
               End;
@@ -3203,11 +3204,11 @@ Begin
                       {$I-} Reset (DataFile2, 1); {$I+}
                       If IoResult <> 0 Then ReWrite (DataFile2, 1);
 
-                      Seek (DataFile, FDir.Pointer);
-                      FDir.Pointer := FileSize(DataFile2);
-                      Seek (DataFile2, FDir.Pointer);
+                      Seek (DataFile, FDir.DescPtr);
+                      FDir.DescPtr := FileSize(DataFile2);
+                      Seek (DataFile2, FDir.DescPtr);
 
-                      For B := 1 to FDir.Lines Do Begin
+                      For B := 1 to FDir.DescLines Do Begin
                         BlockRead  (DataFile, Temp[0], 1);
                         BlockRead  (DataFile, Temp[1], Ord(Temp[0]));
                         BlockWrite (DataFile2, Temp[0], Length(Temp) + 1);
@@ -3245,9 +3246,9 @@ Begin
 
                 Assign (TF, Session.TempPath + 'file_id.diz');
                 ReWrite (TF);
-                Seek (DataFile, FDir.Pointer);
+                Seek (DataFile, FDir.DescPtr);
 
-                For B := 1 to FDir.Lines Do Begin
+                For B := 1 to FDir.DescLines Do Begin
                   BlockRead (DataFile, Temp[0], 1);
                   BlockRead (DataFile, Temp[1], Ord(Temp[0]));
                   WriteLn (TF, Temp);
@@ -3273,22 +3274,24 @@ Begin
                 Get_Next_File(False);
               End;
         '!' : Begin
-                Seek (DataFile, FDir.Pointer);
-                If FDir.Lines > Config.MaxFileDesc Then FDir.Lines := Config.MaxFileDesc;
+                Seek (DataFile, FDir.DescPtr);
+                If FDir.DescLines > Config.MaxFileDesc Then FDir.DescLines := Config.MaxFileDesc;
 
-                For A := 1 to FDir.Lines Do Begin
+                For A := 1 to FDir.DescLines Do Begin
                   BlockRead (DataFile, Session.Msgs.MsgText[A][0], 1);
                   BlockRead (DataFile, Session.Msgs.MsgText[A][1], Ord(Session.Msgs.MsgText[A][0]));
                 End;
 
                 Temp := 'Description Editor';
-                B    := FDir.Lines;
+                B    := FDir.DescLines;
 
                 If Editor(B, mysMaxFileDescLen, Config.MaxFileDesc, True, False, Temp) Then Begin
-                  FDir.Lines   := B;
-                  FDir.Pointer := FileSize(DataFile);
-                  Seek (DataFile, FDir.Pointer);
-                  For A := 1 to FDir.Lines Do
+                  FDir.DescLines   := B;
+                  FDir.DescPtr     := FileSize(DataFile);
+
+                  Seek (DataFile, FDir.DescPtr);
+
+                  For A := 1 to FDir.DescLines Do
                     BlockWrite (DataFile, Session.Msgs.MsgText[A][0], Length(Session.Msgs.MsgText[A]) + 1);
                 End;
               End;
@@ -3296,9 +3299,9 @@ Begin
                 Session.io.OutFull ('Size: ');
                 FDir.Size := strS2I(Session.io.GetInput(8, 8, 12, strI2S(FDir.Size)));
               End;
-        '4' : FDir.DateTime := DateStr2Dos(Session.io.InXY(16, 6, 8, 8, 15, DateDos2Str(FDir.DateTime, Session.User.ThisUser.DateType)));
-        '3' : FDir.Uploader := Session.io.InXY(50, 5, 30, 30, 18, FDir.Uploader);
-        '5' : FDir.DLs      := strS2I(Session.io.InXY(50, 6, 4, 4, 12, strI2S(FDir.DLs)));
+        '4' : FDir.DateTime  := DateStr2Dos(Session.io.InXY(16, 6, 8, 8, 15, DateDos2Str(FDir.DateTime, Session.User.ThisUser.DateType)));
+        '3' : FDir.Uploader  := Session.io.InXY(50, 5, 30, 30, 18, FDir.Uploader);
+        '5' : FDir.Downloads := strS2I(Session.io.InXY(50, 6, 4, 4, 12, strI2S(FDir.Downloads)));
         '6' : Begin
                 Session.io.OutFull('|CRFlags: F(a)iled, (F)ree, (O)ffline, (U)nvalidated, (Q)uit: ');
                 Case Session.io.OneKey('AFOUQ', True) of
@@ -3381,27 +3384,28 @@ Var
       End;
 
       If Not Skip Then Begin
-        FDir.FileName := DirInfo.Name;
-        FDir.Size     := DirInfo.Size;
-        FDir.DateTime := CurDateDos;
-        FDir.Uploader := Session.User.ThisUser.Handle;
-        FDir.DLs      := 0;
-        FDir.Flags    := 0;
-        FDir.Lines    := 0;
+        FDir.FileName  := DirInfo.Name;
+        FDir.Size      := DirInfo.Size;
+        FDir.DateTime  := CurDateDos;
+        FDir.Uploader  := Session.User.ThisUser.Handle;
+        FDir.Downloads := 0;
+        FDir.Flags     := 0;
+        FDir.DescLines := 0;
+        FDir.Rating    := 0;
 
         If Config.ImportDIZ Then
           If Not ImportDIZ(DirInfo.Name) Then
             If Not AutoArea Then
               GetFileDescription(DirInfo.Name);
 
-        If FDir.Lines = 0 Then Begin
+        If FDir.DescLines = 0 Then Begin
           Session.Msgs.MsgText[1] := Session.GetPrompt(208);
-          FDir.Lines := 1;
+          FDir.DescLines := 1;
         End;
 
-        FDir.Pointer := FileSize(DataFile);
+        FDir.DescPtr := FileSize(DataFile);
 
-        For A := 1 to FDir.Lines Do
+        For A := 1 to FDir.DescLines Do
           BlockWrite (DataFile, Session.Msgs.MsgText[A][0], Length(Session.Msgs.MsgText[A]) + 1);
 
         If Config.TestUploads and (Config.TestCmdLine <> '') Then Begin

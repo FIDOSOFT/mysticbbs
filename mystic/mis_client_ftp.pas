@@ -46,8 +46,8 @@ Type
     Destructor  Destroy; Override;
 
     Procedure   ResetSession;
-    Procedure   UpdateUserStats (TFBase: FBaseRec; FDir: FDirRec; DirPos: LongInt);
-    Function    CheckFileLimits (TempFBase: FBaseRec; FDir: FDirRec) : Byte;
+    Procedure   UpdateUserStats (TFBase: FBaseRec; FDir: RecFileList; DirPos: LongInt);
+    Function    CheckFileLimits (TempFBase: FBaseRec; FDir: RecFileList) : Byte;
     Function    OpenDataSession : Boolean;
     Procedure   CloseDataSession;
     Function    ValidDirectory (TempBase: FBaseRec) : Boolean;
@@ -129,14 +129,14 @@ Begin
   InTransfer := False;
 End;
 
-Procedure TFTPServer.UpdateUserStats (TFBase: FBaseRec; FDir: FDirRec; DirPos: LongInt);
+Procedure TFTPServer.UpdateUserStats (TFBase: FBaseRec; FDir: RecFileList; DirPos: LongInt);
 Var
   HistFile: File of HistoryRec;
   History : HistoryRec;
-  FDirFile: File of FDirRec;
+  FDirFile: File of RecFileList;
   UserFile: File of RecUser;
 Begin
-  Inc (FDir.DLs);
+  Inc (FDir.Downloads);
 
   Assign  (UserFile, bbsConfig.DataPath + 'users.dat');
   ioReset (UserFile, SizeOf(RecUser), fmReadWrite + fmDenyWrite);
@@ -162,7 +162,7 @@ Begin
   Close   (UserFile);
 
   Assign  (FDirFile, bbsConfig.DataPath + TFBase.FileName + '.dir');
-  ioReset (FDirFile, SizeOf(FDirRec), fmReadWrite + fmDenyWrite);
+  ioReset (FDirFile, SizeOf(RecFileList), fmReadWrite + fmDenyWrite);
   ioSeek  (FDirFile, DirPos - 1);
   ioWrite (FDirFile, FDir);
   Close   (FDirFile);
@@ -195,7 +195,7 @@ Begin
   Close   (HistFile);
 End;
 
-Function TFTPServer.CheckFileLimits (TempFBase: FBaseRec; FDir: FDirRec) : Byte;
+Function TFTPServer.CheckFileLimits (TempFBase: FBaseRec; FDir: RecFileList) : Byte;
 { 0 = OK to download }
 { 1 = Offline or Invalid or Failed or NO ACCESS or no file (prompt 224)}
 { 2 = DL per day limit exceeded (prompt 58) }
@@ -479,7 +479,7 @@ Var
   TempBase : FBaseRec;
   TempPos  : LongInt;
   DirFile  : TBufFile;
-  Dir      : FDirRec;
+  Dir      : RecFileList;
 Begin
   If LoggedIn Then Begin
     TempPos := FindDirectory(TempBase);
@@ -495,7 +495,7 @@ Begin
 
     DirFile := TBufFile.Create(FileBufSize);
 
-    If DirFile.Open(bbsConfig.DataPath + TempBase.FileName + '.dir', fmOpenCreate, fmRWDN, SizeOf(FDirRec)) Then Begin
+    If DirFile.Open(bbsConfig.DataPath + TempBase.FileName + '.dir', fmOpenCreate, fmRWDN, SizeOf(RecFileList)) Then Begin
       While Not DirFile.EOF Do Begin
         DirFile.Read(Dir);
 
@@ -532,7 +532,7 @@ Var
   TempPos   : LongInt;
   FBaseFile : TBufFile;
   DirFile   : TBufFile;
-  Dir       : FDirRec;
+  Dir       : RecFileList;
 Begin
   If LoggedIn Then Begin
     TempPos := FindDirectory(TempBase);
@@ -562,7 +562,7 @@ Begin
 
     DirFile := TBufFile.Create(FileBufSize);
 
-    If DirFile.Open(bbsConfig.DataPath + TempBase.FileName + '.dir', fmOpenCreate, fmRWDN, SizeOf(FDirRec)) Then Begin
+    If DirFile.Open(bbsConfig.DataPath + TempBase.FileName + '.dir', fmOpenCreate, fmRWDN, SizeOf(RecFileList)) Then Begin
       While Not DirFile.EOF Do Begin
         DirFile.Read(Dir);
 
@@ -587,7 +587,7 @@ Var
   TempPos  : LongInt;
   TempBase : FBaseRec;
   DirFile  : TBufFile;
-  Dir      : FDirRec;
+  Dir      : RecFileList;
   Found    : LongInt;
   F        : File;
   Buf      : Array[1..4096] of Byte;
@@ -605,7 +605,7 @@ Begin
     DirFile := TBufFile.Create(FileBufSize);
     Found   := -1;
 
-    If DirFile.Open(bbsConfig.DataPath + TempBase.FileName + '.dir', fmOpenCreate, fmRWDN, SizeOf(FDirRec)) Then Begin
+    If DirFile.Open(bbsConfig.DataPath + TempBase.FileName + '.dir', fmOpenCreate, fmRWDN, SizeOf(RecFileList)) Then Begin
       While Not DirFile.EOF Do Begin
         DirFile.Read(Dir);
 
