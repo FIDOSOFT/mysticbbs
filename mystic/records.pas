@@ -142,6 +142,7 @@ Type
     UserMailIndex   : Byte;
     UserReadIndex   : Byte;
     UserQuoteWin    : Byte;
+    UserProtocol    : Byte;
     AskTheme        : Boolean;
     AskRealName     : Boolean;
     AskAlias        : Boolean;
@@ -199,6 +200,7 @@ Type
     MaxFileDesc     : Byte;
     FCommentLines   : Byte;
     FCommentLen     : Byte;
+    FProtocol       : Char;
     TestUploads     : Boolean;
     TestPassLevel   : Byte;
     TestCmdLine     : String[mysMaxPathSize];
@@ -238,7 +240,7 @@ Type
     inetNNTPMax     : Word;
     inetNNTPDupes   : Byte;
  // UNSORTED
-    Reserved        : Array[1..488] of Char;
+    Reserved        : Array[1..486] of Char;
   End;
 
 Const
@@ -348,7 +350,8 @@ Type
     UseLBMIdx    : Boolean;               { use lightbar index in email? }
     UseFullChat  : Boolean;               { use full screen teleconference }
     Credits      : LongInt;
-    Reserved     : Array[1..393] of Byte;
+    Protocol     : Char;
+    Reserved     : Array[1..392] of Byte;
   End;
 
   EventRec = Record                   { EVENTS.DAT                        }

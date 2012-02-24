@@ -555,7 +555,9 @@ Begin
     Config.StatusColor2   :=  9 + 1 * 16;
     Config.StatusColor3   := 15 + 1 * 16;
 
-    Config.PWAttempts := 3;
+    Config.PWAttempts   := 3;
+    Config.FProtocol    := 'Z';
+    Config.UserProtocol := 0;
   End;
 
   Assign  (ConfigFile, 'mystic.dat');
@@ -660,6 +662,7 @@ Begin
       User.UseLBMIdx := UseLBMIdx;
       User.UseFullChat := UserFullChat;
       User.Credits := 0;
+      User.Protocol := #0;
     End;
 
     Write (UserFile, User);
@@ -1024,15 +1027,15 @@ Begin
   WarningDisplay;
 
 // COMMENT this out if mystic.dat is being converted:
-  Assign (ConfigFile, 'mystic.dat');
-  Reset  (ConfigFile);
-  Read   (ConfigFile, Config);
-  Close  (ConfigFile);
+//  Assign (ConfigFile, 'mystic.dat');
+//  Reset  (ConfigFile);
+//  Read   (ConfigFile, Config);
+//  Close  (ConfigFile);
 
-//  ConvertConfig;  //1.10a11
+  ConvertConfig;  //1.10a11
 //  ConvertUsers; //1.10a11
 //ConvertSecurity; //1.10a11
-ConvertFileLists;  //1.10a11
+//ConvertFileLists;  //1.10a11
 
 //  ConvertArchives; //1.10a1
 //  ConvertGroups;   //1.10a1
