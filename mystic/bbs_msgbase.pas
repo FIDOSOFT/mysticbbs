@@ -3114,7 +3114,7 @@ Var
   Chunks   : SmallInt;
 Begin
   If Session.LocalMode Then
-    Session.FileBase.ExecuteArchive (Config.QWKPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, FileMask{TempPath}, 2)
+    Session.FileBase.ExecuteArchive (Config.QWKPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
   Else Begin
     If Session.FileBase.SelectProtocol(False) = 'Q' Then Exit;
 
@@ -3126,7 +3126,7 @@ Begin
       Exit;
     End;
 
-    Session.FileBase.ExecuteArchive (Session.TempPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, FileMask, 2)
+    Session.FileBase.ExecuteArchive (Session.TempPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
   End;
 
   Assign (DataFile, Session.TempPath + Config.qwkBBSID + '.msg');
@@ -3286,10 +3286,10 @@ Begin
     If FileExist(Config.QwkGoodbye) Then FileCopy(Config.qwkGoodbye, Session.TempPath + JustFile(Config.qwkGoodbye));
 
     If Session.LocalMode Then Begin
-      Session.FileBase.ExecuteArchive (Config.QWKPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + FileMask, 1);
+      Session.FileBase.ExecuteArchive (Config.QWKPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
       Session.io.OutFullLn (Session.GetPrompt(235));
     End Else Begin
-      Session.FileBase.ExecuteArchive (Session.TempPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + FileMask, 1);
+      Session.FileBase.ExecuteArchive (Session.TempPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
       Session.FileBase.SendFile (Session.TempPath + Temp);
     End;
 

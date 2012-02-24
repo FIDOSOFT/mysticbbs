@@ -24,20 +24,13 @@ Uses
 
 Const
   WinConsoleTitle = 'Mystic Node ';
-  {$IFDEF UNIX}
-    FileMask = '*';
-  {$ELSE}
-    FileMask = '*.*';
-  {$ENDIF}
-  CopyID        = 'Copyright (C) 1997-2012 By James Coyle.  All Rights Reserved.';
-  DateTypeStr   : Array[1..4] of String[8] = ('MM/DD/YY', 'DD/MM/YY', 'YY/DD/MM', 'Ask     ');
-  GetKeyFunc    : Function (Forced : Boolean) : Boolean = NIL;
+  CopyID          = 'Copyright (C) 1997-2012 By James Coyle.  All Rights Reserved.';
+  DateTypeStr : Array[1..4] of String[8] = ('MM/DD/YY', 'DD/MM/YY', 'YY/DD/MM', 'Ask     ');
+  GetKeyFunc  : Function (Forced : Boolean) : Boolean = NIL;
 
 Var
-  Screen  : TOutput;
-  Input   : TInput;
-  // input will be gone, client and screen will be passed.
-
+  Screen      : TOutput;
+  Input       : TInput;
   CurRoom     : Byte;
   NodeMsgFile : File of NodeMsgRec;
   NodeMsg     : NodeMsgRec;
@@ -55,19 +48,19 @@ Var
 
 Procedure EditAccessFlags (Var Flags : AccessFlagType);
 Function  DrawAccessFlags (Var Flags : AccessFlagType) : String;
-Function  NoGetKeyFunc (Forced : Boolean) : Boolean;
-Function  getColor (A: Byte) : Byte;
-Procedure KillRecord (var dFile; RecNum: LongInt; RecSize: Word);
-Procedure AddRecord (var dFile; RecNum: LongInt; RecSize: Word);
-Function  Bool_Search (Mask: String; Str: String) : Boolean;
-Function  strAddr2Str (Addr: RecEchoMailAddr) : String;
-Function  strStr2Addr (S : String; Var Addr: RecEchoMailAddr) : Boolean;
-Function  CheckPath (Str: String) : String;
-Function  ShellDOS (ExecPath: String; Command: String) : LongInt;
+Function  NoGetKeyFunc    (Forced : Boolean) : Boolean;
+Function  getColor        (A: Byte) : Byte;
+Procedure KillRecord      (Var dFile; RecNum: LongInt; RecSize: Word);
+Procedure AddRecord       (var dFile; RecNum: LongInt; RecSize: Word);
+Function  Bool_Search     (Mask: String; Str: String) : Boolean;
+Function  strAddr2Str     (Addr: RecEchoMailAddr) : String;
+Function  strStr2Addr     (S : String; Var Addr: RecEchoMailAddr) : Boolean;
+Function  CheckPath       (Str: String) : String;
+Function  ShellDOS        (ExecPath: String; Command: String) : LongInt;
 
 {$IFNDEF UNIX}
 Procedure Update_Status_Line (Mode: Byte; Str: String);
-Procedure Process_Sysop_Cmd (Cmd: Char);
+Procedure Process_Sysop_Cmd  (Cmd: Char);
 {$ENDIF}
 
 Implementation
@@ -251,7 +244,6 @@ End;
 
 Function ShellDOS (ExecPath: String; Command: String) : LongInt;
 Var
-  RetVal : Integer;
   {$IFNDEF UNIX}
     Image : TConsoleImageRec;
   {$ENDIF}
@@ -281,13 +273,13 @@ Begin
   If ExecPath <> '' Then DirChange(ExecPath);
 
   {$IFDEF UNIX}
-    RetVal := Shell (Command);
+    Result := Shell (Command);
   {$ENDIF}
 
   {$IFDEF WINDOWS}
     If Command <> '' Then Command := '/C' + Command;
     Exec (GetEnv('COMSPEC'), Command);
-    RetVal := DosExitCode;
+    Result := DosExitCode;
   {$ENDIF}
 
   {$IFDEF UNIX}
@@ -315,7 +307,6 @@ Begin
   {$ENDIF}
 
   Session.TimeOut  := TimerSeconds;
-  ShellDOS := RetVal;
 End;
 
 {$IFNDEF UNIX}

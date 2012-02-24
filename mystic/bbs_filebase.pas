@@ -436,7 +436,7 @@ Begin
   If ExportFileList(NewFiles, False) Then Begin
     If Session.io.GetYN (Session.GetPrompt(227), True) Then Begin
       FileName := FileName + Session.User.ThisUser.Archive;
-      ExecuteArchive (Session.TempPath + FileName, Session.User.ThisUser.Archive, Session.TempPath + FileMask, 1);
+      ExecuteArchive (Session.TempPath + FileName, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
     End Else
       FileName := FileName + 'txt';
 
@@ -3386,7 +3386,7 @@ Var
 
     Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
 
-    FindFirst(FBase.Path + FileMask, Archive, DirInfo);
+    FindFirst(FBase.Path + '*', Archive, DirInfo);
 
     While DosError = 0 Do Begin
       OldPos := FilePos(FBaseFile);
