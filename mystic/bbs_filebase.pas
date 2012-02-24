@@ -1881,9 +1881,11 @@ Var
             Session.io.PromptInfo[3] := strI2S(FDir.Downloads);
             Session.io.PromptInfo[4] := Str;
             Session.io.PromptInfo[5] := FDir.Uploader;
+
             OK := ShowText(strDesc);
           End Else Begin
             Session.io.PromptInfo[4] := Str;
+
             OK := ShowText(strExtDesc);
           End;
 

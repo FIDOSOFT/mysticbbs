@@ -34,6 +34,7 @@ Uses
   m_DateTime,
   m_Strings,
   m_QuickSort,
+  m_FileIO,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
   bbs_MsgBase_Squish;
@@ -73,15 +74,16 @@ End;
 (***************************************************************************)
 
 Const
-  FilePack  : Boolean = False;
-  FileSort  : Boolean = False;
-  FileCheck : Boolean = False;
-  BBSPack   : Boolean = False;
-  BBSSort   : Boolean = False;
-  BBSKill   : Boolean = False;
-  UserKill  : Boolean = False;
-  UserPack  : Boolean = False;
-  MsgTrash  : Boolean = False;
+  FilePack   : Boolean = False;
+  FileSort   : Boolean = False;
+  FileCheck  : Boolean = False;
+  FileUpload : Boolean = False;
+  BBSPack    : Boolean = False;
+  BBSSort    : Boolean = False;
+  BBSKill    : Boolean = False;
+  UserKill   : Boolean = False;
+  UserPack   : Boolean = False;
+  MsgTrash   : Boolean = False;
 
   UserKillDays : Integer   = 0;
   BBSSortID    : String[8] = '';
@@ -825,6 +827,118 @@ Begin
   WriteLn;
 End;
 
+Procedure Upload_File_Bases;
+Const
+  NoDescStr = 'No Description';
+Var
+  BaseFile : File of FBaseRec;
+  ListFile : File of RecFileList;
+  DescFile : File;
+  Base     : FBaseRec;
+  List     : RecFileList;
+  DirInfo  : SearchRec;
+  Found    : Boolean;
+  Desc     : Array[1..99] of String[50];
+  Count    : Integer;
+Begin
+  Write ('Mass Upload Files    :');
+
+  Assign (BaseFile, Config.DataPath + 'fbases.dat');
+  {$I-} Reset (BaseFile); {$I+}
+
+  If IoResult = 0 Then Begin
+    While Not Eof(BaseFile) Do Begin
+      Read (BaseFile, Base);
+
+      Update_Status (strStripPipe(Base.Name));
+      Update_Bar    (FilePos(BaseFile), FileSize(BaseFile));
+
+      If Not FileDirExists(Base.Path) Then Continue;
+
+      FindFirst (Base.Path + '*', AnyFile, DirInfo);
+
+      While DosError = 0 Do Begin
+        If (DirInfo.Attr And Directory <> 0) or
+           (Length(DirInfo.Name) > 70) Then Begin
+             FindNext(DirInfo);
+             Continue;
+        End;
+
+        // should technically rename the file like Mystic does if > 70 chars
+
+        Assign (ListFile, Config.DataPath + Base.FileName + '.dir');
+
+        If FileExist(Config.DataPath + Base.FileName + '.dir') Then
+          ioReset (ListFile, SizeOf(RecFileList), fmRWDN)
+        Else
+          ReWrite (ListFile);
+
+        Found := False;
+
+        While Not Eof(ListFile) And Not Found Do Begin
+          Read (ListFile, List);
+
+          If List.Flags and FDirDeleted <> 0 Then Continue;
+
+          {$IFDEF FS_SENSITIVE}
+            Found := List.FileName = DirInfo.Name;
+          {$ELSE}
+            Found := strUpper(List.FileName) = strUpper(DirInfo.Name);
+          {$ENDIF}
+        End;
+
+        If Not Found Then Begin
+          Seek (ListFile, FileSize(ListFile));
+
+          List.FileName  := DirInfo.Name;
+          List.Size      := DirInfo.Size;
+          List.DateTime  := CurDateDos;
+          List.Uploader  := 'MBBSUTIL';
+          List.Flags     := 0;
+          List.Downloads := 0;
+          List.Rating    := 0;
+
+          // IMPORT FILE_ID.DIZ here if not found then
+
+          List.DescLines := 1;
+          Desc[1]        := NoDescStr;
+
+          Assign (DescFile, Config.DataPath + Base.FileName + '.des');
+
+          If FileExist(Config.DataPath + Base.FileName + '.des') Then
+            Reset (DescFile, 1)
+          Else
+            ReWrite (DescFile, 1);
+
+          List.DescPtr := FileSize(DescFile);
+
+          Seek (DescFile, List.DescPtr);
+
+          For Count := 1 to List.DescLines Do
+            BlockWrite (DescFile, Desc[Count][0], Length(Desc[Count]) + 1);
+
+          Close (DescFile);
+
+          Write (ListFile, List);
+        End;
+
+        Close (ListFile);
+
+        FindNext(DirInfo);
+      End;
+
+      FindClose(DirInfo);
+    End;
+
+    Close (BaseFile);
+  End;
+
+  Update_Bar(100, 100);
+  Update_Status('Completed');
+
+  WriteLn;
+End;
+
 Var
   A        : Byte;
   Temp     : String;
@@ -908,6 +1022,7 @@ Begin
     If Temp = '-FCHECK' Then FileCheck := True;
     If Temp = '-FPACK'  Then FilePack  := True;
     If Temp = '-FSORT'  Then FileSort  := True;
+    If Temp = '-FUPLOAD' Then FileUpload := True;
     If Temp = '-UKILL'  Then Begin
       UserKill := True;
       Inc(A);
@@ -955,13 +1070,14 @@ Begin
     End;
   End;
 
-  If FileSort  Then Sort_File_Bases;
-  If FileCheck Then Check_File_Bases;
-  If FilePack  Then Pack_File_Bases;
-  If BBSKill   Then Kill_BBS_List;
-  If BBSPack   Then Pack_BBS_List;
-  If BBSSort   Then Sort_BBS_List;
-  If UserKill  Then Kill_User_File;
-  If UserPack  Then Pack_User_File;
-  If MsgTrash  Then MsgBase_Trash;
+  If FileUpload Then Upload_File_Bases;
+  If FileSort   Then Sort_File_Bases;
+  If FileCheck  Then Check_File_Bases;
+  If FilePack   Then Pack_File_Bases;
+  If BBSKill    Then Kill_BBS_List;
+  If BBSPack    Then Pack_BBS_List;
+  If BBSSort    Then Sort_BBS_List;
+  If UserKill   Then Kill_User_File;
+  If UserPack   Then Pack_User_File;
+  If MsgTrash   Then MsgBase_Trash;
 End.
