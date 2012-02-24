@@ -23,7 +23,8 @@ Program MBBSUTIL;
 
 // post a text file to msg base?
 // auto mass upload
-// import AREAS.BBS?
+// export AREAS.BBS?
+// import FIDONET.NA
 // .TIC stuff?
 
 {$I M_OPS.PAS}
@@ -41,38 +42,6 @@ Uses
 
 {$I RECORDS.PAS}
 
-Type
-  JamLastType = Record
-    NameCrc  : LongInt;
-    UserNum  : LongInt;
-    LastRead : LongInt;
-    HighRead : LongInt;
-  End;
-
-  SquLastType = LongInt;
-
-Function Rename_File (OldFN, NewFN: String) : Boolean;
-Var
-  OldF : File;
-Begin
-  Assign (OldF, NewFN);
-  {$I-} Erase (OldF); {$I+}
-  If IoResult = 0 Then;
-
-  Assign (OldF, OldFN);
-  {$I-} ReName (OldF, NewFN); {$I+}
-  Rename_File := (IoResult = 0);
-End;
-
-Function Exist (Str : String) : Boolean;
-Begin
-  Exist := FSearch(Str, '') <> '';
-End;
-
-(***************************************************************************)
-(***************************************************************************)
-(***************************************************************************)
-
 Const
   FilePack   : Boolean = False;
   FileSort   : Boolean = False;
@@ -84,22 +53,105 @@ Const
   UserKill   : Boolean = False;
   UserPack   : Boolean = False;
   MsgTrash   : Boolean = False;
+  NodeCheck  : Boolean = True;
 
-  UserKillDays : Integer   = 0;
-  BBSSortID    : String[8] = '';
-  BBSSortType  : Byte      = 0;
-  BBSKillID    : String[8] = '';
-  BBSKillDays  : Integer   = 0;
-  TrashFile    : String    = '';
+  UserKillDays : Integer = 0;
+  BBSSortID    : String  = '';
+  BBSSortType  : Byte    = 0;
+  BBSKillID    : String  = '';
+  BBSKillDays  : Integer = 0;
+  TrashFile    : String  = '';
+  TempPath     : String  = '';
 
 Var
   ConfigFile : File of RecConfig;
   Config     : RecConfig;
 
+Type
+  JamLastType = Record
+    NameCrc  : LongInt;
+    UserNum  : LongInt;
+    LastRead : LongInt;
+    HighRead : LongInt;
+  End;
+
+  SquLastType = LongInt;
+
+Function ShellDOS (ExecPath: String; Command: String) : LongInt;
+Begin
+  If ExecPath <> '' Then DirChange(ExecPath);
+
+  {$IFDEF UNIX}
+    Result := Shell (Command);
+  {$ENDIF}
+
+  {$IFDEF WINDOWS}
+    If Command <> '' Then Command := '/C' + Command;
+
+    Exec (GetEnv('COMSPEC'), Command);
+
+    Result := DosExitCode;
+  {$ENDIF}
+
+  DirChange(Config.SystemPath);
+End;
+
+Procedure ExecuteArchive (FName: String; Temp: String; Mask: String; Mode: Byte);
+{mode: 1 = pack, 2 = unpack}
+Var
+  A       : Byte;
+  Temp2   : String[60];
+  ArcFile : File of RecArchive;
+  Arc     : RecArchive;
+Begin
+  Temp := JustFileExt(FName);
+
+  Reset (ArcFile);
+
+  Repeat
+    If Eof(ArcFile) Then Begin
+      Close (ArcFile);
+      Exit;
+    End;
+
+    Read (ArcFile, Arc);
+
+    If (Not Arc.Active) or (Arc.OSType <> OSType) Then Continue;
+
+    If Arc.Ext = Temp Then Break;
+  Until False;
+
+  Close (ArcFile);
+
+  Case Mode of
+    1 : Temp2 := Arc.Pack;
+    2 : Temp2 := Arc.Unpack;
+  End;
+
+  If Temp2 = '' Then Exit;
+
+  Temp := '';
+  A    := 1;
+
+  While A <= Length(Temp2) Do Begin
+    If Temp2[A] = '%' Then Begin
+      Inc(A);
+      If Temp2[A] = '1' Then Temp := Temp + FName Else
+      If Temp2[A] = '2' Then Temp := Temp + Mask Else
+      If Temp2[A] = '3' Then Temp := Temp + TempPath;
+    End Else
+      Temp := Temp + Temp2[A];
+
+    Inc(A);
+  End;
+
+  ShellDOS ('', Temp);
+End;
+
 Procedure Update_Status (Str: String);
 Begin
   GotoXY (44, WhereY);
-  Write (strPadR(Str, 35, ' '));
+  Write  (strPadR(Str, 35, ' '));
 End;
 
 Procedure Update_Bar (Cur, Total: Integer);
@@ -107,15 +159,16 @@ Var
   Percent : Byte;
 Begin
   Percent := Round(Cur / Total * 100 / 10);
+
   GotoXY (24, WhereY);
-  Write (strRep(#178, Percent));
-  Write (strRep(#176, 10 - Percent));
-  Write (strPadL(strI2S(Percent * 10) + '%', 5, ' '));
+  Write  (strRep(#178, Percent));
+  Write  (strRep(#176, 10 - Percent));
+  Write  (strPadL(strI2S(Percent * 10) + '%', 5, ' '));
 End;
 
 Procedure Show_Help;
 Begin
-  WriteLn ('Usage: MBBSUTIL.EXE  <Options>');
+  WriteLn ('Usage: MBBSUTIL <Options>');
   WriteLn;
   WriteLn ('The following command line options are available:');
   WriteLn;
@@ -125,10 +178,16 @@ Begin
   WriteLn ('-FCHECK             Checks file entries for correct size and status');
   WriteLn ('-FPACK              Pack file bases');
   WriteLn ('-FSORT              Sort file base entries by filename');
+  WriteLn ('-FUPLOAD            Mass upload all files into filebases');
+  WriteLn ('-MTRASH <File>      Delete messages to/from users listed in <File>');
+  WriteLn ('-NOCHECK            Bypass online user check at startup');
   WriteLn ('-UKILL  <Days>      Delete users who have not called in <DAYS>');
   WriteLn ('-UPACK              Pack user database');
-  WriteLn ('-MTRASH <File>      Delete messages to/from users listed in <File>');
 End;
+
+(***************************************************************************)
+(***************************************************************************)
+(***************************************************************************)
 
 Procedure Sort_File_Bases;
 Var
@@ -149,10 +208,10 @@ Begin
   While Not Eof(FBaseFile) Do Begin
     Read (FBaseFile, FBase);
 
-    Update_Bar (FilePos(FBaseFile), FileSize(FBaseFile));
+    Update_Bar    (FilePos(FBaseFile), FileSize(FBaseFile));
     Update_Status (strStripMCI(FBase.Name));
 
-    If ReName_File (Config.DataPath + FBase.FileName + '.dir', Config.DataPath + FBase.FileName + '.dib') Then Begin
+    If FileRename (Config.DataPath + FBase.FileName + '.dir', Config.DataPath + FBase.FileName + '.dib') Then Begin
       Assign (FDirFile, Config.DataPath + FBase.FileName + '.dib');
       Reset  (FDirFile);
 
@@ -165,9 +224,9 @@ Begin
         Read (FDirFile, FDir);
         If (FDir.Flags AND FDirDeleted = 0) Then
           {$IFDEF FS_SENSITIVE}
-          SortList.Add(FDir.FileName, FilePos(FDirFile) - 1);
+            SortList.Add(FDir.FileName, FilePos(FDirFile) - 1);
           {$ELSE}
-          SortList.Add(strUpper(FDir.FileName), FilePos(FDirFile) - 1);
+            SortList.Add(strUpper(FDir.FileName), FilePos(FDirFile) - 1);
           {$ENDIF}
       End;
 
@@ -186,44 +245,46 @@ Begin
       Close (TFDirFile);
     End;
   End;
+
   Close (FBaseFile);
 
   Update_Status ('Completed');
+
   WriteLn;
 End;
 
 Procedure Pack_File_Bases;
 Var
-  A           : Byte;
-  Temp        : String[50];
-  FDirFile    : File of RecFileList;
-  TFDirFile   : File of RecFileList;
-  FDir        : RecFileList;
-  DataFile    : File;
-  TDataFile   : File;
-  FBaseFile   : File of FBaseRec;
-  FBase       : FBaseRec;
-
+  A         : Byte;
+  Temp      : String[50];
+  FDirFile  : File of RecFileList;
+  TFDirFile : File of RecFileList;
+  FDir      : RecFileList;
+  DataFile  : File;
+  TDataFile : File;
+  FBaseFile : File of FBaseRec;
+  FBase     : FBaseRec;
 Begin
   Write ('Packing File Bases   : ');
 
   Assign (FBaseFile, Config.DataPath + 'fbases.dat');
   {$I-} Reset (FBaseFile); {$I+}
+
   If IoResult <> 0 Then Exit;
 
   While Not Eof(FBaseFile) Do Begin
     Read (FBaseFile, FBase);
 
-    Update_Bar (FilePos(FBaseFile), FileSize(FBaseFile));
-    Update_Status (strStripMCI(FBase.Name));
+    Update_Bar    (FilePos(FBaseFile), FileSize(FBaseFile));
+    Update_Status (strStripPipe(FBase.Name));
 
-    If ReName_File (Config.DataPath + FBase.FileName + '.dir', Config.DataPath + FBase.FileName + '.dib') Then Begin
+    If FileRename (Config.DataPath + FBase.FileName + '.dir', Config.DataPath + FBase.FileName + '.dib') Then Begin
       Assign  (FDirFile, Config.DataPath + FBase.FileName + '.dib');
       Reset   (FDirFile);
       Assign  (TFDirFile, Config.DataPath + FBase.FileName + '.dir');
       ReWrite (TFDirFile);
 
-      If ReName_File (Config.DataPath + FBase.FileName + '.des', Config.DataPath + FBase.FileName + '.deb') Then Begin
+      If FileRename (Config.DataPath + FBase.FileName + '.des', Config.DataPath + FBase.FileName + '.deb') Then Begin
 
         Assign (TDataFile, Config.DataPath + FBase.FileName + '.deb');
         Reset  (TDataFile, 1);
@@ -250,18 +311,22 @@ Begin
           End;
 
         End;
+
         Close (TDataFile);
         Erase (TDataFile); {delete backup file}
         Close (DataFile);
       End;
+
       Close (FDirFile);
       Erase (FDirFile); {delete backup file}
       Close (TFDirFile);
     End;
   End;
+
   Close (FBaseFile);
 
   Update_Status ('Completed');
+
   WriteLn;
 End;
 
@@ -278,15 +343,16 @@ Begin
 
   Assign (FBaseFile, Config.DataPath + 'fbases.dat');
   {$I-} Reset (FBaseFile); {$I+}
+
   If IoResult <> 0 Then Exit;
 
   While Not Eof(FBaseFile) Do Begin
     Read (FBaseFile, FBase);
 
-    Update_Bar (FilePos(FBaseFile), FileSize(FBaseFile));
-    Update_Status (strStripMCI(FBase.Name));
+    Update_Bar    (FilePos(FBaseFile), FileSize(FBaseFile));
+    Update_Status (strStripPipe(FBase.Name));
 
-    If ReName_File (Config.DataPath + FBase.FileName + '.dir', Config.DataPath + FBase.FileName + '.dib') Then Begin
+    If FileRename (Config.DataPath + FBase.FileName + '.dir', Config.DataPath + FBase.FileName + '.dib') Then Begin
       Assign  (FDirFile, Config.DataPath + FBase.FileName + '.dib');
       Reset   (FDirFile);
       Assign  (TFDirFile, Config.DataPath + FBase.FileName + '.dir');
@@ -294,6 +360,7 @@ Begin
 
       While Not Eof(FDirFile) Do Begin
         Read (FDirFile, FDir);
+
         If FDir.Flags And FDirDeleted = 0 Then Begin
           Assign (DF, FBase.Path + FDir.FileName);
           {$I-} Reset (DF); {$I+}
@@ -309,17 +376,21 @@ Begin
 
             Close (DF);
           End;
+
           Write (TFDirFile, FDir);
         End;
       End;
+
       Close (FDirFile); {delete backup file}
       Erase (FDirFile);
       Close (TFDirFile);
     End;
   End;
+
   Close (FBaseFile);
 
   Update_Status ('Completed');
+
   WriteLn;
 End;
 
@@ -329,18 +400,19 @@ Var
   BBSFile  : File of BBSListRec;
   BBSList  : BBSListRec;
   Dir      : SearchRec;
-  D : DirStr;
-  N : NameStr;
-  E : ExtStr;
+  D        : DirStr;
+  N        : NameStr;
+  E        : ExtStr;
 Begin
   Write ('Packing BBS File     :');
 
   FindFirst (Config.DataPath + '*.bbi', AnyFile - Directory, Dir);
+
   While DosError = 0 Do Begin
 
     FSplit (Dir.Name, D, N, E);
 
-    If ReName_File (Config.DataPath + Dir.Name, Config.DataPath + N + '.bbz') Then Begin
+    If FileRename (Config.DataPath + Dir.Name, Config.DataPath + N + '.bbz') Then Begin
 
       Assign (TBBSFile, Config.DataPath + N + '.bbz');
       Reset  (TBBSFile);
@@ -353,7 +425,7 @@ Begin
 
         If Not BBSList.Deleted Then Write (BBSFile, BBSList);
 
-        Update_Bar (FilePos(TBBSFile), FileSize(TBBSFile));
+        Update_Bar    (FilePos(TBBSFile), FileSize(TBBSFile));
         Update_Status (BBSList.BBSName);
       End;
 
@@ -383,7 +455,7 @@ Procedure Sort_BBS_List;
     Str      : String;
     A        : Word;
   Begin
-    If ReName_File (Config.DataPath + BBSSortID + '.bbi', Config.DataPath + BBSSortID + '.bbz') Then Begin
+    If FileRename (Config.DataPath + BBSSortID + '.bbi', Config.DataPath + BBSSortID + '.bbz') Then Begin
 
       Update_Status (BBSSortID);
 
@@ -438,6 +510,7 @@ Begin
 
   If strUpper(BBSSortID) = 'ALL' Then Begin
     FindFirst (Config.DataPath + '*.bbi', AnyFile - Directory, Dir);
+
     While DosError = 0 Do Begin
       FSplit (Dir.Name, D, N, E);
       BBSSortID := N;
@@ -450,6 +523,7 @@ Begin
     SortList;
 
   Update_Status ('Completed');
+
   WriteLn;
 End;
 
@@ -461,7 +535,7 @@ Procedure Kill_BBS_List;
     BBSFile  : File of BBSListRec;
     BBS      : BBSListRec;
   Begin
-    If ReName_File (Config.DataPath + BBSKillID + '.bbi', Config.DataPath + BBSKillID + '.bbb') Then Begin
+    If FileRename (Config.DataPath + BBSKillID + '.bbi', Config.DataPath + BBSKillID + '.bbb') Then Begin
 
       Assign (TBBSFile, Config.DataPath + BBSKillID + '.bbb');
       Reset  (TBBSFile);
@@ -477,6 +551,7 @@ Procedure Kill_BBS_List;
         If DaysAgo(BBS.Verified) >= BBSKillDays Then Begin
           BBS.Deleted := True;
           BBSPack     := True;
+
           Update_Status ('Killing ' + BBS.BBSName);
         End;
 
@@ -499,10 +574,12 @@ Begin
 
   If strUpper(BBSKillID) = 'ALL' Then Begin
     FindFirst (Config.DataPath + '*.bbi', AnyFile - Directory, Dir);
+
     While DosError = 0 Do Begin
       FSplit (Dir.Name, D, N, E);
       BBSKillID := N;
       PackFile;
+
       FindNext(Dir);
     End;
 
@@ -511,6 +588,7 @@ Begin
     PackFile;
 
   Update_Status ('Completed');
+
   WriteLn;
 End;
 
@@ -522,7 +600,7 @@ Var
 Begin
   Write ('Killing User File    :');
 
-  If ReName_File (Config.DataPath + 'users.dat', Config.DataPath + 'users.dab') Then Begin
+  If FileRename (Config.DataPath + 'users.dat', Config.DataPath + 'users.dab') Then Begin
 
     Assign (TUserFile, Config.DataPath + 'users.dab');
     Reset  (TUserFile);
@@ -543,12 +621,14 @@ Begin
 
       Write (UserFile, User);
     End;
+
     Close (UserFile);
     Close (tUserFile);
     Erase (tUserFile);
   End;
 
   Update_Status ('Completed');
+
   WriteLn;
 End;
 
@@ -576,7 +656,7 @@ Var
 Begin
   Write ('Packing User File    :');
 
-  If ReName_File (Config.DataPath + 'users.dat', Config.DataPath + 'users.dab') Then Begin
+  If FileRename (Config.DataPath + 'users.dat', Config.DataPath + 'users.dab') Then Begin
 
     Assign (TUserFile, Config.DataPath + 'users.dab');
     Reset  (TUserFile);
@@ -651,7 +731,7 @@ Begin
               0 : Begin
                     { DELETE JAM LASTREAD RECORDS }
 
-                    If ReName_File (MBase.Path + MBase.FileName + '.jlr', MBase.Path + MBase.FileName + '.jlb') Then Begin
+                    If FileRename (MBase.Path + MBase.FileName + '.jlr', MBase.Path + MBase.FileName + '.jlb') Then Begin
                       Assign (TJamLRFile, MBase.Path + MBase.FileName + '.jlb');
                       Reset  (TJamLRFile);
 
@@ -690,6 +770,7 @@ Begin
                         Seek (SquLRFile, FileSize(SquLRFile) - 1);
                         Truncate (SquLRFile);
                       End;
+
                       Close (SquLRFile);
                     End;
                   End;
@@ -710,9 +791,11 @@ Begin
                 Seek (MScanFile, FileSize(MScanFile) - 1);
                 Truncate (MScanFile);
               End;
+
               Close (MScanFile);
             End;
           End;
+
           Close (MBaseFile);
         End;
 
@@ -725,6 +808,7 @@ Begin
             Read (FBaseFile, FBase);
             Assign (FScanFile, Config.DataPath + FBase.FileName + '.scn');
             {$I-} Reset (FScanFile); {$I+}
+
             If IoResult = 0 Then Begin
               If FilePos(TUserFile) - 1 - Deleted <{=} FileSize(FScanFile) Then Begin
                 For Count := FilePos(TUserFile) - 1 - Deleted to FileSize(FScanFile) - 2 Do Begin
@@ -733,12 +817,15 @@ Begin
                   Seek  (FScanFile, Count);
                   Write (FScanFile, FScan);
                 End;
+
                 Seek (FScanFile, FileSize(FScanFile) - 1);
                 Truncate (FScanFile);
               End;
+
               Close (FScanFile);
             End;
           End;
+
           Close (FBaseFile);
         End;
 
@@ -752,6 +839,7 @@ Begin
   End;
 
   Update_Status ('Completed');
+
   WriteLn;
 End;
 
@@ -824,6 +912,7 @@ Begin
 
   Update_Bar(100, 100);
   Update_Status('Completed');
+
   WriteLn;
 End;
 
@@ -834,12 +923,26 @@ Var
   BaseFile : File of FBaseRec;
   ListFile : File of RecFileList;
   DescFile : File;
+  DizFile  : Text;
   Base     : FBaseRec;
   List     : RecFileList;
   DirInfo  : SearchRec;
   Found    : Boolean;
   Desc     : Array[1..99] of String[50];
   Count    : Integer;
+
+  Procedure RemoveDesc (Num: Byte);
+  Var
+    A : Byte;
+  Begin
+    For A := Num To List.DescLines - 1 Do
+      Desc[A] := Desc[A + 1];
+
+    Desc[List.DescLines] := '';
+
+    Dec (List.DescLines);
+  End;
+
 Begin
   Write ('Mass Upload Files    :');
 
@@ -898,10 +1001,38 @@ Begin
           List.Downloads := 0;
           List.Rating    := 0;
 
-          // IMPORT FILE_ID.DIZ here if not found then
+          ExecuteArchive (Base.Path + List.FileName, '', 'file_id.diz', 2);
 
-          List.DescLines := 1;
-          Desc[1]        := NoDescStr;
+          Assign (DizFile, TempPath + 'file_id.diz');
+          {$I-} Reset (DizFile); {$I+}
+
+          If IoResult = 0 Then Begin
+            List.DescLines := 0;
+
+            While Not Eof(DizFile) Do Begin
+              Inc    (List.DescLines);
+              ReadLn (DizFile, Desc[List.DescLines]);
+
+              Desc[List.DescLines] := strStripLOW(Desc[List.DescLines]);
+
+              If Length(Desc[List.DescLines]) > mysMaxFileDescLen Then Desc[List.DescLines][0] := Chr(mysMaxFileDescLen);
+
+              If List.DescLines = Config.MaxFileDesc Then Break;
+            End;
+
+            Close (DizFile);
+
+            While (Desc[1] = '') and (List.DescLines > 0) Do
+              RemoveDesc(1);
+
+            While (Desc[List.DescLines] = '') And (List.DescLines > 0) Do
+              Dec (List.DescLines);
+          End Else Begin
+            List.DescLines := 1;
+            Desc[1]        := NoDescStr;
+          End;
+
+          FileErase (TempPath + 'file_id.diz');
 
           Assign (DescFile, Config.DataPath + Base.FileName + '.des');
 
@@ -933,8 +1064,8 @@ Begin
     Close (BaseFile);
   End;
 
-  Update_Bar(100, 100);
-  Update_Status('Completed');
+  Update_Bar    (100, 100);
+  Update_Status ('Completed');
 
   WriteLn;
 End;
@@ -946,6 +1077,7 @@ Var
   Chat     : ChatRec;
 Begin
   TextAttr := 7;
+
   WriteLn;
   WriteLn ('MBBSUTIL: ', mysSoftwareID, ' BBS Utilities Version ', mysVersion, ' (', OSID, ')');
   WriteLn ('Copyright (C) 1997-2012 By James Coyle.  All Rights Reserved.');
@@ -955,11 +1087,13 @@ Begin
 
   Assign (ConfigFile, 'mystic.dat');
   {$I-} Reset(ConfigFile); {$I+}
+
   If IoResult <> 0 Then Begin
     WriteLn ('Error reading MYSTIC.DAT.  Run MBBSUTIL from the main BBS directory.');
     Halt(1);
   End;
-  Read (ConfigFile, Config);
+
+  Read  (ConfigFile, Config);
   Close (ConfigFile);
 
   If Config.DataChanged <> mysDataChanged Then Begin
@@ -976,11 +1110,12 @@ Begin
 
   While (A <= ParamCount) Do Begin
     Temp := strUpper(ParamStr(A));
+
     If Temp = '-BKILL' Then Begin
       BBSKillID   := ParamStr(A+1);
       BBSKillDays := strS2I(ParamStr(A+2));
       Inc(A, 2);
-      If (strUpper(BBSKillID) <> 'ALL') And Not Exist(Config.DataPath + BBSKillID + '.bbi') Then Begin
+      If (strUpper(BBSKillID) <> 'ALL') And Not FileExist(Config.DataPath + BBSKillID + '.bbi') Then Begin
         WriteLn ('ERROR: -BKILL: List ID (' + BBSKillID + ') does not exist.');
         Halt(1);
       End Else
@@ -990,6 +1125,7 @@ Begin
       End Else
         BBSKill := True;
     End;
+
     If Temp = '-BPACK'  Then BBSPack   := True;
     If Temp = '-BSORT'  Then Begin
       BBSSortID := ParamStr(A+1);
@@ -1013,7 +1149,7 @@ Begin
         Halt(1);
       End;
 
-      If (strUpper(BBSSortID) <> 'ALL') And Not Exist(Config.DataPath + BBSSortID + '.bbi') Then Begin
+      If (strUpper(BBSSortID) <> 'ALL') And Not FileExist(Config.DataPath + BBSSortID + '.bbi') Then Begin
         WriteLn ('ERROR: -BSORT: List ID (' + BBSSortID + ') does not exist.');
         Halt(1);
       End Else
@@ -1025,8 +1161,11 @@ Begin
     If Temp = '-FUPLOAD' Then FileUpload := True;
     If Temp = '-UKILL'  Then Begin
       UserKill := True;
+
       Inc(A);
+
       UserKillDays := strS2I(ParamStr(A));
+
       If UserKillDays < 5 Then Begin
         WriteLn ('ERROR: -UKILL days must be set to at LEAST 5.');
         Halt(1);
@@ -1038,7 +1177,7 @@ Begin
       MsgTrash  := True;
       TrashFile := strStripB(ParamStr(A), ' ');
 
-      If (TrashFile <> '') And Not Exist(TrashFile) Then Begin
+      If (TrashFile <> '') And Not FileExist(TrashFile) Then Begin
         WriteLn('ERROR: Trash file does not exist.');
         Halt(1);
       End;
@@ -1050,25 +1189,41 @@ Begin
     Inc (A);
   End;
 
-  For A := 1 to Config.INetTNNodes Do Begin
-    Assign (ChatFile, Config.DataPath + 'chat' + strI2S(A) + '.dat');
-    {$I-} Reset (ChatFile); {$I+}
-    If IoResult = 0 Then Begin
-      Read (ChatFile, Chat);
-      If Chat.Active Then Begin
-        WriteLn ('ERROR: MBBSUTIL has detected that a user is online at this time.');
-        WriteLn ('       In order to prevent corruption of the system data files,');
-        WriteLn ('       this program should only be ran when there are NO users');
-        WriteLn ('       logged in to the BBS system.');
-        WriteLn ('');
-        WriteLn ('Create a system event to log off all users before running this program.');
-        WriteLn ('If there are NO users online and MBBSUTIL detects that there are, try');
-        WriteLn ('changing to the data directory, typing "DEL CHAT*.DAT" then re-run');
-        WriteLn ('MBBSUTIL');
-        Halt(1);
+  If NodeCheck Then
+    For A := 1 to Config.INetTNNodes Do Begin
+      Assign (ChatFile, Config.DataPath + 'chat' + strI2S(A) + '.dat');
+      {$I-} Reset (ChatFile); {$I+}
+
+      If IoResult = 0 Then Begin
+        Read (ChatFile, Chat);
+
+        If Chat.Active Then Begin
+          WriteLn ('ERROR: MBBSUTIL has detected that a user is online at this time.');
+          WriteLn ('       In order to prevent corruption of the system data files,');
+          WriteLn ('       this program should only be ran when there are NO users');
+          WriteLn ('       logged in to the BBS system.');
+          WriteLn ('');
+          WriteLn ('Create a system event to log off all users before running this program.');
+          WriteLn;
+          WriteLn ('If there are NO users online and MBBSUTIL detects that there are, try');
+          WriteLn ('changing to the data directory and deleting "chat*.dat" then re-run');
+          WriteLn ('MBBSUTIL');
+          WriteLn;
+          WriteLn ('Using the -NOCHECK option will bypass this check');
+
+          Halt(1);
+        End;
       End;
     End;
-  End;
+
+  {$I-}
+  MkDir (Config.SystemPath + 'temp0');
+  If IoResult <> 0 Then;
+  {$I+}
+
+  TempPath := Config.SystemPath + 'temp0' + PathChar;
+
+  DirClean (TempPath, '');
 
   If FileUpload Then Upload_File_Bases;
   If FileSort   Then Sort_File_Bases;
