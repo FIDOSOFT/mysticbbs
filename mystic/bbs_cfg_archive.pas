@@ -51,12 +51,13 @@ End;
 
 Procedure Configuration_ArchiveEditor;
 Var
-  Box  : TAnsiMenuBox;
-  List : TAnsiMenuList;
-  F    : TBufFile;
-  Arc  : RecArchive;
+  Box     : TAnsiMenuBox;
+  List    : TAnsiMenuList;
+  F       : TBufFile;
+  Arc     : RecArchive;
+  Copied  : RecArchive;
+  HasCopy : Boolean = False;
 
-  // SORT THIS LIST BY NON CASE SENSITIVE ARCHIVE EXTENSION
   Procedure MakeList;
   Var
     OS : String;
@@ -105,8 +106,7 @@ Begin
     List.Close;
 
     Case List.ExitCode of
-      '/' : Case GetCommandOption(11, 'I-Insert|D-Delete|') of
-              #27 : ;
+      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
               'I' : Begin
                       F.RecordInsert (List.Picked);
 
@@ -124,6 +124,18 @@ Begin
                     End;
               'D' : If ShowMsgBox(1, 'Delete this entry?') Then Begin
                       F.RecordDelete (List.Picked);
+                      MakeList;
+                    End;
+              'C' : If List.Picked <> List.ListMax Then Begin
+                      F.Seek (List.Picked - 1);
+                      F.Read (Copied);
+
+                      HasCopy := True;
+                    End;
+              'P' : If HasCopy Then Begin
+                      F.RecordInsert (List.Picked);
+                      F.Write        (Copied);
+
                       MakeList;
                     End;
             End;

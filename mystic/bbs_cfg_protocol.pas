@@ -49,10 +49,12 @@ End;
 
 Procedure Configuration_ProtocolEditor;
 Var
-  Box  : TAnsiMenuBox;
-  List : TAnsiMenuList;
-  F    : TBufFile;
-  Prot : RecProtocol;
+  Box     : TAnsiMenuBox;
+  List    : TAnsiMenuList;
+  F       : TBufFile;
+  Prot    : RecProtocol;
+  Copied  : RecProtocol;
+  HasCopy : Boolean = False;
 
   Procedure MakeList;
   Var
@@ -105,8 +107,7 @@ Begin
     List.Close;
 
     Case List.ExitCode of
-      '/' : Case GetCommandOption(11, 'I-Insert|D-Delete|') of
-              #27 : ;
+      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
               'I' : Begin
                       F.RecordInsert (List.Picked);
 
@@ -127,6 +128,19 @@ Begin
                         F.RecordDelete (List.Picked);
                         MakeList;
                       End;
+              'C' : If List.Picked <> List.ListMax Then Begin
+                      F.Seek (List.Picked - 1);
+                      F.Read (Copied);
+
+                      HasCopy := True;
+                    End;
+              'P' : If HasCopy Then Begin
+                      F.RecordInsert (List.Picked);
+                      F.Write        (Copied);
+
+                      MakeList;
+                    End;
+
             End;
       #13 : If List.Picked <> List.ListMax Then Begin
               F.Seek (List.Picked - 1);
