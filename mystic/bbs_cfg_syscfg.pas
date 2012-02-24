@@ -224,29 +224,30 @@ Begin
   Box.Open (5, 5, 76, 21);
 
   VerticalLine (26, 7, 19);
-  VerticalLine (58, 7, 13);
+  VerticalLine (58, 7, 14);
 
-  Form.AddBol  ('X', ' List Compression',    8,  7, 28,  7, 18,  3, @Config.FCompress, Topic + '');
-  Form.AddTog  ('X', ' List Columns',       12,  8, 28,  8, 14,  1, 1, 2, '1 2', @Config.FColumns, Topic + '');
-  Form.AddBol  ('X', ' Bases in Groups',     9,  9, 28,  9, 17,  3, @Config.FShowBases, Topic + '');
-  Form.AddBol  ('X', ' Reshow File Header',  6, 10, 28, 10, 20,  3, @Config.FShowHeader, Topic + '');
-  Form.AddTog  ('X', ' Upload Dupe Scan',    8, 11, 28, 11, 18,  7, 0, 2, 'None Current All', @Config.FDupeScan, Topic + '');
-  Form.AddWord ('X', ' Upload Base',        13, 12, 28, 12, 13,  5, 0, 65535, @Config.UploadBase, Topic + '');
-  Form.AddByte ('X', ' Description Lines',   7, 13, 28, 13, 19,  2, 1, 99, @Config.MaxFileDesc, Topic + '');
-  Form.AddBol  ('X', ' Import FILE_ID.DIZ',  6, 14, 28, 14, 20,  3, @Config.ImportDIZ, Topic + '');
-  Form.AddByte ('X', ' Max Comment Lines',   7, 15, 28, 15, 19,  2, 1, 99, @Config.FCommentLines, Topic + '');
-  Form.AddByte ('X', ' Max Comment Cols',    8, 16, 28, 16, 18,  2, 1, 79, @Config.FCommentLen, Topic + '');
-  Form.AddBol  ('X', ' Test Uploads',       12, 17, 28, 17, 14,  3, @Config.TestUploads, Topic + '');
-  Form.AddByte ('X', ' Pass Level',         14, 18, 28, 18, 12,  3, 0, 255, @Config.TestPassLevel, Topic + '');
-  Form.AddStr  ('X', ' Command Line',       12, 19, 28, 19, 14, 45, 80, @Config.TestCmdLine, Topic + '');
+  Form.AddBol  ('L', ' List Compression',    8,  7, 28,  7, 18,  3, @Config.FCompress, Topic + '');
+  Form.AddTog  ('I', ' List Columns',       12,  8, 28,  8, 14,  1, 1, 2, '1 2', @Config.FColumns, Topic + '');
+  Form.AddBol  ('B', ' Bases in Groups',     9,  9, 28,  9, 17,  3, @Config.FShowBases, Topic + '');
+  Form.AddBol  ('R', ' Reshow File Header',  6, 10, 28, 10, 20,  3, @Config.FShowHeader, Topic + '');
+  Form.AddTog  ('U', ' Upload Dupe Scan',    8, 11, 28, 11, 18,  7, 0, 2, 'None Current All', @Config.FDupeScan, Topic + '');
+  Form.AddWord ('P', ' Upload Base',        13, 12, 28, 12, 13,  5, 0, 65535, @Config.UploadBase, Topic + '');
+  Form.AddByte ('D', ' Description Lines',   7, 13, 28, 13, 19,  2, 1, 99, @Config.MaxFileDesc, Topic + '');
+  Form.AddBol  ('I', ' Import FILE_ID.DIZ',  6, 14, 28, 14, 20,  3, @Config.ImportDIZ, Topic + '');
+  Form.AddByte ('M', ' Max Comment Lines',   7, 15, 28, 15, 19,  2, 1, 99, @Config.FCommentLines, Topic + '');
+  Form.AddByte ('A', ' Max Comment Cols',    8, 16, 28, 16, 18,  2, 1, 79, @Config.FCommentLen, Topic + '');
+  Form.AddBol  ('T', ' Test Uploads',       12, 17, 28, 17, 14,  3, @Config.TestUploads, Topic + '');
+  Form.AddByte ('S', ' Pass Level',         14, 18, 28, 18, 12,  3, 0, 255, @Config.TestPassLevel, Topic + '');
+  Form.AddStr  ('O', ' Command Line',       12, 19, 28, 19, 14, 45, 80, @Config.TestCmdLine, Topic + '');
 
-  Form.AddStr  ('X', ' Auto Validate',      43,  7, 60,  7, 15, 15, mysMaxAcsSize, @Config.AcsValidate, Topic + '');
-  Form.AddStr  ('X', ' See Unvalidated',    41,  8, 60,  8, 17, 15, mysMaxAcsSize, @Config.AcsSeeUnvalid, Topic + '');
-  Form.AddStr  ('X', ' DL Unvalidated',     42,  9, 60,  9, 16, 15, mysMaxAcsSize, @Config.AcsDLUnvalid, Topic + '');
-  Form.AddStr  ('X', ' See Failed',         46, 10, 60, 10, 12, 15, mysMaxAcsSize, @Config.AcsSeeFailed, Topic + '');
-  Form.AddStr  ('X', ' DL Failed',          47, 11, 60, 11, 11, 15, mysMaxAcsSize, @Config.AcsDLFailed, Topic + '');
-  Form.AddLong ('X', ' Min Upload Space',   40, 12, 60, 12, 18,  9, 0, 999999999, @Config.FreeUL, Topic + '');
-  Form.AddLong ('X', ' Min CD-ROM Space',   40, 13, 60, 13, 18,  9, 0, 999999999, @Config.FreeCDROM, Topic + '');
+  Form.AddStr  ('U', ' Auto Validate',      43,  7, 60,  7, 15, 15, mysMaxAcsSize, @Config.AcsValidate, Topic + 'ACS to auto-validate uploads');
+  Form.AddStr  ('E', ' See Unvalidated',    41,  8, 60,  8, 17, 15, mysMaxAcsSize, @Config.AcsSeeUnvalid, Topic + 'ACS to see unvalidated files');
+  Form.AddStr  ('N', ' DL Unvalidated',     42,  9, 60,  9, 16, 15, mysMaxAcsSize, @Config.AcsDLUnvalid, Topic + 'ACS to download unvalidated files');
+  Form.AddStr  ('F', ' See Failed',         46, 10, 60, 10, 12, 15, mysMaxAcsSize, @Config.AcsSeeFailed, Topic + 'ACS to see failed files');
+  Form.AddStr  (#0,  ' DL Failed',          47, 11, 60, 11, 11, 15, mysMaxAcsSize, @Config.AcsDLFailed, Topic + 'ACS to download failed files');
+  Form.AddLong ('C', ' Min Upload Space',   40, 12, 60, 12, 18,  9, 0, 999999999, @Config.FreeUL, Topic + 'Min space to allow uploads (kb)');
+  Form.AddLong ('-', ' Min CD-ROM Space',   40, 13, 60, 13, 18,  9, 0, 999999999, @Config.FreeCDROM, Topic + 'Min space for CD-ROM copy (kb)');
+  Form.AddChar (#0,  ' Default Protocol',   40, 14, 60, 14, 18,  0, 255, @Config.FProtocol, Topic + 'Default Protocol hotkey');
 
   Form.Execute;
 
