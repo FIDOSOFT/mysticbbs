@@ -3847,3 +3847,6 @@
 
  ! Mystic will no longer shell to the console and get "stuck" when trying
    to execute an archive that has a blank command line in the configuration
+
+ ! MBBSUTIL was sorting BBS Lists and File Lists in reverse alphabetical
+   order.  This is now fixed to sort as most people would expect.

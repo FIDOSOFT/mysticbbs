@@ -235,7 +235,7 @@ Begin
           {$ENDIF}
       End;
 
-      SortList.Sort(1, SortList.Total, qDescending);
+      SortList.Sort(1, SortList.Total, qAscending);
 
       For A := 1 to SortList.Total Do Begin
         Seek  (FDirFile, SortList.Data[A]^.Ptr);
@@ -489,7 +489,7 @@ Procedure Sort_BBS_List;
         End;
       End;
 
-      SortList.Sort(1, SortList.Total, qDescending);
+      SortList.Sort(1, SortList.Total, qAscending);
 
       For A := 1 to SortList.Total Do Begin
         Seek  (TBBSFile, SortList.Data[A]^.Ptr);
