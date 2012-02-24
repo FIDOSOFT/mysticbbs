@@ -3842,6 +3842,8 @@
 
  + MBBSUTIL has a new function -FUPLOAD.  This goes through every file base
    and looks for new files.  If a new file is found it will be added into
-   Mystic's file base listing as a new file.  FILE_ID.DIZ import does not
-   work from FUPLOAD at this time.  Instead "No Description" is set for the
-   filename.
+   Mystic's file base listing as a new file.  FILE_ID.DIZ will be imported
+   as well.
+
+ ! Mystic will no longer shell to the console and get "stuck" when trying
+   to execute an archive that has a blank command line in the configuration

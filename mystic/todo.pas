@@ -94,6 +94,8 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Ignore user inactivity flag per user
 - HOME and END keys added to lightbar file listings
 - Default protocol per user
+- ANSI message upload post processor option: Auto/Disabled/Ask
+- Prompt for disconect after UL or DL (and add option to filebase settings)
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
 ===========================================
@@ -154,7 +156,8 @@ the entire class is "unused" until then?
 
 -----------------------------------------------------------------------
 
-CHANGE to support 50 line mode
+CHANGE to support up to 132x50 line mode (requires lots of console
+mode library updates and screensave/restore changes)
 
 1. terminal "screen length" is no longer an option of lines but a
    selection:
@@ -187,6 +190,9 @@ ansiflst.50.an1 = ansiflist.50.an1.cfg
 
 -----------------------------------------------------------------------
 
-FILE rating system
+FILE rating / comments system
+
+1. what type? 4 or 5 start or 0-100 rating system?
+2. records already updated to allow for either
 
 -----------------------------------------------------------------------
