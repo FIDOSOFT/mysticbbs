@@ -93,6 +93,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Does anyone use Version 7 compiled nodelists?  Worth supporting?
 - Ignore user inactivity flag per user
 - HOME and END keys added to lightbar file listings
+- Default protocol per user
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
 ===========================================
