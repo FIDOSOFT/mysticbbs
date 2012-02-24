@@ -59,8 +59,8 @@ Function  CheckPath       (Str: String) : String;
 Function  ShellDOS        (ExecPath: String; Command: String) : LongInt;
 
 {$IFNDEF UNIX}
-Procedure Update_Status_Line (Mode: Byte; Str: String);
-Procedure Process_Sysop_Cmd  (Cmd: Char);
+Procedure UpdateStatusLine    (Mode: Byte; Str: String);
+Procedure ProcessSysopCommand (Cmd: Char);
 {$ENDIF}
 
 Implementation
@@ -243,8 +243,8 @@ Begin
 End;
 
 Function ShellDOS (ExecPath: String; Command: String) : LongInt;
-Var
   {$IFNDEF UNIX}
+  Var
     Image : TConsoleImageRec;
   {$ENDIF}
 Begin
@@ -303,14 +303,14 @@ Begin
 
   {$IFNDEF UNIX}
   Screen.PutScreenImage(Image);
-  Update_Status_Line(StatusPtr, '');
+  UpdateStatusLine(StatusPtr, '');
   {$ENDIF}
 
   Session.TimeOut  := TimerSeconds;
 End;
 
 {$IFNDEF UNIX}
-Procedure Update_Status_Line (Mode: Byte; Str: String);
+Procedure UpdateStatusLine (Mode: Byte; Str: String);
 Begin
   If Not Config.UseStatusBar Then Exit;
 
@@ -354,7 +354,7 @@ Begin
   Screen.SetWindow (1, 1, 80, 24, False);
 End;
 
-Procedure Process_Sysop_Cmd (Cmd: Char);
+Procedure ProcessSysopCommand (Cmd: Char);
 Var
   A  : Integer;
   X,
@@ -367,7 +367,7 @@ Begin
 {U} #22 : Begin
             X := Screen.CursorX;
             Y := Screen.CursorY;
-            Update_Status_Line (0, 'Upgrade Security Level: ');
+            UpdateStatusLine (0, 'Upgrade Security Level: ');
             Screen.SetWindow (1, 25, 80, 25, False);
             Screen.TextAttr := 8 + 7 * 16;
             Screen.CursorXY (52, 2);
@@ -380,7 +380,7 @@ Begin
               Session.SetTimeLeft(Session.User.ThisUser.TimeLeft);
             End;
 
-            Update_Status_Line(StatusPtr, '');
+            UpdateStatusLine(StatusPtr, '');
 
             Screen.CursorXY (X, Y);
           End;
@@ -395,7 +395,7 @@ Begin
               Screen.WriteXY   (1, 25, 0, strRep(' ', 80));
               Screen.SetWindow (1, 1, 80, 25, False);
             End Else
-              Update_Status_Line (StatusPtr, '');
+              UpdateStatusLine (StatusPtr, '');
           End;
 {S} #31 : If Not Session.User.InChat Then OpenChat(True);
 {H} #35 : Begin
@@ -413,7 +413,7 @@ Begin
             Else
               StatusPtr := 1;
 
-            Update_Status_Line (StatusPtr, '');
+            UpdateStatusLine (StatusPtr, '');
           End;
     #59..
     #62 : Begin
@@ -428,11 +428,11 @@ Begin
           End;
 {+} #130: If Session.TimeLeft > 1 Then Begin
             Session.SetTimeLeft(Session.TimeLeft-1);
-            Update_Status_Line(StatusPtr, '');
+            UpdateStatusLine(StatusPtr, '');
           End;
 {-} #131: If Session.TimeLeft < 999 Then Begin
             Session.SetTimeLeft(Session.TimeLeft+1);
-            Update_Status_Line(StatusPtr, '');
+            UpdateStatusLine(StatusPtr, '');
           End;
   End;
 End;

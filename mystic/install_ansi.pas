@@ -61,5 +61,5 @@ const
 Begin
   Screen.LoadScreenImage(ImageData, ImageData_Length, ImageData_Width, 1, 1);
   Screen.WriteXY (1, 13, 7, strPadC('Mystic BBS Installation Utility Version ' + mysVersion, 79, ' '));
-  Screen.WriteXY (1, 14, 7, strPadC('Copyright (C) 1997-2011 By James Coyle.  All Rights Reserved.', 79, ' '));
+  Screen.WriteXY (1, 14, 7, strPadC('Copyright (C) 1997-2012 By James Coyle.  All Rights Reserved.', 79, ' '));
 End;

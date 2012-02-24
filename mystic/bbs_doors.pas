@@ -263,7 +263,7 @@ Begin
   Screen.SetWindowTitle(WinConsoleTitle + strI2S(Session.NodeNum));
   Screen.PutScreenImage(Image);
 
-  Update_Status_Line(StatusPtr, '');
+  UpdateStatusLine(StatusPtr, '');
 
   Session.TimeOut := TimerSeconds;
 End;

@@ -233,8 +233,8 @@ Begin
   If Not Send And Protocol.Batch Then Path := FName;
 
   If Res[1] = '!' Then Begin
-    Delete (Res, 1, 1);
-    ExecuteMPL(NIL, Res);
+    Delete     (Res, 1, 1);
+    ExecuteMPL (NIL, Res);
   End Else
   {$IFDEF UNIX}
     ShellDOS (Path, 'sh ' + Session.TempPath + 'xfer.sh');
@@ -242,7 +242,7 @@ Begin
     ShellDOS (Path, Session.TempPath + 'xfer.bat');
   {$ENDIF}
 
-  DirChange(Config.SystemPath);
+  DirChange (Config.SystemPath);
 End;
 
 Procedure TFileBase.GetTransferTime (Size: Longint; Var Mins : Integer; Var Secs: Byte);
@@ -284,10 +284,13 @@ Begin
     FDir.DescLines := 0;
 
     While Not Eof(tFile) Do Begin
-      Inc (FDir.DescLines);
+      Inc    (FDir.DescLines);
       ReadLn (tFile, Session.Msgs.MsgText[FDir.DescLines]);
+
       Session.Msgs.MsgText[FDir.DescLines] := strStripLOW(Session.Msgs.MsgText[FDir.DescLines]);
+
       If Length(Session.Msgs.MsgText[FDir.DescLines]) > mysMaxFileDescLen Then Session.Msgs.MsgText[FDir.DescLines][0] := Chr(mysMaxFileDescLen);
+
       If FDir.DescLines = Config.MaxFileDesc Then Break;
     End;
 
@@ -315,6 +318,7 @@ Begin
 
   Assign (FScanFile, Config.DataPath + FBase.FileName + '.scn');
   {$I-} Reset (FScanFile); {$I+}
+
   If IoResult <> 0 Then ReWrite (FScanFile);
 
   If FileSize(FScanFile) < Session.User.UserNum - 1 Then Begin
@@ -475,6 +479,7 @@ Begin
   TotalFiles := 0;
 
   Reset (FBaseFile);
+
   While Not Eof(FBaseFile) Do Begin
     Read (FBaseFile, FBase);
     If Session.User.Access(FBase.ListACS) Then Begin
@@ -498,7 +503,9 @@ Begin
       If IoResult = 0 Then Begin
         Assign (DF, Config.DataPath + FBase.FileName + '.des');
         {$I-} Reset (DF, 1); {$I+}
+
         If IoResult <> 0 Then ReWrite (DF, 1);
+
         While Not Eof(FDirFile) Do Begin
           Read (FDirFile, FDir);
           If (NewFiles and (FDir.DateTime > FScan.LastNew)) or Not NewFiles Then
@@ -541,6 +548,7 @@ Begin
       Session.io.OutFullLn (Session.GetPrompt(223));
     End;
   End;
+
   Close (FBaseFile);
   Close (TF);
 
@@ -781,6 +789,7 @@ Var
 
         Session.io.PromptInfo[3] := Session.io.OutYN(FScan.NewScan > 0);
         Session.io.OutFull (Session.GetPrompt(201));
+
         If (Total MOD 2 = 0) And (Total > 0) Then Session.io.OutRawLn('');
       End;
 
@@ -845,8 +854,11 @@ Begin
 
   Repeat
     Session.io.OutFull (Session.GetPrompt(202));
+
     Temp := Session.io.GetInput(11, 11, 12, '');
+
     If (Temp = '') or (Temp = 'Q') Then Break;
+
     If Temp = '?' Then
       List_Bases
     Else Begin
@@ -857,12 +869,14 @@ Begin
         N1 := strS2I(Temp);
         N2 := N1;
       End;
+
       For A := N1 to N2 Do
         If (A > 0) and (A <= Total) Then ToggleBase(A);
     End;
   Until False;
 
   Close (FBaseFile);
+
   FBase := Old;
 End;
 
@@ -886,9 +900,11 @@ Begin
 
   While Not Eof(ArcFile) Do Begin
     Read (ArcFile, Arc);
+
     Session.io.PromptInfo[1] := strI2S(FilePos(ArcFile));
     Session.io.PromptInfo[2] := Arc.Desc;
     Session.io.PromptInfo[3] := Arc.Ext;
+
     Session.io.OutFullLn (Session.GetPrompt(170));
   End;
 
@@ -1658,8 +1674,6 @@ Var
         Pos(Data, strUpper(Temp)));
 
       Screen.TextAttr := Attr;
-
-      Session.systemlog('debug: ' + temp);
     End;
   End;
 
@@ -1861,6 +1875,7 @@ Var
           If Batch[A].FileName = FDir.FileName Then Begin
             List[ListSize + 1].Batch := True;
             Session.io.PromptInfo[3] := Session.Lang.TagCh;
+
             Break;
           End;
 
@@ -1868,6 +1883,7 @@ Var
 
         If Not OK Then Begin
           IsNotLast := True;
+
           Break;
         End;
 
@@ -2134,7 +2150,7 @@ Var
                       Reset (FDirFile);
                       Reset (DataFile, 1);
 
-                      fullReDraw;
+                      FullReDraw;
                       DrawPage;
 
                       If CurPos > ListSize Then CurPos := ListSize;
@@ -2148,7 +2164,7 @@ Var
               'V' : Begin
                       Session.io.AnsiGotoXY (1, 23);
                       If ArchiveView(FBase.Path + List[CurPos].FileName) Then Begin
-                        fullRedraw;
+                        FullRedraw;
                         DrawPage;
                       End Else
                         PrintMessage (324);
@@ -2293,7 +2309,9 @@ Begin
 
   If (Mode = 1) and (Data = 'SEARCH') Then Begin
     Session.io.OutFull (Session.GetPrompt(195));
+
     Data := Session.io.GetInput(70, 70, 11, '*.*');
+
     If Data = '' Then Exit;
   End;
 
@@ -2317,14 +2335,13 @@ Begin
   {$I-} Reset (DataFile, 1); {$I+}
   If IoResult <> 0 Then ReWrite (DataFile, 1);
 
-  Result := 0;
-
-  CurPage  := 0;
-  TopPage  := 0;
-  TopDesc  := 0;
-  BotPage  := 0;
-  BotDesc  := 0;
-  Found    := False;
+  Result  := 0;
+  CurPage := 0;
+  TopPage := 0;
+  TopDesc := 0;
+  BotPage := 0;
+  BotDesc := 0;
+  Found   := False;
 
   If (Session.User.ThisUser.FileList = 1) and (Session.io.Graphics > 0) Then
     Ansi_List
@@ -2375,6 +2392,7 @@ Var
   Begin
     Assign (TempFile, Config.DataPath + FBase.FileName + '.dir');
     {$I-} Reset (TempFile); {$I+}
+
     If IoResult <> 0 Then ReWrite (TempFile);
 
     While Not Eof(TempFile) Do Begin
@@ -2388,6 +2406,7 @@ Var
         Break;
       End;
     End;
+
     Close (TempFile);
   End;
 
@@ -2450,7 +2469,6 @@ Var
   DataFile : File;
   TempFile : File;
   Found    : Boolean;
-
   LogFile  : Text;
   FileStatus : Boolean;
 Begin
@@ -2466,6 +2484,8 @@ Begin
     If IoResult = 0 Then Read (FBaseFile, FBase);
 
     Close (FBaseFile);
+
+    // reset ignoregroup here?
   End;
 
   If Not Session.User.Access(FBase.ULacs) Then Begin
@@ -2490,6 +2510,9 @@ Begin
 
   If Config.FreeUL > 0 Then Begin
     FSplit (FBase.Path, D, N, E);
+
+    // this might be broken?
+
     If DiskFree(Ord(UpCase(D[1])) - 64) DIV 1024 < Config.FreeUL Then Begin
       Session.io.OutFullLn (Session.GetPrompt(81));
       FBase := OLD;
@@ -2562,11 +2585,15 @@ Begin
 
       If Not FileStatus Then Begin
         Session.SystemLog ('Failed Upload: ' + FileName + ' to ' + strStripMCI(FBase.Name));
+
         Session.io.OutFull (Session.GetPrompt(84));
+
         FileErase(FullName);
       End Else Begin
         Found := True;
+
         Session.SystemLog ('Uploaded: ' + FileName + ' to ' + strStripMCI(FBase.Name));
+
         Session.io.OutFull (Session.GetPrompt(83));
 
         FDir.FileName  := FileName;
@@ -2581,6 +2608,7 @@ Begin
 
           If IsDupeFile(FileName, Config.FDupeScan = 2) Then Begin
             Session.io.OutFullLn (Session.GetPrompt(378));
+
             Continue;
           End Else
             Session.io.OutFullLn (Session.GetPrompt(379));
@@ -2611,8 +2639,10 @@ Begin
 
           If ShellDOS('', Temp) <> Config.TestPassLevel Then Begin
             Session.io.OutFullLn (Session.GetPrompt(35));
+
             Session.SystemLog (FileName + ' has failed upload test');
-            FDir.Flags := FDir.Flags Or FDirFailed;
+
+            FDir.Flags := FDir.Flags or FDirFailed;
           End Else
             Session.io.OutFullLn (Session.GetPrompt(55));
         End;
@@ -2624,6 +2654,7 @@ Begin
             Session.io.OutFullLn (Session.GetPrompt(381))
           Else Begin
             Session.io.OutFullLn (Session.GetPrompt(382));
+
             GetFileDescription(FileName);
           End;
         End Else
@@ -2636,6 +2667,7 @@ Begin
 
         Assign (TempFile, FBase.Path + FileName);
         {$I-} Reset (TempFile, 1); {$I+}
+
         If IoResult = 0 Then Begin
           FDir.Size := FileSize(TempFile);
           Close (TempFile);
@@ -2648,6 +2680,7 @@ Begin
 
         Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
         {$I-} Reset (FDirFile); {$I+}
+
         If IoResult <> 0 Then ReWrite (FDirFile);
 
         Seek  (FDirFile, FileSize(FDirFile));
@@ -2660,6 +2693,7 @@ Begin
         Inc (Session.HistoryULKB, FDir.Size DIV 1024);
       End;
     End;
+
     Close (LogFile);
   End;
 
@@ -2919,6 +2953,7 @@ Begin
   Session.io.OutFile ('fsearch', True, 0);
 
   Session.io.OutFull (Session.GetPrompt(196));
+
   Str := Session.io.GetInput(40, 40, 12, '');
 
   If Str = '' Then Exit;
@@ -2926,6 +2961,7 @@ Begin
   Session.SystemLog ('File search: "' + Str + '"');
 
   All := Session.io.GetYN(Session.GetPrompt(197), True);
+
   If All Then Session.User.IgnoreGroup := Session.io.GetYN(Session.GetPrompt(64), True);
 
   If All Then Begin

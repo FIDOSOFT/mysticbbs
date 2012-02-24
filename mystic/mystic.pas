@@ -164,7 +164,7 @@ Var
 Begin
   Session.NodeNum := 0;
 
-  For Count := 1 to Config.INetTNMax Do Begin
+  For Count := 1 to Config.INetTNNodes Do Begin
     Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Count) + '.dat');
 
     {$I-} Reset(ChatFile); {$I+}
@@ -268,11 +268,13 @@ Begin
   Close (Session.LangFile);
 
   If Not Session.LoadThemeData(Config.DefThemeFile) Then Begin
-    Screen.WriteLine ('ERROR: Default theme prompts not found [' + Config.DefThemeFile + '.lng]');
+    If Not Session.ConfigMode Then Begin
+      Screen.WriteLine ('ERROR: Default theme prompts not found [' + Config.DefThemeFile + '.lng]');
 
-    DisposeClasses;
+      DisposeClasses;
 
-    Halt(1);
+      Halt(1);
+    End;
   End;
 
   Assign (Session.User.UserFile, Config.DataPath + 'users.dat');
@@ -461,6 +463,7 @@ Begin
 
   If Session.ConfigMode Then Begin
     Configuration_MainMenu;
+    Screen.TextAttr := 7;
     Screen.ClearScreen;
     Screen.BufFlush;
     Halt(0);
@@ -481,7 +484,7 @@ Begin
   {$ENDIF}
 
   {$IFNDEF UNIX}
-  Update_Status_Line(0, '');
+  UpdateStatusLine(0, '');
   {$ENDIF}
 
   Set_Node_Action (Session.GetPrompt(345));

@@ -333,8 +333,8 @@ Begin
 
                 Screen.PutScreenImage(Image);
 
-                Session.SetTimeLeft        (Session.User.TempUser.TimeLeft);
-                Update_Status_Line (StatusPtr, '');
+                Session.SetTimeLeft (Session.User.TempUser.TimeLeft);
+                UpdateStatusLine    (StatusPtr, '');
         End;
         {$ENDIF}
 

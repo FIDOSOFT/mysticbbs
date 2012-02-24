@@ -8,7 +8,6 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
-? Validate ARCHIVE extensions are not case sensitive in Mystic
 ! GOTO does not always work properly in MPL (IceDevil)
 ! Complex boolean evaluations using numerical variables can sometime fail to
   compile (IceDevil)

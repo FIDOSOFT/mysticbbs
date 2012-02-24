@@ -98,7 +98,7 @@ Begin
     End;
 
     Case Ch of
-      #00 : If Session.io.LocalInput Then Process_Sysop_Cmd(Input.ReadKey);
+      #00 : If Session.io.LocalInput Then ProcessSysopCommand(Input.ReadKey);
       ^R  : If Session.io.LocalInput Then Total_ReDraw;
       #08 : If Session.io.LocalInput Then Begin
               If SysopX > Session.io.ScreenInfo[7].X Then Begin
@@ -254,7 +254,7 @@ Begin
 
   Screen.GetScreenImage(1,1,79,24,Image);
 
-  Update_Status_Line (0, '(ESC) to Quit, (Ctrl-R) to Redraw');
+  UpdateStatusLine (0, '(ESC) to Quit, (Ctrl-R) to Redraw');
 
 	If Config.ChatLogging Then Begin
 		Assign (tFile, Config.LogsPath + 'chat.log');
@@ -279,7 +279,7 @@ Begin
 
   Session.io.RemoteRestore(Image);
 
-  Update_Status_Line (StatusPtr, '');
+  UpdateStatusLine (StatusPtr, '');
 End;
 
 End.

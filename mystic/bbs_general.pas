@@ -1397,7 +1397,7 @@ Begin
 
     Session.SystemLog('Chat Page: ' + Temp);
 
-    Update_Status_Line (0, ' ' + strPadR(Session.User.ThisUser.Handle, 17, ' ') + ' ' + strPadR(Temp, 40, ' ') + ' ALT+(S)plit (C)Line');
+    UpdateStatusLine (0, ' ' + strPadR(Session.User.ThisUser.Handle, 17, ' ') + ' ' + strPadR(Temp, 40, ' ') + ' ALT+(S)plit (C)Line');
 
     Session.io.OutFull(Session.GetPrompt(24));
 
@@ -1421,7 +1421,7 @@ Begin
     End;
   End;
 
-  Update_Status_line (StatusPtr, '');
+  UpdateStatusLine (StatusPtr, '');
 
   Session.io.OutFull (Session.GetPrompt(28));
 

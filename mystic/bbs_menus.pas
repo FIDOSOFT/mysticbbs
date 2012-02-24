@@ -109,7 +109,7 @@ Begin
   End;
 
   {$IFNDEF UNIX}
-     Update_Status_Line(StatusPTR, '');
+     UpdateStatusLine(StatusPTR, '');
   {$ENDIF}
 End;
 

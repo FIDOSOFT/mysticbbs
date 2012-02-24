@@ -1151,7 +1151,7 @@ Begin
               Exit;
             End;
 
-            Process_Sysop_Cmd (Result);
+            ProcessSysopCommand(Result);
 
             Result := #1;
           End;
@@ -1246,7 +1246,7 @@ Begin
         Session.LastTimeLeft := TimeCount;
 
         {$IFNDEF UNIX}
-        Update_Status_Line(StatusPtr, '');
+        UpdateStatusLine(StatusPtr, '');
         {$ENDIF}
 
         If TBBSCore(Core).TimerOn Then Begin
@@ -1825,7 +1825,7 @@ Procedure TBBSIO.LocalScreenEnable;
 Begin
   Screen.Active := True;
   Screen.ShowBuffer;
-  Update_Status_Line(StatusPtr, '');
+  UpdateStatusLine(StatusPtr, '');
 End;
 {$ENDIF}
 

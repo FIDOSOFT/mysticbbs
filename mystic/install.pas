@@ -488,9 +488,8 @@ Begin
   Screen.WriteLine ('Switch to the Mystic directory (' + Config.SystemPath + ') and then:');
   Screen.WriteLine('');
   {$IFDEF WINDOWS}
-    Screen.WriteLine ('Type "MYSTIC -L" to run Mystic in local mode');
-    Screen.WriteLine ('Type "MCFG" to run the external configuration utility');
-    Screen.WriteLine ('Type "MYSTIC -CFG" to run the internal configuration utility');
+    Screen.WriteLine ('Type "MYSTIC" to run Mystic in local mode');
+    Screen.WriteLine ('Type "MYSTIC -CFG" to run the configuration utility');
     Screen.WriteLine('');
     Screen.WriteLine ('As always, read the documentation!');
   {$ENDIF}
@@ -501,8 +500,7 @@ Begin
     Screen.WriteLine ('Set your terminal to 80x25 lines with an IBM characterset font!');
     Screen.WriteLine('');
     Screen.WriteLine ('Type "./mystic" from the installed directory to login locally');
-    Screen.WriteLine ('Type "./mcfg" to run the external configuration utility');
-    Screen.WriteLine ('Type "./mystic -cfg" to run the internal configuration utility');
+    Screen.WriteLine ('Type "./mystic -cfg" to run the configuration utility');
   {$ENDIF}
   {$IFDEF DARWIN}
     Screen.WriteLine ('Please read osx.install.doc for installation instructions');
@@ -512,8 +510,7 @@ Begin
     Screen.WriteLine ('See documentation for more terminal suggestions!');
     Screen.WriteLine('');
     Screen.WriteLine ('Type "./mystic" from the installed directory to login locally');
-    Screen.WriteLine ('Type "./mcfg" to run the external configuration utility');
-    Screen.WriteLine ('Type "./mystic -cfg" to run the internal configuration utility');
+    Screen.WriteLine ('Type "./mystic -cfg" to run the configuration utility');
   {$ENDIF}
 
   Screen.WriteLine('');

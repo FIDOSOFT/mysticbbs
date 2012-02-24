@@ -1141,7 +1141,7 @@ Begin
     End;
 
   {$IFNDEF UNIX}
-    Update_Status_Line(StatusPtr, '');
+    UpdateStatusLine(StatusPtr, '');
   {$ENDIF}
 End;
 
