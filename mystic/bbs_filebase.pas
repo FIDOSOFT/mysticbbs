@@ -1589,7 +1589,7 @@ Var
 
     If (FDir.Flags And FDirDeleted <> 0) Then Exit;
     If (FDir.Flags And FDirInvalid <> 0) And (Not Session.User.Access(Config.AcsSeeUnvalid)) Then Exit;
-    If (FDir.Flags And FDirFailed <> 0) And (Not Session.User.Access(Config.AcsSeeFailed)) Then Exit;
+    If (FDir.Flags And FDirFailed  <> 0) And (Not Session.User.Access(Config.AcsSeeFailed)) Then Exit;
 
     Case Mode of
       1 : If Data <> '' Then
@@ -1597,20 +1597,25 @@ Var
       2 : If FDir.DateTime < FScan.LastNew Then Exit;
       3 : Begin
             T2 := Bool_Search(Data, FDir.FileName);
+
             If Not T2 Then Begin
               Seek (DataFile, FDir.DescPtr);
+
               For A := 1 to FDir.DescLines Do Begin
                 BlockRead (DataFile, Temp[0], 1);
                 BlockRead (DataFile, Temp[1], Length(Temp));
+
                 If Bool_Search(Data, Temp) Then Begin
                   T2 := True;
                   Break;
                 End;
               End;
             End;
+
             If Not T2 Then Exit;
           End;
     End;
+
     OkFile := True;
   End;
 
@@ -1990,6 +1995,14 @@ Var
 
         If Session.io.IsArrow Then Begin
           Case Ch of
+            #71 : If CurPage > 1 Then Begin
+                    While CurPage > 1 Do PrevPage;
+                    CurPos := 1;
+                    DrawPage;
+                  End Else If CurPos > 1 Then Begin
+                    BarOFF;
+                    CurPos := 1;
+                  End;
             #72 : If (CurPos > 1) and (ListSize > 0) Then Begin
                     BarOFF;
                     Dec (CurPos);
@@ -2007,6 +2020,17 @@ Var
                   If ListSize > 0 Then Begin
                     BarOFF;
                     CurPos := 1;
+                  End;
+            #79 : If LastPage Then Begin
+                    BarOFF;
+                    CurPos := ListSize;
+                  End Else Begin
+                    While Not LastPage Do Begin
+                      NextPage;
+                      DrawPage;
+                    End;
+
+                    CurPos := ListSize;
                   End;
             #80 : If CurPos < ListSize Then Begin
                     BarOFF;

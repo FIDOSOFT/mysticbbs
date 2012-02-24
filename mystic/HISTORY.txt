@@ -3850,3 +3850,10 @@
 
  ! MBBSUTIL was sorting BBS Lists and File Lists in reverse alphabetical
    order.  This is now fixed to sort as most people would expect.
+
+ + The HOME key now functions in the lightbar file listings to move to the
+   beginning of the list.
+
+ + The END key now functions in the lightbar file listing.  It is kind of a
+   half-assed implementation though, since doing it "the right way" will
+   involve some extra coding in the future.
