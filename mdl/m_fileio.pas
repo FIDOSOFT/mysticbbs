@@ -374,7 +374,8 @@ Var
 Begin
   Assign   (F, Str);
   SetFAttr (F, Archive);
-  Erase    (F);
+
+  {$I-} Erase (F); {$I+}
 
   Result := (IoResult = 0);
 End;
