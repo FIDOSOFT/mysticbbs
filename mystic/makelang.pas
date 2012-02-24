@@ -90,10 +90,12 @@ Begin
 	End;
 
 	Prompt := '';
+
 	For A := 0 to mysMaxLanguageStr Do Begin
 		Done[A] := False;
 		Write (PromptFile, Prompt);
 	End;
+
 	Reset (PromptFile);
 
 	While Not Eof(tFile) Do Begin

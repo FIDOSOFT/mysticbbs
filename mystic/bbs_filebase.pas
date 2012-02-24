@@ -242,7 +242,7 @@ Begin
     ShellDOS (Path, Session.TempPath + 'xfer.bat');
   {$ENDIF}
 
-  ChangeDir(Config.SystemPath);
+  DirChange(Config.SystemPath);
 End;
 
 Procedure TFileBase.GetTransferTime (Size: Longint; Var Mins : Integer; Var Secs: Byte);
@@ -413,7 +413,7 @@ Begin
   End Else
     Session.io.OutFullLn (Session.GetPrompt(386));
 
-  CleanDirectory(Session.TempPath, '');
+  DirClean(Session.TempPath, '');
 End;
 
 Procedure TFileBase.DownloadFileList (Data: String);
@@ -443,7 +443,7 @@ Begin
     SendFile (Session.TempPath + FileName);
   End;
 
-  CleanDirectory(Session.TempPath, '');
+  DirClean(Session.TempPath, '');
 
   Session.User.IgnoreGroup := False;
 End;
@@ -703,9 +703,12 @@ Begin
     Case Session.io.OneKey('DQRV', True) of
       'D' : Begin
               Session.io.OutFull (Session.GetPrompt(384));
+
               Mask := Session.io.GetInput (70, 70, 11, '');
+
               If Mask <> '' Then Begin
                 ExecuteArchive (FName, '', Mask, 2);
+
                 If FileExist(Session.TempPath + Mask) Then Begin
                   Case CheckFileLimits (1, GetFileSize(Session.TempPath + Mask) DIV 1024) of
                     0 : If SendFile (Session.TempPath + Mask) Then Begin;
@@ -734,11 +737,13 @@ Begin
               Mask := Session.io.GetInput (70, 70, 11, '');
               If Mask <> '' Then Begin
                 ExecuteArchive (FName, '', Mask, 2);
+
                 Session.io.PromptInfo[1] := Mask;
                 Session.io.OutFullLn(Session.GetPrompt(306));
                 Session.io.AllowMCI := False;
                 Session.io.OutFile (Session.TempPath + Mask, True, 0);
                 Session.io.AllowMCI := True;
+
                 If Session.io.NoFile Then
                   Session.io.OutFullLn (Session.GetPrompt(305))
                 Else
@@ -992,6 +997,8 @@ Begin
     2 : Temp2 := Arc.Unpack;
     3 : Temp2 := Arc.View;
   End;
+
+  If Temp2 = '' Then Exit;
 
   Temp := '';
   A    := 1;
@@ -2633,7 +2640,7 @@ Begin
 
   FBase := OLD;
 
-  CleanDirectory(Session.TempPath, '');
+  DirClean(Session.TempPath, '');
 
   If Found Then
     Session.io.OutFullLn (Session.GetPrompt(75))
@@ -2660,7 +2667,7 @@ Begin
       Session.io.PromptInfo[1] := FName;
       Session.io.OutFullLn (Session.GetPrompt(82));
 
-      Copied := CopyFile(FBase.Path + FName, Session.TempPath + FName)
+      Copied := FileCopy(FBase.Path + FName, Session.TempPath + FName)
     End;
   End;
 
@@ -2848,7 +2855,7 @@ Begin
 
   BatchNum := 0;
 
-  CleanDirectory (Session.TempPath, '');
+  DirClean (Session.TempPath, '');
 End;
 
 Procedure TFileBase.FileSearch;
@@ -3186,7 +3193,7 @@ Begin
                       Seek (FBaseFile, B - 1);
                       Read (FBaseFile, FBase);
 
-                      If Not CopyFile (Old.Path + FDir.FileName, FBase.Path + FDir.FileName) Then Begin
+                      If Not FileCopy (Old.Path + FDir.FileName, FBase.Path + FDir.FileName) Then Begin
                         Session.io.OutFull ('ERROR|CR|CR|PA');
 
                         FBase := Old;

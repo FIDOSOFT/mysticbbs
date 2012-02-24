@@ -1060,7 +1060,7 @@ Begin
 
   If Not Session.LocalMode Then FileErase(FN);
 
-  CleanDirectory(Session.TempPath, 'msgtmp');
+  DirClean(Session.TempPath, 'msgtmp');
 
   Session.io.PromptInfo[1] := T1;
   Session.io.PromptInfo[2] := T2;
@@ -3133,7 +3133,7 @@ Begin
   {$I-} Reset (DataFile, 1); {$I+}
   If IoResult <> 0 Then Begin
     Session.io.OutFull (Session.GetPrompt(238));
-    CleanDirectory(Session.TempPath, '');
+    DirClean(Session.TempPath, '');
     Exit;
   End;
 
@@ -3143,7 +3143,7 @@ Begin
   If Pos(strUpper(Config.qwkBBSID), strUpper(Temp)) = 0 Then Begin
     Session.io.OutFullLn (Session.GetPrompt(239));
     Close (DataFile);
-    CleanDirectory(Session.TempPath, '');
+    DirClean(Session.TempPath, '');
     Exit;
   End;
 
@@ -3213,7 +3213,7 @@ Begin
   End;
 
   Close    (DataFile);
-  CleanDirectory (Session.TempPath, '');
+  DirClean (Session.TempPath, '');
 
   MBase := OldMBase;
 End;
@@ -3281,9 +3281,9 @@ Begin
 
     Session.io.PromptInfo[1] := Temp;
 
-    If FileExist(Config.QwkWelcome) Then CopyFile(Config.qwkWelcome, Session.TempPath + JustFile(Config.qwkWelcome));
-    If FileExist(Config.QwkNews)    Then CopyFile(Config.qwkNews,    Session.TempPath + JustFile(Config.qwkNews));
-    If FileExist(Config.QwkGoodbye) Then CopyFile(Config.qwkGoodbye, Session.TempPath + JustFile(Config.qwkGoodbye));
+    If FileExist(Config.QwkWelcome) Then FileCopy(Config.qwkWelcome, Session.TempPath + JustFile(Config.qwkWelcome));
+    If FileExist(Config.QwkNews)    Then FileCopy(Config.qwkNews,    Session.TempPath + JustFile(Config.qwkNews));
+    If FileExist(Config.QwkGoodbye) Then FileCopy(Config.qwkGoodbye, Session.TempPath + JustFile(Config.qwkGoodbye));
 
     If Session.LocalMode Then Begin
       Session.FileBase.ExecuteArchive (Config.QWKPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + FileMask, 1);
@@ -3327,7 +3327,7 @@ Begin
 
   MBase := Old;
 
-  CleanDirectory (Session.TempPath, '');
+  DirClean (Session.TempPath, '');
 End;
 
 (*

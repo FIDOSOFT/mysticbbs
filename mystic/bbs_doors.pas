@@ -15,6 +15,7 @@ Uses
   m_Types,
   m_Strings,
   m_DateTime,
+  m_FileIO,
   bbs_Common,
   bbs_Core,
   bbs_User;
@@ -250,7 +251,7 @@ Begin
     PI) Then
       WaitForSingleObject (PI.hProcess, INFINITE);
 
-  ChangeDir(Config.SystemPath);
+  DirChange(Config.SystemPath);
 
   If Session.User.UserNum <> -1 Then Begin
     Reset  (Session.User.UserFile);

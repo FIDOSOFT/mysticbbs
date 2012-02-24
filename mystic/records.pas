@@ -253,10 +253,6 @@ Const
 //LASTON needs optional1-10 compare to Mystic2
 //FBASE
 //  ACS to comment on file
-//FDIR
-// pointer to comments record
-// rating moved here from comment record
-// file deletes and mbbsutil need updating to deal with comments
 //MBASES
 // expand header filename[20]
 // add template[20]
@@ -284,6 +280,8 @@ Const
 //  compare to mystic 2 for fallback stuff?
 //  rename to THEME
 //  horizontal/vertical percent bars
+// default prot into users
+// default prot into new user options
 
 Type
   RecUser = Record                     { USERS.DAT }

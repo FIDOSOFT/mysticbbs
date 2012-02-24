@@ -62,9 +62,6 @@ Procedure AddRecord (var dFile; RecNum: LongInt; RecSize: Word);
 Function  Bool_Search (Mask: String; Str: String) : Boolean;
 Function  strAddr2Str (Addr: RecEchoMailAddr) : String;
 Function  strStr2Addr (S : String; Var Addr: RecEchoMailAddr) : Boolean;
-Procedure CleanDirectory (Path: String; Exempt: String);
-Function  ChangeDir (Dir : String) : Boolean;
-Function  CopyFile (Source, Target : String): Boolean;
 Function  CheckPath (Str: String) : String;
 Function  ShellDOS (ExecPath: String; Command: String) : LongInt;
 
@@ -235,65 +232,6 @@ Begin
   Result := False;
 End;
 
-Function CopyFile (Source, Target : String): Boolean;
-Var
-  SF,
-  TF : File;
-  BRead,
-  BWrite  : LongInt;
-  FileBuf : Array[1..4096] of Char;
-begin
-  CopyFile := False;
-
-  Assign(SF, Source);
-  {$I-} Reset(SF, 1); {$I+}
-
-  If IOResult <> 0 Then Exit;
-
-  Assign(TF, Target);
-  {$I-} ReWrite(TF, 1); {$I+}
-
-  If IOResult <> 0 then Exit;
-
-  Repeat
-    BlockRead  (SF,  FileBuf, SizeOf(FileBuf), BRead);
-    BlockWrite (TF, FileBuf, Bread, BWrite);
-  Until (BRead = 0) or (BRead <> BWrite);
-
-  Close(SF);
-  Close(TF);
-
-  If BRead = BWrite Then CopyFile := True;
-End;
-
-Procedure CleanDirectory (Path: String; Exempt: String);
-Var
-  DirInfo: SearchRec;
-Begin
-  FindFirst(Path + '*.*', Archive, DirInfo);
-  While DosError = 0 Do Begin
-    If strUpper(Exempt) <> strUpper(DirInfo.Name) Then
-      FileErase(Path + DirInfo.Name);
-    FindNext(DirInfo);
-  End;
-    FindClose(DirInfo);
-End;
-
-Function ChangeDir (Dir : String) : Boolean;
-Begin
-{ fpc linux needs trailing backslash}
-{ fpc and vp windows doesnt matter}
-{ tpx cannot have trailing backslash }
-
-  While Dir[Length(Dir)] = PathChar Do Dec(Dir[0]);
-
-  Dir := Dir + PathChar;
-
-  {$I-} ChDir(Dir); {$I+}
-
-  ChangeDir := IoResult = 0;
-End;
-
 Function CheckPath (Str: String) : String;
 Begin
   While Str[Length(Str)] = PathChar Do Dec(Str[0]);
@@ -340,7 +278,7 @@ Begin
     Screen.SetRawMode(False);
   {$ENDIF}
 
-  If ExecPath <> '' Then ChangeDir(ExecPath);
+  If ExecPath <> '' Then DirChange(ExecPath);
 
   {$IFDEF UNIX}
     RetVal := Shell (Command);
@@ -360,7 +298,7 @@ Begin
     Screen.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum));
   {$ENDIF}
 
-  ChangeDir(Config.SystemPath);
+  DirChange(Config.SystemPath);
 
   If Session.User.UserNum <> -1 Then Begin
     Reset  (Session.User.UserFile);

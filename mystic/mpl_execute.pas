@@ -1568,7 +1568,7 @@ Begin
             Store (TempBool, 1);
           End;
     507 : Begin
-            TempBool := CopyFile(Param[1].S, Param[2].S);
+            TempBool := FileCopy(Param[1].S, Param[2].S);
             Store (TempBool, 1);
           End;
     508 : Begin

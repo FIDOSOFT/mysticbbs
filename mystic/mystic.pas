@@ -117,7 +117,7 @@ Begin
   If Session.ExitLevel <> 0 Then ExitCode := Session.ExitLevel;
   If Session.EventRunAfter  Then ExitCode := Session.NextEvent.ErrLevel;
 
-  CleanDirectory (Session.TempPath, '');
+  DirClean (Session.TempPath, '');
 
   {$IFNDEF UNIX}
     Screen.TextAttr := 14;
@@ -371,7 +371,7 @@ Begin
 
   Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
 
-  CleanDirectory(Session.TempPath, '');
+  DirClean(Session.TempPath, '');
 
   Randomize;
 End;
@@ -387,7 +387,7 @@ Begin
     SetHeapTraceOutput('mystic.mem');
   {$ENDIF}
 
-  ChangeDir(JustPath(ParamStr(0)));
+  DirChange(JustPath(ParamStr(0)));
 
   InitClasses;
 

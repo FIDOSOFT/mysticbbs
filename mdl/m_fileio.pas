@@ -33,6 +33,10 @@ Function  JustFile        (Str: String) : String;
 Function  JustFileExt     (Str: String) : String;
 Function  JustPath        (Str: String) : String;
 Function  DirSlash        (Str: String) : String;
+Function  DirChange       (Dir: String) : Boolean;
+Procedure DirClean        (Path: String; Exempt: String);
+Function  FileRename      (OldFN, NewFN: String) : Boolean;
+Function  FileCopy        (Source, Target: String) : Boolean;
 
 { GLOBAL FILEIO VARIABLES AND CONSTANTS }
 
@@ -106,6 +110,7 @@ Implementation
 Uses
   DOS,
   m_Types,
+  m_Strings,
   m_DateTime;
 
 Const
@@ -231,6 +236,77 @@ Begin
   End;
 
   ioWrite := (ioCode = 0);
+End;
+
+Function FileCopy (Source, Target: String) : Boolean;
+Var
+  SF      : File;
+  TF      : File;
+  BRead   : LongInt;
+  BWrite  : LongInt;
+  FileBuf : Array[1..4096] of Char;
+Begin
+  Result := False;
+
+  Assign (SF, Source);
+  {$I-} Reset(SF, 1); {$I+}
+
+  If IOResult <> 0 Then Exit;
+
+  Assign (TF, Target);
+  {$I-} ReWrite(TF, 1); {$I+}
+
+  If IOResult <> 0 then Exit;
+
+  Repeat
+    BlockRead  (SF,  FileBuf, SizeOf(FileBuf), BRead);
+    BlockWrite (TF, FileBuf, BRead, BWrite);
+  Until (BRead = 0) or (BRead <> BWrite);
+
+  Close(SF);
+  Close(TF);
+
+  Result := BRead = BWrite;
+End;
+
+Function FileRename (OldFN, NewFN: String) : Boolean;
+Var
+  OldF : File;
+Begin
+  Assign (OldF, NewFN);
+  {$I-} Erase (OldF); {$I+}
+  If IoResult = 0 Then;
+
+  Assign (OldF, OldFN);
+  {$I-} ReName (OldF, NewFN); {$I+}
+
+  Result := (IoResult = 0);
+End;
+
+Procedure DirClean (Path: String; Exempt: String);
+Var
+  DirInfo: SearchRec;
+Begin
+  FindFirst(Path + '*', Archive, DirInfo);
+
+  While DosError = 0 Do Begin
+    If strUpper(Exempt) <> strUpper(DirInfo.Name) Then
+      FileErase(Path + DirInfo.Name);
+
+    FindNext(DirInfo);
+  End;
+    FindClose(DirInfo);
+End;
+
+Function DirChange (Dir: String) : Boolean;
+Begin
+  While Dir[Length(Dir)] = PathSep Do Dec(Dir[0]);
+
+  Dir := Dir + PathSep;
+
+  {$I-} ChDir(Dir); {$I+}
+
+  Result := IoResult = 0;
 End;
 
 Function DirSlash (Str: String) : String;
