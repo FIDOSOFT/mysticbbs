@@ -769,7 +769,7 @@ Begin
 
   Dec (WrapPos);
 
-  FillChar(Session.Msgs.MsgText, SizeOf(Session.Msgs.MsgText), #0);
+  For A := Lines + 1 to mysMaxMsgLines Do Session.Msgs.MsgText[A] := '';
 
   FullReDraw;
 

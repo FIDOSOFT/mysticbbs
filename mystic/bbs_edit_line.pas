@@ -184,10 +184,15 @@ Var
   A : Integer;
 Begin
   CurLine := Lines;
+
   If CurLine < MaxLine Then Inc(CurLine);
-  Done    := False;
+
+  Done := False;
+
   For A := Lines + 1 to mysMaxMsgLines Do Session.Msgs.MsgText[A] := '';
+
   FullReDraw;
+
   GetText;
 
   If Save Then Begin
