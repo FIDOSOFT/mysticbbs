@@ -37,7 +37,7 @@ Type
     User       : RecUser;
     UserPos    : LongInt;
     FBasePos   : LongInt;
-    FBase      : FBaseRec;
+    FBase      : RecFileBase;
     SecLevel   : RecSecurity;
     FileMask   : String;
 
@@ -46,12 +46,12 @@ Type
     Destructor  Destroy; Override;
 
     Procedure   ResetSession;
-    Procedure   UpdateUserStats (TFBase: FBaseRec; FDir: RecFileList; DirPos: LongInt);
-    Function    CheckFileLimits (TempFBase: FBaseRec; FDir: RecFileList) : Byte;
+    Procedure   UpdateUserStats (TFBase: RecFileBase; FDir: RecFileList; DirPos: LongInt);
+    Function    CheckFileLimits (TempFBase: RecFileBase; FDir: RecFileList) : Byte;
     Function    OpenDataSession : Boolean;
     Procedure   CloseDataSession;
-    Function    ValidDirectory (TempBase: FBaseRec) : Boolean;
-    Function    FindDirectory (Var TempBase: FBaseRec) : LongInt;
+    Function    ValidDirectory (TempBase: RecFileBase) : Boolean;
+    Function    FindDirectory (Var TempBase: RecFileBase) : LongInt;
 
     Procedure   cmdUSER;
     Procedure   cmdPASS;
@@ -129,7 +129,7 @@ Begin
   InTransfer := False;
 End;
 
-Procedure TFTPServer.UpdateUserStats (TFBase: FBaseRec; FDir: RecFileList; DirPos: LongInt);
+Procedure TFTPServer.UpdateUserStats (TFBase: RecFileBase; FDir: RecFileList; DirPos: LongInt);
 Var
   HistFile: File of HistoryRec;
   History : HistoryRec;
@@ -195,7 +195,7 @@ Begin
   Close   (HistFile);
 End;
 
-Function TFTPServer.CheckFileLimits (TempFBase: FBaseRec; FDir: RecFileList) : Byte;
+Function TFTPServer.CheckFileLimits (TempFBase: RecFileBase; FDir: RecFileList) : Byte;
 { 0 = OK to download }
 { 1 = Offline or Invalid or Failed or NO ACCESS or no file (prompt 224)}
 { 2 = DL per day limit exceeded (prompt 58) }
@@ -212,7 +212,7 @@ Begin
   If (FDir.Flags And FDirInvalid <> 0) And Not CheckAccess(User, True, bbsConfig.AcsDLUnvalid) Then Exit;
   If (FDir.Flags And FDirFailed  <> 0) And Not CheckAccess(User, True, bbsConfig.AcsDLFailed)  Then Exit;
 
-  If (FDir.Flags And FDirFree <> 0) or (User.Flags and UserNoRatio <> 0) or (TempFBase.IsFREE) Then Begin
+  If (FDir.Flags And FDirFree <> 0) or (User.Flags and UserNoRatio <> 0) or (TempFBase.Flags and FBFreeFiles <> 0) Then Begin
     Result := 0;
     Exit;
   End;
@@ -293,12 +293,12 @@ Begin
   End;
 End;
 
-Function TFTPServer.ValidDirectory (TempBase: FBaseRec) : Boolean;
+Function TFTPServer.ValidDirectory (TempBase: RecFileBase) : Boolean;
 Begin
   Result := CheckAccess(User, True, TempBase.FtpACS) and (TempBase.FtpName <> '');
 End;
 
-Function TFTPServer.FindDirectory (Var TempBase: FBaseRec) : LongInt;
+Function TFTPServer.FindDirectory (Var TempBase: RecFileBase) : LongInt;
 Var
   FBaseFile : TBufFile;
   Found     : Boolean;
@@ -327,7 +327,7 @@ Begin
 
   FBaseFile := TBufFile.Create(FileBufSize);
 
-  If FBaseFile.Open(bbsConfig.DataPath + 'fbases.dat', fmOpen, fmRWDN, SizeOf(FBaseRec)) Then Begin
+  If FBaseFile.Open(bbsConfig.DataPath + 'fbases.dat', fmOpen, fmRWDN, SizeOf(RecFileBase)) Then Begin
     Found := False;
 
     While Not FBaseFile.EOF Do Begin
@@ -449,7 +449,7 @@ End;
 
 Procedure TFTPServer.cmdCWD;
 Var
-  TempBase  : FBaseRec;
+  TempBase  : RecFileBase;
   TempPos   : LongInt;
 Begin
   If LoggedIn Then Begin
@@ -476,7 +476,7 @@ End;
 
 Procedure TFTPServer.cmdNLST;
 Var
-  TempBase : FBaseRec;
+  TempBase : RecFileBase;
   TempPos  : LongInt;
   DirFile  : TBufFile;
   Dir      : RecFileList;
@@ -528,7 +528,7 @@ End;
 
 Procedure TFTPServer.cmdLIST;
 Var
-  TempBase  : FBaseRec;
+  TempBase  : RecFileBase;
   TempPos   : LongInt;
   FBaseFile : TBufFile;
   DirFile   : TBufFile;
@@ -542,7 +542,7 @@ Begin
 
       FBaseFile := TBufFile.Create(FileBufSize);
 
-      If FBaseFile.Open(bbsConfig.DataPath + 'fbases.dat', fmOpen, fmRWDN, SizeOf(FBaseRec)) Then Begin
+      If FBaseFile.Open(bbsConfig.DataPath + 'fbases.dat', fmOpen, fmRWDN, SizeOf(RecFileBase)) Then Begin
         While Not FBaseFile.EOF Do Begin
           FBaseFile.Read(TempBase);
 
@@ -585,7 +585,7 @@ End;
 Procedure TFTPServer.cmdRETR;
 Var
   TempPos  : LongInt;
-  TempBase : FBaseRec;
+  TempBase : RecFileBase;
   DirFile  : TBufFile;
   Dir      : RecFileList;
   Found    : LongInt;

@@ -95,6 +95,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Default protocol per user
 - ANSI message upload post processor option: Auto/Disabled/Ask
 - Prompt for disconect after UL or DL (and add option to filebase settings)
+- Finish optional user prompts
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
 ===========================================

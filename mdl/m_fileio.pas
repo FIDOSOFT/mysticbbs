@@ -618,7 +618,7 @@ End;
 
 Procedure TBufFile.FillBuffer;
 Begin
-  System.Seek (BufFile, BufFilePos);
+  System.Seek      (BufFile, BufFilePos);
   System.BlockRead (BufFile, Buffer^, BufSize, BufTop);
 
   IoResult := System.IoResult;
@@ -628,8 +628,9 @@ End;
 
 Procedure TBufFile.FlushBuffer;
 Begin
-  System.Seek (BufFile, BufFilePos);
+  System.Seek       (BufFile, BufFilePos);
   System.BlockWrite (BufFile, Buffer^, BufTop, BufTop);
+
   IoResult := System.IoResult;
 
 //  BufPos   := 0;

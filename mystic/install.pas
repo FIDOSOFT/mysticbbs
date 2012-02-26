@@ -393,11 +393,11 @@ Procedure UpdateDataFiles;
 Var
 	CfgFile 	: File of RecConfig;
 	MBaseFile : File of MBaseRec;
-	FBaseFile : File of FBaseRec;
+	FBaseFile : File of RecFileBase;
 	LangFile	: File of LangRec;
 	Cfg 			: RecConfig;
 	MBase 		: MBaseRec;
-	FBase 		: FBaseRec;
+	FBase 		: RecFileBase;
 	TLang 		: LangRec;
 	TF				: Text;
 Begin

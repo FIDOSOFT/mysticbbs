@@ -122,7 +122,7 @@ Begin
   List.LoChars  := #13#27#47;
   List.AllowTag := True;
 
-//  If FBaseFile.FileSize = 0 Then InsertRecord;
+  If FBaseFile.FileSize = 0 Then InsertRecord;
 
   Box.Open (15, 5, 65, 21);
 

@@ -257,7 +257,7 @@ Const
 // expand header filename[20]
 // add template[20]
 // add msgbase sponser[30]
-// add newsname[80]
+// add newsname[60]
 // add colorkludge[b]
 // add flags[l] merge in useReal
 //   flags:
@@ -279,6 +279,7 @@ Const
 //  add script path?
 //  compare to mystic 2 for fallback stuff?
 //  rename to THEME
+//  help percent bar
 //  horizontal/vertical percent bars
 
 Type
@@ -448,6 +449,7 @@ Const
 
 Type
   RecFileBase = Record
+    Index      : Word;
     Name       : String[40];
     FtpName    : String[60];
     FileName   : String[40];
@@ -459,10 +461,11 @@ Type
     ULACS      : String[30];
     CommentACS : String[30];
     SysOpACS   : String[30];
-    Path       : String[120];
-    Password   : String[20];
+    Path       : String[80];
+    Password   : String[15];
     DefScan    : Byte;
     Flags      : LongInt;
+    Res        : Array[1..36] of Byte;
   End;
 
 (* The file directory listing are stored as <FBaseRec.FileName>.DIR in    *)

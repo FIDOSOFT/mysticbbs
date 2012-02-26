@@ -197,8 +197,8 @@ End;
 Procedure Sort_File_Bases;
 Var
   SortList  : TQuickSort;
-  FBaseFile : File of FBaseRec;
-  FBase     : FBaseRec;
+  FBaseFile : File of RecFileBase;
+  FBase     : RecFileBase;
   FDirFile  : File of RecFileList;
   TFDirFile : File of RecFileList;
   FDir      : RecFileList;
@@ -267,8 +267,8 @@ Var
   FDir      : RecFileList;
   DataFile  : File;
   TDataFile : File;
-  FBaseFile : File of FBaseRec;
-  FBase     : FBaseRec;
+  FBaseFile : File of RecFileBase;
+  FBase     : RecFileBase;
 Begin
   Write ('Packing File Bases   : ');
 
@@ -337,8 +337,8 @@ End;
 
 Procedure Check_File_Bases;
 Var
-  FBaseFile : File of FBaseRec;
-  FBase     : FBaseRec;
+  FBaseFile : File of RecFileBase;
+  FBase     : RecFileBase;
   FDirFile  : File of RecFileList;
   FDir      : RecFileList;
   TFDirFile : File of RecFileList;
@@ -648,8 +648,8 @@ Var
   MBase      : MBaseRec;
   MScanFile  : File of MScanRec;
   MScan      : MScanRec;
-  FBaseFile  : File of FBaseRec;
-  FBase      : FBaseRec;
+  FBaseFile  : File of RecFileBase;
+  FBase      : RecFileBase;
   FScanFile  : File of FScanRec;
   FScan      : FScanRec;
   JamLRFile  : File of JamLastType;
@@ -925,11 +925,11 @@ Procedure Upload_File_Bases;
 Const
   NoDescStr = 'No Description';
 Var
-  BaseFile : File of FBaseRec;
+  BaseFile : File of RecFileBase;
   ListFile : File of RecFileList;
   DescFile : File;
   DizFile  : Text;
-  Base     : FBaseRec;
+  Base     : RecFileBase;
   List     : RecFileList;
   DirInfo  : SearchRec;
   Found    : Boolean;

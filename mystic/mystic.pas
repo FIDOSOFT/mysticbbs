@@ -83,6 +83,7 @@ Begin
   If ErrorAddr <> NIL Then Begin
     Session.io.OutFull('|CR|12System Error #' + strI2S(ExitCode));
     Session.SystemLog ('ERROR #' + strI2S(ExitCode));
+
     ExitCode := 1;
   End;
 
@@ -105,12 +106,14 @@ Begin
     Reset (Session.EventFile);
     While Not Eof(Session.EventFile) Do Begin
       Read (Session.EventFile, Session.Event);
+
       If Session.Event.Name = Session.NextEvent.Name Then Begin
         Session.Event.LastRan := CurDateDos;
         Seek  (Session.EventFile, FilePos(Session.EventFile) - 1);
         Write (Session.EventFile, Session.Event);
       End;
     End;
+
     Close (Session.EventFile);
   End;
 
@@ -218,8 +221,6 @@ Begin
   MkDir (Config.SystemPath + 'temp' + strI2S(Session.NodeNum));
   If IoResult <> 0 Then;
   {$I+}
-
-{ ----------------------- }
 
   Assign (RoomFile, Config.DataPath + 'chatroom.dat');
   {$I-} Reset (RoomFile); {$I+}

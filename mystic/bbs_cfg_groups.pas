@@ -24,8 +24,6 @@ Begin
   Box   := TAnsiMenuBox.Create;
   Form  := TAnsiMenuForm.Create;
 
-  Box.Header := ' Group Editor ';
-
   Box.Open (14, 10, 67, 16);
 
   VerticalLine (24, 12, 14);

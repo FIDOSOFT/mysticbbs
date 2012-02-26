@@ -1083,6 +1083,8 @@ Begin
     If OldFBase.IsCDROM Then FBase.Flags := FBase.Flags OR FBSlowMedia;
     If OldFBase.IsFREE  Then FBase.Flags := FBase.Flags OR FBFreeFiles;
 
+    FBase.Index := 0; // calc this now?
+
     Write (FBaseFile, FBase);
   End;
 
