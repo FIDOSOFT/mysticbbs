@@ -23,12 +23,12 @@ Uses
   bbs_cfg_FileBase,
   bbs_cfg_MsgBase,
   bbs_cfg_Groups,
+  bbs_cfg_SecLevel,
 
   //old editors to be rewritten
   bbs_cfg_useredit,
   bbs_cfg_events,
   bbs_cfg_language,
-  bbs_cfg_seclevel,
   bbs_cfg_vote,
   bbs_cfg_menuedit;
 
@@ -43,6 +43,7 @@ Begin
     'B' : Configuration_MessageBaseEditor;
     'F' : Configuration_FileBaseEditor;
     'G' : Configuration_GroupEditor(True);
+    'L' : Configuration_SecurityEditor(True);
     'R' : Configuration_GroupEditor(False);
     'P' : Configuration_ProtocolEditor;
   End;
@@ -124,7 +125,6 @@ Var
       'U' : User_Editor(False, False);
       'M' : Menu_Editor;
       'T' : Lang_Editor;
-      'S' : Levels_Editor;
       'E' : Event_Editor;
       'V' : Vote_Editor;
     End;
@@ -291,10 +291,10 @@ Begin
                 'G' : Configuration_GroupEditor(True);
                 'P' : Configuration_ProtocolEditor;
                 'R' : Configuration_GroupEditor(False);
+                'S' : Configuration_SecurityEditor(True);
                 'U',
                 'M',
                 'T',
-                'S',
                 'E',
                 'V' : ExecuteOldConfiguration(Res);
                 'X' : Break;

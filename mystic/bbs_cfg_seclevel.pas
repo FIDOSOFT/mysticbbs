@@ -4,104 +4,156 @@ Unit bbs_cfg_SecLevel;
 
 Interface
 
-Procedure Levels_Editor;
+Function Configuration_SecurityEditor (Edit: Boolean) : LongInt;
 
 Implementation
 
 Uses
   m_Strings,
+  m_FileIO,
   bbs_Common,
-  bbs_Core,
-  bbs_User;
+  bbs_Ansi_MenuBox,
+  bbs_Ansi_MenuForm,
+  bbs_Cfg_Common;
 
-Procedure Levels_Editor;
 Var
-	A   : Integer;
-	Old : RecSecurity;
+  SecFile : File;
+  Sec     : RecSecurity;
+
+Procedure Edit_Level (Level: Integer);
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String;
 Begin
-	Session.SystemLog('*LEVEL EDITOR*');
+  Topic := '|03(|09Security|03) |01-|09> |15';
 
-  Old := Session.User.Security;
+  ioSeek (SecFile, Level - 1);
+  ioRead (SecFile, Sec);
 
-  Reset (Session.User.SecurityFile);
-  Read (Session.User.SecurityFile, Session.User.Security);
-	Repeat
-    Session.io.OutFullLn ('|CL|14Security Level ' + strI2S(FilePos(Session.User.SecurityFile)) + ' of 255|CR|03');
-    Session.io.OutRawLn ('A. Description          : ' + Session.User.Security.Desc);
-    Session.io.OutRawLn ('B. Time allowed/day     : ' + strI2S(Session.User.Security.Time));
-    Session.io.OutRawLn ('C. Max calls/day        : ' + strI2S(Session.User.Security.MaxCalls));
-    Session.io.OutRawLn ('D. Max downloads/day    : ' + strI2S(Session.User.Security.MaxDLs));
-    Session.io.OutRawLn ('E. Max download K/day   : ' + strI2S(Session.User.Security.MaxDLk));
-    Session.io.OutRawLn ('F. Max mins in time bank: ' + strI2S(Session.User.Security.MaxTB));
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
 
-    Session.io.OutRaw   ('G. UL/DL ratio          : ');
-    If Session.User.Security.DLRatio = 0 Then
-      Session.io.OutRawLn ('Disabled')
-		Else
-      Session.io.OutRawLn ('1 UL for every ' + strI2S(Session.User.Security.DLRatio) + ' DLs');
+  Box.Header := ' Security Level ' + strI2S(Level) + ' ';
 
-    Session.io.OutRaw   ('H. UL/DL Kb ratio       : ');
-    If Session.User.Security.DLKRatio = 0 Then
-      Session.io.OutRawLn ('Disabled')
-		Else
-      Session.io.OutRawLn ('1 UL kb for every ' + strI2S(Session.User.Security.DLKRatio) + ' DL kb');
+  Box.Open (12, 5, 68, 21);
 
-    Session.io.OutRaw ('I. Post / Call Ratio    : ');
-    If Session.User.Security.PCRatio = 0 Then
-      Session.io.OutRawLn ('Disabled')
-		Else
-      Session.io.OutRawLn (strI2S(Session.User.Security.PCRatio) + ' posts for every 100 calls');
+  VerticalLine (35, 6, 20);
 
-    Session.io.OutFullLn ('|CRK. Upgraded Flags Set 1 : ' + DrawAccessFlags(Session.User.Security.AF1));
-    Session.io.OutFullLn ('L. Upgraded Flags Set 2 : ' + DrawAccessFlags(Session.User.Security.AF2));
+  Form.AddStr  ('D', ' Description '        , 22,  6, 37,  6, 13, 30, 30, @Sec.Desc, Topic + 'Description of security level');
+  Form.AddWord ('T', ' Time Per Day '       , 21,  7, 37,  7, 14,  4,  0, 1440, @Sec.Time, Topic + 'Minutes per day');
+  Form.AddWord ('C', ' Calls Per Day '      , 20,  8, 37,  8, 15,  5,  0, 65000, @Sec.MaxCalls, Topic + 'Maximum calls allowed per day');
+  Form.AddWord ('P', ' Post/Call Ratio '    , 18,  9, 37,  9, 17,  5,  0, 65000, @Sec.PCRatio, Topic + 'Must post X messages per 100 calls');
+  Form.AddWord ('E', ' Download Per Day '   , 17, 10, 37, 10, 18,  5,  0, 65000, @Sec.MaxDLs, Topic + 'Maximum downloads allowed per day');
+  Form.AddLong ('K', ' Download KB Per Day ', 14, 11, 37, 11, 21,  7,  0, 9999999, @Sec.MaxDLk, Topic + 'Maximum downloaded kilobytes per day');
+  Form.AddByte ('U', ' UL/DL Ratio '        , 22, 12, 37, 12, 13,  3,  0, 255, @Sec.DLRatio, Topic + 'Must upload 1 file for every X downloaded');
+  Form.AddWord ('B', ' UL/DL KB Ratio '     , 19, 13, 37, 13, 16,  5,  0, 65000, @Sec.DLKRatio, Topic + 'Must upload 1KB for every X downloaded');
+  Form.AddWord ('M', ' Max Time in Bank '   , 17, 14, 37, 14, 18,  5,  0, 65000, @Sec.MaxTB, Topic + 'Maximum minutes allowed in time bank');
+  Form.AddStr  ('S', ' Start Menu '         , 23, 15, 37, 15, 12, 20, 20, @Sec.StartMenu, Topic + 'Menu name to load first when user logs in');
+  Form.AddWord ('X', ' Expires '            , 26, 16, 37, 16,  9,  4,  0, 9999, @Sec.Expires, Topic + 'Number of days before level expires');
+  Form.AddByte ('O', ' Expires To '         , 23, 17, 37, 17, 12,  3,  0, 255, @Sec.ExpiresTo, Topic + 'Security level to expire to');
+  Form.AddFlag ('1', ' Access Flags 1 '     , 19, 18, 37, 18, 16, @Sec.AF1, Topic + 'Access flags: Set 1');
+  Form.AddFlag ('2', ' Access Flags 2 '     , 19, 19, 37, 19, 16, @Sec.AF2, Topic + 'Access flags: Set 2');
+  Form.AddBol  ('H', ' Hard Flag Upgrade '  , 16, 20, 37, 20, 19, 3, @Sec.Hard, Topic + 'Hard access flag upgrade?');
 
-    Session.io.OutFullLn   ('|CRM. Hard AF Upgrade      : ' + Session.io.OutYN(Session.User.Security.Hard));
+  Form.Execute;
 
-    Session.io.OutRawLn ('N. Start Menu           : ' + Session.User.Security.StartMeNU);
+  Box.Close;
 
-    Session.io.OutFull ('|CR|09([) Previous, (]), Next, (J)ump, (Q)uit: ');
-		Case Session.io.OneKey('[]ABCDEFGHIJKLMNQ', True) of
-      '[' : If FilePos(Session.User.SecurityFile) > 1 Then Begin
-              Seek (Session.User.SecurityFile, FilePos(Session.User.SecurityFile)-1);
-              Write (Session.User.SecurityFile, Session.User.Security);
-              Seek (Session.User.SecurityFile, FilePos(Session.User.SecurityFile)-2);
-              Read (Session.User.SecurityFile, Session.User.Security);
-						End;
-      ']' : If FilePos(Session.User.SecurityFile) < 255 Then Begin
-              Seek (Session.User.SecurityFile, FilePos(Session.User.SecurityFile)-1);
-              Write (Session.User.SecurityFile, Session.User.Security);
-              Read (Session.User.SecurityFile, Session.User.Security);
-						End;
-      'A' : Session.User.Security.Desc     := Session.io.InXY(27, 3, 30, 30, 11, Session.User.Security.Desc);
-      'B' : Session.User.Security.Time     := strS2I(Session.io.InXY(27,  4, 3, 3, 12, strI2S(Session.User.Security.Time)));
-      'C' : Session.User.Security.MaxCalls := strS2I(Session.io.InXY(27,  5, 4, 4, 11, strI2S(Session.User.Security.MaxCalls)));
-      'D' : Session.User.Security.MaxDLs   := strS2I(Session.io.InXY(27,  6, 4, 4, 11, strI2S(Session.User.Security.MaxDLs)));
-      'E' : Session.User.Security.MaxDLK   := strS2I(Session.io.InXY(27,  7, 4, 4, 11, strI2S(Session.User.Security.MaxDLK)));
-      'F' : Session.User.Security.MaxTB    := strS2I(Session.io.InXY(27,  8, 4, 4, 11, strI2S(Session.User.Security.MaxTB)));
-      'G' : Session.User.Security.DLRatio  := strS2I(Session.io.InXY(27,  9, 2, 2, 12, strI2S(Session.User.Security.DLRatio)));
-      'H' : Session.User.Security.DLKRatio := strS2I(Session.io.InXY(27, 10, 4, 4, 12, strI2S(Session.User.Security.DLKRatio)));
-      'I' : Session.User.Security.PCRatio  := strS2I(Session.io.InXY(27, 11, 4, 4, 12, strI2S(Session.User.Security.PCRatio)));
-			'J' : Begin
-              Session.io.OutRaw ('Jump to (1-255): ');
-              A := strS2I(Session.io.GetInput(3, 3, 12, ''));
-							If (A > 0) and (A < 256) Then Begin
-                Seek (Session.User.SecurityFile, FilePos(Session.User.SecurityFile)-1);
-                Write (Session.User.SecurityFile, Session.User.Security);
-                Seek (Session.User.SecurityFile, A-1);
-                Read (Session.User.SecurityFile, Session.User.Security);
-							End;
-						End;
-      'K' : EditAccessFlags(Session.User.Security.AF1);
-      'L' : EditAccessFlags(Session.User.Security.AF2);
-      'M' : Session.User.Security.Hard     := Not Session.User.Security.Hard;
-      'N' : Session.User.Security.StartMenu := Session.io.InXY(27, 17, 8, 8, 11, Session.User.Security.startmenu);
-			'Q' : Break;
-		End;
-	Until False;
-  Seek (Session.User.SecurityFile, FilePos(Session.User.SecurityFile)-1);
-  Write (Session.User.SecurityFile, Session.User.Security);
-  Close (Session.User.SecurityFile);
-  Session.User.Security := Old;
+  Box.Free;
+  Form.Free;
+
+  ioSeek  (SecFile, Level - 1);
+  ioWrite (SecFile, Sec);
+End;
+
+Function Configuration_SecurityEditor (Edit: Boolean) : LongInt;
+Var
+  List     : TAnsiMenuList;
+  Box      : TAnsiMenuBox;
+  HideMode : Boolean;
+
+  Procedure MakeList;
+  Var
+    Count : LongInt;
+  Begin
+    List.Clear;
+
+    ioReset(SecFile, SizeOf(RecSecurity), fmReadWrite + fmDenyNone);
+
+    For Count := 1 to 255 Do Begin
+      ioRead (SecFile, Sec);
+
+      If Not HideMode Then
+        List.Add(strPadR(strI2S(Count), 5, ' ') + Sec.Desc, 0)
+      Else
+        If Sec.Desc <> '' Then
+          List.Add(strPadR(strI2S(Count), 5, ' ') + Sec.Desc, 0);
+    End;
+  End;
+
+Var
+  Count : Byte;
+Begin
+  HideMode := True;
+
+  Assign (SecFile, Config.DataPath + 'security.dat');
+
+  If Not ioReset(SecFile, SizeOf(RecSecurity), fmReadWrite + fmDenyNone) Then Begin
+    ReWrite (SecFile, SizeOf(RecSecurity));
+    For Count := 1 to 255 Do ioWrite (SecFile, Sec);
+  End;
+
+  Box  := TAnsiMenuBox.Create;
+  List := TAnsiMenuList.Create;
+
+  Box.Header    := ' Security Levels ';
+  List.LoChars  := #13#27#47;
+  List.NoWindow := True;
+
+  Box.Open (21, 5, 59, 20);
+
+  WriteXY (23,  6, 112, 'Lvl  Description');
+  WriteXY (22,  7, 112, strRep('Ä', 37));
+  WriteXY (22, 18, 112, strRep('Ä', 37));
+  WriteXY (29, 19, 112, cfgCommandList);
+
+  Repeat
+    MakeList;
+
+    If HideMode and (List.ListMax = 0) Then Begin
+      HideMode := False;
+      MakeList;
+    End;
+
+    List.Open (21, 7, 59, 18);
+    List.Close;
+
+    Case List.ExitCode of
+      '/' : Case GetCommandOption(11, 'T-Toggle Hide|') of
+              'T' : HideMode := Not HideMode;
+            End;
+      #13 : Begin
+              Count := strS2I(Copy(List.List[List.Picked]^.Name, 1, 3));
+              If Edit Then
+                Edit_Level(Count)
+              Else Begin
+                Result := Count;
+                Break;
+              End;
+            End;
+      #27 : Begin
+              Result := -1;
+              Break;
+            End;
+    End;
+  Until False;
+
+  Close (SecFile);
+
+  Box.Close;
+  Box.Free;
+  List.Free;
 End;
 
 End.

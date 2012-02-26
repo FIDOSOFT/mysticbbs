@@ -3898,3 +3898,5 @@
  + Message base path expanded to 80 characters from 40.
 
  + Added new ANSI message base editor.
+
+ + Added new ANSI security level editor.

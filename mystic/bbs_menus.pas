@@ -231,7 +231,7 @@ Begin
             '?' : Begin
                     // online ANSI help system (BBSHTML) prototype
                     Help := TAnsiMenuHelp.Create;
-                    Help.OpenHelp (1, 1, 79, 23, Session.Lang.TextPath + Data, 'INDEX');
+                    Help.OpenHelp (Session.Lang.TextPath + Data + ';ansihelp;INDEX');
                     Help.Free;
                   End;
           End;
@@ -319,7 +319,7 @@ Begin
               'E' : Event_Editor;
               'F' : Configuration_ExecuteEditor('F');
               'G' : Configuration_ExecuteEditor('G');
-              'L' : Levels_Editor;
+              'L' : Configuration_ExecuteEditor('L');
               'M' : Configuration_ExecuteEditor('B');
               'P' : Configuration_ExecuteEditor('P');
               'S' : Configuration_MainMenu;

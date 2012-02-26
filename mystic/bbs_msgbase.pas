@@ -162,10 +162,12 @@ Begin
 
   Assign (MScanFile, MBase.Path + MBase.FileName + '.scn');
   {$I-} Reset (MScanFile); {$I+}
+
   If IoResult <> 0 Then ReWrite (MScanFile);
 
   If FileSize(MScanFile) < Session.User.UserNum - 1 Then Begin
     Seek (MScanFile, FileSize(MScanFile));
+
     For Count := FileSize(MScanFile) to Session.User.UserNum - 1 Do
       Write (MScanFile, Temp);
   End;
@@ -182,6 +184,7 @@ Begin
 
   Assign (MScanFile, MBase.Path + MBase.FileName + '.scn');
   {$I-} Reset (MScanFile); {$I+}
+
   If IoResult <> 0 Then Exit;
 
   If FileSize(MScanFile) >= Session.User.UserNum Then Begin    {filesize and usernum are }
@@ -381,6 +384,7 @@ Begin
       If Not Compress Then Begin
         Seek (MBaseFile, A - 1);
         Read (MBaseFile, MBase);
+
         If Not Session.User.Access(MBase.ListACS) Then Begin
           MBase := Old;
           Close (MBaseFile);

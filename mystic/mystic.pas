@@ -100,6 +100,7 @@ Begin
 
   If Session.EventExit or Session.EventRunAfter Then Begin
     Reset (Session.EventFile);
+
     While Not Eof(Session.EventFile) Do Begin
       Read (Session.EventFile, Session.Event);
 
@@ -229,6 +230,21 @@ Begin
     End;
   End;
 
+  Assign (Session.User.UserFile, Config.DataPath + 'users.dat');
+  {$I-} Reset (Session.User.UserFile); {$I+}
+
+  If IoResult <> 0 Then Begin
+    If FileExist(Config.DataPath + 'users.dat') Then Begin
+      Screen.WriteLine ('ERROR: Unable to access USERS.DAT');
+      DisposeClasses;
+      Halt(1);
+    End;
+
+    ReWrite(Session.User.UserFile);
+  End;
+
+  Close (Session.User.UserFile);
+
   If Session.ConfigMode Then Exit;
 
   CheckDIR (Config.SystemPath);
@@ -249,19 +265,6 @@ Begin
       Write (RoomFile, Room);
   End;
   Close (RoomFile);
-
-  Assign (Session.User.UserFile, Config.DataPath + 'users.dat');
-  {$I-} Reset (Session.User.UserFile); {$I+}
-  If IoResult <> 0 Then Begin
-    If FileExist(Config.DataPath + 'users.dat') Then Begin
-      Screen.WriteLine ('ERROR: Unable to access USERS.DAT');
-      DisposeClasses;
-      Halt(1);
-    End;
-    ReWrite(Session.User.UserFile);
-  End;
-
-  Close (Session.User.UserFile);
 
   Assign (Session.FileBase.FBaseFile, Config.DataPath + 'fbases.dat');
   {$I-} Reset(Session.FileBase.FBaseFile); {$I+}

@@ -348,13 +348,13 @@ Type
 (* SECURITY.DAT in the data directory holds 255 records, one for each *)
 (* possible security level. *)
 
-  RecSecurity = Record                 { SECURITY.DAT                     }
+  RecSecurity = Record                   { SECURITY.DAT                     }
     Desc       : String[30];             { Description of security level    }
-    Time       : SmallInt;               { Time online (mins) per day       }
-    MaxCalls   : SmallInt;               { Max calls per day                }
-    MaxDLs     : SmallInt;               { Max downloads per day            }
-    MaxDLk     : SmallInt;               { Max download kilobytes per day   }
-    MaxTB      : SmallInt;               { Max mins allowed in time bank    }
+    Time       : Word;                   { Time online (mins) per day       }
+    MaxCalls   : Word;                   { Max calls per day                }
+    MaxDLs     : Word;                   { Max downloads per day            }
+    MaxDLk     : Word;                   { Max download kilobytes per day   }
+    MaxTB      : Word;                   { Max mins allowed in time bank    }
     DLRatio    : Byte;                   { Download ratio (# of DLs per UL) }
     DLKRatio   : SmallInt;               { DL K ratio (# of DLed K per UL K }
     AF1        : AccessFlagType;         { Access flags for this level A-Z  }
