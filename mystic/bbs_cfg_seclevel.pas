@@ -130,8 +130,8 @@ Begin
     List.Close;
 
     Case List.ExitCode of
-      '/' : Case GetCommandOption(11, 'T-Toggle Hide|') of
-              'T' : HideMode := Not HideMode;
+      '/' : Case GetCommandOption(11, 'H-Toggle Hide|') of
+              'H' : HideMode := Not HideMode;
             End;
       #13 : Begin
               Count := strS2I(Copy(List.List[List.Picked]^.Name, 1, 3));
