@@ -122,7 +122,6 @@ Var
       'T' : Lang_Editor;
       'B' : Message_Base_Editor;
       'G',
-      'R' : Group_Editor;
       'S' : Levels_Editor;
       'E' : Event_Editor;
       'V' : Vote_Editor;
@@ -279,13 +278,13 @@ Begin
               Case Res of
                 'A' : Configuration_ArchiveEditor;
                 'F' : Configuration_FileBaseEditor;
+                'G' : Configuration_GroupEditor(True);
                 'P' : Configuration_ProtocolEditor;
+                'R' : Configuration_GroupEditor(False);
                 'U',
                 'M',
                 'T',
                 'B',
-                'G',
-                'R',
                 'S',
                 'E',
                 'V' : ExecuteOldConfiguration(Res);

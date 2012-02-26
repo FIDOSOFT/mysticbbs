@@ -3873,3 +3873,5 @@
  + Added new ANSI file base editor into the System Configuration.
 
  + Added Copy/Paste functions into all new ANSI internal editors.
+
+ + Added new ANSI message group and file group editors.

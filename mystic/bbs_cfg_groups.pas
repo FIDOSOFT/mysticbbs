@@ -1,149 +1,166 @@
-Unit bbs_cfg_Groups;
-
-{$I M_OPS.PAS}
+Unit bbs_Cfg_Groups;
 
 Interface
 
-Procedure Group_Editor;
+Procedure Configuration_GroupEditor (Msg: Boolean);
 
 Implementation
 
 Uses
+  m_FileIO,
   m_Strings,
-  bbs_Common,
-  bbs_Core;
+  bbs_Ansi_MenuBox,
+  bbs_Ansi_MenuForm,
+  bbs_cfg_Common,
+  bbs_Common;
 
-Procedure File_Group;
-var
-  a : SmallInt;
-fgroup : recgroup;
+Procedure EditGroup (Var Group: RecGroup);
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String;
 Begin
-  Reset (Session.FileBase.FGroupFile);
-  Repeat
-    Session.io.OutFullLn ('|CL|14File Group Editor|CR|CR|09###  Name|CR---  ------------------------------');
-    Reset (Session.FileBase.FGroupFile);
-    while not eof(Session.FileBase.FGroupFile) do begin
-      read (Session.FileBase.FGroupFile, FGroup);
-      Session.io.OutFullLn ('|15' + strPadR(strI2S(filepos(Session.FileBase.FGroupFile)), 5, ' ') + '|14' + FGroup.Name);
-    end;
-    Session.io.OutFull ('|CR|09(I)nsert, (D)elete, (E)dit, (Q)uit? ');
-    case Session.io.OneKey ('DIEQ', True) of
-      'D' : begin
-              Session.io.OutRaw ('Delete which? ');
-              a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-              KillRecord (Session.FileBase.FGroupFile, A, SizeOf(RecGroup));
-            end;
-      'I' : begin
-              Session.io.OutRaw ('Insert before which? (1-' + strI2S(filesize(Session.FileBase.FGroupFile)+1) + '): ');
-              a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-              if (a > 0) and (a <= filesize(Session.FileBase.FGroupFile)+1) then begin
-                AddRecord (Session.FileBase.FGroupFile, A, SizeOf(RecGroup));
-                FGroup.Name := '';
-                FGroup.ACS  := 's255';
-                write (Session.FileBase.FGroupFile, FGroup);
-              end;
-            end;
-      'E' : begin
-              Session.io.OutRaw ('Edit which? ');
-              a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-              if (a > 0) and (a <= filesize(Session.FileBase.FGroupFile)) then begin
-                seek (Session.FileBase.FGroupFile, a-1);
-                read (Session.FileBase.FGroupFile, FGroup);
-                repeat
-                  Session.io.OutFullLn ('|CL|14File Group '+strI2S(FilePos(Session.FileBase.FGroupFile)) + ' of ' + strI2S(FileSize(Session.FileBase.FGroupFile))+'|CR|03');
-                  Session.io.OutRawln ('A. Name   : ' + FGroup.Name);
-                  Session.io.OutRawln ('B. ACS    : ' + FGroup.acs);
-                  Session.io.OutRawLn ('C. Hidden : ' + Session.io.OutYN(FGroup.Hidden));
-                  Session.io.OutFull ('|CR|09Command (Q/Quit): ');
-                  case Session.io.OneKey('ABCQ', True) of
-                    'A' : FGroup.name := Session.io.InXY(13, 3, 30, 30, 11, Fgroup.name);
-                    'B' : FGroup.acs  := Session.io.InXY(13, 4, 20, 20, 11, Fgroup.acs);
-                    'C' : FGroup.Hidden := Not FGroup.Hidden;
-                    'Q' : break;
-                  end;
-                until false;
-                seek (Session.FileBase.FGroupFile, filepos(Session.FileBase.FGroupFile)-1);
-                write (Session.FileBase.FGroupFile, FGroup);
-              end;
-            end;
-      'Q' : break;
-    end;
+  Topic := '|03(|09Group Editor|03) |01-|09> |15';
+  Box   := TAnsiMenuBox.Create;
+  Form  := TAnsiMenuForm.Create;
 
-  until False;
-  close (Session.FileBase.FGroupFile);
+  Box.Header := ' Group Editor ';
 
+  Box.Open (14, 10, 67, 16);
+
+  VerticalLine (24, 12, 14);
+
+  Form.AddStr ('N', ' Name'  , 18, 12, 26, 12, 6, 40, 40, @Group.Name, Topic + 'Description of group');
+  Form.AddStr ('A', ' Access', 16, 13, 26, 13, 8, 30, 30, @Group.ACS, Topic + 'Access level to access this group');
+  Form.AddBol ('H', ' Hidden', 16, 14, 26, 14, 8,  3, @Group.Hidden, Topic + 'Group is hidden from group listing?');
+
+  Form.Execute;
+
+  Box.Close;
+  Form.Free;
+  Box.Free;
 End;
 
-Procedure Message_Group;
-var
-  a : SmallInt;
-  group:Recgroup;
-Begin
-  Reset (Session.Msgs.GroupFile);
-  Repeat
-    Session.io.OutFullLn ('|CL|14Message Group Editor|CR|CR|09###  Name|CR---  ------------------------------');
-    Reset (Session.Msgs.GroupFile);
-    while not Eof(Session.Msgs.GroupFile) do begin
-      read (Session.Msgs.GroupFile, Group);
-      Session.io.OutFullLn ('|15' + strPadR(strI2S(filepos(Session.Msgs.GroupFile)), 5, ' ') + '|14' + Group.Name);
-    end;
-    Session.io.OutFull ('|CR|09(I)nsert, (D)elete, (E)dit, (Q)uit? ');
-    case Session.io.OneKey ('DIEQ', True) of
-      'D' : begin
-              Session.io.OutRaw ('Delete which? ');
-              a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-              KillRecord (Session.Msgs.GroupFile, A, SizeOf(RecGroup));
-            end;
-      'I' : begin
-              Session.io.OutRaw ('Insert before? (1-' + strI2S(filesize(Session.Msgs.GroupFile)+1) + '): ');
-              a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-              if (a > 0) and (a <= filesize(Session.Msgs.GroupFile)+1) then begin
-                AddRecord (Session.Msgs.GroupFile, A, SizeOf(RecGroup));
-                Group.Name := '';
-                Group.ACS  := 's255';
-                write (Session.Msgs.GroupFile, Group);
-              end;
-            end;
-      'E' : begin
-              Session.io.OutRaw ('Edit which? ');
-              a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-              if (a > 0) and (a <= filesize(Session.Msgs.GroupFile)) then begin
-                seek (Session.Msgs.GroupFile, a-1);
-                read (Session.Msgs.GroupFile, Group);
-                repeat
-                  Session.io.OutFullLn ('|CL|14Group ' + strI2S(FilePos(Session.Msgs.GroupFile)) + ' of ' + strI2S(FileSize(Session.Msgs.GroupFile)) + '|CR|03');
-                  Session.io.OutRawln ('A. Name   : ' + Group.Name);
-                  Session.io.OutRawln ('B. ACS    : ' + Group.acs);
-                  Session.io.OutRawLn ('C. Hidden : ' + Session.io.OutYN(Group.Hidden));
+Procedure Configuration_GroupEditor (Msg: Boolean);
+Var
+  Box       : TAnsiMenuBox;
+  List      : TAnsiMenuList;
+  GroupFile : TBufFile;
+  Group     : RecGroup;
+  Copied    : RecGroup;
+  HasCopy   : Boolean = False;
 
-                  Session.io.OutFull ('|CR|09Command (Q/Quit): ');
-                  case Session.io.OneKey('ABCQ', True) of
-                    'A' : Group.name := Session.io.InXY(13, 3, 30, 30, 11, group.name);
-                    'B' : Group.acs  := Session.io.InXY(13, 4, 20, 20, 11, group.acs);
-                    'C' : Group.Hidden := Not Group.Hidden;
-                    'Q' : break;
-                  end;
-                until false;
-                seek (Session.Msgs.GroupFile, filepos(Session.Msgs.GroupFile)-1);
-                write (Session.Msgs.GroupFile, Group);
-              end;
-            end;
-      'Q' : break;
-    end;
+  Procedure MakeList;
+  Begin
+    List.Clear;
 
-  until False;
-  close (Session.Msgs.GroupFile);
-End;
+    GroupFile.Reset;
 
-Procedure Group_Editor;
-Begin
-  Session.SystemLog ('*GROUP EDITOR*');
+    While Not GroupFile.EOF Do Begin
+      GroupFile.Read (Group);
 
-  Session.io.OutFull ('|CL|09Edit Groups: (M)essage, (F)ile, (Q)uit? ');
-  Case Session.io.OneKey('QMF', True) of
-    'M' : Message_Group;
-    'F' : File_Group;
+      List.Add(strPadR(strI2S(GroupFile.FilePos), 3, ' ') + '  ' + strStripPipe(Group.Name), 0);
+    End;
+
+    List.Add('', 2);
   End;
+
+Begin
+  GroupFile := TBufFile.Create(2048);
+
+  If Msg Then Begin
+    If Not GroupFile.Open(Config.DataPath + 'groups_g.dat', fmOpenCreate, fmReadWrite + fmDenyNone, SizeOf(RecGroup)) Then Begin
+      GroupFile.Free;
+      Exit;
+    End;
+  End Else Begin
+    If Not GroupFile.Open(Config.DataPath + 'groups_f.dat', fmOpenCreate, fmReadWrite + fmDenyNone, SizeOf(RecGroup)) Then Begin
+      GroupFile.Free;
+      Exit;
+    End;
+  End;
+
+  Box  := TAnsiMenuBox.Create;
+  List := TAnsiMenuList.Create;
+
+  List.NoWindow := True;
+  List.LoChars  := #13#27#47;
+
+  If Msg Then
+    Box.Header := ' Message Group Editor '
+  Else
+    Box.Header := ' File Group Editor ';
+
+  Box.Open (21, 6, 59, 20);
+
+  If Msg Then
+    WriteXY (23, 8, 112, '###  Message Group Name')
+  Else
+    WriteXY (23, 8, 112, '###  File Group Name');
+
+  WriteXY (22, 9, 112,  strRep(#196, 37));
+  WriteXY (22, 18, 112, strRep(#196, 37));
+  WriteXY (29, 19, 112, cfgCommandList);
+
+  Repeat
+    MakeList;
+
+    List.Open (21, 9, 59, 18);
+    List.Close;
+
+    Case List.ExitCode of
+      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
+              'I' : If List.Picked > 1 Then Begin
+                      GroupFile.RecordInsert (List.Picked);
+
+                      Group.Name   := 'New Group';
+                      Group.ACS    := '';
+                      Group.Hidden := False;
+
+                      GroupFile.Write (Group);
+
+                      MakeList;
+                    End;
+              'D' : If (List.Picked < List.ListMax) Then
+                      If ShowMsgBox(1, 'Delete this entry?') Then Begin
+                        GroupFile.Seek (List.Picked - 1);
+                        GroupFile.Read (Group);
+
+                        GroupFile.RecordDelete (List.Picked);
+
+                        MakeList;
+                      End;
+              'C' : If List.Picked <> List.ListMax Then Begin
+                      GroupFile.Seek (List.Picked - 1);
+                      GroupFile.Read (Copied);
+
+                      HasCopy := True;
+                    End;
+              'P' : If HasCopy Then Begin
+                      GroupFile.RecordInsert (List.Picked);
+                      GroupFile.Write        (Copied);
+
+                      MakeList;
+                    End;
+            End;
+      #13 : If List.Picked <> List.ListMax Then Begin
+              GroupFile.Seek (List.Picked - 1);
+              GroupFile.Read (Group);
+
+              EditGroup(Group);
+
+              GroupFile.Seek  (List.Picked - 1);
+              GroupFile.Write (Group);
+            End;
+      #27 : Break;
+    End;
+  Until False;
+
+  Box.Close;
+
+  GroupFile.Free;
+  List.Free;
+  Box.Free;
 End;
 
 End.

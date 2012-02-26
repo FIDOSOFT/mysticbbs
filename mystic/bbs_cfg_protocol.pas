@@ -98,7 +98,7 @@ Begin
   WriteXY (15,  7, 112, 'Active   OSID     Batch   Key  Description');
   WriteXY (15,  8, 112, strRep('Ä', 51));
   WriteXY (15, 18, 112, strRep('Ä', 51));
-  WriteXY (29, 19, 112, 'Press / for command list');
+  WriteXY (29, 19, 112, cfgCommandList);
 
   Repeat
     MakeList;

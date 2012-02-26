@@ -4,6 +4,9 @@ Unit bbs_cfg_Common;
 
 Interface
 
+Const
+  cfgCommandList = 'Press / for command list';
+
 Function GetCommandOption (StartY: Byte; CmdStr: String) : Char;
 
 Implementation

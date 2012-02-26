@@ -129,7 +129,7 @@ Begin
   WriteXY (17,  6, 112, '#####  File Base Description');
   WriteXY (16,  7, 112, strRep(#196, 49));
   WriteXY (16, 19, 112, strRep(#196, 49));
-  WriteXY (29, 20, 112, 'Press / for command list');
+  WriteXY (29, 20, 112, cfgCommandList);
 
   Repeat
     MakeList;
