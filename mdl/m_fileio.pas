@@ -457,20 +457,20 @@ Begin
 
   Case OM of
     fmOpen      : Begin
-                    System.Reset(BufFile, 1);
+                    {$I-} System.Reset(BufFile, 1); {$I+}
                     If System.IoResult <> 0 Then Exit;
                     FillBuffer;
                   End;
     fmOpenCreate: Begin
-                    System.Reset(BufFile, 1);
+                    {$I-} System.Reset(BufFile, 1); {$I+}
                     If System.IoResult <> 0 Then Begin
-                      System.ReWrite(BufFile, 1);
+                      {$I-} System.ReWrite(BufFile, 1); {$I+}
                       If System.IoResult <> 0 Then Exit;
                     End Else
                       FillBuffer;
                   End;
     fmCreate    : Begin
-                    System.ReWrite(BufFile, 1);
+                    {$I-} System.ReWrite(BufFile, 1); {$I+}
                     If IoResult <> 0 Then Exit;
                   End;
   End;
