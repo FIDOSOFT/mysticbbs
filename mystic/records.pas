@@ -405,13 +405,14 @@ Type
     NewsName  : String[60];
     FileName  : String[40];
     Path      : String[mysMaxPathSize];
-    BaseType  : Byte;
-    NetType   : Byte;
-    ReadType  : Byte;
-    ListType  : Byte;
+    BaseType  : Byte;                                 // 0=JAM  1=Squish
+    NetType   : Byte;                                 // 0=Local 1=Echo 2=News 3=Net
+    ReadType  : Byte;                                 // 0=User 1=Normal 2=FS
+    ListType  : Byte;                                 // 0=User 1=Normal 2=FS
     ListACS   : String[mysMaxAcsSize];
     ReadACS   : String[mysMaxAcsSize];
     PostACS   : String[mysMaxAcsSize];
+    NewsACS   : String[mysMaxACsSize];
     SysopACS  : String[mysMaxAcsSize];
     Sponsor   : String[30];
     ColQuote  : Byte;
@@ -419,10 +420,10 @@ Type
     ColTear   : Byte;
     ColOrigin : Byte;
     ColKludge : Byte;
-    NetAddr   : Byte;                   { Net AKA to use for this base     }
-    Origin    : String[50];             { Net origin line for this base    }
-    DefNScan  : Byte;                   { 0 = off, 1 = on, 2 = always      }
-    DefQScan  : Byte;                   { 0 = off, 1 = on, 2 = always      }
+    NetAddr   : Byte;                                 // Net AKA to use for this base
+    Origin    : String[50];                           // Net origin line for this base
+    DefNScan  : Byte;                                 // 0 = off, 1 = on, 2 = forced
+    DefQScan  : Byte;                                 // 0 = off, 1 = on, 2 = forced
     MaxMsgs   : Word;
     MaxAge    : Word;
     Header    : String[20];
@@ -430,7 +431,7 @@ Type
     ITemplate : String[20];
     Index     : Word;
     Flags     : LongInt;
-    Res       : Array[1..110] of Byte;
+    Res       : Array[1..74] of Byte;
   End;
 
   FScanRec = Record                    { <Data Path> *.SCN               }
