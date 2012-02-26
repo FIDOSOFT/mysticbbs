@@ -109,6 +109,7 @@ Var
   Str : String;
 Begin
   ResetSession;
+
   Client.WriteLine(re_Greeting);
 
   Repeat

@@ -40,6 +40,7 @@ Begin
 
   Case Mode of
     'A' : Configuration_ArchiveEditor;
+    'F' : Configuration_FileBaseEditor;
     'P' : Configuration_ProtocolEditor;
   End;
 
@@ -122,7 +123,6 @@ Var
       'B' : Message_Base_Editor;
       'G',
       'R' : Group_Editor;
-      'F' : File_Base_Editor;
       'S' : Levels_Editor;
       'E' : Event_Editor;
       'V' : Vote_Editor;
@@ -278,6 +278,7 @@ Begin
             End Else
               Case Res of
                 'A' : Configuration_ArchiveEditor;
+                'F' : Configuration_FileBaseEditor;
                 'P' : Configuration_ProtocolEditor;
                 'U',
                 'M',
@@ -285,7 +286,6 @@ Begin
                 'B',
                 'G',
                 'R',
-                'F',
                 'S',
                 'E',
                 'V' : ExecuteOldConfiguration(Res);

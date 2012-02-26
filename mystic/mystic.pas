@@ -344,6 +344,7 @@ Begin
   {$I-} Reset (Session.User.SecurityFile); {$I+}
   If IoResult <> 0 Then Begin
     ReWrite(Session.User.SecurityFile);
+
     For Count := 1 to 255 Do
       Write (Session.User.SecurityFile, Session.User.Security);
   End;

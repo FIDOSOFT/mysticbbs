@@ -769,13 +769,13 @@ End;
 
 Procedure TMsgBase.ReplyMessage (Email: Boolean; ListMode : Byte; ReplyID : String);
 Var
-  ToWho  : String[30];  {to field}
-  Subj   : String[60];  {subject field}
-  Addr   : RecEchomailAddr;    {netmail to addr}
+  ToWho  : String[30];
+  Subj   : String[60];
+  Addr   : RecEchomailAddr;
   MsgNew : PMsgBaseABS;
-  Temp1  : String;      {quote text}
-  Temp2  : String[2];   {Initials}
-  Temp3  : String[80];  {Text}
+  Temp1  : String;
+  Temp2  : String[2];
+  Temp3  : String[80];
   tFile  : Text;
   Lines  : SmallInt;
 Begin
@@ -1019,11 +1019,11 @@ End;
 
 Procedure TMsgBase.MessageUpload (Var CurLine: SmallInt);
 Var
-  FN   : String[100]; {was string}
-  TF   : Text;
-  T1   : String[30]; { Saved TO:   }
-  T2   : String[60]; { Saved SUBJ: }
-  OK   : Boolean;
+  FN : String[100];
+  TF : Text;
+  T1 : String[30];
+  T2 : String[60];
+  OK : Boolean;
 Begin
   OK := False;
 
@@ -1500,6 +1500,7 @@ Var
             'D' : Begin
                     If Session.io.GetYN(Session.GetPrompt(402), True) Then Begin
                       MsgBase^.DeleteMsg;
+
                       If Not SeekNextMsg(False, False) Then Begin
                         Ansi_View_Message := True;
                         Exit;
@@ -1529,7 +1530,9 @@ Var
                     Session.io.PromptInfo[2] := strI2S(MsgBase^.GetHighMsgNum);
 
                     Session.io.OutFull (Session.GetPrompt(403));
+
                     A := strS2I(Session.io.GetInput(9, 9, 12, ''));
+
                     If (A > 0) and (A <= MsgBase^.GetHighMsgNum) Then Begin
                       MsgBase^.SeekFirst(A);
                       If Not SeekNextMsg(True, False) Then Begin
@@ -1546,6 +1549,7 @@ Var
                         Ansi_View_Message := True;
                         Exit;
                       End;
+
                     Break;
                   End;
             #13 : If (Lines > PageSize) and (PageEnd <= Lines) Then Begin
@@ -1578,21 +1582,26 @@ Var
             #27,
             'Q' : Begin
                     GetMessageScan;
+
                     If MScan.NewScan = 2 Then
                       Session.io.OutFullLn(Session.GetPrompt(406))
                     Else Begin
                       ReadRes := False;
                       Ansi_View_Message := True;
+
                       Exit;
                     End;
                   End;
             'R' : Begin
                     ReplyMessage (Mode = 'E', ListMode, ReplyID);
+
                     Break;
                   End;
             'T' : Begin
                     Session.io.PromptInfo[1] := MBase.Name;
+
                     GetMessageScan;
+
                     Case MScan.NewScan of
                       0 : Begin
                             MScan.NewScan := 1;
@@ -1606,20 +1615,24 @@ Var
                     End;
 
                     SetMessageScan;
+
                     Break;
                   End;
             'X' : Begin
                     Export_Message;
+
                     Break;
                   End;
             '[' : If MsgBase^.GetRefer > 0 Then Begin
                     MsgBase^.SeekFirst(MsgBase^.GetRefer);
                     MsgBase^.MsgStartUp;
+
                     Break;
                   End;
             ']' : If MsgBase^.GetSeeAlso > 0 Then Begin
                     MsgBase^.SeekFirst(MsgBase^.GetSeeAlso);
                     MsgBase^.MsgStartUp;
+
                     Break;
                   End;
             '?' : Begin
@@ -1671,6 +1684,7 @@ Var
             Session.io.PromptInfo[2] := Subj;
             Session.io.PromptInfo[3] := MsgFrom;
             Session.io.PromptInfo[4] := MsgTo;
+
             If NewMsgs Then
               Session.io.PromptInfo[5] := Session.Lang.NewMsgChar
             Else
@@ -1711,17 +1725,16 @@ Var
           CurPage := 0;
         End;
 
-{ add scanning prompt here }
-(*
-if (scanmode=3) then begin
-    Session.io.AnsiGotoXY(32, 11);
-    Session.io.OutFull ('|08.---------------.');
-    Session.io.AnsiGotoXY(32, 12);
-    Session.io.OutFull ('| |07searching ... |08|');
-    Session.io.AnsiGotoXY(32, 13);
-    Session.io.OutFull ('`---------------''');
-end;
-*)
+        // add scanning prompt here
+        //if (scanmode=3) then begin
+        //    Session.io.AnsiGotoXY(32, 11);
+        //    Session.io.OutFull ('|08.---------------.');
+        //    Session.io.AnsiGotoXY(32, 12);
+        //    Session.io.OutFull ('| |07searching ... |08|');
+        //    Session.io.AnsiGotoXY(32, 13);
+        //    Session.io.OutFull ('`---------------''');
+        //end;
+
         PageTotal := 0;
         Read_Page  := True;
 
@@ -1976,9 +1989,9 @@ end;
     End;
 
   Var
-    Str  : String;
-    A    : LongInt;
-    B    : LongInt;
+    Str : String;
+    A   : LongInt;
+    B   : LongInt;
   Begin
     If SeekNextMsg(True, False) Then
     Repeat

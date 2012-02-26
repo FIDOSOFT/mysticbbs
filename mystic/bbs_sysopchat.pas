@@ -21,7 +21,7 @@ Var
 
 Procedure Split_Chat;
 Var
-	Update   : LongInt = 0;
+  Update   : LongInt = 0;
   LastUser : Boolean;
   UserStr  : String;
   SysopStr : String;
@@ -32,7 +32,7 @@ Var
   UserY    : Byte;
   SysopX,
   SysopY   : Byte;
-	X, Y, A  : Byte;
+  X, Y, A  : Byte;
 
 Procedure Total_ReDraw;
 Begin
@@ -52,7 +52,7 @@ Begin
   SysopStr := '';
 
   Session.io.AnsiGotoXY (SysopX, SysopY);
-  Session.io.AnsiColor (Session.io.ScreenInfo[5].A);
+  Session.io.AnsiColor  (Session.io.ScreenInfo[5].A);
 
   LastUser := False;
 End;
@@ -61,39 +61,43 @@ Begin
   Total_ReDraw;
 
   Repeat
-		If Update <> TimerMinutes Then Begin
+    If Update <> TimerMinutes Then Begin
       X := Screen.CursorX;
       Y := Screen.CursorY;
-			A := Screen.TextAttr;
+      A := Screen.TextAttr;
 
       If Session.io.ScreenInfo[9].X <> 0 Then Begin
         Session.io.AnsiGotoXY (Session.io.ScreenInfo[9].X, Session.io.ScreenInfo[9].Y);
-        Session.io.AnsiColor (Session.io.ScreenInfo[9].A);
+        Session.io.AnsiColor  (Session.io.ScreenInfo[9].A);
+
         Session.io.OutFull ('|$L04|TL');
-			End;
+      End;
 
       If Session.io.ScreenInfo[0].X <> 0 Then Begin
         Session.io.AnsiGotoXY (Session.io.ScreenInfo[0].X, Session.io.ScreenInfo[0].Y);
-        Session.io.AnsiColor (Session.io.ScreenInfo[0].A);
+        Session.io.AnsiColor  (Session.io.ScreenInfo[0].A);
+
         Session.io.OutFull ('|TI');
-			End;
+      End;
 
       Session.io.AnsiGotoXY (X, Y);
-      Session.io.AnsiColor(A);
+      Session.io.AnsiColor  (A);
 
-			Update := TimerMinutes;
-		End;
+      Update := TimerMinutes;
+    End;
 
     Ch := Session.io.GetKey;
 
     If Not Session.io.LocalInput and Not LastUser Then Begin
-      Session.io.AnsiGotoXY   (UserX, UserY);
-      Session.io.AnsiColor (Session.io.ScreenInfo[1].A);
+      Session.io.AnsiGotoXY (UserX, UserY);
+      Session.io.AnsiColor  (Session.io.ScreenInfo[1].A);
+
       LastUser := True;
     End Else
     If Session.io.LocalInput and LastUser Then Begin
-      Session.io.AnsiGotoXY   (SysopX, SysopY);
-      Session.io.AnsiColor (Session.io.ScreenInfo[5].A);
+      Session.io.AnsiGotoXY (SysopX, SysopY);
+      Session.io.AnsiColor  (Session.io.ScreenInfo[5].A);
+
       LastUser := False;
     End;
 
@@ -103,12 +107,14 @@ Begin
       #08 : If Session.io.LocalInput Then Begin
               If SysopX > Session.io.ScreenInfo[7].X Then Begin
                 Session.io.OutBS (1, True);
+
                 Dec (SysopX);
                 Dec (SysopStr[0]);
               End;
             End Else Begin
               If UserX > Session.io.ScreenInfo[3].X Then Begin
                 Session.io.OutBS (1, True);
+
                 Dec (UserX);
                 Dec (UserStr[0]);
               End;
@@ -225,22 +231,22 @@ Begin
               Session.io.OutBS(1, True);
               Dec(Str1[0]);
             End;
-      Else
-        Str1 := Str1 + Ch;
+    Else
+      Str1 := Str1 + Ch;
 
-        Session.io.BufAddChar(Ch);
+      Session.io.BufAddChar(Ch);
 
-        If Length(Str1) > 78 Then Begin
-          strWrap (Str1, Str2, 78);
-          Session.io.OutBS(Length(Str2), True);
-          Session.io.OutRawLn ('');
-          Session.io.OutRaw (Str2);
+      If Length(Str1) > 78 Then Begin
+        strWrap (Str1, Str2, 78);
+        Session.io.OutBS(Length(Str2), True);
+        Session.io.OutRawLn ('');
+        Session.io.OutRaw (Str2);
 
-          If Config.ChatLogging Then WriteLn (tFile, Str1);
+        If Config.ChatLogging Then WriteLn (tFile, Str1);
 
-          Str1 := Str2;
-        End;
+        Str1 := Str2;
       End;
+    End;
   Until False;
 
   Session.io.OutFull (Session.GetPrompt(27));
@@ -256,23 +262,24 @@ Begin
 
   UpdateStatusLine (0, '(ESC) to Quit, (Ctrl-R) to Redraw');
 
-	If Config.ChatLogging Then Begin
-		Assign (tFile, Config.LogsPath + 'chat.log');
-	  {$I-} Append (tFile); {$I+}
-	  If IoResult <> 0 Then ReWrite (tFile);
+  If Config.ChatLogging Then Begin
+    Assign (tFile, Config.LogsPath + 'chat.log');
+    {$I-} Append (tFile); {$I+}
 
-	  WriteLn (tFile, '');
-	  WriteLn (tFile, 'Chat recorded ' + DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, True) +
+    If IoResult <> 0 Then ReWrite (tFile);
+
+    WriteLn (tFile, '');
+    WriteLn (tFile, 'Chat recorded ' + DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, True) +
                     ' with ' + Session.User.ThisUser.Handle);
     WriteLn (tFile, strRep('-', 70));
-	End;
+  End;
 
-	If ((Split) And (Session.io.Graphics > 0)) Then Split_Chat Else Line_Chat;
+  If ((Split) And (Session.io.Graphics > 0)) Then Split_Chat Else Line_Chat;
 
-	If Config.ChatLogging Then Begin
+  If Config.ChatLogging Then Begin
     WriteLn (tFile, strRep('-', 70));
-	  Close (tFile);
-	End;
+    Close (tFile);
+  End;
 
   Session.User.InChat := False;
   Session.TimeOut     := TimerSeconds;

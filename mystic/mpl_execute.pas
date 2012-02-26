@@ -90,7 +90,7 @@ Type
     Function  GetMBaseRecord  (Num: LongInt) : Boolean;
     Procedure GetMGroupVars   (Var G: RecGroup);
     Function  GetMGroupRecord (Num: LongInt) : Boolean;
-    Procedure GetFBaseVars    (Var F: FBaseRec);
+    Procedure GetFBaseVars    (Var F: RecFileBase);
     Function  GetFBaseRecord  (Num: LongInt) : Boolean;
     Procedure GetFGroupVars   (Var G: RecGroup);
     Function  GetFGroupRecord (Num: LongInt) : Boolean;
@@ -203,7 +203,7 @@ Begin
   Close (F);
 End;
 
-Procedure TInterpEngine.GetFBaseVars (Var F: FBaseRec);
+Procedure TInterpEngine.GetFBaseVars (Var F: RecFileBase);
 Begin
   Move (F.Name,     VarData[IdxVarFBase     ]^.Data^, SizeOf(F.Name));
   Move (F.ListACS,  VarData[IdxVarFBase + 1 ]^.Data^, SizeOf(F.ListACS));
@@ -212,12 +212,12 @@ End;
 Function TInterpEngine.GetFBaseRecord (Num: LongInt) : Boolean;
 Var
   F  : File;
-  FB : FBaseRec;
+  FB : RecFileBase;
 Begin
   Result := False;
 
   Assign (F, Config.DataPath + 'fbases.dat');
-  If Not ioReset(F, SizeOf(FBaseRec), fmRWDN) Then Exit;
+  If Not ioReset(F, SizeOf(RecFileBase), fmRWDN) Then Exit;
 
   If ioSeek(F, Pred(Num)) And (ioRead(F, FB)) Then Begin
     GetFBaseVars(FB);

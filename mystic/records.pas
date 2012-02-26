@@ -244,17 +244,15 @@ Type
   End;
 
 Const
-  UserLockedOut  = $01;
-  UserNoRatio    = $02;
-  UserDeleted    = $04;
-  UserNoKill     = $08;
-  UserNoCaller   = $10;
-  UserNoPWChange = $20;
+  UserLockedOut  = $00000001;
+  UserNoRatio    = $00000002;
+  UserDeleted    = $00000004;
+  UserNoKill     = $00000008;
+  UserNoCaller   = $00000010;
+  UserNoPWChange = $00000020;
 
 //FUTURE DATA FILE UPDATES NEEDED
 //LASTON needs optional1-10 compare to Mystic2
-//FBASE
-//  ACS to comment on file
 //MBASES
 // expand header filename[20]
 // add template[20]
@@ -282,13 +280,11 @@ Const
 //  compare to mystic 2 for fallback stuff?
 //  rename to THEME
 //  horizontal/vertical percent bars
-// default prot into users
-// default prot into new user options
 
 Type
   RecUser = Record                     { USERS.DAT }
     PermIdx      : LongInt;                 // permanent user number
-    Flags        : Byte;                  { User Flags }
+    Flags        : LongInt;                  { User Flags }
     Handle       : String[30];            { Handle                       }
     RealName     : String[30];            { Real Name                    }
     Password     : String[15];            { Password                     }
@@ -351,7 +347,7 @@ Type
     UseFullChat  : Boolean;               { use full screen teleconference }
     Credits      : LongInt;
     Protocol     : Char;
-    Reserved     : Array[1..392] of Byte;
+    Reserved     : Array[1..389] of Byte;
   End;
 
   EventRec = Record                   { EVENTS.DAT                        }
@@ -445,25 +441,29 @@ Type
     LastNew : LongInt;                 { Last file scan (packed datetime)}
   End;
 
-  FBaseRec = Record                    { FBASES.DAT                      }
-    Name     : String[40];             { File base name                  }
-    FtpName  : String[60];             { FTP directory name              }
-    Filename : String[40];             { File name                       }
-    DispFile : String[20];             { Pre-list display file name      }
-    Template : String[20];             { ansi file list template         }
-    ListACS,                           { ACS required to see this base   }
-    FtpACS,                            { ACS to see in FTP directory     }
-    SysopACS,                          { ACS required for SysOp functions}
-    ULACS,                             { ACS required to upload files    }
-    DLACS    : String[mysMaxAcsSize];  { ACS required to download files  }
-    Path     : String[120];            { Path where files are stored     }
-    Password : String[20];             { Password to access this base    }
-    DefScan  : Byte;                   { Default New Scan Setting        }
-    ShowUL   : Boolean;
-    IsCDROM  : Boolean;
-    IsFREE   : Boolean;
+Const
+  FBShowUpload = $00000001;
+  FBSlowMedia  = $00000002;
+  FBFreeFiles  = $00000004;
+
+Type
+  RecFileBase = Record
+    Name       : String[40];
+    FtpName    : String[60];
+    FileName   : String[40];
+    DispFile   : String[20];
+    Template   : String[20];
+    ListACS    : String[30];
+    FtpACS     : String[30];
+    DLACS      : String[30];
+    ULACS      : String[30];
+    CommentACS : String[30];
+    SysOpACS   : String[30];
+    Path       : String[120];
+    Password   : String[20];
+    DefScan    : Byte;
+    Flags      : LongInt;
   End;
-  // make flags and merge in shouul, iscdrom,isfree, etc
 
 (* The file directory listing are stored as <FBaseRec.FileName>.DIR in    *)
 (* the data directory.  Each record stores the info on one file.  File    *)

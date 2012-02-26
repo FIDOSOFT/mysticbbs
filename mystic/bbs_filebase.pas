@@ -23,13 +23,13 @@ Type
   End;
 
   TFileBase = Class
-    FBaseFile    : File of FBaseRec;
+    FBaseFile    : File of RecFileBase;
     FDirFile     : File of RecFileList;
     FScanFile    : File of FScanRec;
     ProtocolFile : File of RecProtocol;
     FGroupFile   : File of RecGroup;
     ArcFile      : File of RecArchive;
-    FBase        : FBaseRec;
+    FBase        : RecFileBase;
     FGroup       : RecGroup;
     FScan        : FScanRec;
     FDir         : RecFileList;
@@ -355,7 +355,7 @@ End;
 Procedure TFileBase.SetFileScanDate;
 Var
   L   : LongInt;
-  Old : FBaseRec;
+  Old : RecFileBase;
   Str : String;
 Begin
   Session.io.OutFull (Session.GetPrompt(255));
@@ -662,7 +662,7 @@ Begin
   If (FDir.Flags And FDirInvalid <> 0) And Not Session.User.Access(Config.AcsDLUnvalid) Then Exit;
   If (FDir.Flags And FDirFailed  <> 0) And Not Session.User.Access(Config.AcsDLFailed)  Then Exit;
 
-  If (FDir.Flags And FDirFree <> 0) or (Session.User.ThisUser.Flags and UserNoRatio <> 0) or (FBase.IsFREE) Then Begin
+  If (FDir.Flags And FDirFree <> 0) or (Session.User.ThisUser.Flags and UserNoRatio <> 0) or (FBase.Flags and FBFreeFiles <> 0) Then Begin
     Result := 0;
     Exit;
   End;
@@ -836,7 +836,7 @@ Var
   End;
 
 Var
-  Old  : FBaseRec;
+  Old  : RecFileBase;
   Temp : String[11];
   A    : Word;
   N1   : Word;
@@ -1042,7 +1042,7 @@ End;
 Procedure TFileBase.ViewFile;
 Var
   FName : String[70];
-  Old   : FBaseRec;
+  Old   : RecFileBase;
 Begin
   Session.io.OutFull (Session.GetPrompt(353));
 
@@ -1121,7 +1121,7 @@ Procedure TFileBase.BatchAdd;
 Var
   FName  : String[70];
   A      : Byte;
-  Old    : FBaseRec;
+  Old    : RecFileBase;
   OkSave : Boolean;
 Begin
   If BatchNum = mysMaxBatchQueue Then Begin
@@ -1223,7 +1223,7 @@ Var
   A      : Word;
   Total  : Word;
   tGroup : recGroup;
-  tFBase : FBaseRec;
+  tFBase : RecFileBase;
   tLast  : Word;
   Areas  : Word;
   Data   : Word;
@@ -1431,7 +1431,7 @@ Procedure TFileBase.ChangeFileArea (Data: String);
 Var
   A        : Word;
   Total    : Word;
-  Old      : FBaseRec;
+  Old      : RecFileBase;
   Str      : String[5];
   Compress : Boolean;
 
@@ -1730,7 +1730,7 @@ Var
         TopDesc := 0;
       End Else Begin
         Inc (Count, FDir.DescLines + 1);
-        If FBase.ShowUL Then Inc(Count);
+        If FBase.Flags And FBShowUpload <> 0 Then Inc(Count);
       End;
     End;
 
@@ -1772,7 +1772,7 @@ Var
     Session.io.ScreenInfo[5].Y := 0;
     Session.io.ScreenInfo[6].Y := 0;
 
-    Session.io.OutFile ('ansiflst', True, 0);
+    Session.io.OutFile (FBase.Template, True, 0);
 
     PageSize := Session.io.ScreenInfo[2].Y - Session.io.ScreenInfo[1].Y + 1;
 
@@ -1925,7 +1925,7 @@ Var
       End;
 
       If BotDesc > FDir.DescLines Then Begin
-        If FBase.ShowUL Then Begin
+        If FBase.Flags and FBShowUpload <> 0 Then Begin
           OK := ShowText(strUploader);
           If OK Then
             BotDesc := 0
@@ -2383,7 +2383,7 @@ End;
 Function TFileBase.IsDupeFile (FileName : String; Global : Boolean) : Boolean;
 Var
   Res : Boolean;
-  OLD : FBaseRec;
+  OLD : RecFileBase;
 
   Procedure Check_Area;
   Var
@@ -2462,7 +2462,7 @@ Var
   D        : DirStr;
   N        : NameStr;
   E        : ExtStr;
-  OLD      : FBaseRec;
+  OLD      : RecFileBase;
   Blind    : Boolean;
   Temp     : String;
   FullName : String;
@@ -2502,7 +2502,7 @@ Begin
     Exit;
   End;
 
-  If FBase.IsCDROM Then Begin
+  If FBase.Flags And FBSlowMedia <> 0 Then Begin
     Session.io.OutFullLn (Session.GetPrompt(80));
     FBase := OLD;
     Exit;
@@ -2715,7 +2715,7 @@ Var
 Begin
   Copied := False;
 
-  If FBase.IsCDROM Then Begin
+  If FBase.Flags And FBSlowMedia <> 0 Then Begin
 
     Copied := True;
 
@@ -2829,7 +2829,7 @@ Var
   K   : LongInt;
   M   : Integer;
   Dir : String[40];
-  Old : FBaseRec;
+  Old : RecFileBase;
   FL  : Text;
 Begin
   K := 0;
@@ -2943,7 +2943,7 @@ Var
   End;
 
 Var
-  Old : FBaseRec;
+  Old : RecFileBase;
 Begin
   Old   := FBase;
   Found := False;
@@ -2992,7 +2992,7 @@ End;
 
 Procedure TFileBase.NewFileScan (Mode: Char);
 Var
-  TempFBase : FBaseRec;
+  TempFBase : RecFileBase;
   Found     : Boolean;
   Done      : Boolean;
   NewFiles  : Boolean;
@@ -3113,7 +3113,7 @@ Var
   A         : Integer;
   B         : Integer;
   Temp      : String;
-  Old       : FBaseRec;
+  Old       : RecFileBase;
   TF        : Text;
 Begin
   If FBase.FileName = '' Then Begin
@@ -3206,7 +3206,8 @@ Begin
       Case Session.io.OneKey('123456[]DEIMQUV!', True) of
         '1' : Begin
                 Temp := Session.io.InXY (4, 3, 70, 70, 11, FDir.FileName);
-                If Not FBase.IsCDROM Then
+
+                If FBase.Flags And FBSlowMedia = 0 Then
                   If (Temp <> FDir.FileName) and (Temp <> '') Then Begin
                     If Not FileExist(FBase.Path + Temp) or (strUpper(Temp) = strUpper(FDir.FileName)) Then Begin
                       Assign(TF, FBase.Path + FDir.FileName);
@@ -3518,7 +3519,7 @@ Var
   End;
 
 Var
-  Old : FBaseRec;
+  Old : RecFileBase;
   Pos : LongInt;
 Begin
   Session.SystemLog ('Mass upload');

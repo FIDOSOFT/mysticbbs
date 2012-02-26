@@ -317,7 +317,7 @@ Begin
                     End;
               'A' : Configuration_ExecuteEditor('A');
               'E' : Event_Editor;
-              'F' : File_Base_Editor;
+              'F' : Configuration_ExecuteEditor('F');
               'G' : Group_Editor;
               'L' : Levels_Editor;
               'M' : Message_Base_Editor;

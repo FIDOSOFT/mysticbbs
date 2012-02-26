@@ -418,6 +418,8 @@ Begin
       If (A < 0) or (Picked = 1) Then A := 0;
       WriteXY (X1 + Width + 1, Y1 + 1 + A, Box.BoxAttr2, #178);
     End;
+
+  Session.io.BufFlush;
 End;
 
 Procedure TAnsiMenuList.Open (BX1, BY1, BX2, BY2 : Byte);
@@ -515,6 +517,7 @@ Begin
         End;
         If Picked < ListMax Then Inc (Picked);
         If Picked > TopPage + WinSize - 1 Then Inc (TopPage);
+        Update;
       End Else
       If Pos(Ch, LoChars) > 0 Then Begin
         ExitCode := Ch;

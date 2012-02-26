@@ -3857,3 +3857,19 @@
  + The END key now functions in the lightbar file listing.  It is kind of a
    half-assed implementation though, since doing it "the right way" will
    involve some extra coding in the future.
+
+ + File Base settings for all ACS strings has been increased from 20 to 30
+   characters.
+
+ + File base "lightbar" list templates are now defined per file base in
+   the file base editor.  The upgrade utility will set existing bases to
+   'ansiflst' but any newly created bases will need to have this value set
+   per base now.
+
+ + Updated file base record structures and added options for the possible
+   future "Comment and Rating" system for file bases.  In addition, some
+   boolean data has been changed into a bitmapped flag variable.
+
+ + Added new ANSI file base editor into the System Configuration.
+
+ + Added Copy/Paste functions into all new ANSI internal editors.

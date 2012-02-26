@@ -13,6 +13,25 @@ Uses
 {$I RECORDS.PAS}
 
 Type
+  OldFBaseRec = Record                    { FBASES.DAT                      }
+    Name     : String[40];             { File base name                  }
+    FtpName  : String[60];             { FTP directory name              }
+    Filename : String[40];             { File name                       }
+    DispFile : String[20];             { Pre-list display file name      }
+    Template : String[20];             { ansi file list template         }
+    ListACS,                           { ACS required to see this base   }
+    FtpACS,                            { ACS to see in FTP directory     }
+    SysopACS,                          { ACS required for SysOp functions}
+    ULACS,                             { ACS required to upload files    }
+    DLACS    : String[mysMaxAcsSize];  { ACS required to download files  }
+    Path     : String[120];            { Path where files are stored     }
+    Password : String[20];             { Password to access this base    }
+    DefScan  : Byte;                   { Default New Scan Setting        }
+    ShowUL   : Boolean;
+    IsCDROM  : Boolean;
+    IsFREE   : Boolean;
+  End;
+
   OldFDirRec = Record                  { *.DIR                              }
     FileName : String[70];             { File name                          }
     Size     : LongInt;                { File size (in bytes)               }
@@ -1021,21 +1040,74 @@ Begin
   FindClose(DirInfo);
 End;
 
+Procedure ConvertFileBases;
+Var
+  FBase        : RecFileBase;
+  FBaseFile    : File of RecFileBase;
+  OldFBase     : OldFBaseRec;
+  OldFBaseFile : File of OldFBaseRec;
+Begin
+  WriteLn ('[-] Updating file bases...');
+
+  If Not ReNameFile(Config.DataPath + 'fbases.dat', Config.DataPath + 'fbases.old') Then Begin
+    WriteLn('[!] UNABLE TO FIND: ' + Config.DataPath + 'fbases.dat');
+    Exit;
+  End;
+
+  Assign (OldFBaseFile, Config.DataPath + 'fbases.old');
+  Reset  (OldFBaseFile);
+
+  Assign  (FBaseFile, Config.DataPath + 'fbases.dat');
+  ReWrite (FBaseFile);
+
+  While Not Eof(OldFBaseFile) Do Begin
+    Read (OldFBaseFile, OldFBase);
+
+    FBase.Name       := OldFBase.Name;
+    FBase.FtpName    := OldFBase.FtpName;
+    FBase.FileName   := OldFBase.FileName;
+    FBase.DispFile   := OldFBase.DispFile;
+    FBase.Template   := 'ansiflst';
+    FBase.ListACS    := OldFBase.ListACS;
+    FBase.FtpACS     := OldFBase.FtpACS;
+    FBase.DLACS      := OldFBase.DLACS;
+    FBase.ULACS      := OldFBase.ULACS;
+    FBase.SysopACS   := OldFBase.SysopACS;
+    FBase.Path       := OldFBase.Path;
+    FBase.Password   := OldFBase.Password;
+    FBase.DefScan    := OldFBase.DefScan;
+    FBase.CommentACS := 's20';
+    FBase.Flags      := 0;
+
+    If OldFBase.ShowUL  Then FBase.Flags := FBase.Flags OR FBShowUpload;
+    If OldFBase.IsCDROM Then FBase.Flags := FBase.Flags OR FBSlowMedia;
+    If OldFBase.IsFREE  Then FBase.Flags := FBase.Flags OR FBFreeFiles;
+
+    Write (FBaseFile, FBase);
+  End;
+
+  Close (FBaseFile);
+  Close (OldFBaseFile);
+
+  DeleteFile (Config.DataPath + 'fbases.old');
+End;
+
 Var
   ConfigFile : File of RecConfig;
 Begin
   WarningDisplay;
 
-// COMMENT this out if mystic.dat is being converted:
-//  Assign (ConfigFile, 'mystic.dat');
-//  Reset  (ConfigFile);
-//  Read   (ConfigFile, Config);
-//  Close  (ConfigFile);
+  //COMMENT this out if mystic.dat is being converted:
+  Assign (ConfigFile, 'mystic.dat');
+  Reset  (ConfigFile);
+  Read   (ConfigFile, Config);
+  Close  (ConfigFile);
 
-  ConvertConfig;  //1.10a11
+//  ConvertConfig;  //1.10a11
 //  ConvertUsers; //1.10a11
 //ConvertSecurity; //1.10a11
 //ConvertFileLists;  //1.10a11
+ConvertFileBases; //1.10a11
 
 //  ConvertArchives; //1.10a1
 //  ConvertGroups;   //1.10a1
