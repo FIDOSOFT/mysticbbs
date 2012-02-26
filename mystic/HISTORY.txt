@@ -3875,3 +3875,26 @@
  + Added Copy/Paste functions into all new ANSI internal editors.
 
  + Added new ANSI message group and file group editors.
+
+ - Removed Password protected file and message bases.  This is a barely
+   used feature and it doesn't integrate well when the bases are available
+   via FTP and NTTP, etc.  Security around bases needs to be based on the
+   ACS system to avoid issues in those situations.
+
+     Prompts 66, and 67 are no longer used.
+     Prompts 103 and 104 are no longer used.
+
+ + Ansi message reader template is now configured on a per-base level just
+   as the standard reader template is.
+
+ + Ansi message reader message index is now configured on a per-base level
+   just like the ansi reader template.
+
+ + Message base ACS length has been extended to 30 characters.
+
+ + Message base standard reader header filename has been expanded to 20
+   characters.
+
+ + Message base path expanded to 80 characters from 40.
+
+ + Added new ANSI message base editor.

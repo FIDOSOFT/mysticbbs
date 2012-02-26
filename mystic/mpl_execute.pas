@@ -86,7 +86,7 @@ Type
 
     Procedure GetUserVars     (Var U: RecUser);
     Function  GetUserRecord   (Num: LongInt) : Boolean;
-    Procedure GetMBaseVars    (Var M: MBaseRec);
+    Procedure GetMBaseVars    (Var M: RecMessageBase);
     Function  GetMBaseRecord  (Num: LongInt) : Boolean;
     Procedure GetMGroupVars   (Var G: RecGroup);
     Function  GetMGroupRecord (Num: LongInt) : Boolean;
@@ -150,11 +150,11 @@ Begin
   Close (F);
 End;
 
-Procedure TInterpEngine.GetMBaseVars (Var M: MBaseRec);
+Procedure TInterpEngine.GetMBaseVars (Var M: RecMessageBase);
 Begin
   Move (M.Index,    VarData[IdxVarMBase     ]^.Data^, SizeOf(M.Index));
   Move (M.Name,     VarData[IdxVarMBase + 1 ]^.Data^, SizeOf(M.Name));
-  Move (M.ACS,      VarData[IdxVarMBase + 2 ]^.Data^, SizeOf(M.ACS));
+  Move (M.ListACS,  VarData[IdxVarMBase + 2 ]^.Data^, SizeOf(M.ListACS));
   Move (M.ReadACS,  VarData[IdxVarMBase + 3 ]^.Data^, SizeOf(M.ReadACS));
   Move (M.PostACS,  VarData[IdxVarMBase + 4 ]^.Data^, SizeOf(M.PostACS));
   Move (M.SysopACS, VarData[IdxVarMBase + 5 ]^.Data^, SizeOf(M.SysopACS));
@@ -163,12 +163,12 @@ End;
 Function TInterpEngine.GetMBaseRecord (Num: LongInt) : Boolean;
 Var
   F : File;
-  M : MBaseRec;
+  M : RecMessageBase;
 Begin
   Result := False;
 
   Assign (F, Config.DataPath + 'mbases.dat');
-  If Not ioReset(F, SizeOf(MBaseRec), fmRWDN) Then Exit;
+  If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
   If ioSeek(F, Num) And (ioRead(F, M)) Then Begin
     GetMBaseVars(M);

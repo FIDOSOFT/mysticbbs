@@ -644,8 +644,8 @@ Var
   UserFile   : File of RecUser;
   TUserFile  : File of RecUser;
   User       : RecUser;
-  MBaseFile  : File of MBaseRec;
-  MBase      : MBaseRec;
+  MBaseFile  : File of RecMessageBase;
+  MBase      : RecMessageBase;
   MScanFile  : File of MScanRec;
   MScan      : MScanRec;
   FBaseFile  : File of RecFileBase;
@@ -688,7 +688,7 @@ Begin
           While Not Eof(MBaseFile) Do Begin
             Read (MBaseFile, MBase);
 
-            If MBase.PostType <> 1 Then Continue;
+            If MBase.Flags And MBPrivate = 0 Then Continue;
 
             Case MBase.BaseType of
               0 : MsgBase := New(PMsgBaseJAM, Init);
@@ -852,8 +852,8 @@ Procedure MsgBase_Trash;
 Var
   TF        : Text;
   BadName   : String;
-  MBaseFile : File of MBaseRec;
-  MBase     : MBaseRec;
+  MBaseFile : File of RecMessageBase;
+  MBase     : RecMessageBase;
   MsgBase   : PMsgBaseABS;
 Begin
   Write ('Trashing Messages    :');

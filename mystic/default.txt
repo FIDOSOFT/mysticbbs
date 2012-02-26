@@ -149,8 +149,8 @@
 063 |CR|12Cannot download files in local mode!|DE|DE|DE
 064 |01[|10þ|01] |09Search all file groups? |11
 065 |CR|12Start your transfer now.
-066 |CR|14File area "|FB" is password protected.|CR|09Password:
-067 |CR|12Access denied.
+066 UNUSED
+067 UNUSED
 068 |CR|12You do not have access to upload here!
 069 |CR|12Illegal filename.|DE|DE|DE
 070 |CR|14Searching for duplicate files ...
@@ -203,8 +203,8 @@
 ; &1 = base number      &2 = base name      &3 = total messages
 101 |15|$L05|&1  |07|$R32|&2
 102  |09|$D77Ä |CR |09Select Message Base |01[|10?|01/|10List|01]|09:
-103 |CR|14Message area "|MB" is password protected.|CR|09Password:
-104 Access denied.
+103 UNUSED
+104 UNUSED
 105 |CR|12You don't have access to post here!
 106 |CR|12Use the full screen editor? |11
 107 |01[|10þ|01] |09Saving Message|01...
@@ -594,8 +594,7 @@
 313 |12Your download ratio would be exceeded.|PN
 ; Lightbar file list: Batch queue is full.
 314 |12Your batch queue is full.|PN
-; Node login ACS failed
-315 |CR|14You do not have access to call this node.
+315 UNUSED
 ; Lightbar Y/N: YES text
 316 |08++(|23|00 yes |16|08/ |07no |08)++
 ; Lightbar Y/N: NO text

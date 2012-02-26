@@ -4,233 +4,251 @@ Unit bbs_cfg_MsgBase;
 
 Interface
 
-Procedure Message_Base_Editor;
+Procedure Configuration_MessageBaseEditor;
 
 Implementation
 
 Uses
-  m_FileIO,
   m_Strings,
-  bbs_Common,
-  bbs_Core,
-  bbs_User;
+  m_FileIO,
+  bbs_Ansi_MenuBox,
+  bbs_Ansi_MenuForm,
+  bbs_Cfg_Common,
+  bbs_Cfg_SysCfg,
+  bbs_Common;
 
-Procedure Message_Base_Editor;
-Const
-        BT : Array[0..1] of String[6] = ('JAM', 'Squish');
-        NT : Array[0..3] of String[8] = ('Local   ', 'EchoMail', 'UseNet  ', 'NetMail ');
-        ST : Array[0..2] of String[6] = ('No', 'Yes', 'Always');
 Var
-        A,
-        B  : Word; { was integer }
+  MBaseFile : TBufFile;
+  MBase     : RecMessageBase;
+
+Procedure EditMessageBase;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String;
 Begin
-        Session.SystemLog ('*MBASE EDITOR*');
+  Topic := '|03(|09Message Base Edit|03) |01-|09> |15';
+  Box   := TAnsiMenuBox.Create;
+  Form  := TAnsiMenuForm.Create;
 
-        Repeat
-                Session.io.AllowPause := True;
+  Box.Header := ' Index ' + strI2S(MBase.Index) + ' ';
 
-                Session.io.OutFullLn ('|CL|14Message Base Editor|CR|CR|09###  Name|$D37 Type      Format|CR---  |$D40- -------   ------');
+  Box.Open (3, 5, 77, 21);
 
-                Reset (Session.Msgs.MBaseFile);
-                While Not Eof(Session.Msgs.MBaseFile) Do Begin
-                        Read (Session.Msgs.MBaseFile, Session.Msgs.MBase);
+  VerticalLine (17,  6, 20);
+  VerticalLine (66,  6, 20);
 
-                        Session.io.OutFullLn ('|15' + strPadR(strI2S(FilePos(Session.Msgs.MBaseFile) - 1), 3, ' ') + '  |14|$R41|MB|10' +
-                        NT[Session.Msgs.MBase.NetType] + '  ' + BT[Session.Msgs.MBase.BaseType]);
+  Form.AddStr  ('N', ' Name'        , 11,  6, 19,  6,  6, 30, 40, @MBase.Name, Topic + 'Message base description');
+  Form.AddStr  ('W', ' Newsgroup'   ,  6,  7, 19,  7, 11, 30, 60, @MBase.NewsName, Topic + 'Newsgroup name (Blank/Disabled)');
+  Form.AddStr  ('Q', ' QWK Name'    ,  7,  8, 19,  8, 10, 13, 13, @MBase.QwkName, Topic + 'Qwk Short name');
+  Form.AddStr  ('F', ' File Name'   ,  6,  9, 19,  9, 11, 30, 40, @MBase.FileName, Topic + 'Message base storage file name');
+  Form.AddPath ('P', ' Path'        , 11, 10, 19, 10,  6, 30, 80, @MBase.Path, Topic + 'Message base storage path');
+  Form.AddStr  ('L', ' List ACS'    ,  7, 11, 19, 11, 10, 30, 30, @MBase.ListACS, Topic + 'Access required to see in base list');
+  Form.AddStr  ('R', ' Read ACS'    ,  7, 12, 19, 12, 10, 30, 30, @MBase.ReadACS, Topic + 'Access required to read messages');
+  Form.AddStr  ('P', ' Post ACS'    ,  7, 13, 19, 13, 10, 30, 30, @MBase.PostACS, Topic + 'Access required to post messages');
+  Form.AddStr  ('Y', ' Sysop ACS'   ,  6, 14, 19, 14, 11, 30, 30, @MBase.SysopACS, Topic + 'Access required for Sysop access');
+  Form.AddNone ('D', ' Net Address' ,  4, 15, 13, Topic + 'NetMail Address');
+  Form.AddStr  ('I', ' Origin'      ,  9, 16, 19, 16,  8, 30, 50, @MBase.Origin, Topic + 'Message base origin line');
+  Form.AddStr  ('S', ' Sponsor'     ,  8, 17, 19, 17,  9, 30, 30, @MBase.Sponsor, Topic + 'User name of base''s sponser');
+  Form.AddStr  ('H', ' Header'      ,  9, 18, 19, 18,  8, 20, 20, @MBase.Header, Topic + 'Display file name of msg header');
+  Form.AddStr  ('T', ' R Template'  ,  5, 19, 19, 19, 12, 20, 20, @MBase.RTemplate, Topic + 'Template for full screen reader');
+  Form.AddStr  ('M', ' L Template'  ,  5, 20, 19, 20, 12, 20, 20, @MBase.ITemplate, Topic + 'Template for lightbar message list');
 
-                        If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
-                                Case Session.io.MorePrompt of
-                                        'N' : Break;
-                                        'C' : Session.io.AllowPause := False;
-                                End;
-                End;
-                Session.io.OutFull ('|CR|09(I)nsert, (D)elete, (E)dit, (M)ove, (Q)uit? ');
-                case Session.io.OneKey (#13'DIEMQ', True) of
-                  'D' : begin
-                          Session.io.OutFull ('Delete which? ');
-                          a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-                          If (A > 0) and (A <= FileSize(Session.Msgs.MBaseFile)) Then Begin
-                            Seek (Session.Msgs.MBaseFile, A);
-                            Read (Session.Msgs.MBaseFile, Session.Msgs.MBase);
+  Form.AddAttr ('Q', ' Quote Color' , 53,  6, 68,  6, 13, @MBase.ColQuote, Topic + 'Color for quoted text');
+  Form.AddAttr ('X', ' Text Color'  , 54,  7, 68,  7, 12, @MBase.ColText, Topic + 'Color for message text');
+  Form.AddAttr ('E', ' Tear Color'  , 54,  8, 68,  8, 12, @MBase.ColTear, Topic + 'Color for tear line');
+  Form.AddAttr ('G', ' Origin Color', 52,  9, 68,  9, 14, @MBase.ColOrigin, Topic + 'Color for origin line');
+  Form.AddAttr ('K', ' Kludge Color', 52, 10, 68, 10, 14, @MBase.ColKludge, Topic + 'Color for kludge line');
+  Form.AddWord ('M', ' Max Msgs'    , 56, 11, 68, 11, 10, 5, 0, 65535, @MBase.MaxMsgs, Topic + 'Maximum number of message in base');
+  Form.AddWord ('1', ' Max Msg Age' , 53, 12, 68, 12, 13, 5, 0, 65535, @MBase.MaxAge, Topic + 'Maximum age (days) to keep messages');
+  Form.AddTog  ('2', ' New Scan'    , 56, 13, 68, 13, 10, 6, 0, 2, 'No Yes Forced', @MBase.DefNScan, Topic + 'Newscan default for users');
+  Form.AddTog  ('3', ' QWK Scan'    , 56, 14, 68, 14, 10, 6, 0, 2, 'No Yes Forced', @MBase.DefQScan, Topic + 'QWKscan default for users');
+  Form.AddBits ('4', ' Real Names'  , 54, 15, 68, 15, 12, MBRealNames, @MBase.Flags, Topic + 'Use real names in this base?');
+  Form.AddBits ('5', ' Autosigs'    , 56, 16, 68, 16, 10, MBAutoSigs, @MBase.Flags, Topic + 'Allow auto signatures in this base?');
+  Form.AddBits ('6', ' Kill Kludge' , 53, 17, 68, 17, 13, MBKillKludge, @MBase.Flags, Topic + 'Filter out kludge lines');
+  Form.AddBits ('V', ' Private'     , 57, 18, 68, 18,  9, MBPrivate, @MBase.Flags, Topic + 'Is this a private base?');
+  Form.AddTog  ('A', ' Base Type'   , 55, 19, 68, 19, 11,  9,  0, 3, 'Local EchoMail Newsgroup Netmail', @MBase.NetType, Topic + 'Message base type');
+  Form.AddTog  ('B', ' Base Format' , 53, 20, 68, 20, 13,  6,  0, 1, 'JAM Squish', @MBase.BaseType, Topic + 'Message base storage format');
 
-                            FileErase (config.msgspath + Session.Msgs.MBase.filename + '.jhr');
-                            FileErase (config.msgspath + Session.Msgs.MBase.filename + '.jlr');
-                            FileErase (config.msgspath + Session.Msgs.MBase.filename + '.jdt');
-                            FileErase (config.msgspath + Session.Msgs.MBase.filename + '.jdx');
-                            FileErase (config.msgspath + Session.Msgs.MBase.filename + '.sqd');
-                            FileErase (config.msgspath + Session.Msgs.MBase.filename + '.sqi');
-                            FileErase (config.msgspath + Session.Msgs.MBase.filename + '.sql');
+  Repeat
+    WriteXY (19, 15, 113, strPadR(strAddr2Str(Config.NetAddress[MBase.NetAddr]), 19, ' '));
 
-                            KillRecord (Session.Msgs.MBaseFile, A+1, SizeOf(MBaseRec));
-                          End;
-                        end;
-                        'I' : begin
-                                                        Session.io.OutFull ('Insert before? (1-' + strI2S(filesize(Session.Msgs.MBaseFile)) + '): ');
-                                                        a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-                                                        if (a > 0) and (a <= filesize(Session.Msgs.MBaseFile)) then begin
-                                                                AddRecord (Session.Msgs.MBaseFile, A, SizeOf(Session.Msgs.MBaseFile));
+    Case Form.Execute of
+      'D' : MBase.NetAddr := Configuration_EchoMailAddress(False);
+      #27 : Break;
+    End;
+  Until False;
 
-                                                                {find permanent mbase index}
-                                                                b := a + 1;
-                                                                reset (Session.Msgs.MBaseFile);
-                                                                while not eof(Session.Msgs.MBaseFile) do begin
-                                                                        read (Session.Msgs.MBaseFile, Session.Msgs.mbase);
-                                                                        if B = Session.Msgs.MBase.index then begin
-                                                                                inc (b);
-                                                                                reset (Session.Msgs.MBaseFile);
-                                                                        end;
-                                                                end;
-                                                                Session.Msgs.MBase.name                      := 'New Message Base';
-                                                                Session.Msgs.MBase.qwkname   := 'New Messages';
-                                                                Session.Msgs.MBase.filename  := 'NEW';
-                                                                Session.Msgs.MBase.Path                      := config.msgspath;
-                                                                Session.Msgs.MBase.nettype   := 0;
-                                                                Session.Msgs.MBase.posttype := 0;
-                                                                Session.Msgs.MBase.acs                       := 's255';
-                                                                Session.Msgs.MBase.readacs   := 's255';
-                                                                Session.Msgs.MBase.postacs   := 's255';
-                                                                Session.Msgs.MBase.sysopacs  := 's255';
-                                                                Session.Msgs.MBase.index             := B;
-                                                                Session.Msgs.MBase.netaddr   := 1;
-                                                                Session.Msgs.MBase.origin            := config.origin;
-                                                                Session.Msgs.MBase.usereal   := false;
-                                                                Session.Msgs.MBase.colquote  := config.colorquote;
-                                                                Session.Msgs.MBase.coltext   := config.colortext;
-                                                                Session.Msgs.MBase.coltear   := config.colortear;
-                                                                Session.Msgs.MBase.colorigin := config.colororigin;
-                                                                Session.Msgs.MBase.defnscan  := 1;
-                                                                Session.Msgs.MBase.defqscan  := 1;
-                                                                Session.Msgs.MBase.basetype  := 0;
-                                                                seek (Session.Msgs.MBaseFile, a);
-                                                                write (Session.Msgs.MBaseFile, Session.Msgs.mbase);
-                                                        end;
-                                                end;
-                        'E' : begin
-                                                        Session.io.OutFull ('Edit which? ');
-                                                        a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-                                                        if (a >= 0) and (a < filesize(Session.Msgs.MBaseFile)) then begin
-                                                                seek (Session.Msgs.MBaseFile, a);
-                                                                read (Session.Msgs.MBaseFile, Session.Msgs.mbase);
-                                                                repeat
-                 Session.io.OutFullLn ('|CL|14Message Base '+strI2S(FilePos(Session.Msgs.MBaseFile)-1)+' of '+strI2S(FileSize(Session.Msgs.MBaseFile)-1)+' |08[Perm Idx:' + strI2S(Session.Msgs.MBase.index) + ']|CR|03');
-                                                                        Session.io.OutRawln ('A. Name         : ' + Session.Msgs.MBase.name);
-                                                                        Session.io.OutRawln ('B. QWK Name     : ' + Session.Msgs.MBase.qwkname);
-                                                                        Session.io.OutRawln ('C. Filename     : ' + Session.Msgs.MBase.filename);
-                                                                        Session.io.OutRawln ('D. Storage Path : ' + Session.Msgs.MBase.path);
-                                                                        Session.io.OutRaw   ('E. Post Type    : ');
-                              If Session.Msgs.MBase.PostType = 0 Then Session.io.OutRaw ('Public ') Else Session.io.OutRaw ('Private');
-                             Session.io.OutRawLn (strRep(' ', 23) + 'Y. Base Format  : ' + BT[Session.Msgs.MBase.BaseType]);
+  Box.Close;
 
-     Session.io.OutFull ('|CRF. List ACS     : ' + strPadR(Session.Msgs.MBase.acs, 30, ' '));
-                                                                        Session.io.OutFull ('O. Quote Color  : ');
-                                                                        Session.io.AnsiColor(Session.Msgs.MBase.ColQuote);
-                                                                        Session.io.OutFullLn ('XX> Quote|03|16');
+  Form.Free;
+  Box.Free;
+End;
 
-     Session.io.OutRaw ('G. Read ACS     : ' + strPadR(Session.Msgs.MBase.readacs, 30, ' '));
-                                                                        Session.io.OutFull     ('P. Text Color   : ');
-                                                                        Session.io.AnsiColor(Session.Msgs.MBase.ColText);
-                                                                        Session.io.OutFullLn ('Text|03|16');
+Procedure Configuration_MessageBaseEditor;
+Var
+  Box     : TAnsiMenuBox;
+  List    : TAnsiMenuList;
+  MIndex  : LongInt;
+  Copied  : RecMessageBase;
+  HasCopy : Boolean = False;
 
-     Session.io.OutRaw ('H. Post ACS     : ' + strPadR(Session.Msgs.MBase.postacs, 30, ' '));
-                                                                        Session.io.OutFull     ('R. Tear Color   : ');
-                                                                        Session.io.AnsiColor(Session.Msgs.MBase.ColTear);
-                                                                        Session.io.OutFullLn ('--- Tear|03|16');
+  Procedure MakeList;
+  Var
+    Tag : Byte;
+  Begin
+    List.Clear;
 
-    Session.io.OutRaw ('I. Sysop ACS    : ' + strPadR(Session.Msgs.MBase.sysopacs, 30, ' '));
-                                                                        Session.io.OutFull     ('S. Origin Color : ');
-                                                                        Session.io.AnsiColor(Session.Msgs.MBase.ColOrigin);
-                                                                        Session.io.OutFullLn ('* Origin:|03|16');
+    MBaseFile.Reset;
 
-            Session.io.OutRaw   ('J. Password     : ' + strPadR(Session.Msgs.MBase.password, 30, ' '));
-                                                                        Session.io.OutRawln ('T. Header File  : ' + Session.Msgs.MBase.Header);
-                                                                        Session.io.OutRawLn ('K. Base Type    : ' + NT[Session.Msgs.MBase.NetType]);
-              Session.io.OutRawln ('L. Net Address  : ' + strAddr2Str(config.netaddress[Session.Msgs.MBase.netaddr]) + ' (' + Config.NetDesc[Session.Msgs.MBase.NetAddr] + ')');
-                                                                        Session.io.OutRawln ('M. Origin line  : ' + Session.Msgs.MBase.origin);
-                   Session.io.OutRawLn ('N. Use Realnames: ' + Session.io.OutYN(Session.Msgs.MBase.UseReal));
+    While Not MBaseFile.EOF Do Begin
+      If MBaseFile.FilePos = 0 Then Tag := 2 Else Tag := 0;
 
-                 Session.io.OutFullLn ('|CRU. Default New Scan: ' + strPadR(ST[Session.Msgs.MBase.DefNScan], 27, ' ') +
-                                      'W. Max Messages : ' + strI2S(Session.Msgs.MBase.MaxMsgs));
+      MBaseFile.Read (MBase);
 
-            Session.io.OutRawLn ('V. Default QWK Scan: ' + strPadR(ST[Session.Msgs.MBase.DefQScan], 27, ' ') +
-             'X. Max Msg Age  : ' + strI2S(Session.Msgs.MBase.MaxAge) + ' days');
+      List.Add(strPadR(strI2S(MBaseFile.FilePos), 5, ' ') + '  ' + strStripMCI(MBase.Name), Tag);
+    End;
 
-                                                                        Session.io.OutFull ('|CR|09([) Prev, (]) Next, (Q)uit: ');
-                                                                        case Session.io.OneKey('[]ABCDEFGHIJKLMNOPQRSTUVWXY', True) of
-                                                                                '[' : If FilePos(Session.Msgs.MBaseFile) > 1 Then Begin
-                 Seek    (Session.Msgs.MBaseFile, FilePos(Session.Msgs.MBaseFile)-1);
-                 Write (Session.Msgs.MBaseFile, Session.Msgs.MBase);
-                 Seek    (Session.Msgs.MBaseFile, FilePos(Session.Msgs.MBaseFile)-2);
-                                               Read    (Session.Msgs.MBaseFile, Session.Msgs.MBase);
-                                                                                                        End;
-       ']' : If FilePos(Session.Msgs.MBaseFile) < FileSize(Session.Msgs.MBaseFile) Then Begin
-                                                  Seek (Session.Msgs.MBaseFile, FilePos(Session.Msgs.MBaseFile)-1);
-                                                  Write (Session.Msgs.MBaseFile, Session.Msgs.MBase);
-                                                  Read (Session.Msgs.MBaseFile, Session.Msgs.MBase);
-                                                                                                        End;
-                                                  'A' : Session.Msgs.MBase.Name     := Session.io.InXY(19,  3, 40, 40, 11, Session.Msgs.MBase.Name);
-                                                  'B' : Session.Msgs.MBase.QwkName  := Session.io.InXY(19,  4, 13, 13, 11, Session.Msgs.MBase.QwkName);
-                                                  'C' : Session.Msgs.MBase.FileName := Session.io.InXY(19,  5,  40,  40, 11, Session.Msgs.MBase.filename);
-                                                  'D' : Session.Msgs.MBase.Path     := CheckPath(Session.io.InXY(19, 6, 39, 39, 11, Session.Msgs.MBase.Path));
-                                                  'E' : If Session.Msgs.MBase.PostType = 0 Then Inc(Session.Msgs.MBase.PostType) Else Dec(Session.Msgs.MBase.PostType);
-                                                  'F' : Session.Msgs.MBase.ACS      := Session.io.InXY(19,  9, 20, 20, 11, Session.Msgs.MBase.acs);
-                                                  'G' : Session.Msgs.MBase.ReadACS  := Session.io.InXY(19, 10, 20, 20, 11, Session.Msgs.MBase.readacs);
-                                                  'H' : Session.Msgs.MBase.PostACS  := Session.io.InXY(19, 11, 20, 20, 11, Session.Msgs.MBase.postacs);
-                                                  'I' : Session.Msgs.MBase.SysopACS := Session.io.InXY(19, 12, 20, 20, 11, Session.Msgs.MBase.sysopacs);
-                                                  'J' : Session.Msgs.MBase.Password := Session.io.InXY(19, 13, 15, 15, 12, Session.Msgs.MBase.password);
-                                                  'K' : If Session.Msgs.MBase.NetType < 3 Then Inc(Session.Msgs.MBase.NetType) Else Session.Msgs.MBase.NetType := 0;
-                                                                                'L' : begin
-                                                                                                                Session.io.OutFullLn ('|03');
-                                                                      For A := 1 to 30 Do Begin
-     Session.io.OutRaw (strPadR(strI2S(A) + '.', 5, ' ') + strPadR(strAddr2Str(Config.NetAddress[A]), 30, ' '));
-                                                                                 If A Mod 2 = 0 then Session.io.OutRawLn('');
-                                                                                                                End;
-                                    Session.io.OutFull ('|CR|09Address: ');
-                                   a := strS2I(Session.io.GetInput(2, 2, 12, ''));
-                           if (a > 0) and (a < 31) then Session.Msgs.MBase.netaddr := a;
-                                                                                                        end;
-      'M' : Session.Msgs.MBase.origin    := Session.io.InXY(19, 16, 50, 50, 11, Session.Msgs.MBase.origin);
-                                                                                'N' : Session.Msgs.MBase.usereal   := Not Session.Msgs.MBase.UseReal;
-      'O' : Session.Msgs.MBase.ColQuote  := getColor(Session.Msgs.MBase.ColQuote);
-      'P' : Session.Msgs.MBase.ColText   := getColor(Session.Msgs.MBase.ColText);
-      'R' : Session.Msgs.MBase.ColTear   := getColor(Session.Msgs.MBase.ColTear);
-      'S' : Session.Msgs.MBase.ColOrigin := getColor(Session.Msgs.MBase.ColOrigin);
-      'T' : Session.Msgs.MBase.Header   := Session.io.InXY(67, 13, 8, 8, 11, Session.Msgs.MBase.Header);
-                            'U' : If Session.Msgs.MBase.DefNScan < 2 Then Inc(Session.Msgs.MBase.DefNScan) Else Session.Msgs.MBase.DefNScan := 0;
-                            'V' : If Session.Msgs.MBase.DefQScan < 2 Then Inc(Session.Msgs.MBase.DefQScan) Else Session.Msgs.MBase.DefQScan := 0;
-                            'W' : Session.Msgs.MBase.MaxMsgs  := strS2I(Session.io.InXY(67, 19, 5, 5, 12, strI2S(Session.Msgs.MBase.MaxMsgs)));
-                            'X' : Session.Msgs.MBase.MaxAge   := strS2I(Session.io.InXY(67, 20, 5, 5, 12, strI2S(Session.Msgs.MBase.MaxAge)));
-                            'Y' : If Session.Msgs.MBase.BaseType = 0 Then Session.Msgs.MBase.BaseType := 1 Else Session.Msgs.MBase.BaseType := 0;
-                            'Q' : Break;
-                                                                        End;
-                                                                Until False;
-                                                                Seek    (Session.Msgs.MBaseFile, FilePos(Session.Msgs.MBaseFile) - 1);
-                                                                Write (Session.Msgs.MBaseFile, Session.Msgs.MBase);
-                                                        End;
-                                                End;
-                        'M' : Begin
-                                                        Session.io.OutRaw ('Move which? ');
-                                                        A := strS2I(Session.io.GetInput(3, 3, 12, ''));
+    List.Add('', 2);
+  End;
 
-                                                        Session.io.OutRaw ('Move before? (1-' + strI2S(FileSize(Session.Msgs.MBaseFile)) + '): ');
-                                                        B := strS2I(Session.io.GetInput(3, 3, 12, ''));
+  Procedure AssignRecord (Email: Boolean);
+  Begin
+    MIndex := List.Picked;
 
-                         If (A > 0) and (A <= FileSize(Session.Msgs.MBaseFile)) and (B > 0) and (B <= FileSize(Session.Msgs.MBaseFile)) Then Begin
-                                                                Seek (Session.Msgs.MBaseFile, A);
-                                                                Read (Session.Msgs.MBaseFile, Session.Msgs.MBase);
+    MBaseFile.Reset;
 
-                                                                AddRecord (Session.Msgs.MBaseFile, B+1, SizeOf(MBaseRec));
-                                                                Write  (Session.Msgs.MBaseFile, Session.Msgs.MBase);
+    While Not MBaseFile.EOF Do Begin
+      MBaseFile.Read (MBase);
 
-                                                                If A > B Then Inc(A);
+      If MIndex = MBase.Index Then Begin
+        Inc (MIndex);
+        MBaseFile.Reset;
+      End;
+    End;
 
-                                                                KillRecord (Session.Msgs.MBaseFile, A+1, SizeOf(MBaseRec));
-                                                        End;
-                                                End;
-                        'Q' : break;
-                end;
+    MBaseFile.RecordInsert (List.Picked);
 
-        until False;
-        close (Session.Msgs.MBaseFile);
-end;
+    FillChar (MBase, SizeOf(RecMessageBase), 0);
 
-end.
+    With MBase Do Begin
+      Index       := MIndex;
+      FileName    := 'new';
+      Path        := Config.MsgsPath;
+      Name        := 'New Base';
+      DefNScan    := 1;
+      DefQScan    := 1;
+      MaxMsgs     := 500;
+      MaxAge      := 365;
+      Header      := 'msghead';
+      RTemplate   := 'ansimrd';
+      ITemplate   := 'ansimlst';
+      SysopACS    := 's255';
+      NetAddr     := 1;
+      ColQuote    := Config.ColorQuote;
+      ColText     := Config.ColorText;
+      ColTear     := Config.ColorTear;
+      ColOrigin   := Config.ColorOrigin;
+      ColKludge   := Config.ColorKludge;
+      Flags       := MBAutoSigs or MBKillKludge;
+
+      If Email Then Begin
+        FileName := 'email';
+        Name     := 'Electronic Mail';
+        Index    := 0;
+        Flags    := Flags or MBPrivate;
+      End;
+    End;
+
+    MBaseFile.Write(MBase);
+  End;
+
+Begin
+  MBaseFile := TBufFile.Create(4096);
+
+  If Not MBaseFile.Open(Config.DataPath + 'mbases.dat', fmOpenCreate, fmReadWrite + fmDenyNone, SizeOf(RecMessageBase)) Then Begin
+    MBaseFile.Free;
+    Exit;
+  End;
+
+  Box  := TAnsiMenuBox.Create;
+  List := TAnsiMenuList.Create;
+
+  List.NoWindow := True;
+  List.LoChars  := #13#27#47;
+  List.AllowTag := True;
+
+  If MBaseFile.FileSize = 0 Then AssignRecord(True);
+
+  Box.Open (15, 5, 65, 21);
+
+  WriteXY (17,  6, 112, '#####  Message Base Description');
+  WriteXY (16,  7, 112, strRep('Ä', 49));
+  WriteXY (16, 19, 112, strRep('Ä', 49));
+  WriteXY (29, 20, 112, cfgCommandList);
+
+  Repeat
+    MakeList;
+
+    List.Open (15, 7, 65, 19);
+    List.Close;
+
+    Case List.ExitCode of
+      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
+              'I' : If List.Picked > 1 Then Begin
+                      AssignRecord(False);
+                      MakeList;
+                    End;
+              'D' : If (List.Picked > 1) and (List.Picked < List.ListMax) Then
+                      If ShowMsgBox(1, 'Delete this entry?') Then Begin
+                        MBaseFile.Seek (List.Picked - 1);
+                        MBaseFile.Read (MBase);
+
+                        MBaseFile.RecordDelete (List.Picked);
+
+                        If ShowMsgBox(1, 'Delete data files?') Then Begin
+                          FileErase (MBase.Path + MBase.FileName + '.jhr');
+                          FileErase (MBase.Path + MBase.FileName + '.jlr');
+                          FileErase (MBase.Path + MBase.FileName + '.jdt');
+                          FileErase (MBase.Path + MBase.FileName + '.jdx');
+                          FileErase (MBase.Path + MBase.FileName + '.sqd');
+                          FileErase (MBase.Path + MBase.FileName + '.sqi');
+                          FileErase (MBase.Path + MBase.FileName + '.sql');
+                          FileErase (MBase.Path + MBase.FileName + '.scn');
+                        End;
+
+                        MakeList;
+                      End;
+              'C' : If List.Picked <> List.ListMax Then Begin
+                      MBaseFile.Seek (List.Picked - 1);
+                      MBaseFile.Read (Copied);
+
+                      HasCopy := True;
+                    End;
+              'P' : If HasCopy Then Begin
+                      MBaseFile.RecordInsert (List.Picked);
+                      MBaseFile.Write        (Copied);
+
+                      MakeList;
+                    End;
+
+            End;
+      #13 : If List.Picked < List.ListMax Then Begin
+              MBaseFile.Seek (List.Picked - 1);
+              MBaseFile.Read (MBase);
+              EditMessageBase;
+              MBaseFile.Seek  (List.Picked - 1);
+              MBaseFile.Write (MBase);
+            End;
+      #27 : Break;
+    End;
+  Until False;
+
+  Box.Close;
+
+  MBaseFile.Free;
+  List.Free;
+  Box.Free;
+End;
+
+End.

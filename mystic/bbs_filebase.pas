@@ -1434,21 +1434,6 @@ Var
   Old      : RecFileBase;
   Str      : String[5];
   Compress : Boolean;
-
-  Function CheckPassword : Boolean;
-  Begin
-    CheckPassword := True;
-
-    If FBase.Password <> '' Then
-      If Not Session.io.GetPW(Session.GetPrompt(66), Session.GetPrompt(417), FBase.Password) Then Begin
-        Session.io.OutFullLn (Session.GetPrompt(67));
-        FBase := Old;
-        Close (FBaseFile);
-        CheckPassword := False;
-        Exit;
-      End;
-  End;
-
 Begin
   Old      := FBase;
   Compress := Config.FCompress;
@@ -1472,7 +1457,6 @@ Begin
       If IoResult <> 0 Then Break;
 
       If Session.User.Access(FBase.ListACS) Then Begin
-        If Not CheckPassword Then Exit;
         Session.User.ThisUser.LastFBase := FilePos(FBaseFile);
         Close (FBaseFile);
         Exit;
@@ -1494,7 +1478,6 @@ Begin
       Read (FBaseFile, FBase);
 
       If Session.User.Access(FBase.ListACS) Then Begin
-        If Not CheckPassword Then Exit;
         Session.User.ThisUser.LastFBase := FilePos(FBaseFile)
       End Else
         FBase := Old;
@@ -1554,8 +1537,6 @@ Begin
           Exit;
         End;
       End;
-
-      If Not CheckPassword Then Exit;
 
       Session.User.ThisUser.LastFBase := FilePos(FBaseFile);
 

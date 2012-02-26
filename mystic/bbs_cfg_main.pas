@@ -20,14 +20,14 @@ Uses
   bbs_cfg_SysCfg,
   bbs_cfg_Archive,
   bbs_cfg_Protocol,
+  bbs_cfg_FileBase,
+  bbs_cfg_MsgBase,
+  bbs_cfg_Groups,
 
   //old editors to be rewritten
   bbs_cfg_useredit,
-  bbs_cfg_groups,
   bbs_cfg_events,
-  bbs_cfg_filebase,
   bbs_cfg_language,
-  bbs_cfg_msgbase,
   bbs_cfg_seclevel,
   bbs_cfg_vote,
   bbs_cfg_menuedit;
@@ -40,7 +40,10 @@ Begin
 
   Case Mode of
     'A' : Configuration_ArchiveEditor;
+    'B' : Configuration_MessageBaseEditor;
     'F' : Configuration_FileBaseEditor;
+    'G' : Configuration_GroupEditor(True);
+    'R' : Configuration_GroupEditor(False);
     'P' : Configuration_ProtocolEditor;
   End;
 
@@ -74,11 +77,12 @@ End;
 
 Procedure Configuration_MainMenu;
 Var
-  Form    : TAnsiMenuForm;
-  Box     : TAnsiMenuBox;
-  Image   : TConsoleImageRec;
-  MenuPos : Array[0..4] of Byte = (1, 1, 1, 1, 1);
-  Res     : Char;
+  Form     : TAnsiMenuForm;
+  Box      : TAnsiMenuBox;
+  Image    : TConsoleImageRec;
+  MenuPos  : Array[0..4] of Byte = (1, 1, 1, 1, 1);
+  ThemeOld : LangRec;
+  Res      : Char;
 
   Procedure BoxOpen (X1, Y1, X2, Y2: Byte);
   Begin
@@ -120,8 +124,6 @@ Var
       'U' : User_Editor(False, False);
       'M' : Menu_Editor;
       'T' : Lang_Editor;
-      'B' : Message_Base_Editor;
-      'G',
       'S' : Levels_Editor;
       'E' : Event_Editor;
       'V' : Vote_Editor;
@@ -274,9 +276,17 @@ Begin
                 #75 : MenuPtr := 2;
                 #77 : MenuPtr := 4;
               End;
-            End Else
+            End Else Begin
+              ThemeOld := Session.Lang;
+
+              Session.Lang.FieldCol1 := 15 + 1 * 16;
+              Session.Lang.FieldCol2 :=  9 + 1 * 16;
+              Session.Lang.FieldChar := 'm';
+              Session.Lang.EchoCh    := '*';
+
               Case Res of
                 'A' : Configuration_ArchiveEditor;
+                'B' : Configuration_MessageBaseEditor;
                 'F' : Configuration_FileBaseEditor;
                 'G' : Configuration_GroupEditor(True);
                 'P' : Configuration_ProtocolEditor;
@@ -284,7 +294,6 @@ Begin
                 'U',
                 'M',
                 'T',
-                'B',
                 'S',
                 'E',
                 'V' : ExecuteOldConfiguration(Res);
@@ -292,6 +301,9 @@ Begin
               Else
                 MenuPtr := 0;
               End;
+
+              Session.Lang := ThemeOld;
+            End;
           End;
       4 : Begin
             BoxOpen      (54, 4, 64, 6);

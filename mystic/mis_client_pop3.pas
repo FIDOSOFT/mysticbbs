@@ -156,8 +156,8 @@ End;
 
 Procedure TPOP3Server.CreateMailBoxData;
 Var
-  MBaseFile : File of MBaseRec;
-  MBase     : MBaseRec;
+  MBaseFile : File of RecMessageBase;
+  MBase     : RecMessageBase;
   MsgBase   : PMsgBaseABS;
 
   Function ParseDateTime (Date, Time : String) : String;
@@ -176,7 +176,7 @@ Var
 Begin
   Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
 
-  If Not ioReset(MBaseFile, SizeOf(MBaseRec), fmRWDN) Then Exit;
+  If Not ioReset(MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
   ioRead (MBaseFile, MBase);
   Close  (MBaseFile);
@@ -231,13 +231,13 @@ End;
 Procedure TPOP3Server.DeleteMessages;
 Var
   Count     : LongInt;
-  MBaseFile : File of MBaseRec;
-  MBase     : MBaseRec;
+  MBaseFile : File of RecMessageBase;
+  MBase     : RecMessageBase;
   MsgBase   : PMsgBaseABS;
 Begin
   Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
 
-  If Not ioReset(MBaseFile, SizeOf(MBaseRec), fmRWDN) Then Exit;
+  If Not ioReset(MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
   ioRead (MBaseFile, MBase);
   Close  (MBaseFile);

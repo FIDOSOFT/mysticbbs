@@ -320,7 +320,7 @@ Begin
               'F' : Configuration_ExecuteEditor('F');
               'G' : Configuration_ExecuteEditor('G');
               'L' : Levels_Editor;
-              'M' : Message_Base_Editor;
+              'M' : Configuration_ExecuteEditor('B');
               'P' : Configuration_ExecuteEditor('P');
               'S' : Configuration_MainMenu;
               'U' : User_Editor(False, False);

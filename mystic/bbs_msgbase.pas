@@ -15,13 +15,13 @@ Uses
 
 Type
   TMsgBase = Class
-    MBaseFile : File of MBaseRec;
+    MBaseFile : File of RecMessageBase;
     MScanFile : File of MScanRec;
     GroupFile : File of RecGroup;
     TotalMsgs : Integer;
     TotalConf : Integer;
     MsgBase   : PMsgBaseABS;
-    MBase     : MBaseRec;
+    MBase     : RecMessageBase;
     MScan     : MScanRec;
     Group     : RecGroup;
     MsgText   : RecMessageText;
@@ -31,12 +31,12 @@ Type
     Constructor Create   (Var Owner: Pointer);
     Destructor  Destroy; Override;
 
-    Function    OpenCreateBase      (Var Msg: PMsgBaseABS; Var Area: MBaseRec) : Boolean;
+    Function    OpenCreateBase      (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
     Procedure   AppendMessageText   (Var Msg: PMsgBaseABS; Lines: Integer; ReplyID: String);
     Procedure   AssignMessageData   (Var Msg: PMsgBaseABS);
-    Function    GetTotalMessages    (Var TempBase: MBaseRec) : LongInt;
+    Function    GetTotalMessages    (Var TempBase: RecMessageBase) : LongInt;
     Procedure   PostTextFile        (Data: String; AllowCodes: Boolean);
-    Function    SaveMessage         (mArea: MBaseRec; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mLines: Integer) : Boolean;
+    Function    SaveMessage         (mArea: RecMessageBase; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mLines: Integer) : Boolean;
     Function    ListAreas           (Compress: Boolean) : Integer;
     Procedure   ChangeArea          (Data: String);
     Procedure   SetMessageScan;
@@ -58,7 +58,7 @@ Type
     Procedure   UploadREP;
     Procedure   WriteCONTROLDAT;
     Function    WriteMSGDAT : LongInt;
-    Function    ResolveOrigin       (var mArea: MBaseRec) : String;
+    Function    ResolveOrigin       (var mArea: RecMessageBase) : String;
   End;
 
 Implementation
@@ -110,7 +110,7 @@ Begin
   Inherited Destroy;
 End;
 
-Function TMsgBase.OpenCreateBase (Var Msg: PMsgBaseABS; Var Area: MBaseRec) : Boolean;
+Function TMsgBase.OpenCreateBase (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
 Begin
   Result := False;
 
@@ -135,7 +135,7 @@ Begin
   Result := True;
 End;
 
-Function TMsgBase.GetTotalMessages (Var TempBase: MBaseRec) : LongInt;
+Function TMsgBase.GetTotalMessages (Var TempBase: RecMessageBase) : LongInt;
 Var
   TempMsg : PMsgBaseABS;
 Begin
@@ -241,7 +241,7 @@ Var
 Begin
   Msg^.StartNewMsg;
 
-  If MBase.UseReal Then
+  If MBase.Flags And MBRealNames <> 0 Then
     Msg^.SetFrom(Session.User.ThisUser.RealName)
   Else
     Msg^.SetFrom(Session.User.ThisUser.Handle);
@@ -279,33 +279,18 @@ Begin
   End Else
     Msg^.SetMailType(mmtNormal);
 
-  Msg^.SetPriv(MBase.PostType = 1);
-  Msg^.SetDate(DateDos2Str(CurDateDos, 1));
-  Msg^.SetTime(TimeDos2Str(CurDateDos, False));
+  Msg^.SetPriv (MBase.Flags and MBPrivate <> 0);
+  Msg^.SetDate (DateDos2Str(CurDateDos, 1));
+  Msg^.SetTime (TimeDos2Str(CurDateDos, False));
 End;
 
 Procedure TMsgBase.ChangeArea (Data: String);
 Var
   A,
   Total    : Word;
-  Old      : MBaseRec;
+  Old      : RecMessageBase;
   Str      : String[5];
   Compress : Boolean;
-
-  Function CheckPassword : Boolean;
-  Begin
-    CheckPassword := True;
-
-    If MBase.Password <> '' Then
-      If Not Session.io.GetPW(Session.GetPrompt(103), Session.GetPrompt(417), MBase.Password) Then Begin
-        Session.io.OutFullLn (Session.GetPrompt(67));
-        MBase := Old;
-        Close (MBaseFile);
-        CheckPassword := False;
-        Exit;
-      End;
-  End;
-
 Begin
   Compress := Config.MCompress;
   Old      := MBase;
@@ -328,8 +313,7 @@ Begin
 
       If IoResult <> 0 Then Break;
 
-      If Session.User.Access(MBase.ACS) Then Begin
-        If Not CheckPassword Then Break;
+      If Session.User.Access(MBase.ListACS) Then Begin
         Session.User.ThisUser.LastMBase := FilePos(MBaseFile);
         Close (MBaseFile);
         Exit;
@@ -349,8 +333,7 @@ Begin
     If A <= FileSize(MBaseFile) Then Begin
       Seek (MBaseFile, A-1);
       Read (MBaseFile, MBase);
-      If Session.User.Access(MBase.ACS) Then Begin
-        If Not CheckPassword Then Exit;
+      If Session.User.Access(MBase.ListACS) Then Begin
         Session.User.ThisUser.LastMBase := FilePos(MBaseFile)
       End Else
         MBase := Old;
@@ -389,7 +372,7 @@ Begin
       If Not Compress Then Begin
         Seek (MBaseFile, A - 1);
         Read (MBaseFile, MBase);
-        If Not Session.User.Access(MBase.ACS) Then Begin
+        If Not Session.User.Access(MBase.ListACS) Then Begin
           MBase := Old;
           Close (MBaseFile);
           Exit;
@@ -399,7 +382,7 @@ Begin
 
         While Not Eof(MBaseFile) And (A <> Total) Do Begin
           Read (MBaseFile, MBase);
-          If Session.User.Access(MBase.ACS) Then Inc(Total);
+          If Session.User.Access(MBase.ListACS) Then Inc(Total);
         End;
 
         If A <> Total Then Begin
@@ -408,8 +391,6 @@ Begin
           Exit;
         End;
       End;
-
-      If Not CheckPassword Then Exit;
 
       Session.User.ThisUser.LastMBase := FilePos(MBaseFile);
 
@@ -442,7 +423,7 @@ Var
     While Not Eof(MBaseFile) Do Begin
       Read (MBaseFile, MBase);
 
-      If Session.User.Access(MBase.ACS) Then Begin
+      If Session.User.Access(MBase.ListACS) Then Begin
         Inc (Total);
 
         Session.io.PromptInfo[1] := strI2S(Total);
@@ -482,7 +463,7 @@ Var
 
     Repeat
       Read (MBaseFile, MBase);
-      If Session.User.Access(MBase.ACS) Then Inc(B);
+      If Session.User.Access(MBase.ListACS) Then Inc(B);
       If A = B Then Break;
     Until False;
 
@@ -520,7 +501,7 @@ Var
   End;
 
 Var
-  Old  : MBaseRec;
+  Old  : RecMessageBase;
   Temp : String[11];
   A    : Word;
   N1   : Word;
@@ -565,7 +546,7 @@ Var
   A      : Word;
   Total  : Word;
   tGroup : RecGroup;
-  tMBase : MBaseRec;
+  tMBase : RecMessageBase;
   tLast  : Word;
   Areas  : Word;
   Data   : Word;
@@ -661,7 +642,7 @@ Begin
         Read  (MBaseFile, tMBase); { Skip EMAIL base }
         While Not Eof(MBaseFile) Do Begin
           Read (MBaseFile, tMBase);
-          If Session.User.Access(tMBase.ACS) Then Inc(Areas);
+          If Session.User.Access(tMBase.ListACS) Then Inc(Areas);
         End;
         Close (MBaseFile);
       End;
@@ -720,7 +701,7 @@ Function TMsgBase.ListAreas (Compress: Boolean) : Integer;
 Var
   Total    : Word = 0;
   Listed   : Word = 0;
-  TempBase : MBaseRec;
+  TempBase : RecMessageBase;
 Begin
   Reset (MBaseFile);
 
@@ -730,7 +711,7 @@ Begin
   While Not Eof(MBaseFile) Do Begin
     Read (MBaseFile, TempBase);
 
-    If Session.User.Access(TempBase.ACS) Then Begin
+    If Session.User.Access(TempBase.ListACS) Then Begin
       Inc (Listed);
 
       If Listed = 1 Then
@@ -983,9 +964,10 @@ Begin
                   MsgBase^.SetDest(DestAddr)
                 End;
               End Else
-              If MBase.PostType = 1 Then Begin
+              If MBase.Flags And MBPrivate <> 0 Then Begin
                 Temp1 := Session.io.GetInput (30, 30, 11, MsgBase^.GetTo);
-                If Session.User.SearchUser(Temp1, MBase.UseReal) Then
+
+                If Session.User.SearchUser(Temp1, MBase.Flags and MBRealNames <> 0) Then
                   MsgBase^.SetTo(Temp1);
               End Else
                 MsgBase^.SetTo(Session.io.GetInput(30, 30, 11, MsgBase^.GetTo));
@@ -1095,7 +1077,7 @@ Var
   Var
     MsgNew   : PMsgBaseABS;
     Str      : String;
-    TempBase : MBaseRec;
+    TempBase : RecMessageBase;
     Area     : Integer;
     Addr     : RecEchoMailAddr;
   Begin
@@ -2222,7 +2204,7 @@ Begin
   If Mode = 'E' Then
     ScanMode := 1
   Else
-  If (MBase.PostType = 1) or (Mode = 'Y') or (Mode = 'P') Then
+  If (MBase.Flags and MBPrivate <> 0) or (Mode = 'Y') or (Mode = 'P') Then
     ScanMode := 2
   Else
   If (Mode = 'S') or (Mode = 'T') Then
@@ -2298,7 +2280,7 @@ Var
   A        : Integer;
   Lines    : Integer;
   Forced   : Boolean;
-  Old      : MBaseRec;
+  Old      : RecMessageBase;
 Begin
   Old := MBase;
 
@@ -2358,11 +2340,11 @@ Begin
       If Not strStr2Addr(MsgAddr, DestAddr) Then MsgTo := '';
     End;
   End Else
-  If MBase.PostType = 1 Then Begin    { if the base is flagged private }
+  If MBase.Flags and MBPrivate <> 0 Then Begin
     If MsgTo = '' Then Begin
       Session.io.OutFull (Session.GetPrompt(450));
       MsgTo := Session.io.GetInput (30, 30, 18, '');
-      If Not Session.User.SearchUser(MsgTo, MBase.UseReal) Then MsgTo := '';
+      If Not Session.User.SearchUser(MsgTo, MBase.Flags and MBRealNames <> 0) Then MsgTo := '';
     End Else
       If strUpper(MsgTo) = 'SYSOP' Then MsgTo := Config.SysopName;
 
@@ -2466,7 +2448,7 @@ End;
 
 Procedure TMsgBase.CheckEMail;
 Var
-  Old     : MBaseRec;
+  Old     : RecMessageBase;
   Total   : Integer;
 Begin
   Session.io.OutFull (Session.GetPrompt(123));
@@ -2589,7 +2571,7 @@ Begin
   Session.io.OutFullLn (Session.GetPrompt(460));
 
   If Global Then Begin
-    ioReset (MBaseFile, SizeOf(MBaseRec), fmRWDN);
+    ioReset (MBaseFile, SizeOf(RecMessageBase), fmRWDN);
     ioRead  (MBaseFile, MBase);
 
     While Not Eof(MBaseFile) Do Begin
@@ -2606,7 +2588,7 @@ Procedure TMsgBase.MessageNewScan (Data : String);
 {    /M : scan only mandatory bases           }
 {    /G : scan all bases in all groups        }
 Var
-  Old  : MBaseRec;
+  Old  : RecMessageBase;
   Mode : Char;
   Mand : Boolean;
 Begin
@@ -2669,7 +2651,7 @@ Procedure TMsgBase.GlobalMessageSearch (Mode : Char);
 { A = all areas in all groups }
 Var
   SearchStr : String;
-  Old       : MBaseRec;
+  Old       : RecMessageBase;
 Begin
   If Not (Mode in ['A', 'C', 'G']) Then Mode := 'G';
 
@@ -2728,7 +2710,7 @@ Var
   MsgTo   : String[30];
   MsgSubj : String[60];
   Lines   : Integer;
-  Old     : MBaseRec;
+  Old     : RecMessageBase;
   OldUser : RecUser;
 
   Procedure Write_Mass_Msg;
@@ -2789,7 +2771,7 @@ Begin
               Session.io.OutFull (Session.GetPrompt(390));
               Str := Session.io.GetInput (30, 30, 18, '');
               If Str <> '' Then Begin
-                If Session.User.SearchUser(Str, MBase.UseReal) Then Begin
+                If Session.User.SearchUser(Str, MBase.Flags And MBRealNames <> 0) Then Begin
                   Inc (NamePos);
                   Names[NamePos] := Str;
                 End;
@@ -2890,7 +2872,7 @@ End;
 
 Procedure TMsgBase.ViewSentEmail;
 Var
-  Old : MBaseRec;
+  Old : RecMessageBase;
 Begin
   Old := MBase;
 
@@ -3119,7 +3101,7 @@ End;
 Procedure TMsgBase.UploadREP;
 Var
   DataFile : File;
-  OldMBase : MBaseRec;
+  OldMBase : RecMessageBase;
   QwkHdr   : QwkDATHdr;
   Temp     : String[128];
   A        : SmallInt;
@@ -3238,7 +3220,7 @@ Type
     Pos  : LongInt;
   End;
 Var
-  Old       : MBaseRec;
+  Old       : RecMessageBase;
   DataFile  : File;
   Temp      : String;
   QwkLR     : QwkLRRec;
@@ -3459,7 +3441,7 @@ Begin
 End;
 *)
 
-Function TMsgBase.SaveMessage (mArea: MBaseRec; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mLines: Integer) : Boolean;
+Function TMsgBase.SaveMessage (mArea: RecMessageBase; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mLines: Integer) : Boolean;
 Var
   SemFile : File;
   Count   : SmallInt;
@@ -3498,7 +3480,7 @@ Begin
   End Else
     Msg^.SetMailType (mmtNormal);
 
-  Msg^.SetPriv (mArea.PostType = 1);
+  Msg^.SetPriv (mArea.Flags And MBPrivate <> 0);
   Msg^.SetDate (DateDos2Str(CurDateDos, 1));
   Msg^.SetTime (TimeDos2Str(CurDateDos, False));
   Msg^.SetFrom (mFrom);
@@ -3541,7 +3523,7 @@ Var
   Pages     : Integer;
   Count     : Integer;
   Offset    : Integer;
-  TempBase  : MBaseRec;
+  TempBase  : RecMessageBase;
 Begin
   mName := strWordGet(1, Data, ';');
   mArea := strS2I(strWordGet(2, Data, ';'));
@@ -3562,7 +3544,7 @@ Begin
   End;
 
   Assign  (MBaseFile, Config.DataPath + 'mbases.dat');
-  ioReset (MBaseFile, SizeOf(MBaseRec), fmReadWrite + fmDenyNone);
+  ioReset (MBaseFile, SizeOf(RecMessageBase), fmReadWrite + fmDenyNone);
 
   If Not ioSeek (MBaseFile, mArea) Then Begin
     Close (MBaseFile);
@@ -3624,7 +3606,7 @@ Begin
   End;
 End;
 
-Function TMsgBase.ResolveOrigin (Var mArea: MBaseRec) : String;
+Function TMsgBase.ResolveOrigin (Var mArea: RecMessageBase) : String;
 Var
   Loc   : Byte;
   FN    : String;

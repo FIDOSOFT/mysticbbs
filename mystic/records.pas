@@ -253,17 +253,6 @@ Const
 
 //FUTURE DATA FILE UPDATES NEEDED
 //LASTON needs optional1-10 compare to Mystic2
-//MBASES
-// expand header filename[20]
-// add template[20]
-// add msgbase sponser[30]
-// add newsname[60]
-// add colorkludge[b]
-// add flags[l] merge in useReal
-//   flags:
-//   userealname, forced, allow autosig, allow attachments, kludge filter
-// remove password?
-// ACS to s[30]
 //MENUS
 // remove fallback?
 // (flags)
@@ -274,13 +263,6 @@ Const
 // (commands)
 // TBD compare to mystic 2
 // VOTING: expand ACS to s[30]
-// LANGREC
-//  example path sizes
-//  add script path?
-//  compare to mystic 2 for fallback stuff?
-//  rename to THEME
-//  help percent bar
-//  horizontal/vertical percent bars
 
 Type
   RecUser = Record                     { USERS.DAT }
@@ -408,33 +390,47 @@ Type
     QwkScan : Byte;                    { Include this base in qwk scan?  }
   End;
 
-  MBaseRec = Record                    { MBASES.DAT                       }
-    Name     : String[40];             { Message base name                }
-    QWKName  : String[13];             { QWK (short) message base name    }
-    FileName : String[40];             { Message base file name           }
-    Path     : String[40];             { Path where files are stored      }
-    BaseType : Byte;                   { 0 = JAM, 1 = Squish              }
-    NetType  : Byte;                   { 0 = Local  1 = EchoMail          }
-                                       { 2 = UseNet 3 = NetMail           }
-    PostType : Byte;                   { 0 = Public 1 = Private           }
-    ACS,                               { ACS required to see this base    }
-    ReadACS,                           { ACS required to read messages    }
-    PostACS,                           { ACS required to post messages    }
-    SysopACS : String[20];             { ACS required for sysop options   }
-    Password : String[15];             { Password for this message base   }
-    ColQuote : Byte;                   { Quote text color                 }
-    ColText  : Byte;                   { Text color                       }
-    ColTear  : Byte;                   { Tear line color                  }
-    ColOrigin: Byte;                   { Origin line color                }
-    NetAddr  : Byte;                   { Net AKA to use for this base     }
-    Origin   : String[50];             { Net origin line for this base    }
-    UseReal  : Boolean;                { Use real names?                  }
-    DefNScan : Byte;                   { 0 = off, 1 = on, 2 = always      }
-    DefQScan : Byte;                   { 0 = off, 1 = on, 2 = always      }
-    MaxMsgs  : Word;                   { Max messages to allow            }
-    MaxAge   : Word;                   { Max age of messages before purge }
-    Header   : String[8];              { Display Header file name         }
-    Index    : SmallInt;               { QWK index - NEVER CHANGE THIS    }
+Const
+  MBRealNames   = $00000001;
+  MBKillKludge  = $00000002;
+  MBAutosigs    = $00000004;
+  MBNoAttach    = $00000008;
+  MBPrivate     = $00000010;
+  MBCrossPost   = $00000020;
+
+Type
+  RecMessageBase = Record
+    Name      : String[40];
+    QWKName   : String[13];
+    NewsName  : String[60];
+    FileName  : String[40];
+    Path      : String[mysMaxPathSize];
+    BaseType  : Byte;
+    NetType   : Byte;
+    ReadType  : Byte;
+    ListType  : Byte;
+    ListACS   : String[mysMaxAcsSize];
+    ReadACS   : String[mysMaxAcsSize];
+    PostACS   : String[mysMaxAcsSize];
+    SysopACS  : String[mysMaxAcsSize];
+    Sponsor   : String[30];
+    ColQuote  : Byte;
+    ColText   : Byte;
+    ColTear   : Byte;
+    ColOrigin : Byte;
+    ColKludge : Byte;
+    NetAddr   : Byte;                   { Net AKA to use for this base     }
+    Origin    : String[50];             { Net origin line for this base    }
+    DefNScan  : Byte;                   { 0 = off, 1 = on, 2 = always      }
+    DefQScan  : Byte;                   { 0 = off, 1 = on, 2 = always      }
+    MaxMsgs   : Word;
+    MaxAge    : Word;
+    Header    : String[20];
+    RTemplate : String[20];
+    ITemplate : String[20];
+    Index     : Word;
+    Flags     : LongInt;
+    Res       : Array[1..110] of Byte;
   End;
 
   FScanRec = Record                    { <Data Path> *.SCN               }
@@ -462,7 +458,6 @@ Type
     CommentACS : String[30];
     SysOpACS   : String[30];
     Path       : String[80];
-    Password   : String[15];
     DefScan    : Byte;
     Flags      : LongInt;
     Res        : Array[1..36] of Byte;
@@ -549,12 +544,52 @@ Type
     LHText  : String[79];
   End;
 
+  RecPercent = Record
+    BarLength : Byte;
+    LoChar    : Char;
+    LoAttr    : Byte;
+    HiChar    : Char;
+    HiAttr    : Byte;
+    Format    : Byte;
+  End;
+
   PercentRec = Record                                      // percentage bar record
     BarLen : Byte;
     LoChar : Char;
     LoAttr : Byte;
     HiChar : Char;
     HiAttr : Byte;
+  End;
+
+Const
+  ThmAllowASCII = $00000001;
+  ThmAllowANSI  = $00000002;
+  ThmLightbarYN = $00000004;
+  ThmFallback   = $00000008;
+
+Type
+  RecTheme = Record
+    FileName     : String[20];
+    Desc         : String[40];
+    TextPath     : String[mysMaxPathSize];
+    MenuPath     : String[mysMaxPathSize];
+    ScriptPath   : String[mysMaxPathSize];
+    TemplatePath : String[mysMaxPathSize];
+    Flags        : LongInt;
+    FieldCol1  : Byte;
+    FieldCol2  : Byte;
+    FieldChar  : Char;
+    EchoCh     : Char;
+    QuoteColor : Byte;
+    TagCh      : Char;
+    FileHi     : Byte;
+    FileLo     : Byte;
+    NewMsgChar : Char;
+    VotingBar  : RecPercent;
+    FileBar    : RecPercent;
+    MsgBar     : RecPercent;
+    GalleryBar : RecPercent;
+    HelpBar    : RecPercent;
   End;
 
   LangRec = Record                       { LANGUAGE.DAT                     }

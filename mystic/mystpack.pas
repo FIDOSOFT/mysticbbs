@@ -122,9 +122,9 @@ Const
 
 Var
   ConfigFile : File of RecConfig;
-  MBaseFile  : File of MBaseRec;
+  MBaseFile  : File of RecMessageBase;
   Config     : RecConfig;
-  MBase      : MBaseRec;
+  MBase      : RecMessageBase;
 
 Const
   DATEC1970 = 2440588;

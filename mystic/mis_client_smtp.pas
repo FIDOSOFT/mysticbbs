@@ -152,8 +152,8 @@ Procedure TSMTPServer.cmdDATA;
 Var
   InData     : String;
   HackCount  : LongInt;
-  MBaseFile  : File of MBaseRec;
-  MBase      : MBaseRec;
+  MBaseFile  : File of RecMessageBase;
+  MBase      : RecMessageBase;
   MsgBase    : PMsgBaseABS;
   MsgText    : TStringList;
   MsgSubject : String;
@@ -205,7 +205,7 @@ Begin
   Until False;
 
   Assign  (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
-  ioReset (MBaseFile, SizeOf(MBaseRec), fmRWDN);
+  ioReset (MBaseFile, SizeOf(RecMessageBase), fmRWDN);
   ioRead  (MBaseFile, MBase);
   Close   (MBaseFile);
 

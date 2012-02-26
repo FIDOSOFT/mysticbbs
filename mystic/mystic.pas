@@ -44,6 +44,7 @@ Uses
 Procedure InitClasses;
 Begin
   Assign (ConfigFile, 'mystic.dat');
+
   if ioReset(ConfigFile, SizeOf(RecConfig), fmReadWrite + fmDenyNone) Then Begin
     Read (ConfigFile, Config);
     Close (ConfigFile);
@@ -80,12 +81,7 @@ Begin
 
   ExitProc := ExitSave;
 
-  If ErrorAddr <> NIL Then Begin
-    Session.io.OutFull('|CR|12System Error #' + strI2S(ExitCode));
-    Session.SystemLog ('ERROR #' + strI2S(ExitCode));
-
-    ExitCode := 1;
-  End;
+  If ErrorAddr <> NIL Then ExitCode := 1;
 
   If Session.User.UserNum <> -1 Then Begin
     Session.User.ThisUser.LastOn := CurDateDos;
@@ -204,23 +200,45 @@ Procedure CheckPathsAndDataFiles;
 Var
   Count : Byte;
   PR    : PercentRec;
-  MBase : MBaseRec;
 Begin
-  If Not Session.ConfigMode Then Begin
-    CheckDIR (Config.SystemPath);
-    CheckDIR (Config.AttachPath);
-    CheckDIR (Config.DataPath);
-    CheckDIR (Config.MsgsPath);
-    CheckDIR (Config.SemaPath);
-    CheckDIR (Config.QwkPath);
-    CheckDIR (Config.ScriptPath);
-    CheckDIR (Config.LogsPath);
-  End;
+  Randomize;
+
+  Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
 
   {$I-}
   MkDir (Config.SystemPath + 'temp' + strI2S(Session.NodeNum));
   If IoResult <> 0 Then;
   {$I+}
+
+  DirClean(Session.TempPath, '');
+
+  Assign (Session.LangFile, Config.DataPath + 'language.dat');
+  {$I-} Reset (Session.LangFile); {$I+}
+  If IoResult <> 0 Then Begin
+    Screen.WriteLine ('ERROR: No theme configuration. Use MYSTIC -CFG');
+    DisposeClasses;
+    Halt(1);
+  End;
+  Close (Session.LangFile);
+
+  If Not Session.LoadThemeData(Config.DefThemeFile) Then Begin
+    If Not Session.ConfigMode Then Begin
+      Screen.WriteLine ('ERROR: Default theme prompts not found [' + Config.DefThemeFile + '.lng]');
+      DisposeClasses;
+      Halt(1);
+    End;
+  End;
+
+  If Session.ConfigMode Then Exit;
+
+  CheckDIR (Config.SystemPath);
+  CheckDIR (Config.AttachPath);
+  CheckDIR (Config.DataPath);
+  CheckDIR (Config.MsgsPath);
+  CheckDIR (Config.SemaPath);
+  CheckDIR (Config.QwkPath);
+  CheckDIR (Config.ScriptPath);
+  CheckDIR (Config.LogsPath);
 
   Assign (RoomFile, Config.DataPath + 'chatroom.dat');
   {$I-} Reset (RoomFile); {$I+}
@@ -231,52 +249,6 @@ Begin
       Write (RoomFile, Room);
   End;
   Close (RoomFile);
-
-  Assign (Session.LangFile, Config.DataPath + 'language.dat');
-  {$I-} Reset (Session.LangFile); {$I+}
-  If IoResult <> 0 Then Begin
-    Session.Lang.Desc       := 'Default';
-    Session.Lang.FileName   := 'default';
-    Session.Lang.TextPath   := Config.SystemPath + 'text' + PathChar;
-    Session.Lang.MenuPath   := Config.SystemPath + 'menus' + PathChar;
-    Session.Lang.BarYN      := True;
-    Session.Lang.FieldCol1  := 31;
-    Session.Lang.FieldCol2  := 25;
-    Session.Lang.FieldChar  := ' ';
-    Session.Lang.QuoteColor := 31;
-    Session.Lang.EchoCh     := '*';
-    Session.Lang.TagCh      := 'û';
-    Session.Lang.okASCII    := True;
-    Session.Lang.okANSI     := True;
-    Session.Lang.FileHi     := 112;
-    Session.Lang.FileLo     := 11;
-    Session.Lang.NewMsgChar := 'N';
-
-    PR.BarLen := 15;
-    PR.LoChar := '°';
-    PR.LoAttr := 8;
-    PR.HiChar := 'Û';
-    PR.HiAttr := 9;
-
-    Session.Lang.VotingBar  := PR;
-    Session.Lang.FileBar    := PR;
-    Session.Lang.MsgBar     := PR;
-    Session.Lang.GalleryBar := PR;
-
-    ReWrite (Session.LangFile);
-    Write   (Session.LangFile, Session.Lang);
-  End;
-  Close (Session.LangFile);
-
-  If Not Session.LoadThemeData(Config.DefThemeFile) Then Begin
-    If Not Session.ConfigMode Then Begin
-      Screen.WriteLine ('ERROR: Default theme prompts not found [' + Config.DefThemeFile + '.lng]');
-
-      DisposeClasses;
-
-      Halt(1);
-    End;
-  End;
 
   Assign (Session.User.UserFile, Config.DataPath + 'users.dat');
   {$I-} Reset (Session.User.UserFile); {$I+}
@@ -299,35 +271,9 @@ Begin
   Assign (Session.Msgs.MBaseFile, Config.DataPath + 'mbases.dat');
   {$I-} Reset(Session.Msgs.MBaseFile); {$I+}
   If IoResult <> 0 Then Begin
-    ReWrite (Session.Msgs.MBaseFile);
-
-    MBase.Name      := 'E-mail';
-    MBase.QWKName   := 'Email';
-    MBase.FileName  := 'email';
-    MBase.Path      := Config.MsgsPath;
-    MBase.BaseType  := 0;
-    MBase.NetType   := 0;
-    MBase.PostType  := 1;
-    MBase.ACS       := '%';
-    MBase.ReadACS   := '';
-    MBase.PostACS   := '';
-    MBase.SysopACS  := 's255';
-    MBase.Password  := '';
-    MBase.ColQuote  := Config.ColorQuote;
-    MBase.ColText   := Config.ColorText;
-    MBase.ColTear   := Config.ColorTear;
-    MBase.ColOrigin := Config.ColorOrigin;
-    MBase.NetAddr   := 1;
-    MBase.Origin    := Config.Origin;
-    MBase.UseReal   := False;
-    MBase.DefNScan  := 1;
-    MBase.DefQScan  := 1;
-    MBase.MaxMsgs   := 0;
-    MBase.MaxAge    := 0;
-    MBase.Header    := '';
-    MBase.Index     := 1;
-
-    Write (Session.Msgs.MBaseFile, MBase);
+    Screen.WriteLine ('ERROR: No message base configuration. Use MYSTIC -CFG');
+    DisposeClasses;
+    Halt(1);
   End;
   Close (Session.Msgs.MBaseFile);
 
@@ -370,14 +316,6 @@ Begin
   {$I-} Reset (Session.FileBase.ProtocolFile); {$I+}
   If IoResult <> 0 Then ReWrite (Session.FileBase.ProtocolFile);
   Close (Session.FileBase.ProtocolFile);
-
-  Session.FindNextEvent;
-
-  Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
-
-  DirClean(Session.TempPath, '');
-
-  Randomize;
 End;
 
 Var
@@ -470,6 +408,8 @@ Begin
     Screen.BufFlush;
     Halt(0);
   End;
+
+  Session.FindNextEvent;
 
   Session.SystemLog ('Node ' + strI2S(Session.NodeNum) + ' online');
 

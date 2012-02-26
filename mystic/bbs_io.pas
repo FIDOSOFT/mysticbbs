@@ -24,7 +24,7 @@ Type
   TBBSIO = Class
     Core         : Pointer;
     Term         : TTermAnsi;
-    ScreenInfo   : Array[0..9]  of Record X, Y, A : Byte; End;
+    ScreenInfo   : Array[0..9] of Record X, Y, A : Byte; End;
     PromptInfo   : Array[1..MaxPromptInfo] of String[89];
     FmtString    : Boolean;
     FmtLen       : Byte;
@@ -265,8 +265,8 @@ Begin
 
   Ch := OneKey('YNC' + #13, False);
 
-  OutBS(Screen.CursorX, True);
-  AnsiColor(SavedAttr);
+  OutBS     (Screen.CursorX, True);
+  AnsiColor (SavedAttr);
 
   PausePtr := 1;
   AllowMCI := SavedMCI;
@@ -345,7 +345,9 @@ End;
 Procedure TBBSIO.OutRaw (Str: String);
 Begin
   If FmtString Then Begin
+
     FmtString := False;
+
     Case FmtType of
       1 : Str := strPadR(Str, FmtLen, ' ');
       2 : Str := strPadL(Str, FmtLen, ' ');
@@ -1296,8 +1298,14 @@ Begin
 
   Repeat
     AnsiMoveX (X);
-    If Yes Then OutFull (TBBSCore(Core).GetPrompt(316)) Else OutFull (TBBSCore(Core).GetPrompt(317));
+
+    If Yes Then
+      OutFull (TBBSCore(Core).GetPrompt(316))
+    Else
+      OutFull (TBBSCore(Core).GetPrompt(317));
+
     Ch := UpCase(GetKey);
+
     If IsArrow Then Begin
       If Ch = #77 Then Yes := False;
       If Ch = #75 Then Yes := True;
@@ -1306,14 +1314,18 @@ Begin
     If Ch = #32 Then Yes := Not Yes Else
     If Ch = 'Y' Then Begin
       Yes := True;
-      AnsiMoveX(X);
-      OutFull (TBBSCore(Core).GetPrompt(316));
+
+      AnsiMoveX (X);
+      OutFull   (TBBSCore(Core).GetPrompt(316));
+
       Break;
     End Else
     If Ch = 'N' Then Begin
       Yes := False;
+
       AnsiMoveX (X);
-      OutFull (TBBSCore(Core).GetPrompt(317));
+      OutFull   (TBBSCore(Core).GetPrompt(317));
+
       Break;
     End;
   Until False;
@@ -1321,7 +1333,7 @@ Begin
   OutRawLn('');
 
   AllowArrow := Temp;
-  GetYNL     := Yes;
+  Result     := Yes;
 End;
 
 Function TBBSIO.GetYN (Str: String; Yes: Boolean) : Boolean;
@@ -1340,7 +1352,7 @@ Begin
 
   OutFullLn (OutYN(Yes));
 
-  GetYN := Yes;
+  Result := Yes;
 End;
 
 Function TBBSIO.GetPW (Str: String; BadStr: String; PW: String) : Boolean;
@@ -1404,7 +1416,7 @@ Function TBBSIO.GetInput (Field, Max, Mode: Byte; Default: String) : String;
 Var
   FieldCh   : Char;
   Ch        : Char;
-  S         : String;
+  Str       : String;
   StrPos    : Integer;
   xPos      : Byte;
   Junk      : Integer;
@@ -1415,7 +1427,7 @@ Var
 
   Procedure pWrite (Str : String);
   Begin
-    If (Mode = 6) and (S <> '') Then
+    If (Mode = 6) and (Str <> '') Then
       BufAddStr (strRep(TBBSCore(Core).Lang.EchoCh, Length(Str)))
     Else
       BufAddStr (Str);
@@ -1425,9 +1437,9 @@ Var
   Begin
     AnsiMoveX (xPos);
 
-    pWrite (Copy(S, Junk, Field));
+    pWrite (Copy(Str, Junk, Field));
     If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol2);
-    pWrite (strRep(FieldCh, Field - Length(Copy(S, Junk, Field))));
+    pWrite (strRep(FieldCh, Field - Length(Copy(Str, Junk, Field))));
     If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol1);
 
     AnsiMoveX (xPos + CurPos - 1);
@@ -1435,9 +1447,9 @@ Var
 
   Procedure ReDrawPart;
   Begin
-    pWrite (Copy(S, StrPos, Field - CurPos + 1));
+    pWrite (Copy(Str, StrPos, Field - CurPos + 1));
     If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol2);
-    pWrite (strRep(FieldCh, (Field - CurPos + 1) - Length(Copy(S, StrPos, Field - CurPos + 1))));
+    pWrite (strRep(FieldCh, (Field - CurPos + 1) - Length(Copy(Str, StrPos, Field - CurPos + 1))));
     If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol1);
 
     AnsiMoveX (xPos + CurPos - 1);
@@ -1446,7 +1458,7 @@ Var
   Procedure ScrollRight;
   Begin
     Inc (Junk, Field DIV 2); {scroll size}
-    If Junk > Length(S) Then Junk := Length(S);
+    If Junk > Length(Str) Then Junk := Length(Str);
     If Junk > Max Then Junk := Max;
     CurPos := StrPos - Junk + 1;
     ReDraw;
@@ -1464,8 +1476,8 @@ Var
   Begin
     If CurPos > Field then ScrollRight;
 
-    Insert (Ch, S, StrPos);
-    If StrPos < Length(S) Then ReDrawPart;
+    Insert (Ch, Str, StrPos);
+    If StrPos < Length(Str) Then ReDrawPart;
 
     Inc (StrPos);
     Inc (CurPos);
@@ -1496,6 +1508,7 @@ Begin
 
     If UseInField and (Graphics = 1) Then Begin
       FieldCh := TBBSCore(Core).Lang.FieldChar;
+
       AnsiColor (TBBSCore(Core).Lang.FieldCol2);
       BufAddStr (strRep(FieldCh, Field));
       AnsiColor (TBBSCore(Core).Lang.FieldCol1);
@@ -1517,12 +1530,15 @@ Begin
   AllowArrow := (Mode in [1..3, 7..9]) and (Graphics > 0);
 
   BackPos := 0;
-  S      := Default;
-  StrPos := Length(S) + 1;
-  Junk   := StrPos - Field;
+  Str     := Default;
+  StrPos  := Length(Str) + 1;
+  Junk    := StrPos - Field;
+
   If Junk < 1 Then Junk := 1;
+
   CurPos := StrPos - Junk + 1;
-  pWrite (Copy(S, Junk, Field));
+
+  PWrite (Copy(Str, Junk, Field));
 
   PurgeInputBuffer;
 
@@ -1540,10 +1556,10 @@ Begin
         #72 : If (BackPos < mysMaxInputHistory) And (BackPos < InputPos) Then Begin
                 Inc (BackPos);
 
-                If BackPos = 1 Then BackSaved := S;
+                If BackPos = 1 Then BackSaved := Str;
 
-                S := InputData[BackPos];
-                StrPos := Length(S) + 1;
+                Str := InputData[BackPos];
+                StrPos := Length(Str) + 1;
                 Junk   := StrPos - Field;
                 If Junk < 1 Then Junk := 1;
                 CurPos := StrPos - Junk + 1;
@@ -1556,14 +1572,14 @@ Begin
                 If CurPos < 1 then CurPos := 1;
                 AnsiMoveX (Screen.CursorX - 1);
               End;
-        #77 : If StrPos < Length(S) + 1 Then Begin
-                If (CurPos = Field) and (StrPos < Length(S)) Then ScrollRight;
+        #77 : If StrPos < Length(Str) + 1 Then Begin
+                If (CurPos = Field) and (StrPos < Length(Str)) Then ScrollRight;
                 Inc (CurPos);
                 Inc (StrPos);
                 AnsiMoveX (Screen.CursorX + 1);
               End;
         #79 : Begin
-                StrPos := Length(S) + 1;
+                StrPos := Length(Str) + 1;
                 Junk   := StrPos - Field;
                 If Junk < 1 Then Junk := 1;
                 CurPos := StrPos - Junk + 1;
@@ -1573,18 +1589,18 @@ Begin
                 Dec (BackPos);
 
                 If BackPos = 0 Then
-                  S := BackSaved
+                  Str := BackSaved
                 Else
-                  S := InputData[BackPos];
+                  Str := InputData[BackPos];
 
-                StrPos := Length(S) + 1;
+                StrPos := Length(Str) + 1;
                 Junk   := StrPos - Field;
                 If Junk < 1 Then Junk := 1;
                 CurPos := StrPos - Junk + 1;
                 ReDraw;
               End;
-        #83 : If (StrPos <= Length(S)) and (Length(S) > 0) Then Begin
-                Delete(S, StrPos, 1);
+        #83 : If (StrPos <= Length(Str)) and (Length(Str) > 0) Then Begin
+                Delete(Str, StrPos, 1);
                 ReDrawPart;
               End;
       End;
@@ -1593,12 +1609,12 @@ Begin
         #02 : ReDraw;
         #08 : If StrPos > 1 Then Begin
                 Dec    (StrPos);
-                Delete (S, StrPos, 1);
+                Delete (Str, StrPos, 1);
 
                 If CurPos = 1 Then
                   ScrollLeft
                 Else
-                If StrPos = Length(S) + 1 Then Begin
+                If StrPos = Length(Str) + 1 Then Begin
                   If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol2);
                   BufAddStr (#8 + FieldCh + #8);
                   If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol1);
@@ -1611,19 +1627,19 @@ Begin
               End;
         #13 : Break;
         ^Y  : Begin
-                S      := '';
+                Str    := '';
                 StrPos := 1;
                 Junk   := 1;
                 CurPos := 1;
                 ReDraw;
               End;
         #32..
-        #254: If Length(S) < Max Then
+        #254: If Length(Str) < Max Then
               Case Mode of
                 1 : AddChar (Ch);
                 2 : AddChar (UpCase(Ch));
                 3 : Begin
-                      If (CurPos = 1) or (S[StrPos-1] in [' ', '.']) Then
+                      If (CurPos = 1) or (Str[StrPos-1] in [' ', '.']) Then
                         Ch := UpCase(Ch)
                       Else
                         Ch := LoCase(Ch);
@@ -1667,7 +1683,7 @@ Begin
     For Junk := 4 DownTo 2 Do
       InputData[Junk] := InputData[Junk - 1];
 
-    InputData[1] := S;
+    InputData[1] := Str;
 
     If InputPos < mysMaxInputHistory Then Inc(InputPos);
   End;
@@ -1680,15 +1696,15 @@ Begin
   Case Mode of
     5 : Case TBBSCore(Core).User.ThisUser.DateType of  { Convert to MM/DD/YY }
           {DD/MM/YY}
-          2 : S := Copy(S, 4, 2) + '/' + Copy(S, 1, 2) + '/' + Copy(S, 7, 2);
+          2 : Str := Copy(Str, 4, 2) + '/' + Copy(Str, 1, 2) + '/' + Copy(Str, 7, 2);
           {YY/DD/MM}
-          3 : S := Copy(S, 7, 2) + '/' + Copy(S, 4, 2) + '/' + Copy(S, 1, 2);
+          3 : Str := Copy(Str, 7, 2) + '/' + Copy(Str, 4, 2) + '/' + Copy(Str, 1, 2);
         End;
   End;
 
   UseInField := True;
   AllowArrow := ArrowSave;
-  GetInput   := S;
+  Result     := Str;
 End;
 
 Function TBBSIO.InXY (X, Y, Field, Max, Mode: Byte; Default: String) : String;

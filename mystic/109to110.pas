@@ -13,6 +13,35 @@ Uses
 {$I RECORDS.PAS}
 
 Type
+  OldMBaseRec = Record                    { MBASES.DAT                       }
+    Name     : String[40];             { Message base name                }
+    QWKName  : String[13];             { QWK (short) message base name    }
+    FileName : String[40];             { Message base file name           }
+    Path     : String[40];             { Path where files are stored      }
+    BaseType : Byte;                   { 0 = JAM, 1 = Squish              }
+    NetType  : Byte;                   { 0 = Local  1 = EchoMail          }
+                                       { 2 = UseNet 3 = NetMail           }
+    PostType : Byte;                   { 0 = Public 1 = Private           }
+    ACS,                               { ACS required to see this base    }
+    ReadACS,                           { ACS required to read messages    }
+    PostACS,                           { ACS required to post messages    }
+    SysopACS : String[20];             { ACS required for sysop options   }
+    Password : String[15];             { Password for this message base   }
+    ColQuote : Byte;                   { Quote text color                 }
+    ColText  : Byte;                   { Text color                       }
+    ColTear  : Byte;                   { Tear line color                  }
+    ColOrigin: Byte;                   { Origin line color                }
+    NetAddr  : Byte;                   { Net AKA to use for this base     }
+    Origin   : String[50];             { Net origin line for this base    }
+    UseReal  : Boolean;                { Use real names?                  }
+    DefNScan : Byte;                   { 0 = off, 1 = on, 2 = always      }
+    DefQScan : Byte;                   { 0 = off, 1 = on, 2 = always      }
+    MaxMsgs  : Word;                   { Max messages to allow            }
+    MaxAge   : Word;                   { Max age of messages before purge }
+    Header   : String[8];              { Display Header file name         }
+    Index    : SmallInt;               { QWK index - NEVER CHANGE THIS    }
+  End;
+
   OldFBaseRec = Record                    { FBASES.DAT                      }
     Name     : String[40];             { File base name                  }
     FtpName  : String[60];             { FTP directory name              }
@@ -1074,7 +1103,6 @@ Begin
     FBase.ULACS      := OldFBase.ULACS;
     FBase.SysopACS   := OldFBase.SysopACS;
     FBase.Path       := OldFBase.Path;
-    FBase.Password   := OldFBase.Password;
     FBase.DefScan    := OldFBase.DefScan;
     FBase.CommentACS := 's20';
     FBase.Flags      := 0;
@@ -1094,6 +1122,71 @@ Begin
   DeleteFile (Config.DataPath + 'fbases.old');
 End;
 
+Procedure ConvertMessageBases;
+Var
+  MBase        : RecMessageBase;
+  MBaseFile    : File of RecMessageBase;
+  OldMBase     : OldMBaseRec;
+  OldMBaseFile : File of OldMBaseRec;
+Begin
+  WriteLn ('[-] Updating message bases...');
+
+  If Not ReNameFile(Config.DataPath + 'mbases.dat', Config.DataPath + 'mbases.old') Then Begin
+    WriteLn('[!] UNABLE TO FIND: ' + Config.DataPath + 'mbases.dat');
+    Exit;
+  End;
+
+  Assign (OldMBaseFile, Config.DataPath + 'mbases.old');
+  Reset  (OldMBaseFile);
+
+  Assign  (MBaseFile, Config.DataPath + 'mbases.dat');
+  ReWrite (MBaseFile);
+
+  While Not Eof(OldMBaseFile) Do Begin
+    Read (OldMBaseFile, OldMBase);
+
+    MBase.Name := OldMBase.Name;
+    MBase.QWKName := OldMBase.QwkName;
+    MBase.NewsName := '';
+    MBase.FileName := OldMBase.FileName;
+    MBase.Path := OldMBase.Path;
+    MBase.BaseType := OldMBase.BaseType;
+    MBase.NetType := OldMBase.NetType;
+    MBase.ListACS := OldMBase.ACS;
+    MBase.ReadACS := OldMBase.ReadACS;
+    MBase.PostACS := OldMBase.PostACS;
+    MBase.SysopACS := OldMBase.SysopACS;
+    MBase.Sponsor := '';
+    MBase.ColQuote := OldMBase.ColQuote;
+    MBase.ColText := OldMBase.ColText;
+    MBase.ColTear := OldMBase.ColTear;
+    MBase.ColOrigin := OldMBAse.ColOrigin;
+    MBase.ColKludge := 8;
+    MBase.NetAddr := OldMBase.NetAddr;
+    MBase.Origin := OldMBase.Origin;
+    MBase.DefNScan := OldMBase.DefNScan;
+    MBase.DefQScan := OldMBase.DefQScan;
+    MBase.MaxMsgs := OldMBase.MaxMsgs;
+    MBase.MaxAge := OldMBase.MaxAge;
+    MBase.Header := OldMBase.Header;
+    MBase.RTemplate := 'ansimrd';
+    MBase.ITemplate := 'ansimlst';
+    MBase.Index := OldMBase.Index;
+
+    MBase.Flags := 0;
+
+    If OldMBase.UseReal      Then MBase.Flags := MBase.Flags or MBRealNames;
+    If OldMBase.PostType = 1 Then MBase.Flags := MBase.Flags or MBPrivate;
+
+    Write (MBaseFile, MBase);
+  End;
+
+  Close (MBaseFile);
+  Close (OldMBaseFile);
+
+  DeleteFile (Config.DataPath + 'mbases.old');
+End;
+
 Var
   ConfigFile : File of RecConfig;
 Begin
@@ -1109,7 +1202,8 @@ Begin
 //  ConvertUsers; //1.10a11
 //ConvertSecurity; //1.10a11
 //ConvertFileLists;  //1.10a11
-ConvertFileBases; //1.10a11
+//ConvertFileBases; //1.10a11
+ConvertMessageBases; //1.10a11
 
 //  ConvertArchives; //1.10a1
 //  ConvertGroups;   //1.10a1

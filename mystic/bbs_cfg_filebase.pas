@@ -46,8 +46,7 @@ Begin
   Form.AddStr  ('C', ' Comment ACS ' ,  9, 14, 24, 14, 13, 30, 30, @FBase.CommentACS, Topic + 'ACS to comment and rate files');
   Form.AddStr  ('P', ' FTP ACS'      , 13, 15, 24, 15,  9, 30, 30, @FBase.FTPACS, Topic + 'ACS to access via FTP');
   Form.AddStr  ('S', ' Sysop ACS '   , 11, 16, 24, 16, 11, 30, 30, @FBase.SysopACS, Topic + 'ACS for Sysop access');
-  Form.AddTog  ('E', ' Default Scan' ,  8, 17, 24, 17, 14,  6, 0, 2, 'No Yes Forced', @FBase.DefScan, Topic + 'Default scan setting');
-  Form.AddPass ('A', ' Password'     , 12, 18, 24, 18, 10, 20, 20, @FBase.Password, Topic + 'Base password (Blank/Disable)');
+  Form.AddTog  ('E', ' Default Scan' ,  8, 17, 24, 17, 14,  6, 0, 2, 'No Yes Always', @FBase.DefScan, Topic + 'Default scan setting');
   Form.AddPath ('I', ' File Path'    , 11, 19, 24, 19, 11, 30, 120, @FBase.Path, Topic + 'Directory where files are stored');
 
   Form.AddBits ('R', ' Free Files'   , 57,  7, 71,  7, 12, FBFreeFiles, @FBase.Flags, Topic + 'Files in base are free?');
