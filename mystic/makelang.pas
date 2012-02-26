@@ -24,38 +24,39 @@ Program MakeLang;
 {$I M_OPS.PAS}
 
 Uses
-	DOS,
+  DOS,
   m_Strings;
 
 {$I RECORDS.PAS}
 
 Var
-	ConfigFile : File of RecConfig;
-	PromptFile : File of PromptRec;
-	Config		 : RecConfig;
-	Prompt		 : PromptRec;
-	Done			 : Array[0..mysMaxLanguageStr] of Boolean;
-	tFile 		 : Text;
-	A 				 : Integer;
-	Temp			 : String;
-	FName 		 : NameStr;
-	FExt			 : ExtStr;
-	FDir			 : DirStr;
-
+  ConfigFile : File of RecConfig;
+  PromptFile : File of PromptRec;
+  Config     : RecConfig;
+  Prompt     : PromptRec;
+  Done       : Array[0..mysMaxLanguageStr] of Boolean;
+  tFile      : Text;
+  A          : Integer;
+  Temp       : String;
+  FName      : NameStr;
+  FExt       : ExtStr;
+  FDir       : DirStr;
 Begin
-	WriteLn;
-	WriteLn ('MAKELANG (' + OSID + ') - Mystic Language Compiler v', mysVersion);
-	WriteLn ('Copyright (C) 1997-2012 By James Coyle.  All Rights Reserved.');
-	WriteLn;
+  WriteLn;
+  WriteLn ('MAKELANG (' + OSID + ') - Mystic Language Compiler v', mysVersion);
+  WriteLn ('Copyright (C) 1997-2012 By James Coyle.  All Rights Reserved.');
+  WriteLn;
 
-	Assign (ConfigFile, 'mystic.dat');
-	{$I-}Reset (ConfigFile);{$I+}
-	If IoResult <> 0 Then Begin
-		WriteLn ('ERROR: MYSTIC.DAT not found.  Run from main BBS directory.');
-		Halt(1);
-	End;
-	Read (ConfigFile, Config);
-	Close (ConfigFile);
+  Assign (ConfigFile, 'mystic.dat');
+  {$I-}Reset (ConfigFile);{$I+}
+
+  If IoResult <> 0 Then Begin
+    WriteLn ('ERROR: MYSTIC.DAT not found.  Run from main BBS directory.');
+    Halt(1);
+  End;
+
+  Read  (ConfigFile, Config);
+  Close (ConfigFile);
 
   If Config.DataChanged <> mysDataChanged Then Begin
     WriteLn('ERROR: Data files are not current and must be upgraded.');
@@ -63,75 +64,76 @@ Begin
   End;
 
 
-	If ParamCount <> 1 Then Begin
-		WriteLn ('Usage: MAKELANG [language_file]');
-		Halt(1);
-	End;
+  If ParamCount <> 1 Then Begin
+    WriteLn ('Usage: MAKELANG [language_file]');
+    Halt(1);
+  End;
 
-	FSplit (ParamStr(1), FDir, FName, FExt);
+  FSplit (ParamStr(1), FDir, FName, FExt);
 
-	Assign (tFile, FName + FExt);
-	{$I-} Reset (tFile); {$I+}
-	If IoResult <> 0 Then Begin
-		WriteLn ('ERROR: Language file (' + FName + FExt + ') not found.');
-		Halt(1);
-	End;
+  Assign (tFile, FName + FExt);
+  {$I-} Reset (tFile); {$I+}
 
-	Write ('Compiling language file: ');
+  If IoResult <> 0 Then Begin
+    WriteLn ('ERROR: Language file (' + FName + FExt + ') not found.');
+    Halt(1);
+  End;
 
-	Assign (PromptFile, Config.DataPath + FName + '.lng');
-	{$I-} ReWrite (PromptFile); {$I+}
+  Write ('Compiling language file: ');
 
-	If IoResult <> 0 Then Begin
-		WriteLn;
-		WriteLn;
-		WriteLn (^G'ERROR: Cannot run while Mystic is loaded.');
-		Halt(1);
-	End;
+  Assign (PromptFile, Config.DataPath + FName + '.lng');
+  {$I-} ReWrite (PromptFile); {$I+}
 
-	Prompt := '';
+  If IoResult <> 0 Then Begin
+    WriteLn;
+    WriteLn;
+    WriteLn (^G'ERROR: Cannot run while Mystic is loaded.');
+    Halt(1);
+  End;
 
-	For A := 0 to mysMaxLanguageStr Do Begin
-		Done[A] := False;
-		Write (PromptFile, Prompt);
-	End;
+  Prompt := '';
 
-	Reset (PromptFile);
+  For A := 0 to mysMaxLanguageStr Do Begin
+    Done[A] := False;
+    Write (PromptFile, Prompt);
+  End;
 
-	While Not Eof(tFile) Do Begin
-		ReadLn (tFile, Temp);
+  Reset (PromptFile);
 
-		If Copy(Temp, 1, 3) = '000'      Then A := 0 Else
-		If strS2I(Copy(Temp, 1, 3)) > 0 Then A := strS2I(Copy(Temp, 1, 3)) Else
-		A := -1;
+  While Not Eof(tFile) Do Begin
+    ReadLn (tFile, Temp);
 
-		If A <> -1 Then Begin
-			If A > mysMaxLanguageStr Then Begin
-				WriteLn;
-				WriteLn;
-				WriteLn (^G'ERROR: String #', A, ' was not expected.  Language file not created.');
-				Close (PromptFile);
-				Erase (PromptFile);
-				Halt(1);
-			End;
+    If Copy(Temp, 1, 3) = '000'      Then A := 0 Else
+    If strS2I(Copy(Temp, 1, 3)) > 0 Then A := strS2I(Copy(Temp, 1, 3)) Else
+      A := -1;
 
-			Done[A] := True;
-			Seek (PromptFile, A);
-			Prompt := Copy(Temp, 5, Length(Temp));
-			Write (PromptFile, Prompt);
-		End;
-	End;
-
-	Close (tFile);
+    If A <> -1 Then Begin
+      If A > mysMaxLanguageStr Then Begin
+	WriteLn;
+	WriteLn;
+	WriteLn (^G'ERROR: String #', A, ' was not expected.  Language file not created.');
 	Close (PromptFile);
+	Erase (PromptFile);
+	Halt(1);
+      End;
 
-	WriteLn ('Done.');
+      Done[A] := True;
+      Seek (PromptFile, A);
+      Prompt := Copy(Temp, 5, Length(Temp));
+      Write (PromptFile, Prompt);
+    End;
+  End;
 
-	For A := 0 to mysMaxLanguageStr Do Begin
-		If Not Done[A] Then Begin
-			WriteLn;
-			WriteLn (^G'ERROR: String #', A, ' was not found.  Language file not created.');
-			Erase (PromptFile);
-		End;
-	End;
+  Close (tFile);
+  Close (PromptFile);
+
+  WriteLn ('Done.');
+
+  For A := 0 to mysMaxLanguageStr Do Begin
+    If Not Done[A] Then Begin
+      WriteLn;
+      WriteLn (^G'ERROR: String #', A, ' was not found.  Language file not created.');
+      Erase (PromptFile);
+    End;
+  End;
 End.
