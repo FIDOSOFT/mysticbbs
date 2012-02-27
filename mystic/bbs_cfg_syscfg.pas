@@ -15,6 +15,7 @@ Procedure Configuration_FTPServer;
 Procedure Configuration_TelnetServer;
 Procedure Configuration_POP3Server;
 Procedure Configuration_SMTPServer;
+Procedure Configuration_NNTPServer;
 
 Implementation
 
@@ -437,6 +438,36 @@ Begin
   Form.AddByte ('N', ' Max Connections', 28, 12, 47, 12, 17, 3, 1, 255, @Config.inetSMTPMax, Topic + 'Max Connections');
   Form.AddByte ('I', ' Dupe IP Limit',   30, 13, 47, 13, 15, 3, 1, 255,   @Config.inetSMTPDupes, Topic + 'Max connections with same IP');
   Form.AddWord ('T', ' Timeout',         36, 14, 47, 14,  9, 5, 0, 65535, @Config.inetSMTPTimeout, Topic + 'Connection timeout (seconds)');
+
+  Form.Execute;
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
+Procedure Configuration_NNTPServer;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09NNTP Server|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Header := ' NNTP Server ';
+
+  Box.Open (27, 8, 53, 16);
+
+  VerticalLine (45, 10, 14);
+
+  Form.AddBol  ('U', ' Use Server',      33, 10, 47, 10, 12, 3, @Config.inetNNTPUse, Topic + 'Enable NNTP server');
+  Form.AddWord ('P', ' Server Port',     32, 11, 47, 11, 13, 5, 0, 65535, @Config.inetNNTPPort, Topic + 'Server port');
+  Form.AddByte ('N', ' Max Connections', 28, 12, 47, 12, 17, 3, 1, 255, @Config.inetNNTPMax, Topic + 'Max Connections');
+  Form.AddByte ('I', ' Dupe IP Limit',   30, 13, 47, 13, 15, 3, 1, 255,   @Config.inetNNTPDupes, Topic + 'Max connections with same IP');
+  Form.AddWord ('T', ' Timeout',         36, 14, 47, 14,  9, 5, 0, 65535, @Config.inetNNTPTimeout, Topic + 'Connection timeout (seconds)');
 
   Form.Execute;
   Form.Free;

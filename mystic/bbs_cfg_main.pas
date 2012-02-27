@@ -244,6 +244,7 @@ Begin
                 '2' : Configuration_FTPServer;
                 '3' : Configuration_POP3Server;
                 '4' : Configuration_SMTPServer;
+                '5' : Configuration_NNTPServer;
                 'X' : Break;
               Else
                 MenuPtr := 0;
