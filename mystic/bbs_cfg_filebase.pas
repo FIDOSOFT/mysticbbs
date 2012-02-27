@@ -16,11 +16,7 @@ Uses
   bbs_Common,
   bbs_cfg_Common;
 
-Var
-  FBaseFile : TBufFile;
-  FBase     : RecFileBase;
-
-Procedure EditFileBase;
+Procedure EditFileBase (Var FBase: RecFileBase);
 Var
   Box   : TAnsiMenuBox;
   Form  : TAnsiMenuForm;
@@ -67,10 +63,12 @@ End;
 
 Procedure Configuration_FileBaseEditor;
 Var
-  Box     : TAnsiMenuBox;
-  List    : TAnsiMenuList;
-  Copied  : RecFileBase;
-  HasCopy : Boolean = False;
+  Box       : TAnsiMenuBox;
+  List      : TAnsiMenuList;
+  Copied    : RecFileBase;
+  HasCopy   : Boolean = False;
+  FBaseFile : TBufFile;
+  FBase     : RecFileBase;
 
   Procedure MakeList;
   Begin
@@ -175,7 +173,7 @@ Begin
               FBaseFile.Seek (List.Picked - 1);
               FBaseFile.Read (FBase);
 
-              EditFileBase;
+              EditFileBase(FBase);
 
               FBaseFile.Seek  (List.Picked - 1);
               FBaseFile.Write (FBase);
