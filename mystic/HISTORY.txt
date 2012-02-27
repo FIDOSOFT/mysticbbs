@@ -3826,7 +3826,7 @@
 
  + CTRL-T now moves one word to the left in the full screen editor.
 
- + CTRL-U now moves one word to the right in the full screen editor.
+ + CTRL-R now moves one word to the right in the full screen editor.
 
  + CTRL-X now moves down one line the same as the down arrow key in the
    full screen editor.
@@ -3905,3 +3905,14 @@
 
  + SMTP server now has a configurable number of simultaneous connections
    from the same IP address.
+
+ + CTRL-K now cuts a line of text in the full screen editor.  If you continue
+   to cut more than one time, the text is appended to the cut buffer and will
+   contiue to do so until it is pasted.  Any cut after a paste resets the cut
+   data.  This is inspired by the Nano/Pico editors on Unix platforms which
+   work the same way (with the same keys!).  The cut buffer currently allows
+   up to 100 lines to be cut and pasted at once.
+
+ + CTRL-U now Uncuts all text that is currently in the cut buffer within the
+   full screen editor.  You can uncut (paste) as many times as you like with
+   the current buffer.

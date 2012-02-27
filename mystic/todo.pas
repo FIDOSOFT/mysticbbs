@@ -99,6 +99,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - ANSI message upload post processor option: Auto/Disabled/Ask
 - Prompt for disconect after UL or DL (and add option to filebase settings)
 - Finish optional user prompts
+- MCI code for FS ansi viewer?
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
 ===========================================
