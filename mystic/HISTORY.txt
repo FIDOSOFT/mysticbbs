@@ -3902,3 +3902,6 @@
  + Added new ANSI security level editor.
 
  + SMTP server now has a configurable timeout value per session (in seconds)
+
+ + SMTP server now has a configurable number of simultaneous connections
+   from the same IP address.
