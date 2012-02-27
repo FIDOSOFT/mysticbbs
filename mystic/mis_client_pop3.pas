@@ -40,8 +40,7 @@ Type
 
   TPOP3Server = Class(TServerClient)
     Server   : TServerManager;
-    UserName : String[40];
-    Password : String[20];
+    UserName : String[30];
     LoggedIn : Boolean;
     GotQuit  : Boolean;
     Cmd      : String;
@@ -112,7 +111,6 @@ Begin
   LoggedIn := False;
   GotQuit  := False;
   UserName := '';
-  Password := '';
   UserPos  := -1;
 
   For Count := 1 to MailSize Do
