@@ -17,11 +17,7 @@ Uses
   bbs_Cfg_SysCfg,
   bbs_Common;
 
-Var
-  MBaseFile : TBufFile;
-  MBase     : RecMessageBase;
-
-Procedure EditMessageBase;
+Procedure EditMessageBase (Var MBase: RecMessageBase);
 Var
   Box   : TAnsiMenuBox;
   Form  : TAnsiMenuForm;
@@ -89,11 +85,13 @@ End;
 
 Procedure Configuration_MessageBaseEditor;
 Var
-  Box     : TAnsiMenuBox;
-  List    : TAnsiMenuList;
-  MIndex  : LongInt;
-  Copied  : RecMessageBase;
-  HasCopy : Boolean = False;
+  Box       : TAnsiMenuBox;
+  List      : TAnsiMenuList;
+  MIndex    : LongInt;
+  Copied    : RecMessageBase;
+  HasCopy   : Boolean = False;
+  MBaseFile : TBufFile;
+  MBase     : RecMessageBase;
 
   Procedure MakeList;
   Var
@@ -239,7 +237,9 @@ Begin
       #13 : If List.Picked < List.ListMax Then Begin
               MBaseFile.Seek (List.Picked - 1);
               MBaseFile.Read (MBase);
-              EditMessageBase;
+
+              EditMessageBase (MBase);
+
               MBaseFile.Seek  (List.Picked - 1);
               MBaseFile.Write (MBase);
             End;

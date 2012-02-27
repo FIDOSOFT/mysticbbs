@@ -16,11 +16,7 @@ Uses
   bbs_Ansi_MenuForm,
   bbs_Cfg_Common;
 
-Var
-  SecFile : File;
-  Sec     : RecSecurity;
-
-Procedure Edit_Level (Level: Integer);
+Procedure EditLevel (Var Sec: RecSecurity);
 Var
   Box   : TAnsiMenuBox;
   Form  : TAnsiMenuForm;
@@ -28,13 +24,8 @@ Var
 Begin
   Topic := '|03(|09Security|03) |01-|09> |15';
 
-  ioSeek (SecFile, Level - 1);
-  ioRead (SecFile, Sec);
-
   Box  := TAnsiMenuBox.Create;
   Form := TAnsiMenuForm.Create;
-
-  Box.Header := ' Security Level ' + strI2S(Level) + ' ';
 
   Box.Open (12, 5, 68, 21);
 
@@ -62,9 +53,6 @@ Begin
 
   Box.Free;
   Form.Free;
-
-  ioSeek  (SecFile, Level - 1);
-  ioWrite (SecFile, Sec);
 End;
 
 Function Configuration_SecurityEditor (Edit: Boolean) : LongInt;
@@ -72,6 +60,8 @@ Var
   List     : TAnsiMenuList;
   Box      : TAnsiMenuBox;
   HideMode : Boolean;
+  SecFile  : File;
+  Sec      : RecSecurity;
 
   Procedure MakeList;
   Var
@@ -135,9 +125,16 @@ Begin
             End;
       #13 : Begin
               Count := strS2I(Copy(List.List[List.Picked]^.Name, 1, 3));
-              If Edit Then
-                Edit_Level(Count)
-              Else Begin
+
+              If Edit Then Begin
+                ioSeek (SecFile, Count - 1);
+                ioRead (SecFile, Sec);
+
+                EditLevel(Sec);
+
+                ioSeek  (SecFile, Count - 1);
+                ioWrite (SecFile, Sec);
+              End Else Begin
                 Result := Count;
                 Break;
               End;
