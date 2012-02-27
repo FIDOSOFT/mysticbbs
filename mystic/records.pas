@@ -242,8 +242,9 @@ Type
     inetNNTPPort    : Word;
     inetNNTPMax     : Word;
     inetNNTPDupes   : Byte;
+    inetNNTPTimeOut : Word;
  // UNSORTED
-    Reserved        : Array[1..484] of Char;
+    Reserved        : Array[1..482] of Char;
   End;
 
 Const
