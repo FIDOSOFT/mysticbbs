@@ -588,6 +588,7 @@ Begin
     Config.inetTNNodes    := MaxNode;
 
     Config.inetSMTPDupes  := 1;
+    Config.inetSMTPTimeout := 120;
 
     Config.inetPOP3Dupes   := 1;
     Config.inetPOP3Delete  := False;
@@ -1193,17 +1194,17 @@ Begin
   WarningDisplay;
 
   //COMMENT this out if mystic.dat is being converted:
-  Assign (ConfigFile, 'mystic.dat');
-  Reset  (ConfigFile);
-  Read   (ConfigFile, Config);
-  Close  (ConfigFile);
+//  Assign (ConfigFile, 'mystic.dat');
+//  Reset  (ConfigFile);
+//  Read   (ConfigFile, Config);
+//  Close  (ConfigFile);
 
-//  ConvertConfig;  //1.10a11
+  ConvertConfig;  //1.10a11
 //  ConvertUsers; //1.10a11
 //ConvertSecurity; //1.10a11
 //ConvertFileLists;  //1.10a11
 //ConvertFileBases; //1.10a11
-ConvertMessageBases; //1.10a11
+//ConvertMessageBases; //1.10a11
 
 //  ConvertArchives; //1.10a1
 //  ConvertGroups;   //1.10a1

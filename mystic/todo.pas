@@ -19,6 +19,9 @@ BUGS AND POSSIBLE ISSUES
   the CPU requirement for new versions.  Or just tell people the code is
   already available GPL and let them compile it if it is a problem?
 ! RAR internal viewer does not work with files that have embedded comments
+! Investigate strange crashing when Mystic is built in the FPC editor vs
+  the makewin script.  Something is out of whack with compiler options?  OR
+  FPC BUG?  DirAttr is suspect in MPL is it 1 byte or 4 in size?
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================

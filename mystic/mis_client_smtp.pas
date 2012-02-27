@@ -52,8 +52,7 @@ Type
 Implementation
 
 Const
-  SMTPTimeOut    = 120; { MCFG }
-  SMTPHackThresh = 10000;
+  SMTPHackThresh  = 10000;
 
   re_Goodbye      = '221 Goodbye';
   re_UnknownCmd   = '502 Unknown command';
@@ -292,7 +291,7 @@ Begin
   Client.WriteLine('220 ' + bbsConfig.iNetDomain + ' Mystic SMTP Ready');
 
   Repeat
-    If Client.WaitForData(SMTPTimeOut * 1000) = 0 Then Break;
+    If Client.WaitForData(bbsConfig.inetSMTPTimeout * 1000) = 0 Then Break;
 
     If Terminated Then Exit;
 

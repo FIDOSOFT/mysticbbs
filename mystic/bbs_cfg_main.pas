@@ -243,6 +243,7 @@ Begin
                 '1' : Configuration_TelnetServer;
                 '2' : Configuration_FTPServer;
                 '3' : Configuration_POP3Server;
+                '4' : Configuration_SMTPServer;
                 'X' : Break;
               Else
                 MenuPtr := 0;

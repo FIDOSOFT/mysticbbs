@@ -14,6 +14,7 @@ Procedure Configuration_Internet;
 Procedure Configuration_FTPServer;
 Procedure Configuration_TelnetServer;
 Procedure Configuration_POP3Server;
+Procedure Configuration_SMTPServer;
 
 Implementation
 
@@ -406,6 +407,36 @@ Begin
   Form.AddByte ('I', ' Dupe IP Limit',   30, 13, 47, 13, 15, 3, 1, 255,   @Config.inetPOP3Dupes, Topic + 'Max connections with same IP');
   Form.AddWord ('T', ' Timeout',         36, 14, 47, 14,  9, 5, 0, 65535, @Config.inetPOP3Timeout, Topic + 'Connection timeout (seconds)');
   Form.AddBol  ('D', ' Delete',          37, 15, 47, 15,  8, 3, @Config.inetPOP3Delete, Topic + 'Delete email on retreive');
+
+  Form.Execute;
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
+Procedure Configuration_SMTPServer;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09SMTP Server|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Header := ' SMTP Server ';
+
+  Box.Open (27, 8, 53, 16);
+
+  VerticalLine (45, 10, 14);
+
+  Form.AddBol  ('U', ' Use Server',      33, 10, 47, 10, 12, 3, @Config.inetSMTPUse, Topic + 'Enable SMTP server');
+  Form.AddWord ('P', ' Server Port',     32, 11, 47, 11, 13, 5, 0, 65535, @Config.inetSMTPPort, Topic + 'Server port');
+  Form.AddByte ('N', ' Max Connections', 28, 12, 47, 12, 17, 3, 1, 255, @Config.inetSMTPMax, Topic + 'Max Connections');
+  Form.AddByte ('I', ' Dupe IP Limit',   30, 13, 47, 13, 15, 3, 1, 255,   @Config.inetSMTPDupes, Topic + 'Max connections with same IP');
+  Form.AddWord ('T', ' Timeout',         36, 14, 47, 14,  9, 5, 0, 65535, @Config.inetSMTPTimeout, Topic + 'Connection timeout (seconds)');
 
   Form.Execute;
   Form.Free;

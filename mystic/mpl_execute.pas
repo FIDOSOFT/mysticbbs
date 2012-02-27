@@ -43,6 +43,9 @@ Type
     SavedMCI     : Boolean;
     SavedGroup   : Boolean;
     SavedArrow   : Boolean;
+    {$IFDEF LOGGING}
+      Depth      : LongInt;
+    {$ENDIF}
 
     Function  GetErrorMsg : String;
     Procedure Error (Err: Byte; Str: String);
@@ -98,6 +101,10 @@ Type
     Constructor Create (O: Pointer);
     Destructor  Destroy; Override;
     Function    Execute (FN: String) : Byte;
+
+    {$IFDEF LOGGING}
+    Procedure LogVarInformation (Num: LongInt);
+    {$ENDIF}
   End;
 
 Function ExecuteMPL (Owner: Pointer; Str: String) : Byte;
@@ -115,6 +122,35 @@ Uses
   BBS_General;
 
 {$I MPL_COMMON.PAS}
+
+{$IFDEF LOGGING}
+Procedure TInterpEngine.LogVarInformation (Num: LongInt);
+Begin
+  Session.SystemLog('     DUMP VAR ' + strI2S(Num));
+
+  With VarData[Num]^ Do Begin
+    Session.SystemLog('           ID: ' + strI2S(VarID));
+    Session.SystemLog('         Type: ' + strI2S(Ord(vType)));
+    Session.SystemLog('     DataSize: ' + strI2S(DataSize));
+    Session.SystemLog('      VarSize: ' + strI2S(VarSize));
+    Session.SystemLog('         Kill: ' + strI2S(Ord(Kill)));
+
+    If Data <> NIL Then
+      Session.SystemLog('         Data: Assigned')
+    Else
+      Session.SystemLog('         Data: NIL');
+  End;
+
+//       Params    : Array[1..mplMaxProcParams] of Char;
+//       NumParams : Byte;
+//       pID       : Array[1..mplMaxProcParams] of Word;
+//       ProcPos   : LongInt;
+//       Data      : PStack;
+//       ArrPos    : Byte;
+//       ArrDim    : TArrayInfo;
+
+End;
+{$ENDIF}
 
 Procedure TInterpEngine.GetUserVars (Var U: RecUser);
 Begin
@@ -261,6 +297,10 @@ Begin
   ErrStr    := '';
   Ch        := #0;
   W         := 0;
+
+  {$IFDEF LOGGING}
+    Depth   := 0;
+  {$ENDIF}
 End;
 
 Destructor TInterpEngine.Destroy;
@@ -1116,6 +1156,10 @@ Begin
   // or a predefined procedure from mpl_common.
 
   If VarData[VarNum]^.ProcPos > 0 Then Begin
+    {$IFDEF LOGGING}
+      Session.SystemLog('    Custom Proc: ' + strI2S(ProcID));
+    {$ENDIF}
+
     Sub      := CurFilePos;
     SavedVar := CurVarNum;
 
@@ -1209,7 +1253,7 @@ Begin
   // execution speed?
 
   {$IFDEF LOGGING}
-    Session.SystemLog('MPE ProcID: ' + strI2S(ProcID));
+    Session.SystemLog('    Internal Proc: ' + strI2S(ProcID));
   {$ENDIF}
 
   Case ProcID of
@@ -1983,6 +2027,11 @@ Var
 Begin
   Result := 0;
 
+  {$IFDEF LOGGING}
+    Inc(Depth);
+    Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock BEGIN Var: ' + strI2S(StartVar) + ' Rec: ' + strI2S(StartRec));
+  {$ENDIF}
+
   NextChar; // block begin character... can we ignore it? at least for case_else
   NextWord; // or just have case else ignore the begin at the compiler level
             // but still output the begin
@@ -2060,19 +2109,31 @@ Begin
   Until (ErrNum <> 0) or Done or DataFile^.EOF;
 
   {$IFDEF LOGGING}
-    Session.SystemLog('MPE: Kill Block Vars');
+    Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock KILL VAR: ' + strI2S(CurVarNum) + ' to ' + strI2S(StartVar + 1));
   {$ENDIF}
 
   For Count := CurVarNum DownTo StartVar + 1 Do Begin
-    If (VarData[Count]^.Kill) And (VarData[Count]^.Data <> NIL) Then begin
+    {$IFDEF LOGGING}
+      LogVarInformation(Count);
+    {$ENDIF}
+
+    If (VarData[Count]^.Kill) And (VarData[Count]^.Data <> NIL) Then Begin
       FreeMem(VarData[Count]^.Data, VarData[Count]^.DataSize);
-    end;
+
+      {$IFDEF LOGGING}
+        Session.SystemLog('    FreeMem ' + strI2S(Count));
+      {$ENDIF}
+    End;
+
+    {$IFDEF LOGGING}
+      Session.SystemLog('    Dispose ' + strI2S(Count));
+    {$ENDIF}
 
     Dispose (VarData[Count]);
   End;
 
   {$IFDEF LOGGING}
-    Session.SystemLog('MPE: Kill Block Done');
+    Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock KILL REC: ' + strI2S(CurRecNum) + ' to ' + strI2S(StartRec + 1));
   {$ENDIF}
 
   For Count := CurRecNum DownTo StartRec + 1 Do
@@ -2082,6 +2143,11 @@ Begin
 
   CurVarNum := StartVar;
   CurRecNum := StartRec;
+
+  {$IFDEF LOGGING}
+    Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock END');
+    Dec (Depth);
+  {$ENDIF}
 End;
 
 Function TInterpEngine.Execute (FN: String) : Byte;
@@ -2119,6 +2185,7 @@ Begin
 
   If Not DataFile^.Open(FN) Then Begin
     Dispose(DataFile, Done);
+
     Exit;
   End;
 
@@ -2126,8 +2193,10 @@ Begin
 
   If DataFile^.FileSize < mplVerLength Then Begin
     DataFile^.Close;
-    Error (mpxInvalidFile, FN);
+
+    Error   (mpxInvalidFile, FN);
     Dispose (DataFile, Done);
+
     Exit;
   End;
 
@@ -2136,8 +2205,10 @@ Begin
 
   If VerStr <> mplVersion Then Begin
     DataFile^.Close;
-    Error (mpxVerMismatch, VerStr);
+
+    Error   (mpxVerMismatch, VerStr);
     Dispose (DataFile, Done);
+
     Exit;
   End;
 

@@ -219,6 +219,7 @@ Type
     inetSMTPPort    : Word;
     inetSMTPMax     : Word;
     inetSMTPDupes   : Byte;
+    inetSMTPTimeOut : Word;
     inetPOP3Use     : Boolean;
     inetPOP3Port    : Word;
     inetPOP3Max     : Word;
@@ -242,7 +243,7 @@ Type
     inetNNTPMax     : Word;
     inetNNTPDupes   : Byte;
  // UNSORTED
-    Reserved        : Array[1..486] of Char;
+    Reserved        : Array[1..484] of Char;
   End;
 
 Const

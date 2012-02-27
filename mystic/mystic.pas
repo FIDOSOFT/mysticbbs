@@ -119,12 +119,14 @@ Begin
 
   DirClean (Session.TempPath, '');
 
-  {$IFNDEF UNIX}
-    Screen.TextAttr := 14;
-    Screen.SetWindow (1, 1, 80, 25, False);
-    Screen.ClearScreen;
+  {$IFNDEF LOGGING}
+    {$IFNDEF UNIX}
+      Screen.TextAttr := 14;
+      Screen.SetWindow (1, 1, 80, 25, False);
+      Screen.ClearScreen;
 
-    Screen.WriteLine ('Exiting with Errorlevel ' + strI2S(ExitCode));
+      Screen.WriteLine ('Exiting with Errorlevel ' + strI2S(ExitCode));
+    {$ENDIF}
   {$ENDIF}
 
   DisposeClasses;

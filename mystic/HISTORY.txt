@@ -3900,3 +3900,5 @@
  + Added new ANSI message base editor.
 
  + Added new ANSI security level editor.
+
+ + SMTP server now has a configurable timeout value per session (in seconds)
