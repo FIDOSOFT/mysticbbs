@@ -594,10 +594,11 @@ Begin
     Config.inetPOP3Delete  := False;
     Config.inetPOP3Timeout := 900;
 
-    Config.inetNNTPUse    := False;
-    Config.inetNNTPPort   := 119;
-    Config.inetNNTPMax    := 8;
-    Config.inetNNTPDupes  := 3;
+    Config.inetNNTPUse     := False;
+    Config.inetNNTPPort    := 119;
+    Config.inetNNTPMax     := 8;
+    Config.inetNNTPDupes   := 3;
+    Config.inetNNTPTimeOut := 120;
 
     Config.UseStatusBar   := True;
     Config.StatusColor1   :=  9 + 1 * 16;
