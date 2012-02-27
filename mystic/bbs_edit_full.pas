@@ -29,12 +29,18 @@ End;
 
 Function AnsiEditor (Var Lines: Integer; WrapPos: Byte; MaxLines: Integer; TEdit, Forced: Boolean; Var Subj: String) : Boolean;
 Const
-  WinStart   : Byte    = 2;
-  WinEnd     : Byte    = 22;
-  WinText    : Byte    = 7;
-  InsertMode : Boolean = True;
-
+  MaxCutText = 100;
+Type
+  CutTextPtr = ^CutTextRec;
+  CutTextRec = String[79];
 Var
+  WinStart     : Byte    = 2;
+  WinEnd       : Byte    = 22;
+  WinText      : Byte    = 7;
+  InsertMode   : Boolean = True;
+  CutPasted    : Boolean = False;
+  CutTextPos   : Word    = 0;
+  CutText      : Array[1..MaxCutText] of CutTextPtr;
   Done         : Boolean;
   Save         : Boolean;
   Ch           : Char;
@@ -849,7 +855,27 @@ Begin
 
               Session.io.AnsiClrEOL;
             End;
-      ^K  : ; // cuttext... what will be copy?
+      ^K  : Begin
+              If CutPasted Then Begin
+                For A := CutTextPos DownTo 1 Do
+                  Dispose (CutText[A]);
+
+                CutTextPos := 0;
+                CutPasted  := False;
+              End;
+
+              If CutTextPos < MaxCutText Then Begin
+                Inc (CutTextPos);
+
+                New (CutText[CutTextPos]);
+
+                CutText[CutTextPos]^ := Session.Msgs.MsgText[CurLine];
+
+                DeleteLine(CurLine);
+
+                TextRefreshPart;
+              End;
+            End;
       ^L,
       ^M  : Begin
               Session.io.PurgeInputBuffer;
@@ -869,17 +895,7 @@ Begin
 
               FullReDraw;
             End;
-      ^R  : ; // paste
-      ^T  : Begin
-              While CurX > 1 Do Begin
-                Dec (CurX);
-
-                If Session.Msgs.MsgText[CurLine][CurX] = ' ' Then Break;
-              End;
-
-              UpdatePosition;
-            End;
-      ^U  : Begin
+      ^R  : Begin
               While CurX < Length(Session.Msgs.MsgText[CurLine]) + 1 Do Begin
                 Inc (CurX);
 
@@ -890,6 +906,26 @@ Begin
               End;
 
               UpdatePosition;
+            End;
+      ^T  : Begin
+              While CurX > 1 Do Begin
+                Dec (CurX);
+
+                If Session.Msgs.MsgText[CurLine][CurX] = ' ' Then Break;
+              End;
+
+              UpdatePosition;
+            End;
+      ^U  : If CutTextPos > 0 Then Begin
+              CutPasted := True;
+
+              For A := CutTextPos DownTo 1 Do
+                If TotalLine < mysMaxMsgLines Then Begin
+                  InsertLine(CurLine);
+                  Session.Msgs.MsgText[CurLine] := CutText[A]^;
+                End;
+
+              TextRefreshPart;
             End;
       ^V  : ToggleInsert (True);
       ^W  : While (CurX > 1) Do Begin
@@ -944,6 +980,9 @@ Begin
   Result := (Save = True);
 
   Session.io.AnsiGotoXY (1, Session.User.ThisUser.ScreenSize);
+
+  For A := CutTextPos DownTo 1 Do
+    Dispose (CutText[A]);
 End;
 
 End.
