@@ -45,19 +45,24 @@ Var
 Begin
 	A := 1;
 	B := 25;
+
 	Repeat
 		If A > 1 Then Begin
 			Screen.WriteXY (1, A-1, 0, strRep(' ', 80));
 			Screen.WriteXY (1, B+1, 0, strRep(' ', 80));
 		End;
+
 		Screen.WriteXY (1, A, 8, 'ú-' + strRep('Ä', 75) + '--ú');
 		Screen.WriteXY (1, B, 8, 'ú-' + strRep('Ä', 75) + '--ú');
+
 		WaitMS(15);
+
 		Inc (A);
 		Dec (B);
 	Until A = 14;
 
 	A := 76;
+
 	Repeat
 		Dec (A, 2);
 		Screen.WriteXY (1, 13, 8, strPadC('ú-' + strRep('Ä', A) + '--ú', 80, ' '));
@@ -115,7 +120,7 @@ End;
 
 Procedure MakeDir (Str: String);
 Var
-  A       : Byte;
+  A      : Byte;
   CurDIR : String;
   Prefix : String;
 Begin
@@ -407,7 +412,7 @@ Begin
 	Reset  (CfgFile);
 	Read	 (CfgFile, Cfg);
 
-	Cfg.SystemPath 	  := Config.SystemPath;
+	Cfg.SystemPath  := Config.SystemPath;
 	Cfg.AttachPath  := Config.AttachPath;
 	Cfg.DataPath	  := Config.DataPath;
 	Cfg.MsgsPath	  := Config.MsgsPath;
@@ -415,7 +420,7 @@ Begin
 	Cfg.QwkPath 	  := Config.QwkPath;
 	Cfg.ScriptPath  := Config.ScriptPath;
 	Cfg.LogsPath	  := Config.LogsPath;
-	Cfg.UserIdxPos 	  := 0;
+	Cfg.UserIdxPos  := 0;
   Cfg.SystemCalls := 0;
 
 	Reset (CfgFile);

@@ -1386,12 +1386,12 @@ begin
 
   if updateinfo.errorType <> 0 then Exit;
 
-  if GetStr(tkw[wOpEqual], False, False)    then begin OutString(Char(OpEqual));    OpType := topEqual; end else
+  if GetStr(tkw[wOpEqual],    False, False) then begin OutString(Char(OpEqual));    OpType := topEqual; end else
   if GetStr(tkw[wOpNotEqual], False, False) then begin OutString(Char(OpNotEqual)); OpType := topNotEqual; end else
-  if GetStr(tkw[wOpEqGreat], False, False)  then begin OutString(Char(OpEqGreat));  OpType := topEqGreat; end else
-  if GetStr(tkw[wOpEqLess], False, False)   then begin OutString(Char(OpEqLess));   OpType := topEqLess; end else
-  if GetStr(tkw[wOpGreater], False, False)  then begin OutString(Char(OpGreater));  OpType := topGreater; end else
-  if GetStr(tkw[wOpLess], False, False)     then begin OutString(Char(OpLess));     OpType := topLess; end else
+  if GetStr(tkw[wOpEqGreat],  False, False) then begin OutString(Char(OpEqGreat));  OpType := topEqGreat; end else
+  if GetStr(tkw[wOpEqLess],   False, False) then begin OutString(Char(OpEqLess));   OpType := topEqLess; end else
+  if GetStr(tkw[wOpGreater],  False, False) then begin OutString(Char(OpGreater));  OpType := topGreater; end else
+  if GetStr(tkw[wOpLess],     False, False) then begin OutString(Char(OpLess));     OpType := topLess; end else
   if VarType1 <> iBool then Error(mpsExpOperator, '');
 
   if OpType <> tOpNone then begin
@@ -1415,13 +1415,13 @@ begin
   end;
 end;
 
-Procedure TParserEngine.ParseVariable (vt : TIdentTypes);
+Procedure TParserEngine.ParseVariable (VT: TIdentTypes);
 Begin
-  if vt in vnums  then ParseVarNumber else
-  if vt = iString then ParseVarString else
-  if vt = iChar   then ParseVarChar Else
-  if vt = iBool   then ParseVarBoolean else
-  if vt = iFile   then Error(mpsInStatement,'');
+  If VT in vNums  Then ParseVarNumber Else
+  If VT = iString Then ParseVarString Else
+  If VT = iChar   Then ParseVarChar Else
+  If VT = iBool   Then ParseVarBoolean Else
+  If VT = iFile   Then Error(mpsInStatement,'');
 End;
 
 Procedure TParserEngine.ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var Info: TParserVarInfoRec);
@@ -1503,16 +1503,16 @@ Procedure TParserEngine.ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var I
     IdentStr := strLower(IdentStr);
 
     // separate function?
-    If IdentStr = tkv[iString] Then Info.vType := iString Else
-    If IdentStr = tkv[iChar ]  Then Info.vType := iChar  Else
-    If IdentStr = tkv[iByte ] Then Info.vType := iByte  Else
-    If IdentStr = tkv[iShort] Then Info.vType := iShort Else
-    If IdentStr = tkv[iWord ] Then Info.vType := iWord  Else
-    If IdentStr = tkv[iInteger] Then Info.vType := iInteger   Else
-    If IdentStr = tkv[iLongInt ] Then Info.vType := iLongInt  Else
-    If IdentStr = tkv[iReal ] Then Info.vType := iReal  Else
-    If IdentStr = tkv[iBool ] Then Info.vType := iBool  Else
-    If IdentStr = tkv[iFile ] Then Begin
+    If IdentStr = tkv[iString ] Then Info.vType := iString  Else
+    If IdentStr = tkv[iChar   ] Then Info.vType := iChar    Else
+    If IdentStr = tkv[iByte   ] Then Info.vType := iByte    Else
+    If IdentStr = tkv[iShort  ] Then Info.vType := iShort   Else
+    If IdentStr = tkv[iWord   ] Then Info.vType := iWord    Else
+    If IdentStr = tkv[iInteger] Then Info.vType := iInteger Else
+    If IdentStr = tkv[iLongInt] Then Info.vType := iLongInt Else
+    If IdentStr = tkv[iReal   ] Then Info.vType := iReal    Else
+    If IdentStr = tkv[iBool   ] Then Info.vType := iBool    Else
+    If IdentStr = tkv[iFile   ] Then Begin
       If IsRec Then Error(mpsSyntaxError, 'Cannot define file in record');
       Info.vType := iFile;
     End Else Begin

@@ -196,7 +196,8 @@ Const
              ':',               'function',       'array',      'case',
              'of',              '..',             'type',       'const',
              'break',           'continue',       'uses',       'exit',
-             '$',               'and',            'or',         'xor',             'shl',            'shr'
+             '$',               'and',            'or',         'xor',  
+             'shl',             'shr'
            );
 
      wTokensIPLC : TTokenWordType = (
@@ -215,7 +216,8 @@ Const
              ':',               'func',           'array',      'switch',
              'of',              '..',             'type',       'const',
              'break',           'continue',       'uses',       'exit',
-             '$',               '&',              '|',          'xor',             '<<',             '>>'
+             '$',               '&',              '|',          'xor', 
+             '<<',              '>>'
            );
 
   {$ENDIF}

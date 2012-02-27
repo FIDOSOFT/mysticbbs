@@ -30,11 +30,11 @@ Type
     Port          : LongInt;
     TextPath      : String[80];
 
-    Constructor Create (Config: RecConfig; PortNum: Word; CliMax: Word; ND: TNodeData; CreateProc: TServerCreateProc);
-    Destructor  Destroy; Override;
-    Procedure   Execute; Override;
-    Function    CheckIP (IP, Mask: String) : Boolean;
-    Function    IsBlockedIP (Var Client: TSocketClass) : Boolean;
+    Constructor Create       (Config: RecConfig; PortNum: Word; CliMax: Word; ND: TNodeData; CreateProc: TServerCreateProc);
+    Destructor  Destroy;     Override;
+    Procedure   Execute;     Override;
+    Function    CheckIP      (IP, Mask: String) : Boolean;
+    Function    IsBlockedIP  (Var Client: TSocketClass) : Boolean;
     Function    DuplicateIPs (Var Client: TSocketClass) : Byte;
   End;
 
