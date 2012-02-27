@@ -568,20 +568,23 @@ Type
     ScriptPath   : String[mysMaxPathSize];
     TemplatePath : String[mysMaxPathSize];
     Flags        : LongInt;
-    FieldCol1  : Byte;
-    FieldCol2  : Byte;
-    FieldChar  : Char;
-    EchoCh     : Char;
-    QuoteColor : Byte;
-    TagCh      : Char;
-    FileHi     : Byte;
-    FileLo     : Byte;
-    NewMsgChar : Char;
-    VotingBar  : RecPercent;
-    FileBar    : RecPercent;
-    MsgBar     : RecPercent;
-    GalleryBar : RecPercent;
-    HelpBar    : RecPercent;
+    FieldColor1  : Byte;
+    FieldColor2  : Byte;
+    FieldChar    : Char;
+    EchoChar     : Char;
+    QuoteColor   : Byte;
+    TagChar      : Char;
+    FileDescHi   : Byte;
+    FileDescLo   : Byte;
+    NewMsgChar   : Char;
+    VotingBar    : RecPercent;
+    FileBar      : RecPercent;
+    MsgBar       : RecPercent;
+    GalleryBar   : RecPercent;
+    HelpBar      : RecPercent;
+    ViewerBar    : RecPercent;
+    ThemeColor   : Array['A'..'Z'] of Byte; //or 0..9 is this overkill?
+    // grep ++lang
   End;
 
   LangRec = Record                       { LANGUAGE.DAT                     }
