@@ -367,7 +367,7 @@ Begin
     SMTPServer := TServerManager.Create(bbsConfig, bbsConfig.INetSMTPPort, bbsConfig.inetSMTPMax, NodeData, @CreateSMTP);
 
     SMTPServer.Server.FTelnetServer := False;
-    SMTPServer.ClientMaxIPs         := 1;
+    SMTPServer.ClientMaxIPs         := bbsConfig.INetSMTPDupes;
 
     Started := True;
   End;
@@ -394,7 +394,7 @@ Begin
     NNTPServer := TServerManager.Create(bbsConfig, bbsConfig.InetNNTPPort, bbsConfig.inetNNTPMax, NodeData, @CreateNNTP);
 
     NNTPServer.Server.FTelnetServer := False;
-    NNTPServer.ClientMaxIPs         := 1;
+    NNTPServer.ClientMaxIPs         := bbsConfig.inetNNTPDupes;
 
     Started := True;
   End;
