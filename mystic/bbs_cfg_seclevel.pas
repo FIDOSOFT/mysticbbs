@@ -111,12 +111,12 @@ Begin
   List.LoChars  := #13#27#47;
   List.NoWindow := True;
 
-  Box.Open (21, 5, 59, 20);
+  Box.Open (21, 5, 59, 21);
 
-  WriteXY (23,  6, 112, 'Lvl  Description');
-  WriteXY (22,  7, 112, strRep('Ä', 37));
-  WriteXY (22, 18, 112, strRep('Ä', 37));
-  WriteXY (29, 19, 112, cfgCommandList);
+  WriteXY (23,  7, 112, 'Lvl  Description');
+  WriteXY (22,  8, 112, strRep('Ä', 37));
+  WriteXY (22, 19, 112, strRep('Ä', 37));
+  WriteXY (29, 20, 112, cfgCommandList);
 
   Repeat
     MakeList;
@@ -126,7 +126,7 @@ Begin
       MakeList;
     End;
 
-    List.Open (21, 7, 59, 18);
+    List.Open (21, 8, 59, 19);
     List.Close;
 
     Case List.ExitCode of

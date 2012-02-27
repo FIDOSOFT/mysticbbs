@@ -76,6 +76,8 @@ Uses
 
 Constructor TBBSUser.Create (Var Owner: Pointer);
 Begin
+  FillChar(ThisUser, SizeOf(ThisUser), #0);
+
   UserNum             := -1;
   ThisUser.ScreenSize := Config.DefScreenSize;
   ThisUser.DateType   := 1;
@@ -86,6 +88,10 @@ Begin
   ThisUser.EditType   := 1;
   ThisUser.Birthday   := CurDateJulian;
   ThisUser.Gender     := 'U';
+  ThisUser.FirstOn    := CurDateDos;
+  ThisUser.Archive    := Config.qwkArchive;
+  ThisUser.LastFGroup := Config.StartFGroup;
+  ThisUser.LastMGroup := Config.StartMGroup;
 
   IgnoreGroup   := False;
   InChat        := False;
@@ -914,13 +920,13 @@ Begin
 
   Upgrade_User_Level (True, ThisUser, Config.NewUserSec);
 
-  ThisUser.FirstOn    := CurDateDos;
-  ThisUser.Archive    := Config.qwkArchive;
-  ThisUser.LastFBase  := 0;
-  ThisUser.LastFGroup := Config.StartFGroup;
-  ThisUser.LastMGroup := Config.StartMGroup;
-  ThisUser.LastMBase  := 0;
-  ThisUser.Flags      := 0;
+//  ThisUser.FirstOn    := CurDateDos;
+//  ThisUser.Archive    := Config.qwkArchive;
+//  ThisUser.LastFBase  := 0;
+//  ThisUser.LastFGroup := Config.StartFGroup;
+//  ThisUser.LastMGroup := Config.StartMGroup;
+//  ThisUser.LastMBase  := 0;
+//  ThisUser.Flags      := 0;
 
   If Not Config.AskRealName Then ThisUser.RealName := ThisUser.Handle;
   If Not Config.AskAlias    Then ThisUser.Handle   := ThisUser.RealName;
@@ -1156,6 +1162,7 @@ Begin
 
   Session.io.Graphics := 0;
 
+  Session.systemLog ('-');
   Session.SystemLog ('Connect from ' + Session.UserIPInfo + ' (' + Session.UserHostInfo + ')');
 
   If Config.SystemPW <> '' Then

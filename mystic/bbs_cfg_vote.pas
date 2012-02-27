@@ -24,6 +24,7 @@ Begin
 	Session.SystemLog ('*VOTE EDITOR*');
 	Repeat
     Session.io.OutFullLn ('|CL|14Voting Booth Editor|CR|CR|15##  Question|CR|09--  ---------------------------------------');
+
 		Reset (VoteFile);
 		While Not Eof(VoteFile) do begin
 			Read (VoteFile, Vote);

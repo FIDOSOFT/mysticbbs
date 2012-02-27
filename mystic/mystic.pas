@@ -136,9 +136,7 @@ Procedure CheckDIR (Dir: String);
 Begin
   If Not FileDirExists(Dir) Then Begin
     Screen.WriteLine ('ERROR: ' + Dir + ' does not exist.');
-
     DisposeClasses;
-
     Halt(1);
   End;
 End;
@@ -232,7 +230,6 @@ Begin
 
   Assign (Session.User.UserFile, Config.DataPath + 'users.dat');
   {$I-} Reset (Session.User.UserFile); {$I+}
-
   If IoResult <> 0 Then Begin
     If FileExist(Config.DataPath + 'users.dat') Then Begin
       Screen.WriteLine ('ERROR: Unable to access USERS.DAT');
@@ -242,8 +239,12 @@ Begin
 
     ReWrite(Session.User.UserFile);
   End;
-
   Close (Session.User.UserFile);
+
+  Assign (VoteFile, Config.DataPath + 'votes.dat');
+  {$I-} Reset (VoteFile); {$I+}
+  If IoResult <> 0 Then ReWrite (VoteFile);
+  Close (VoteFile);
 
   If Session.ConfigMode Then Exit;
 
@@ -309,11 +310,6 @@ Begin
   {$I-} Reset(Session.FileBase.ArcFile); {$I+}
   If IoResult <> 0 Then ReWrite(Session.FileBase.ArcFile);
   Close (Session.FileBase.ArcFile);
-
-  Assign (VoteFile, Config.DataPath + 'votes.dat');
-  {$I-} Reset (VoteFile); {$I+}
-  If IoResult <> 0 Then ReWrite (VoteFile);
-  Close (VoteFile);
 
   Assign (Session.FileBase.ProtocolFile, Config.DataPath + 'protocol.dat');
   {$I-} Reset (Session.FileBase.ProtocolFile); {$I+}
@@ -414,7 +410,7 @@ Begin
 
   Session.FindNextEvent;
 
-  Session.SystemLog ('Node ' + strI2S(Session.NodeNum) + ' online');
+//  Session.SystemLog ('Node ' + strI2S(Session.NodeNum) + ' online');
 
   If Session.TimeOffset > 0 Then
     Session.SetTimeLeft(Session.TimeOffset)

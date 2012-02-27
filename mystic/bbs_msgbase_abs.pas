@@ -239,7 +239,7 @@ End;
 
 Procedure TMsgBaseABS.DoString (Str: String);
 Var
-  Count : SmallWord;
+  Count : Word;
 Begin
   For Count := 1 to Length(Str) Do
     DoChar(Str[Count]);

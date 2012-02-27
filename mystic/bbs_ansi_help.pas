@@ -20,9 +20,6 @@ Unit bbs_Ansi_Help;
 
 Interface
 
-Uses
-  bbs_Ansi_MenuBox;
-
 Const
   mysMaxHelpTest      = 200;
   mysMaxHelpKeyLen    = 20;
@@ -40,7 +37,6 @@ Type
   End;
 
   TAnsiMenuHelp = Class
-    Box      : TAnsiMenuBox;
     HelpFile : Text;
     CurKey   : String[mysMaxHelpKeyLen];
     Text     : Array[1..mysMaxHelpTest] of TLineInfoRec;
@@ -48,8 +44,9 @@ Type
 
     Constructor Create;
     Destructor  Destroy; Override;
-    Procedure   OpenHelp (X1, Y1, X2, Y2: Byte; FN, Keyword: String);
+
     Function    ReadKeywordData : Boolean;
+    Procedure   OpenHelp   (Str: String);
     Function    StripLinks (Str: String) : String;
   End;
 
@@ -57,7 +54,8 @@ Implementation
 
 Uses
   m_Strings,
-  bbs_Core;
+  bbs_Core,
+  bbs_Ansi_MenuBox;
 
 Constructor TAnsiMenuHelp.Create;
 Begin
@@ -92,7 +90,6 @@ Begin
 
   Result := Str;
 End;
-
 
 Function TAnsiMenuHelp.ReadKeywordData : Boolean;
 Var
@@ -167,14 +164,22 @@ Begin
   Result := Done And (Lines > 0);
 End;
 
-Procedure TAnsiMenuHelp.OpenHelp (X1, Y1, X2, Y2: Byte; FN, Keyword: String);
+Procedure TAnsiMenuHelp.OpenHelp (Str: String);
+Const
+  WinX1 : Byte = 2;
+  WinY1 : Byte = 2;
+  WinX2 : Byte = 78;
+  WinY2 : Byte = 22;
 Var
-  TopPage : Integer;
-  CurLine : Integer;
-  CurLPos : Byte;
-  WinSize : Integer;
-  LastPos : Byte;
-  LastKey : Array[1..10] of String[mysMaxHelpKeyLen];
+  FN       : String;
+  Template : String;
+  Keyword  : String;
+  TopPage  : Integer;
+  CurLine  : Integer;
+  CurLPos  : Byte;
+  WinSize  : Integer;
+  LastPos  : Byte;
+  LastKey  : Array[1..10] of String[mysMaxHelpKeyLen];
 
   Procedure LinkOFF (LineNum: Word; YPos, LPos: Byte);
   Var
@@ -185,7 +190,7 @@ Var
     With Text[LineNum] Do
       S := Copy(strStripPipe(Text), Link[LPos].LinkPos, Link[LPos].LinkLen);
 
-    WriteXY (X1 + Text[LineNum].Link[LPos].LinkPos, YPos, 9, S);
+    WriteXY (WinX1 + Text[LineNum].Link[LPos].LinkPos - 1, YPos, 9, S);
   End;
 
   Procedure DrawPage;
@@ -193,14 +198,14 @@ Var
     Count1 : Byte;
     Count2 : Byte;
   Begin
-    For Count1 := Y1 to WinSize Do Begin
-      If TopPage + Count1 - Y1 <= Lines Then Begin
-       WriteXYPipe (X1 + 1, (Count1 - Y1) + Y1 + 1, 7, X2 - X1 - 1, Text[TopPage + (Count1 - Y1)].Text);
+    For Count1 := 1 to WinSize Do Begin
+      If TopPage + Count1 - 1 <= Lines Then Begin
+        WriteXYPipe (WinX1, Count1 + WinY1 - 1, 7, WinX2 - WinX1 + 1, Text[TopPage + Count1 - 1].Text);
 
-       For Count2 := 1 to Text[TopPage + Count1 - 1].Links Do
-         LinkOFF (TopPage + Count1 - 1, Count1 - Y1 + Y1 + 1, Count2);
+        For Count2 := 1 to Text[TopPage + Count1 - 1].Links Do
+          LinkOFF (TopPage + Count1 - 1, Count1 + WinY1 - 1, Count2);
       End Else
-       WriteXYPipe (X1 + 1, (Count1 - Y1) + Y1 + 1, 7, X2 - X1 - 1, '');
+        WriteXYPipe (WinX1, Count1 + WinY1 - 1, 7, WinX2 - WinX1 + 1, '');
     End;
   End;
 
@@ -211,9 +216,9 @@ Var
     With Text[TopPage + CurLine - 1] Do
       S := Copy(strStripPipe(Text), Link[CurLPos].LinkPos, Link[CurLPos].LinkLen);
 
-    WriteXY  (X1 + Text[TopPage + CurLine - 1].Link[CurLPos].LinkPos, Y1 + CurLine, 31, S);
+    WriteXY (WinX1 + Text[TopPage + CurLine - 1].Link[CurLPos].LinkPos - 1, WinY1 + CurLine - 1, 31, S);
 
-    Session.io.AnsiGotoXY (X1 + Text[TopPage + CurLine - 1].Link[CurLPos].LinkPos, Y1 + CurLine);
+    Session.io.AnsiGotoXY (WinX1 + Text[TopPage + CurLine - 1].Link[CurLPos].LinkPos - 1, WinY1 + CurLine - 1);
   End;
 
   Procedure UpdateCursor;
@@ -221,10 +226,12 @@ Var
     If Text[TopPage + CurLine - 1].Links > 0 Then Begin
       If CurLPos > Text[TopPage + CurLine - 1].Links Then CurLPos := Text[TopPage + CurLine - 1].Links;
       If CurLPos < 1 Then CurLPos := 1;
+
       LinkON;
     End Else Begin
       CurLPos := 1;
-      Session.io.AnsiGotoXY (X1 + 1, Y1 + CurLine);
+
+      Session.io.AnsiGotoXY (WinX1, WinY1 + CurLine - 1);
     End;
   End;
 
@@ -246,17 +253,28 @@ Var
   Count : Byte;
   Ch    : Char;
 Begin
+  FN       := strWordGet(1, Str, ';');
+  Template := strWordGet(2, Str, ';');
+  Keyword  := strWordGet(3, Str, ';');
+
   Assign (HelpFile, FN);
-  Reset  (HelpFile);
+  {$I-} Reset (HelpFile); {$I+}
 
   If IoResult <> 0 Then Exit;
 
   Close  (HelpFile);
 
+  Session.io.OutFile(Template, False, 0);
+
+  WinX1 := Session.io.ScreenInfo[1].X;
+  WinY1 := Session.io.ScreenInfo[1].Y;
+  WinX2 := Session.io.ScreenInfo[2].X;
+  WinY2 := Session.io.SCreenInfo[2].Y;
+
   TopPage := 1;
   CurLine := 1;
   LastPos := 0;
-  WinSize := Y2 - Y1 - 1;
+  WinSize := WinY2 - WinY1 + 1;
   CurKey  := Keyword;
   OK      := ReadKeywordData;
 
@@ -267,24 +285,12 @@ Begin
 
   If Not OK Then Exit;
 
-  Box := TAnsiMenuBox.Create;
+//  Session.io.PurgeInputBuffer;
 
-  Box.Shadow    := False;
-  Box.FrameType := 1;
-  Box.BoxAttr   := 8;
-  Box.BoxAttr2  := 8;
-  Box.HeadAttr  := 15;
-  Box.Box3D     := False;
-  Box.Header    := ' Section : ' + CurKey + ' ';
-
-  Box.Open (X1, Y1, X2, Y2);
-
-  DrawPage;
-  UpdateCursor;
+//  DrawPage;
+//  UpdateCursor;
 
   While OK Do Begin
-//    Box.UpdateHeader (' Section : ' + CurKey + ' ');
-
     TopPage := 1;
     CurLine := 1;
 
@@ -308,6 +314,7 @@ Begin
           #71 : If (TopPage > 1) or (CurLine > 1) Then Begin
                   TopPage := 1;
                   CurLine := 1;
+
                   DrawPage;
                   UpdateCursor;
                 End;
@@ -317,7 +324,7 @@ Begin
                     DrawPage;
                     UpdateCursor;
                   End Else If CurLine > 1 Then Begin
-                    LinkOFF(TopPage + CurLine - 1, CurLine + 1, CurLPos);
+                    LinkOFF(TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
                     Dec (CurLine);
                     UpdateCursor;
                   End;
@@ -325,22 +332,24 @@ Begin
           #73 : Begin
                   If TopPage - WinSize > 0 Then Begin
                     Dec (TopPage, WinSize);
+
                     DrawPage;
                     UpdateCursor;
                   End Else If CurLine > 1 Then Begin
                     TopPage := 1;
                     CurLine := 1;
+
                     DrawPage;
                     UpdateCursor;
                   End;
                 End;
           #75 : If (CurLPos > 1) and (Text[TopPage + CurLine - 1].Links > 0) Then Begin
-                  LinkOFF(TopPage + CurLine - 1, CurLine + 1, CurLPos);
+                  LinkOFF(TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
                   Dec(CurLPos);
                   LinkON;
                 End;
           #77 : If CurLPos < Text[TopPage + CurLine - 1].Links Then Begin
-                  LinkOFF(TopPage + CurLine - 1, CurLine + 1, CurLPos);
+                  LinkOFF(TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
                   Inc(CurLPos);
                   LinkON;
                 End;
@@ -348,11 +357,12 @@ Begin
                   Repeat
                     PageDown;
                   Until TopPage >= Lines - WinSize - 1;
+
                   DrawPage;
                   UpdateCursor;
                 End Else
                 If TopPage + CurLine <= Lines Then Begin
-                  LinkOFF (TopPage + CurLine - 1, CurLine + 1, CurLPos);
+                  LinkOFF (TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
                   CurLine := Lines - TopPage + 1;
                   UpdateCursor;
                 End;
@@ -363,7 +373,7 @@ Begin
                     UpdateCursor;
                   End Else
                   If (CurLine < WinSize) And (TopPage + CurLine <= Lines) Then Begin
-                    LinkOFF(TopPage + CurLine - 1, CurLine + 1, CurLPos);
+                    LinkOFF(TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
                     Inc(CurLine);
                     UpdateCursor;
                   End;
@@ -374,7 +384,7 @@ Begin
                   UpdateCursor;
                 End Else
                 If TopPage + CurLine <= Lines Then Begin
-                  LinkOFF (TopPage + CurLine - 1, CurLine + 1, CurLPos);
+                  LinkOFF (TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
                   CurLine := Lines - TopPage + 1;
                   UpdateCursor;
                 End;
@@ -435,9 +445,6 @@ Begin
       End;
     Until False;
   End;
-
-  Box.Close;
-  Box.Free;
 End;
 
 End.

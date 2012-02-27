@@ -291,7 +291,7 @@ End;
 
 Procedure TMsgBase.ChangeArea (Data: String);
 Var
-  A,
+  Count    : LongInt;
   Total    : Word;
   Old      : RecMessageBase;
   Str      : String[5];
@@ -300,19 +300,24 @@ Begin
   Compress := Config.MCompress;
   Old      := MBase;
 
+  {$IFDEF LOGGING}
+    Session.SystemLog('MsgAreaChange: ' + Data);
+    Session.SystemLog('      CurArea: ' + strI2S(Session.User.ThisUser.LastMBase));
+  {$ENDIF}
+
   If (Data = '+') or (Data = '-') Then Begin
     Reset (MBaseFile);
 
-    A := Session.User.ThisUser.LastMBase - 1;
+    Count := Session.User.ThisUser.LastMBase - 1;
 
     Repeat
       Case Data[1] of
-        '+' : Inc(A);
-        '-' : Dec(A);
+        '+' : Inc(Count);
+        '-' : Dec(Count);
       End;
 
       {$I-}
-      Seek (MBaseFile, A);
+      Seek (MBaseFile, Count);
       Read (MBaseFile, MBase);
       {$I+}
 
@@ -332,15 +337,19 @@ Begin
     Exit;
   End;
 
-  A := strS2I(Data);
+  Count := strS2I(Data);
 
-  If A > 0 Then Begin
-    Inc (A);
+  {$IFDEF LOGGING}
+    Session.SystemLog('Numeric change converstion: ' + strI2S(Count));
+  {$ENDIF}
+
+  If Count > 0 Then Begin
+    Inc (Count);
 
     Reset (MBaseFile);
 
-    If A <= FileSize(MBaseFile) Then Begin
-      Seek (MBaseFile, A-1);
+    If Count <= FileSize(MBaseFile) Then Begin
+      Seek (MBaseFile, Count - 1);
       Read (MBaseFile, MBase);
 
       If Session.User.Access(MBase.ListACS) Then Begin
@@ -377,12 +386,12 @@ Begin
         Break;
     Until False;
 
-    A := strS2I(Str);
+    Count := strS2I(Str);
 
-    If (A > 0) and (A <= Total) Then Begin
+    If (Count > 0) and (Count <= Total) Then Begin
       Reset (MBaseFile);
       If Not Compress Then Begin
-        Seek (MBaseFile, A - 1);
+        Seek (MBaseFile, Count - 1);
         Read (MBaseFile, MBase);
 
         If Not Session.User.Access(MBase.ListACS) Then Begin
@@ -393,12 +402,12 @@ Begin
       End Else Begin
         Total := 0;
 
-        While Not Eof(MBaseFile) And (A <> Total) Do Begin
+        While Not Eof(MBaseFile) And (Count <> Total) Do Begin
           Read (MBaseFile, MBase);
           If Session.User.Access(MBase.ListACS) Then Inc(Total);
         End;
 
-        If A <> Total Then Begin
+        If Count <> Total Then Begin
           Close (MBaseFile);
           MBase := OLD;
           Exit;

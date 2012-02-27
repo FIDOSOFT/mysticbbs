@@ -347,7 +347,11 @@ Begin
   {$I-} Reset (MenuFile); {$I+}
 
   If IoResult <> 0 Then Begin
-    If Not Global Then Session.io.OutFullLn ('|CR|14Menu not found, loading fallback.');
+    If Not Global Then Begin
+      Session.io.OutFullLn ('|CR|14Menu not found, loading fallback.');
+      Session.SystemLog    ('Menu: ' + MenuName + ' not found');
+    End;
+
     Exit;
   End;
 

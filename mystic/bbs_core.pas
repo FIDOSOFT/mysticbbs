@@ -241,7 +241,7 @@ Begin
   If IoResult <> 0 Then ReWrite (tLOG);
 
   If Str = '-' Then
-    WriteLn (tLOG, strRep('-', 50))
+    WriteLn (tLOG, strRep('-', 40))
   Else
     WriteLn (tLOG, DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, False) + ' ' + Str);
 

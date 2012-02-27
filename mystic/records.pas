@@ -9,6 +9,8 @@
  ===========================================================================
 }
 
+{$PACKRECORDS 1}
+
 Const
   mysSoftwareID  = 'Mystic';
   mysCopyYear    = '1997-2012';
@@ -251,19 +253,6 @@ Const
   UserNoCaller   = $00000010;
   UserNoPWChange = $00000020;
 
-//FUTURE DATA FILE UPDATES NEEDED
-//LASTON needs optional1-10 compare to Mystic2
-//MENUS
-// remove fallback?
-// (flags)
-// menu descriptions
-// node action
-// command timer
-// input chars
-// (commands)
-// TBD compare to mystic 2
-// VOTING: expand ACS to s[30]
-
 Type
   RecUser = Record                     { USERS.DAT }
     PermIdx      : LongInt;                 // permanent user number
@@ -431,7 +420,7 @@ Type
     ITemplate : String[20];
     Index     : Word;
     Flags     : LongInt;
-    Res       : Array[1..74] of Byte;
+    Res       : Array[1..80] of Byte;
   End;
 
   FScanRec = Record                    { <Data Path> *.SCN               }

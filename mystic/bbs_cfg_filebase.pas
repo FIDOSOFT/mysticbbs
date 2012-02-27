@@ -31,7 +31,7 @@ Begin
   Box   := TAnsiMenuBox.Create;
   Form  := TAnsiMenuForm.Create;
 
-  Box.Open (6, 5, 75, 21);
+  Box.Open (6, 5, 75, 20);
 
   VerticalLine (22, 7, 19);
   VerticalLine (69, 7, 9);
@@ -47,7 +47,7 @@ Begin
   Form.AddStr  ('P', ' FTP ACS'      , 13, 15, 24, 15,  9, 30, 30, @FBase.FTPACS, Topic + 'ACS to access via FTP');
   Form.AddStr  ('S', ' Sysop ACS '   , 11, 16, 24, 16, 11, 30, 30, @FBase.SysopACS, Topic + 'ACS for Sysop access');
   Form.AddTog  ('E', ' Default Scan' ,  8, 17, 24, 17, 14,  6, 0, 2, 'No Yes Always', @FBase.DefScan, Topic + 'Default scan setting');
-  Form.AddPath ('I', ' File Path'    , 11, 19, 24, 19, 11, 30, 120, @FBase.Path, Topic + 'Directory where files are stored');
+  Form.AddPath ('I', ' File Path'    , 11, 18, 24, 18, 11, 30, 120, @FBase.Path, Topic + 'Directory where files are stored');
 
   Form.AddBits ('R', ' Free Files'   , 57,  7, 71,  7, 12, FBFreeFiles, @FBase.Flags, Topic + 'Files in base are free?');
   Form.AddBits ('M', ' Slow Media'   , 57,  8, 71,  8, 12, FBSlowMedia, @FBase.Flags, Topic + 'Files stored on slow media device?');
@@ -100,6 +100,7 @@ Var
       FtpName  := Name;
       DefScan  := 1;
       SysopACS := 's255';
+      Template := 'ansiflst';
       Flags    := FBShowUpload;
     End;
 
@@ -138,7 +139,7 @@ Begin
 
     Case List.ExitCode of
       '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
-              'I' : If List.Picked > 1 Then Begin
+              'I' : Begin
                       InsertRecord;
                       MakeList;
                     End;

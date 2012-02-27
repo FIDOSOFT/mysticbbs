@@ -106,7 +106,7 @@ Var
 
       MBaseFile.Read (MBase);
 
-      List.Add(strPadR(strI2S(MBaseFile.FilePos), 5, ' ') + '  ' + strStripMCI(MBase.Name), Tag);
+      List.Add(strPadR(strI2S(MBaseFile.FilePos - 1), 5, ' ') + '  ' + strStripMCI(MBase.Name), Tag);
     End;
 
     List.Add('', 2);
@@ -155,7 +155,8 @@ Var
       If Email Then Begin
         FileName := 'email';
         Name     := 'Electronic Mail';
-        Index    := 0;
+        Index    := 1;
+        ListACS  := '%';
         Flags    := Flags or MBPrivate;
       End;
     End;
@@ -246,6 +247,7 @@ Begin
 
   Box.Close;
 
+  MBaseFile.Close;
   MBaseFile.Free;
   List.Free;
   Box.Free;
