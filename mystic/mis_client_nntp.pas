@@ -22,24 +22,25 @@ Type
   TNNTPServer = Class(TServerClient)
     Server   : TServerManager;
     UserName : String[30];
-    Password : String[15];
     LoggedIn : Boolean;
     Cmd      : String;
     Data     : String;
     User     : RecUser;
     UserPos  : LongInt;
+    MBase    : RecMessageBase;
+    MBasePos : LongInt;
 
     Constructor Create (Owner: TServerManager; CliSock: TSocketClass);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
 
     Procedure   ClientWriteLine (Str: String);
-
     Procedure   ResetSession;
 
     Procedure   cmd_AUTHINFO;
     Procedure   cmd_GROUP;
     Procedure   cmd_LIST;
+    Procedure   cmd_XOVER;
   End;
 
 Implementation
@@ -54,7 +55,7 @@ Const
 
   re_Greeting      = '200 Mystic BBS NNTP server ready';
   re_Goodbye       = '205 Goodbye';
-  re_ListFollows   = '215 List of newsgroups follows';
+  re_ListFollows   = '215 List follows';
   re_AuthOK        = '281 Authentication accepted';
   re_AuthBad       = '381 Authentication rejected';
   re_AuthPass      = '381 Password required';
@@ -82,10 +83,10 @@ End;
 
 Procedure TNNTPServer.ResetSession;
 Begin
-  LoggedIn   := False;
-  UserName   := '';
-  Password   := '';
-  UserPos    := -1;
+  LoggedIn := False;
+  UserName := '';
+  UserPos  := -1;
+  MBasePos := -1;
 End;
 
 Procedure TNNTPServer.cmd_AUTHINFO;
@@ -99,6 +100,7 @@ Begin
   If NewCmd = 'USER' Then Begin
     If SearchForUser(NewData, User, UserPos) Then Begin
       ClientWriteLine(re_AuthPass);
+
       UserName := NewData;
     End Else
       ClientWriteLine(re_AuthBad);
@@ -120,10 +122,55 @@ Begin
 End;
 
 Procedure TNNTPServer.cmd_GROUP;
+Var
+  MBaseFile : TBufFile;
+  TempBase  : RecMessageBase;
+  MsgBase   : PMsgBaseABS;
+  Active    : LongInt = 0;
+  Low       : LongInt = 0;
+  High      : LongInt = 0;
+  Found     : Boolean = False;
 Begin
-// 211 number_of_estimated_articles first_msg last_msg newsname
-// 411 nosuchnewsgroup
-// this selects the "current" base
+  MBaseFile := TBufFile.Create(FileReadBuffer);
+
+  If MBaseFile.Open(bbsConfig.DataPath + 'mbases.dat', fmOpen, fmRWDN, SizeOf(RecMessageBase)) Then Begin
+    MBaseFile.Read(TempBase);
+
+    While Not MBaseFile.EOF Do Begin
+      MBaseFile.Read(TempBase);
+
+      If (TempBase.NewsName = Data) and CheckAccess(User, True, TempBase.ReadACS) Then Begin
+        Found := True;
+
+        Case TempBase.BaseType of
+          0 : MsgBase := New(PMsgBaseJAM, Init);
+          1 : MsgBase := New(PMsgBaseSquish, Init);
+        End;
+
+        MsgBase^.SetMsgPath (TempBase.Path + TempBase.FileName);
+
+        If MsgBase^.OpenMsgBase Then Begin
+          Low    := 1;
+          High   := MsgBase^.GetHighMsgNum;
+          Active := MsgBase^.NumberOfMsgs;
+        End;
+
+        Dispose (MsgBase, Done);
+
+        MBase    := TempBase;
+        MBasePos := MBaseFile.FilePos;
+
+        ClientWriteLine('211 ' + strI2S(Active) + ' ' + strI2S(Low) + ' ' + strI2S(High) + ' ' + TempBase.NewsName);
+
+        Break;
+      End;
+    End;
+  End;
+
+  MBaseFile.Free;
+
+  If Not Found Then
+    ClientWriteLine('411 No such newsgroup');
 End;
 
 Procedure TNNTPServer.cmd_LIST;
@@ -131,11 +178,24 @@ Var
   MBaseFile   : TBufFile;
   TempBase    : RecMessageBase;
   MsgBase     : PMsgBaseABS;
-  LowMessage  : LongInt = 0;
-  HighMessage : LongInt = 0;
+  LowMessage  : LongInt;
+  HighMessage : LongInt;
   PostAbility : Char;
 Begin
   ClientWriteLine(re_ListFollows);
+
+  If Data = 'OVERVIEW.FMT' Then Begin
+    ClientWriteLine ('Subject:');
+    ClientWriteLine ('From:');
+    ClientWriteLine ('Date:');
+    ClientWriteLine ('Message-ID:');
+    ClientWriteLine ('References:');
+    ClientWriteLine ('Bytes:');
+    ClientWriteLine ('Lines:');
+    ClientWriteLine ('.');
+    // find this in RFC to make sure this website isnt wrong
+    Exit;
+  End;
 
   MBaseFile := TBufFile.Create(FileReadBuffer);
 
@@ -180,6 +240,43 @@ Begin
   ClientWriteLine('.');
 End;
 
+Procedure TNNTPServer.cmd_XOVER;
+Var
+  First : LongInt = 0;
+  Last  : LongInt = 0;
+  Found : Boolean = False;
+Begin
+  If MBasePos = -1 Then Begin
+    ClientWriteLine('412 No newsgroup selected');
+    Exit;
+  End;
+
+  If Pos('-', Data) > 0 Then Begin
+    First := strS2I(strWordGet(1, Data, '-'));
+    Last  := strS2I(strWordGet(2, Data, '-'));
+  End Else Begin
+    First := strS2I(Data);
+    Last  := First;
+  End;
+
+  // if last = 0 and first <> 0 then
+  //   last = all messages
+  // else
+  //   first = current article (what sets this value)
+  //   last  = current article (what sets this value)
+
+  // 224 Overview information
+  // send messages here
+  // set found if a message was found.  format per line then a term line is:
+  // msgnum + tab + subj + tab + from + tab + datetime + tab + #0 + tab + msgbytes + tab + msglines + tab + #0
+  // .
+
+  // confusion: if no article send error below or tab tab? ive read both.
+
+  If Not Found Then
+    ClientWriteLine('420 No article(s) selected');
+End;
+
 Procedure TNNTPServer.Execute;
 Var
   Str : String;
@@ -208,6 +305,7 @@ Begin
     If Cmd = 'GROUP'    Then cmd_GROUP Else
     If Cmd = 'LIST'     Then cmd_LIST Else
     If Cmd = 'QUIT'     Then Break Else
+    If Cmd = 'XOVER'    Then cmd_XOVER Else
       ClientWriteLine(re_Unknown);
   Until Terminated;
 
