@@ -59,6 +59,7 @@ Const
   re_AuthOK        = '281 Authentication accepted';
   re_AuthBad       = '381 Authentication rejected';
   re_AuthPass      = '381 Password required';
+  re_AuthReq       = '450 Auth required';
   re_AuthSync      = '482 Bad Authentication sequence';
   re_Unknown       = '500 Unknown command';
   re_UnknownOption = '501 Unknown option';
@@ -131,6 +132,11 @@ Var
   High      : LongInt = 0;
   Found     : Boolean = False;
 Begin
+  If Not LoggedIn Then Begin
+    ClientWriteLine(re_AuthReq);
+    Exit;
+  End;
+
   MBaseFile := TBufFile.Create(FileReadBuffer);
 
   If MBaseFile.Open(bbsConfig.DataPath + 'mbases.dat', fmOpen, fmRWDN, SizeOf(RecMessageBase)) Then Begin
@@ -182,6 +188,11 @@ Var
   HighMessage : LongInt;
   PostAbility : Char;
 Begin
+  If Not LoggedIn Then Begin
+    ClientWriteLine(re_AuthReq);
+    Exit;
+  End;
+
   ClientWriteLine(re_ListFollows);
 
   If Data = 'OVERVIEW.FMT' Then Begin
@@ -246,6 +257,11 @@ Var
   Last  : LongInt = 0;
   Found : Boolean = False;
 Begin
+  If Not LoggedIn Then Begin
+    ClientWriteLine(re_AuthReq);
+    Exit;
+  End;
+
   If MBasePos = -1 Then Begin
     ClientWriteLine('412 No newsgroup selected');
     Exit;
