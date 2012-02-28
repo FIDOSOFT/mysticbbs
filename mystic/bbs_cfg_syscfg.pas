@@ -138,19 +138,31 @@ Function Configuration_EchomailAddress (Edit: Boolean) : Byte;
     Form  : TAnsiMenuForm;
     Topic : String;
   Begin
-    Topic := '|03(|09Echomail Address|03) |01-|09> |15';
+    Topic := '|03(|09Echomail Network|03) |01-|09> |15';
     Box   := TAnsiMenuBox.Create;
     Form  := TAnsiMenuForm.Create;
 
-    Box.Open (21, 8, 60, 16);
+    Box.Open (14, 6, 66, 17);
 
-    VerticalLine (36, 10, 14);
+    VerticalLine (29,  9, 12);
+    VerticalLine (29, 14, 15);
+    VerticalLine (54,  9, 12);
 
-    Form.AddWord ('Z', ' Zone'       , 30, 10, 38, 10,  6,  5,  0, 65535, @Config.NetAddress[Num].Zone, Topic + 'Network Zone number');
-    Form.AddWord ('N', ' Net'        , 31, 11, 38, 11,  5,  5,  0, 65535, @Config.NetAddress[Num].Net, Topic + 'Network Net number');
-    Form.AddWord ('O', ' Node'       , 30, 12, 38, 12,  6,  5,  0, 65535, @Config.NetAddress[Num].Node, Topic + 'Network Node number');
-    Form.AddWord ('P', ' Point'      , 29, 13, 38, 13,  7,  5,  0, 65535, @Config.NetAddress[Num].Point, Topic + 'Network Pointer number');
-    Form.AddStr  ('D', ' Description', 23, 14, 38, 14, 13, 20, 20,        @Config.NetDesc[Num], Topic + 'Network description');
+    WriteXY (21, 8, 112, 'Address');
+    WriteXY (47, 8, 112, 'Uplink');
+
+    Form.AddWord ('Z', ' Zone'       , 23,  9, 31,  9,  6,  5,  0, 65535, @Config.NetAddress[Num].Zone, Topic + 'Network Zone');
+    Form.AddWord ('N', ' Net'        , 24, 10, 31, 10,  5,  5,  0, 65535, @Config.NetAddress[Num].Net, Topic + 'Network Net');
+    Form.AddWord ('O', ' Node'       , 23, 11, 31, 11,  6,  5,  0, 65535, @Config.NetAddress[Num].Node, Topic + 'Network Node');
+    Form.AddWord ('P', ' Point'      , 22, 12, 31, 12,  7,  5,  0, 65535, @Config.NetAddress[Num].Point, Topic + 'Network Point');
+
+    Form.AddStr  ('M', ' Domain',      21, 14, 31, 14,  8,  8,  8, @Config.NetDomain[Num], Topic + 'Network domain');
+    Form.AddStr  ('D', ' Description', 16, 15, 31, 15, 13, 25, 25, @Config.NetDesc[Num], Topic + 'Network description');
+
+    Form.AddWord ('Z', ' Zone'       , 48,  9, 56,  9,  6,  5,  0, 65535, @Config.NetUplink[Num].Zone, Topic + 'Uplink Zone');
+    Form.AddWord ('N', ' Net'        , 49, 10, 56, 10,  5,  5,  0, 65535, @Config.NetUplink[Num].Net, Topic + 'Uplink Net');
+    Form.AddWord ('O', ' Node'       , 48, 11, 56, 11,  6,  5,  0, 65535, @Config.NetUplink[Num].Node, Topic + 'Uplink Node');
+    Form.AddWord ('P', ' Point'      , 47, 12, 56, 12,  7,  5,  0, 65535, @Config.NetUplink[Num].Point, Topic + 'Uplink Point');
 
     Form.Execute;
 

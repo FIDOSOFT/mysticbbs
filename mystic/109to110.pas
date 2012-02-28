@@ -502,6 +502,9 @@ Begin
     Config.Origin         := Origin;
 
     FillChar (Config.NetAddress, SizeOf(Config.NetAddress), #0);
+    FillChar (Config.NetDesc, SizeOf(Config.NetDesc), #0);
+    FillChar (Config.NetDomain, SizeOf(Config.NetDomain), #0);
+    FillChar (Config.NetUplink, SizeOf(Config.NetUplink), 0);
 
     For A := 1 to 20 Do Begin
       Config.NetAddress[A].Zone  := NetAddress[A].Zone;

@@ -190,7 +190,7 @@ Begin
             Form.AddNone ('3', ' 3 New User Optional Fields', 5, 10, 28, '');
             Form.AddNone ('F', ' F File Base Settings',       5, 11, 28, '');
             Form.AddNone ('M', ' M Message Base Settings',    5, 12, 28, '');
-            Form.AddNone ('E', ' E Echomail Addresses',       5, 13, 28, '');
+            Form.AddNone ('E', ' E Echomail Networks',        5, 13, 28, '');
             Form.AddNone ('O', ' O Offline Mail Settings',    5, 14, 28, '');
 
             Res        := Form.Execute;

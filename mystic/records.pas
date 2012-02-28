@@ -173,9 +173,11 @@ Type
     qwkWelcome      : String[mysMaxPathSize];
     qwkNews         : String[mysMaxPathSize];
     qwkGoodbye      : String[mysMaxPathSize];
-    Origin          : String[50];                         // Default origin line
-    NetAddress      : Array[1..30] of RecEchoMailAddr;    // echomail addresses
-    NetDesc         : Array[1..30] of String[20];         // echomail network description
+    Origin          : String[50];                               // Default origin line
+    NetAddress      : Array[1..30] of RecEchoMailAddr;          // echomail addresses
+    NetUplink       : Array[1..30] of RecEchoMailAddr;          // echomail uplink addresses
+    NetDomain       : Array[1..30] of String[8];                // echomail domains (5D)
+    NetDesc         : Array[1..30] of String[25];               // echomail network description
     NetCrash        : Boolean;
     NetHold         : Boolean;
     NetKillSent     : Boolean;
@@ -244,7 +246,7 @@ Type
     inetNNTPDupes   : Byte;
     inetNNTPTimeOut : Word;
  // UNSORTED
-    Reserved        : Array[1..482] of Char;
+    Reserved        : Array[1..846] of Char;
   End;
 
 Const
