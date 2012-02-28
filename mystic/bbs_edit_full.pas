@@ -970,8 +970,8 @@ Begin
     A := TotalLine;
 
     While (Session.Msgs.MsgText[A] = '') and (A > 1) Do Begin
-      Dec(A);
-      Dec(TotalLine);
+      Dec (A);
+      Dec (TotalLine);
     End;
 
     Lines := TotalLine;

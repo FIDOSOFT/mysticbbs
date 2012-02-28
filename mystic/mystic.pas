@@ -412,8 +412,6 @@ Begin
 
   Session.FindNextEvent;
 
-//  Session.SystemLog ('Node ' + strI2S(Session.NodeNum) + ' online');
-
   If Session.TimeOffset > 0 Then
     Session.SetTimeLeft(Session.TimeOffset)
   Else
