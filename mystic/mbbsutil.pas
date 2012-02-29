@@ -31,7 +31,7 @@ Program MBBSUTIL;
 
 Uses
   CRT,
-  Dos,
+  DOS,
   m_DateTime,
   m_Strings,
   m_QuickSort,
@@ -54,6 +54,7 @@ Const
   UserPack   : Boolean = False;
   MsgTrash   : Boolean = False;
   NodeCheck  : Boolean = True;
+  AreasOut   : Boolean = False;
 
   UserKillDays : Integer = 0;
   BBSSortID    : String  = '';
@@ -62,6 +63,7 @@ Const
   BBSKillDays  : Integer = 0;
   TrashFile    : String  = '';
   TempPath     : String  = '';
+  AreasFile    : String  = '';
 
 Var
   ConfigFile : File of RecConfig;
@@ -116,6 +118,7 @@ Begin
   Repeat
     If Eof(ArcFile) Then Begin
       Close (ArcFile);
+
       Exit;
     End;
 
@@ -141,6 +144,7 @@ Begin
   While A <= Length(Temp2) Do Begin
     If Temp2[A] = '%' Then Begin
       Inc(A);
+
       If Temp2[A] = '1' Then Temp := Temp + FName Else
       If Temp2[A] = '2' Then Temp := Temp + Mask Else
       If Temp2[A] = '3' Then Temp := Temp + TempPath;
@@ -151,6 +155,18 @@ Begin
   End;
 
   ShellDOS ('', Temp);
+End;
+
+Function strAddr2Str (Addr : RecEchoMailAddr) : String;
+Var
+  Temp : String[20];
+Begin
+  Temp := strI2S(Addr.Zone) + ':' + strI2S(Addr.Net) + '/' +
+          strI2S(Addr.Node);
+
+  If Addr.Point <> 0 Then Temp := Temp + '.' + strI2S(Addr.Point);
+
+  Result := Temp;
 End;
 
 Procedure Update_Status (Str: String);
@@ -177,17 +193,18 @@ Begin
   WriteLn;
   WriteLn ('The following command line options are available:');
   WriteLn;
-  WriteLn ('-BKILL  <ID> <Days> Delete BBSes which haven''t been verified in <DAYS>');
-  WriteLn ('-BPACK              Pack all BBS lists');
-  WriteLn ('-BSORT  <ID> <Type> Sorts and packs BBS list by <type>');
-  WriteLn ('-FCHECK             Checks file entries for correct size and status');
-  WriteLn ('-FPACK              Pack file bases');
-  WriteLn ('-FSORT              Sort file base entries by filename');
-  WriteLn ('-FUPLOAD            Mass upload all files into filebases');
-  WriteLn ('-MTRASH <File>      Delete messages to/from users listed in <File>');
-  WriteLn ('-NOCHECK            Bypass online user check at startup');
-  WriteLn ('-UKILL  <Days>      Delete users who have not called in <DAYS>');
-  WriteLn ('-UPACK              Pack user database');
+  WriteLn ('-AREAOUT <File>             Export AREAS.BBS format file in <File>');
+  WriteLn ('-BKILL   <ID> <Days>        Delete BBSes which haven''t been verified in <DAYS>');
+  WriteLn ('-BPACK                      Pack all BBS lists');
+  WriteLn ('-BSORT   <ID> <Type>        Sorts and packs BBS list by <type>');
+  WriteLn ('-FCHECK                     Checks file entries for correct size and status');
+  WriteLn ('-FPACK                      Pack file bases');
+  WriteLn ('-FSORT                      Sort file base entries by filename');
+  WriteLn ('-FUPLOAD                    Mass upload all files into filebases');
+  WriteLn ('-MTRASH  <File>             Delete messages to/from users listed in <File>');
+  WriteLn ('-NOCHECK                    Bypass online user check at startup');
+  WriteLn ('-UKILL   <Days>             Delete users who have not called in <DAYS>');
+  WriteLn ('-UPACK                      Pack user database');
 End;
 
 (***************************************************************************)
@@ -1075,6 +1092,45 @@ Begin
   WriteLn;
 End;
 
+Procedure ExportAreasBBS;
+Var
+  MBaseFile : TBufFile;
+  MBase     : RecMessageBase;
+  OutFile   : Text;
+Begin
+  Write ('Exporting AREAS.BBS  : ');
+
+  Assign (OutFile, AreasFile);
+  {$I-} ReWrite(OutFile); {$I+}
+
+  If IoResult <> 0 Then Exit;
+
+  MBaseFile := TBufFile.Create(8192);
+
+  If MBaseFile.Open(Config.DataPath + 'mbases.dat', fmOpen, fmRWDN, SizeOf(RecMessageBase)) Then Begin
+    MBaseFile.Read(MBase);
+
+    While Not MBaseFile.EOF Do Begin
+      MBaseFile.Read(MBase);
+
+      Update_Bar    (MBaseFile.FilePos, MBaseFile.FileSize);
+      Update_Status (strStripPipe(MBase.Name));
+
+      If MBase.NetType <> 1 Then Continue;
+
+      WriteLn (OutFile, '!' + Config.DataPath + MBase.FileName + ' ' + MBase.FileName + ' ' + strAddr2Str(Config.NetUplink[MBase.NetAddr]));
+    End;
+  End;
+
+  Close (OutFile);
+
+  MBaseFile.Free;
+
+  Update_Status ('Completed');
+
+  WriteLn;
+End;
+
 Var
   A        : Byte;
   Temp     : String;
@@ -1115,6 +1171,19 @@ Begin
 
   While (A <= ParamCount) Do Begin
     Temp := strUpper(ParamStr(A));
+
+    If Temp = '-AREASOUT' Then Begin
+      AreasFile := ParamStr(A+1);
+
+      Inc(A);
+
+      AreasOut := True;
+
+      If AreasFile = '' Then Begin
+        WriteLn('Missing parameter');
+        Halt(1);
+      End;
+    End;
 
     If Temp = '-BKILL' Then Begin
       BBSKillID   := ParamStr(A+1);
@@ -1240,4 +1309,5 @@ Begin
   If UserKill   Then Kill_User_File;
   If UserPack   Then Pack_User_File;
   If MsgTrash   Then MsgBase_Trash;
+  If AreasOut   Then ExportAreasBBS;
 End.

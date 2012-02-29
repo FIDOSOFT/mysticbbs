@@ -3916,3 +3916,21 @@
  + CTRL-U now Uncuts all text that is currently in the cut buffer within the
    full screen editor.  You can uncut (paste) as many times as you like with
    the current buffer.
+
+ + Mystic now has support for configuring Echomail domains for 5D addresses.
+
+ + Mystic now has support to configure an uplink address for each echomail
+   address.
+
+ + Default language filename can now be up to a 20 character filename
+
+ + Default start menu can now be up to a 20 character filename
+
+ + All ACS settings in the System configuration have been expanded from 20
+   characters to 30 characters max.
+
+ + All paths in the System configuration have been expanded to 80 characters
+   max.
+
+ + MBBSUTIL now has an -AREASOUT option which will export a list of all bases
+   flagged as Echomail in the AREAS.BBS format.
