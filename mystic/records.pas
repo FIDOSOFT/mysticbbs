@@ -56,9 +56,9 @@ Type
 
   RecMessageText = Array[1..mysMaxMsgLines] of String[79];
 
-  AccessFlagType = Set of 1..25;  { flags A to Z }
+  AccessFlagType = Set of 1..25;
 
-  RecEchoMailAddr = Record        { FidoNet-style network address    }
+  RecEchoMailAddr = Record
     Zone,
     Net,
     Node,
@@ -73,13 +73,13 @@ Type
     iMax   : Byte;
   End;
 
-  RecConfig = Record                                       // MYSTIC.DAT
+  RecConfig = Record                                            // MYSTIC.DAT
  // INTERNALS
-    DataChanged     : String[8];                           // Version of last data change
-    SystemCalls     : LongInt;                             // system caller number
-    UserIdxPos      : LongInt;                             // permanent user # position
+    DataChanged     : String[8];                                // Version of last data change
+    SystemCalls     : LongInt;                                  // system caller number
+    UserIdxPos      : LongInt;                                  // permanent user # position
  // SYSTEM PATHS
-    SystemPath      : String[mysMaxPathSize];
+    SystemPath      : String[mysMaxPathSize];                   // Root mystic path
     DataPath        : String[mysMaxPathSize];
     LogsPath        : String[mysMaxPathSize];
     MsgsPath        : String[mysMaxPathSize];
@@ -97,17 +97,17 @@ Type
     SysopPW         : String[15];
     SystemPW        : String[15];
     FeedbackTo      : String[30];
-    Inactivity      : Word;                               // Inactivity seconds (0=disabled)
-    DefStartMenu    : String[20];                         // Default start menu
+    Inactivity      : Word;                                     // Inactivity seconds (0=disabled)
+    DefStartMenu    : String[20];                               // Default start menu
     DefFallMenu     : String[20];
     DefThemeFile    : String[20];
     DefTermMode     : Byte;
     DefScreenSize   : Byte;
     DefScreenCols   : Byte;
-    ChatStart       : SmallInt;                           // Chat hour start
-    ChatEnd         : SmallInt;                           // Chat hour end: mins since midnight
-    ChatFeedback    : Boolean;                            // E-mail sysop if page isn't answered
-    ChatLogging     : Boolean;                            // Record SysOp chat to CHAT.LOG?
+    ChatStart       : SmallInt;                                 // Chat hour start
+    ChatEnd         : SmallInt;                                 // Chat hour end: mins since midnight
+    ChatFeedback    : Boolean;                                  // E-mail sysop if page isn't answered
+    ChatLogging     : Boolean;                                  // Record SysOp chat to CHAT.LOG?
     AcsSysop        : String[mysMaxAcsSize];
  // LOGIN/MATRIX
     LoginTime       : Byte;
