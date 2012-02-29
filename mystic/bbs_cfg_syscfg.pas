@@ -16,6 +16,7 @@ Procedure Configuration_TelnetServer;
 Procedure Configuration_POP3Server;
 Procedure Configuration_SMTPServer;
 Procedure Configuration_NNTPServer;
+Procedure Configuration_MessageSettings;
 
 Implementation
 
@@ -480,6 +481,50 @@ Begin
   Form.AddByte ('N', ' Max Connections', 28, 12, 47, 12, 17, 3, 1, 255, @Config.inetNNTPMax, Topic + 'Max Connections');
   Form.AddByte ('I', ' Dupe IP Limit',   30, 13, 47, 13, 15, 3, 1, 255,   @Config.inetNNTPDupes, Topic + 'Max connections with same IP');
   Form.AddWord ('T', ' Timeout',         36, 14, 47, 14,  9, 5, 0, 65535, @Config.inetNNTPTimeout, Topic + 'Connection timeout (seconds)');
+
+  Form.Execute;
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
+Procedure Configuration_MessageSettings;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09Message Settings|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Open (4, 5, 77, 19);
+
+  VerticalLine (27, 7, 17);
+  VerticalLine (65, 7, 14);
+
+  Form.AddBol  ('C', ' List Compression',      9,  7, 29,  7, 18, 3, @Config.MCompress, Topic + 'Compress numbers in area list?');
+  Form.AddByte ('I', ' List Columns',         13,  8, 29,  8, 14, 3, 1, 2, @Config.MColumns, Topic + 'Columns in area list');
+  Form.AddBol  ('S', ' Show Message Header',   6,  9, 29,  9, 21, 3, @Config.MShowHeader, Topic + 'Redisplay header after each page');
+  Form.AddBol  ('B', ' Bases in Group List',   6, 10, 29, 10, 21, 3, @Config.MShowBases, Topic + 'Calculate bases in group list?');
+  Form.AddByte ('X', ' Max AutoSig Lines',     8, 11, 29, 11, 19, 3, 1, 99, @Config.MaxAutoSig, Topic + 'Max autosig lines');
+  Form.AddStr  ('R', ' Crosspost ACS',        12, 12, 29, 12, 15, 30, 30, @Config.AcsCrossPost, Topic + 'ACS to allow crosspost messages');
+  Form.AddStr  ('A', ' Attachment ACS',       11, 13, 29, 13, 16, 30, 30, @Config.AcsFileAttach, Topic + 'ACS to allow file attachments');
+  Form.AddStr  ('S', ' Node Lookup ACS',      10, 14, 29, 14, 17, 30, 30, @Config.AcsNodeLookup, Topic + 'ACS to allow nodelist search');
+  Form.AddBol  ('T', ' External FSE',         13, 15, 29, 15, 14, 3, @Config.FSEditor, Topic + 'Use external editor');
+  Form.AddStr  ('F', ' FSE Command Line',      9, 16, 29, 16, 18, 40, 60, @Config.FSCommand, Topic + 'FSE command line');
+  Form.AddStr  ('D', ' Default Origin',       11, 17, 29, 17, 16, 40, 50, @Config.Origin, Topic + 'Origin line for new bases');
+
+  Form.AddAttr ('Q', ' Quote Color',          52,  7, 67,  7, 13, @Config.ColorQuote, Topic + 'Color for quoted text');
+  Form.AddAttr ('E', ' Text Color'  ,         53,  8, 67,  8, 12, @Config.ColorText, Topic + 'Color for message text');
+  Form.AddAttr ('O', ' Tear Color'  ,         53,  9, 67,  9, 12, @Config.ColorTear, Topic + 'Color for tear line');
+  Form.AddAttr ('L', ' Origin Color',         51, 10, 67, 10, 14, @Config.ColorOrigin, Topic + 'Color for origin line');
+  Form.AddAttr ('K', ' Kludge Color',         51, 11, 67, 11, 14, @Config.ColorKludge, Topic + 'Color for kludge line');
+  Form.AddBol  ('N', ' Netmail Crash',        50, 12, 67, 12, 15, 3, @Config.NetCrash, Topic + 'Use netmail crash flag');
+  Form.AddBol  ('M', ' Netmail Hold',         51, 13, 67, 13, 14, 3, @Config.NetHold, Topic + 'Use netmail hold flag');
+  Form.AddBol  ('1', ' Netmail Killsent',     47, 14, 67, 14, 18, 3, @Config.NetKillsent, Topic + 'Use netmail killsent flag');
 
   Form.Execute;
   Form.Free;

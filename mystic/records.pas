@@ -97,36 +97,38 @@ Type
     SysopPW         : String[15];
     SystemPW        : String[15];
     FeedbackTo      : String[30];
-    Inactivity      : Word;
-    LoginTime       : Byte;
-    LoginAttempts   : Byte;
-    PWAttempts      : Byte;
-    PWChange        : Word;
-    PWInquiry       : Boolean;
-    DefStartMenu    : String[20];
+    Inactivity      : Word;                               // Inactivity seconds (0=disabled)
+    DefStartMenu    : String[20];                         // Default start menu
     DefFallMenu     : String[20];
     DefThemeFile    : String[20];
     DefTermMode     : Byte;
     DefScreenSize   : Byte;
     DefScreenCols   : Byte;
-    UseMatrix       : Boolean;
-    MatrixMenu      : String[20];
-    MatrixPW        : String[15];
-    MatrixAcs       : String[mysMaxAcsSize];
-    AcsSysop        : String[mysMaxAcsSize];
-    AcsInvisLogin   : String[mysMaxAcsSize];
-    AcsSeeInvis     : String[mysMaxAcsSize];
-    AcsMultiLogin   : String[mysMaxAcsSize];
-    SysopMacro      : Array[1..4] of String[80];          // Sysop Macros
     ChatStart       : SmallInt;                           // Chat hour start
     ChatEnd         : SmallInt;                           // Chat hour end: mins since midnight
     ChatFeedback    : Boolean;                            // E-mail sysop if page isn't answered
     ChatLogging     : Boolean;                            // Record SysOp chat to CHAT.LOG?
+    AcsSysop        : String[mysMaxAcsSize];
+ // LOGIN/MATRIX
+    LoginTime       : Byte;
+    LoginAttempts   : Byte;
+    PWAttempts      : Byte;
+    PWChange        : Word;
+    PWInquiry       : Boolean;
+    UseMatrix       : Boolean;
+    MatrixMenu      : String[20];
+    MatrixPW        : String[15];
+    MatrixAcs       : String[mysMaxAcsSize];
+    AcsInvisLogin   : String[mysMaxAcsSize];
+    AcsSeeInvis     : String[mysMaxAcsSize];
+    AcsMultiLogin   : String[mysMaxAcsSize];
+ // CONSOLE SETTINGS
+    SysopMacro      : Array[1..4] of String[80];                // Sysop Macros f1-f4
     UseStatusBar    : Boolean;
     StatusColor1    : Byte;
     StatusColor2    : Byte;
     StatusColor3    : Byte;
- // NEW USER SETTINGS
+ // NEW USER SETTINGS 1
     AllowNewUsers   : Boolean;
     NewUserSec      : SmallInt;
     NewUserPW       : String[15];
@@ -135,12 +137,13 @@ Type
     StartFGroup     : Word;
     UseUSAPhone     : Boolean;
     UserNameFormat  : Byte;
-    UserDateType    : Byte;                               // 1=MM/DD/YY 2=DD/MM/YY 3=YY/DD/MM 4=Ask
-    UserEditorType  : Byte;                               // 0=Line 1=Full 2=Ask
-    UserHotKeys     : Byte;                               // 0=no 1=yes 2=ask
-    UserFullChat    : Byte;                               // 0=no 1=yes 2=ask
-    UserFileList    : Byte;                               // 0=Normal 1=Lightbar 2=Ask
-    UserReadType    : Byte;                               // 0=normal 1=ansi 2=ask
+ // NEW USER SETTINGS 2
+    UserDateType    : Byte;                                     // 1=MM/DD/YY 2=DD/MM/YY 3=YY/DD/MM 4=Ask
+    UserEditorType  : Byte;                                     // 0=Line 1=Full 2=Ask
+    UserHotKeys     : Byte;                                     // 0=no 1=yes 2=ask
+    UserFullChat    : Byte;                                     // 0=no 1=yes 2=ask
+    UserFileList    : Byte;                                     // 0=Normal 1=Lightbar 2=Ask
+    UserReadType    : Byte;                                     // 0=normal 1=ansi 2=ask
     UserMailIndex   : Byte;
     UserReadIndex   : Byte;
     UserQuoteWin    : Byte;
@@ -159,25 +162,15 @@ Type
     AskUserNote     : Boolean;
     AskScreenSize   : Boolean;
     AskScreenCols   : Boolean;
+ // NEW USER OPTIONAL
     OptionalField   : Array[1..10] of RecUserOptionalField;
  // MESSAGE BASE SETTINGS
     MCompress       : Boolean;
     MColumns        : Byte;
-    MShowHeader     : Boolean;                            // re-show msg header after pause
+    MShowHeader     : Boolean;                                  // re-show msg header after pause
     MShowBases      : Boolean;
     MaxAutoSig      : Byte;
-    qwkMaxBase      : Word;
-    qwkMaxPacket    : Word;
-    qwkArchive      : String[4];
-    qwkBBSID        : String[8];
-    qwkWelcome      : String[mysMaxPathSize];
-    qwkNews         : String[mysMaxPathSize];
-    qwkGoodbye      : String[mysMaxPathSize];
     Origin          : String[50];                               // Default origin line
-    NetAddress      : Array[1..30] of RecEchoMailAddr;          // echomail addresses
-    NetUplink       : Array[1..30] of RecEchoMailAddr;          // echomail uplink addresses
-    NetDomain       : Array[1..30] of String[8];                // echomail domains (5D)
-    NetDesc         : Array[1..30] of String[25];               // echomail network description
     NetCrash        : Boolean;
     NetHold         : Boolean;
     NetKillSent     : Boolean;
@@ -191,13 +184,26 @@ Type
     AcsNodeLookup   : String[mysMaxAcsSize];
     FSEditor        : Boolean;
     FSCommand       : String[60];
+ // ECHOMAIL NETWORKS
+    NetAddress      : Array[1..30] of RecEchoMailAddr;          // echomail addresses
+    NetUplink       : Array[1..30] of RecEchoMailAddr;          // echomail uplink addresses
+    NetDomain       : Array[1..30] of String[8];                // echomail domains (5D)
+    NetDesc         : Array[1..30] of String[25];               // echomail network description
+ // OFFLINE MAIL (should include local qwk path)
+    qwkMaxBase      : Word;
+    qwkMaxPacket    : Word;
+    qwkArchive      : String[4];
+    qwkBBSID        : String[8];
+    qwkWelcome      : String[mysMaxPathSize];
+    qwkNews         : String[mysMaxPathSize];
+    qwkGoodbye      : String[mysMaxPathSize];
  // FILE BASE SETTINGS
     FCompress       : Boolean;
     FColumns        : Byte;
     FShowHeader     : Boolean;
     FShowBases      : Boolean;
-    FDupeScan       : Byte;                               // 0=no 1=yes 2=global
-    UploadBase      : Word;                               // Default upload file base
+    FDupeScan       : Byte;                                     // 0=no 1=yes 2=global
+    UploadBase      : Word;                                     // Default upload file base
     ImportDIZ       : Boolean;
     FreeUL          : LongInt;
     FreeCDROM       : LongInt;

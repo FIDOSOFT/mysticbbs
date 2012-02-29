@@ -210,6 +210,7 @@ Begin
                 'E' : Configuration_EchoMailAddress(True);
                 '3' : Configuration_OptionalFields;
                 'F' : Configuration_FileSettings;
+                'M' : Configuration_MessageSettings;
                 'O' : Configuration_QWKSettings;
                 'X' : Break;
               Else
