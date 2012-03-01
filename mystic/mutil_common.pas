@@ -37,6 +37,9 @@ Procedure ExecuteArchive     (FName: String; Temp: String; Mask: String; Mode: B
 Implementation
 
 Uses
+  {$IFDEF UNIX}
+    Unix
+  {$ENDIF}
   DOS,
   m_Types,
   m_Strings,
