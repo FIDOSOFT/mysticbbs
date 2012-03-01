@@ -46,7 +46,6 @@ Const
   FilePack   : Boolean = False;
   FileSort   : Boolean = False;
   FileCheck  : Boolean = False;
-  FileUpload : Boolean = False;
   BBSPack    : Boolean = False;
   BBSSort    : Boolean = False;
   BBSKill    : Boolean = False;
@@ -78,84 +77,6 @@ Type
   End;
 
   SquLastType = LongInt;
-
-Function ShellDOS (ExecPath: String; Command: String) : LongInt;
-Begin
-  // needs to save/restore screen
-
-  If ExecPath <> '' Then DirChange(ExecPath);
-
-  {$IFDEF UNIX}
-    Result := Shell (Command);
-  {$ENDIF}
-
-  {$IFDEF WINDOWS}
-    If Command <> '' Then Command := '/C' + Command;
-
-    Exec (GetEnv('COMSPEC'), Command);
-
-    Result := DosExitCode;
-  {$ENDIF}
-
-  DirChange(Config.SystemPath);
-End;
-
-Procedure ExecuteArchive (FName: String; Temp: String; Mask: String; Mode: Byte);
-{mode: 1 = pack, 2 = unpack}
-Var
-  A       : Byte;
-  Temp2   : String[60];
-  ArcFile : File of RecArchive;
-  Arc     : RecArchive;
-Begin
-  Temp := strUpper(JustFileExt(FName));
-
-  Assign (ArcFile, Config.DataPath + 'archive.dat');
-  {$I-} Reset (ArcFile); {$I+}
-
-  If IoResult <> 0 Then Exit;
-
-  Repeat
-    If Eof(ArcFile) Then Begin
-      Close (ArcFile);
-
-      Exit;
-    End;
-
-    Read (ArcFile, Arc);
-
-    If (Not Arc.Active) or (Arc.OSType <> OSType) Then Continue;
-
-    If strUpper(Arc.Ext) = Temp Then Break;
-  Until False;
-
-  Close (ArcFile);
-
-  Case Mode of
-    1 : Temp2 := Arc.Pack;
-    2 : Temp2 := Arc.Unpack;
-  End;
-
-  If Temp2 = '' Then Exit;
-
-  Temp := '';
-  A    := 1;
-
-  While A <= Length(Temp2) Do Begin
-    If Temp2[A] = '%' Then Begin
-      Inc(A);
-
-      If Temp2[A] = '1' Then Temp := Temp + FName Else
-      If Temp2[A] = '2' Then Temp := Temp + Mask Else
-      If Temp2[A] = '3' Then Temp := Temp + TempPath;
-    End Else
-      Temp := Temp + Temp2[A];
-
-    Inc(A);
-  End;
-
-  ShellDOS ('', Temp);
-End;
 
 Function strAddr2Str (Addr : RecEchoMailAddr) : String;
 Var
@@ -200,7 +121,6 @@ Begin
   WriteLn ('-FCHECK                     Checks file entries for correct size and status');
   WriteLn ('-FPACK                      Pack file bases');
   WriteLn ('-FSORT                      Sort file base entries by filename');
-  WriteLn ('-FUPLOAD                    Mass upload all files into filebases');
   WriteLn ('-MTRASH   <File>            Delete messages to/from users listed in <File>');
   WriteLn ('-NOCHECK                    Bypass online user check at startup');
   WriteLn ('-UKILL    <Days>            Delete users who have not called in <DAYS>');
@@ -938,160 +858,6 @@ Begin
   WriteLn;
 End;
 
-Procedure Upload_File_Bases;
-Const
-  NoDescStr = 'No Description';
-Var
-  BaseFile : File of RecFileBase;
-  ListFile : File of RecFileList;
-  DescFile : File;
-  DizFile  : Text;
-  Base     : RecFileBase;
-  List     : RecFileList;
-  DirInfo  : SearchRec;
-  Found    : Boolean;
-  Desc     : Array[1..99] of String[50];
-  Count    : Integer;
-
-  Procedure RemoveDesc (Num: Byte);
-  Var
-    A : Byte;
-  Begin
-    For A := Num To List.DescLines - 1 Do
-      Desc[A] := Desc[A + 1];
-
-    Desc[List.DescLines] := '';
-
-    Dec (List.DescLines);
-  End;
-
-Begin
-  Write ('Mass Upload Files    :');
-
-  Assign (BaseFile, Config.DataPath + 'fbases.dat');
-  {$I-} Reset (BaseFile); {$I+}
-
-  If IoResult = 0 Then Begin
-    While Not Eof(BaseFile) Do Begin
-      Read (BaseFile, Base);
-
-      Update_Status (strStripPipe(Base.Name));
-      Update_Bar    (FilePos(BaseFile), FileSize(BaseFile));
-
-      If Not FileDirExists(Base.Path) Then Continue;
-
-      FindFirst (Base.Path + '*', AnyFile, DirInfo);
-
-      While DosError = 0 Do Begin
-        If (DirInfo.Attr And Directory <> 0) or
-           (Length(DirInfo.Name) > 70) Then Begin
-             FindNext(DirInfo);
-             Continue;
-        End;
-
-        // should technically rename the file like Mystic does if > 70 chars
-
-        Assign (ListFile, Config.DataPath + Base.FileName + '.dir');
-
-        If FileExist(Config.DataPath + Base.FileName + '.dir') Then
-          ioReset (ListFile, SizeOf(RecFileList), fmRWDN)
-        Else
-          ReWrite (ListFile);
-
-        Found := False;
-
-        While Not Eof(ListFile) And Not Found Do Begin
-          Read (ListFile, List);
-
-          If List.Flags and FDirDeleted <> 0 Then Continue;
-
-          {$IFDEF FS_SENSITIVE}
-            Found := List.FileName = DirInfo.Name;
-          {$ELSE}
-            Found := strUpper(List.FileName) = strUpper(DirInfo.Name);
-          {$ENDIF}
-        End;
-
-        If Not Found Then Begin
-          Seek (ListFile, FileSize(ListFile));
-
-          List.FileName  := DirInfo.Name;
-          List.Size      := DirInfo.Size;
-          List.DateTime  := CurDateDos;
-          List.Uploader  := 'MBBSUTIL';
-          List.Flags     := 0;
-          List.Downloads := 0;
-          List.Rating    := 0;
-
-          ExecuteArchive (Base.Path + List.FileName, '', 'file_id.diz', 2);
-
-          Assign (DizFile, TempPath + 'file_id.diz');
-          {$I-} Reset (DizFile); {$I+}
-
-          If IoResult = 0 Then Begin
-            List.DescLines := 0;
-
-            While Not Eof(DizFile) Do Begin
-              Inc    (List.DescLines);
-              ReadLn (DizFile, Desc[List.DescLines]);
-
-              Desc[List.DescLines] := strStripLOW(Desc[List.DescLines]);
-
-              If Length(Desc[List.DescLines]) > mysMaxFileDescLen Then Desc[List.DescLines][0] := Chr(mysMaxFileDescLen);
-
-              If List.DescLines = Config.MaxFileDesc Then Break;
-            End;
-
-            Close (DizFile);
-
-            While (Desc[1] = '') and (List.DescLines > 0) Do
-              RemoveDesc(1);
-
-            While (Desc[List.DescLines] = '') And (List.DescLines > 0) Do
-              Dec (List.DescLines);
-          End Else Begin
-            List.DescLines := 1;
-            Desc[1]        := NoDescStr;
-          End;
-
-          FileErase (TempPath + 'file_id.diz');
-
-          Assign (DescFile, Config.DataPath + Base.FileName + '.des');
-
-          If FileExist(Config.DataPath + Base.FileName + '.des') Then
-            Reset (DescFile, 1)
-          Else
-            ReWrite (DescFile, 1);
-
-          List.DescPtr := FileSize(DescFile);
-
-          Seek (DescFile, List.DescPtr);
-
-          For Count := 1 to List.DescLines Do
-            BlockWrite (DescFile, Desc[Count][0], Length(Desc[Count]) + 1);
-
-          Close (DescFile);
-
-          Write (ListFile, List);
-        End;
-
-        Close (ListFile);
-
-        FindNext(DirInfo);
-      End;
-
-      FindClose(DirInfo);
-    End;
-
-    Close (BaseFile);
-  End;
-
-  Update_Bar    (100, 100);
-  Update_Status ('Completed');
-
-  WriteLn;
-End;
-
 Procedure ExportAreasBBS;
 Var
   MBaseFile : TBufFile;
@@ -1232,7 +998,6 @@ Begin
     If Temp = '-FCHECK' Then FileCheck := True;
     If Temp = '-FPACK'  Then FilePack  := True;
     If Temp = '-FSORT'  Then FileSort  := True;
-    If Temp = '-FUPLOAD' Then FileUpload := True;
     If Temp = '-UKILL'  Then Begin
       UserKill := True;
 
@@ -1300,7 +1065,6 @@ Begin
 
   DirClean (TempPath, '');
 
-  If FileUpload Then Upload_File_Bases;
   If FileSort   Then Sort_File_Bases;
   If FileCheck  Then Check_File_Bases;
   If FilePack   Then Pack_File_Bases;
