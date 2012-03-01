@@ -4,26 +4,35 @@ Unit m_Input;
 
 Interface
 
-{$IFDEF WINDOWS}
+{.$DEFINE USE_CRT_INPUT}
+
+{$IFDEF OS2}
+  {$DEFINE USE_CRT_INPUT}
+{$ENDIF}
+
+{$IFDEF USE_CRT_INPUT}
+  {$WARNING ***** GENERIC CRT INPUT IS ENABLED *****}
+
   Uses
-    m_Input_Windows;
+    m_Input_CRT;
 
   Type
-    TInput = Class(TInputWindows);
-{$ENDIF}
+    TInput = Class(TInputCRT);
+{$ELSE}
+  {$IFDEF WINDOWS}
+    Uses m_Input_Windows;
+    Type TInput = Class(TInputWindows);
+  {$ENDIF}
 
-{$IFDEF LINUX}
-  Uses m_Input_Linux;
+  {$IFDEF LINUX}
+    Uses m_Input_Linux;
+    Type TInput = Class(TInputLinux);
+  {$ENDIF}
 
-  Type
-    TInput = Class(TInputLinux);
-{$ENDIF}
-
-{$IFDEF DARWIN}
-  Uses m_Input_Darwin;
-
-  Type
-    TInput = Class(TInputDarwin);
+  {$IFDEF DARWIN}
+    Uses m_Input_Darwin;
+    Type TInput = Class(TInputDarwin);
+  {$ENDIF}
 {$ENDIF}
 
 Const

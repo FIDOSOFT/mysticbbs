@@ -4,26 +4,31 @@ Unit m_Output;
 
 Interface
 
-{$IFDEF WINDOWS}
-  Uses
-    m_Output_Windows;
+{.$DEFINE USE_CRT_OUTPUT}
 
-  Type
-    TOutput = Class(TOutputWindows);
+{$IFDEF OS2}
+  {$DEFINE USE_CRT_INPUT}
 {$ENDIF}
 
-{$IFDEF LINUX}
-  Uses m_Output_Linux;
+{$IFDEF USE_CRT_OUTPUT}
+  {$WARNING ***** GENERIC CRT OUTPUT IS ENABLED *****}
+  Uses m_Output_CRT;
+  Type TOutput = Class(TOutputCRT);
+{$ELSE}
+  {$IFDEF WINDOWS}
+    Uses m_Output_Windows;
+    Type TOutput = Class(TOutputWindows);
+  {$ENDIF}
 
-  Type
-    TOutput = Class(TOutputLinux);
-{$ENDIF}
+  {$IFDEF LINUX}
+    Uses m_Output_Linux;
+    Type TOutput = Class(TOutputLinux);
+  {$ENDIF}
 
-{$IFDEF DARWIN}
-  Uses m_Output_Darwin;
-
-  Type
-    TOutput = Class(TOutputDarwin);
+  {$IFDEF DARWIN}
+    Uses m_Output_Darwin;
+    Type TOutput = Class(TOutputDarwin);
+  {$ENDIF}
 {$ENDIF}
 
 Implementation
