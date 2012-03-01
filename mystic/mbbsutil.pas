@@ -193,17 +193,17 @@ Begin
   WriteLn;
   WriteLn ('The following command line options are available:');
   WriteLn;
-  WriteLn ('-AREAOUT <File>             Export AREAS.BBS format file in <File>');
-  WriteLn ('-BKILL   <ID> <Days>        Delete BBSes which haven''t been verified in <DAYS>');
+  WriteLn ('-AREAOUT  <File>            Export AREAS.BBS format file in <File>');
+  WriteLn ('-BKILL    <ID> <Days>       Delete BBSes which haven''t been verified in <DAYS>');
   WriteLn ('-BPACK                      Pack all BBS lists');
-  WriteLn ('-BSORT   <ID> <Type>        Sorts and packs BBS list by <type>');
+  WriteLn ('-BSORT    <ID> <Type>       Sorts and packs BBS list by <type>');
   WriteLn ('-FCHECK                     Checks file entries for correct size and status');
   WriteLn ('-FPACK                      Pack file bases');
   WriteLn ('-FSORT                      Sort file base entries by filename');
   WriteLn ('-FUPLOAD                    Mass upload all files into filebases');
-  WriteLn ('-MTRASH  <File>             Delete messages to/from users listed in <File>');
+  WriteLn ('-MTRASH   <File>            Delete messages to/from users listed in <File>');
   WriteLn ('-NOCHECK                    Bypass online user check at startup');
-  WriteLn ('-UKILL   <Days>             Delete users who have not called in <DAYS>');
+  WriteLn ('-UKILL    <Days>            Delete users who have not called in <DAYS>');
   WriteLn ('-UPACK                      Pack user database');
 End;
 
@@ -1141,7 +1141,7 @@ Begin
 
   WriteLn;
   WriteLn ('MBBSUTIL: ', mysSoftwareID, ' BBS Utilities Version ', mysVersion, ' (', OSID, ')');
-  WriteLn ('Copyright (C) 1997-2012 By James Coyle.  All Rights Reserved.');
+  WriteLn ('Copyright (C) ', mysCopyYear, ' By James Coyle.  All Rights Reserved.');
   WriteLn;
 
   FileMode := 66;
@@ -1258,6 +1258,7 @@ Begin
 
       If TrashFile = '' Then TrashFile := Config.DataPath + 'trashcan.dat';
     End;
+
     If Temp = '-UPACK'  Then UserPack  := True;
 
     Inc (A);
