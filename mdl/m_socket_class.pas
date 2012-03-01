@@ -503,6 +503,7 @@ Var
   PHE    : PHostEnt;
   SIN    : TINetSockAddr;
   Temp   : LongInt;
+  SL     : TSockLen;
 Begin
   Result := NIL;
 
@@ -521,7 +522,9 @@ Begin
   Else
     FPeerName := StrPas(PHE^.h_name);
 
-  fpGetSockName(FSocketHandle, @SIN, SizeOf(SIN));
+  SL := SizeOf(SIN);
+
+  fpGetSockName(FSocketHandle, @SIN, @SL);
 
   FHostIP := NetAddrToStr(SIN.sin_addr);
   Client  := TSocketClass.Create;
