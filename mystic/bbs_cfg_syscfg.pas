@@ -510,9 +510,9 @@ Begin
   Form.AddBol  ('S', ' Show Message Header',   6,  9, 29,  9, 21, 3, @Config.MShowHeader, Topic + 'Redisplay header after each page');
   Form.AddBol  ('B', ' Bases in Group List',   6, 10, 29, 10, 21, 3, @Config.MShowBases, Topic + 'Calculate bases in group list?');
   Form.AddByte ('X', ' Max AutoSig Lines',     8, 11, 29, 11, 19, 3, 1, 99, @Config.MaxAutoSig, Topic + 'Max autosig lines');
-  Form.AddStr  ('R', ' Crosspost ACS',        12, 12, 29, 12, 15, 30, 30, @Config.AcsCrossPost, Topic + 'ACS to allow crosspost messages');
-  Form.AddStr  ('A', ' Attachment ACS',       11, 13, 29, 13, 16, 30, 30, @Config.AcsFileAttach, Topic + 'ACS to allow file attachments');
-  Form.AddStr  ('S', ' Node Lookup ACS',      10, 14, 29, 14, 17, 30, 30, @Config.AcsNodeLookup, Topic + 'ACS to allow nodelist search');
+  Form.AddStr  ('R', ' Crosspost ACS',        12, 12, 29, 12, 15, 20, 30, @Config.AcsCrossPost, Topic + 'ACS to allow crosspost messages');
+  Form.AddStr  ('A', ' Attachment ACS',       11, 13, 29, 13, 16, 20, 30, @Config.AcsFileAttach, Topic + 'ACS to allow file attachments');
+  Form.AddStr  ('S', ' Node Lookup ACS',      10, 14, 29, 14, 17, 20, 30, @Config.AcsNodeLookup, Topic + 'ACS to allow nodelist search');
   Form.AddBol  ('T', ' External FSE',         13, 15, 29, 15, 14, 3, @Config.FSEditor, Topic + 'Use external editor');
   Form.AddStr  ('F', ' FSE Command Line',      9, 16, 29, 16, 18, 40, 60, @Config.FSCommand, Topic + 'FSE command line');
   Form.AddStr  ('D', ' Default Origin',       11, 17, 29, 17, 16, 40, 50, @Config.Origin, Topic + 'Origin line for new bases');
