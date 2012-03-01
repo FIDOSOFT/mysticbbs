@@ -32,7 +32,11 @@ Procedure ProcessName (Str: String; Start: Boolean);
 Begin
   Console.WriteXYPipe (5, Console.CursorY, 7, 26, Str);
 
-  If Start Then Inc (ProcessPos);
+  If Start Then Begin
+    Inc (ProcessPos);
+
+    BarOne.Reset;
+  End;
 End;
 
 Procedure ProcessStatus (Str: String);
@@ -49,7 +53,12 @@ Begin
     rFATAL   : Console.WriteXYPipe(66, Console.CursorY, 12, 11, 'FATAL');
   End;
 
-  If Done Then Console.WriteLine('');
+  If Done Then Begin
+    Console.WriteLine('');
+
+    BarOne.Update (100, 100);
+    BarAll.Update (ProcessPos, ProcessTotal);
+  End;
 End;
 
 Procedure TStatusBar.Reset;

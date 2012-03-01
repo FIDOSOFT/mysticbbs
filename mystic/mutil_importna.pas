@@ -21,7 +21,6 @@ Var
   Buffer       : Array[1..2048] of Byte;
   TagName      : String;
   BaseName     : String;
-  MBaseFile    : File of RecMessageBase;
   MBase        : RecMessageBase;
   Count        : Byte;
 Begin
@@ -90,6 +89,9 @@ Begin
           Break;
         End;
 
+      If INI.ReadString(Header_IMPORTNA, 'lowercase_filename', '1') = '1' Then
+        MBase.FileName := strLower(MBase.FileName);
+
       If INI.ReadString(Header_IMPORTNA, 'use_autosig', '1') = '1' Then
         MBase.Flags := MBase.Flags OR MBAutoSigs;
 
@@ -110,9 +112,6 @@ Begin
 
   ProcessStatus ('Created |15' + strI2S(CreatedBases) + ' |07base(s)');
   ProcessResult (rDONE, True);
-
-  BarOne.Update (100, 100);
-  BarAll.Update (ProcessPos, ProcessTotal);
 End;
 
 End.

@@ -33,6 +33,10 @@ Program MUTIL;
 // tosser too.  TOP 10 generators, etc.  It's all planned for MUTIL.
 
 Uses
+  {$IFDEF DEBUG}
+    HeapTrc,
+    LineInfo,
+  {$ENDIF}
   INIFiles,
   m_Output,
   m_DateTime,
@@ -40,7 +44,8 @@ Uses
   m_FileIO,
   mutil_Common,
   mutil_Status,
-  mutil_ImportNA;
+  mutil_ImportNA,
+  mutil_Upload;
 
 {$I MUTIL_ANSI.PAS}
 
@@ -124,18 +129,30 @@ Begin
     Halt(1);
   End;
 
+  TempPath := bbsConfig.SystemPath + 'temp0' + PathChar;
+
+  GetDIR (0, StartPath);
+
+  {$I-}
+  MkDir (TempPath);
+  {$I+}
+
+  DirClean (TempPath, '');
+
   BarOne := TStatusBar.Create(3);
   BarAll := TStatusBar.Create(6);
 End;
 
 Var
-  DoImportNA : Boolean;
+  DoImportNA   : Boolean;
+  DoMassUpload : Boolean;
 Begin
   ApplicationStartup;
 
   // Build process list
 
-  DoImportNA := CheckProcess(Header_IMPORTNA);
+  DoImportNA   := CheckProcess(Header_IMPORTNA);
+  DoMassUpload := CheckProcess(Header_UPLOAD);
 
   // Exit with an error if nothing is configured
 
@@ -149,5 +166,6 @@ Begin
 
   // We're good lets execute this stuff!
 
-  If DoImportNA Then uImportNA;
+  If DoImportNA   Then uImportNA;
+  If DoMassUpload Then uMassUpload;
 End.
