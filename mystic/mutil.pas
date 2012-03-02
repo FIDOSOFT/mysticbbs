@@ -137,6 +137,8 @@ Begin
   MkDir (TempPath);
   {$I+}
 
+  If IoResult <> 0 Then;
+
   DirClean (TempPath, '');
 
   BarOne := TStatusBar.Create(3);
