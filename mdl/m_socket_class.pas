@@ -5,6 +5,9 @@ Unit m_Socket_Class;
 Interface
 
 Uses
+  {$IFDEF OS2}
+    WinSock,
+  {$ENDIF}
   {$IFDEF WIN32}
     Windows,
     Winsock2,
