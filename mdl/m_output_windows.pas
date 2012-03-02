@@ -588,7 +588,7 @@ Var
   CountX  : Byte;
   CountY  : Byte;
   BufPos  : Integer;
-  TempBuf : Array[1..SizeOf(TConsoleScreenRec) DIV 4] of LongInt Absolute Image.Data;
+  TempBuf : Array[1..SizeOf(TConsoleScreenRec) DIV 2] of LongInt Absolute Image.Data;
 Begin
   BufSize.X     := Image.X2 - Image.X1 + 1;
   BufSize.Y     := Image.Y2 - Image.Y1 + 1;
@@ -697,33 +697,13 @@ Begin
 End;
 
 Function TOutputWindows.ReadCharXY (X, Y: Byte) : Char;
-//Var
-//  Coord   : TCoord;
-//  WasRead : ULong;
 Begin
-//  Coord.X := X;
-//  Coord.Y := Y - 1;
-
-  // should use buffer instead
-
-//  ReadConsoleOutputCharacter(ConOut, @Result, 1, Coord, WasRead);
-
   Result := Buffer[Y][X].UnicodeChar;
 End;
 
 Function TOutputWindows.ReadAttrXY (X, Y: Byte) : Byte;
-//Var
-//  Coord   : TCoord;
-//  WasRead : ULong;
 Begin
-//  Coord.X := X;
-//  Coord.Y := Y - 1;
-
-  // should use buffer instead
-
   Result := Buffer[Y][X].Attributes;
-
-//  ReadConsoleOutputAttribute(ConOut, @Result, 1, Coord, WasRead);
 End;
 
 Procedure TOutputWindows.BufFlush;

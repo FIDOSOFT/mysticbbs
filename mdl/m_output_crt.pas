@@ -310,8 +310,6 @@ Begin
 
   SetTextAttr(OldAttr);
   CursorXY (OldX, OldY);
-
-  BufFlush;
 End;
 
 Procedure TOutputCRT.WriteXYPipe (X, Y, Attr, Pad: Integer; Text: String);
