@@ -17,6 +17,8 @@ Procedure Configuration_POP3Server;
 Procedure Configuration_SMTPServer;
 Procedure Configuration_NNTPServer;
 Procedure Configuration_MessageSettings;
+Procedure Configuration_NewUser1Settings;
+Procedure Configuration_NewUser2Settings;
 
 Implementation
 
@@ -532,5 +534,86 @@ Begin
   Box.Close;
   Box.Free;
 End;
+
+Procedure Configuration_NewUser1Settings;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09New User Settings|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Open (18, 5, 63, 16);
+
+  VerticalLine (39, 7, 14);
+
+  Form.AddBol  ('A', ' Allow New Users',    22,  7, 41,  7, 17, 3, @Config.AllowNewUsers, Topic);
+  Form.AddByte ('S', ' Security',           29,  8, 41,  8, 10, 3, 1, 255, @Config.NewUserSec, Topic);
+  Form.AddStr  ('P', ' Password',           29,  9, 41,  9, 10, 15, 15, @Config.NewUserPW, Topic);
+  Form.AddBol  ('N', ' New User Feedback',  20, 10, 41, 10, 19, 3, @Config.NewUserEmail, Topic);
+  Form.AddBol  ('U', ' Use USA Phone',      24, 11, 41, 11, 15, 3, @Config.UseUSAPhone, Topic);
+  Form.AddTog  ('E', ' User Name Format',   21, 12, 41, 12, 18, 8, 0, 3, 'As_Typed Upper Lower Proper', @Config.UserNameFormat, Topic);
+  Form.AddWord ('T', ' Start Msg Group',    22, 13, 41, 13, 17, 5, 0, 65535, @Config.StartMGroup, Topic);
+  Form.AddWord ('R', ' Start File Group',   21, 14, 41, 14, 18, 5, 0, 65535, @Config.StartFGroup, Topic);
+
+  Form.Execute;
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
+
+Procedure Configuration_NewUser2Settings;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09New User Settings|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Open (8, 5, 73, 21);
+
+  VerticalLine (25, 7, 19);
+  VerticalLine (58, 7, 16);
+
+  Form.AddBol  ('A', ' Ask Theme',      14,  7, 27,  7, 11, 3, @Config.AskTheme, Topic);
+  Form.AddBol  ('S', ' Ask Real Name',  10,  8, 27,  8, 15, 3, @Config.AskRealName, Topic);
+  Form.AddBol  ('K', ' Ask Alias',      14,  9, 27,  9, 11, 3, @Config.AskAlias, Topic);
+  Form.AddBol  ('T', ' Ask Street',     13, 10, 27, 10, 12, 3, @Config.AskStreet, Topic);
+  Form.AddBol  ('C', ' Ask City/State',  9, 11, 27, 11, 16, 3, @Config.AskCityState, Topic);
+  Form.AddBol  ('Z', ' Ask ZipCode',    12, 12, 27, 12, 13, 3, @Config.AskZipCode, Topic);
+  Form.AddBol  ('H', ' Ask Home Phone',  9, 13, 27, 13, 16, 3, @Config.AskHomePhone, Topic);
+  Form.AddBol  ('E', ' Ask Cell Phone',  9, 14, 27, 14, 16, 3, @Config.AskDataPhone, Topic);
+  Form.AddBol  ('I', ' Ask Birthdate',  10, 15, 27, 15, 15, 3, @Config.AskBirthdate, Topic);
+  Form.AddBol  ('G', ' Ask Gender',     13, 16, 27, 16, 12, 3, @Config.AskGender, Topic);
+  Form.AddBol  ('M', ' Ask Email',      14, 17, 27, 17, 11, 3, @Config.AskEmail, Topic);
+  Form.AddBol  ('L', ' Ask UserNote',   11, 18, 27, 18, 14, 3, @Config.AskUserNote, Topic);
+  Form.AddBol  ('R', ' Ask Screensize',  9, 19, 27, 19, 16, 3, @Config.AskScreenSize, Topic);
+
+  Form.AddTog  ('D', ' Date Type',      47,  7, 60,  7, 11, 8, 1, 4, 'MM/DD/YY DD/MM/YY YY/DD/MM Ask', @Config.UserDateType, Topic);
+  Form.AddTog  ('O', ' Hot Keys',       48,  8, 60,  8, 10, 3, 0, 2, 'No Yes Ask', @Config.UserHotKeys, Topic);
+  Form.AddTog  ('P', ' Protocol',       48,  9, 60,  9, 10, 3, 0, 2, 'No Yes Ask', @Config.UserProtocol, Topic);
+  Form.AddTog  ('N', ' Node Chat',      47, 10, 60, 10, 11, 6, 0, 2, 'Normal ANSI Ask', @Config.UserFullChat, Topic);
+  Form.AddTog  ('F', ' File List',      47, 11, 60, 11, 11, 6, 0, 2, 'Normal ANSI Ask', @Config.UserFileList, Topic);
+  Form.AddTog  ('1', ' Message Reader', 42, 12, 60, 12, 16, 6, 0, 2, 'Normal ANSI Ask', @Config.UserReadType, Topic);
+  Form.AddTog  ('2', ' Read at Index',  43, 13, 60, 13, 15, 3, 0, 2, 'No Yes Ask', @Config.UserReadIndex, Topic);
+  Form.AddTog  ('3', ' Email at Index', 42, 14, 60, 14, 16, 3, 0, 2, 'No Yes Ask', @Config.UserMailIndex, Topic);
+  Form.AddTog  ('4', ' Message Editor', 42, 15, 60, 15, 16, 4, 0, 2, 'Line Full Ask', @Config.UserEditorType, Topic);
+  Form.AddTog  ('5', ' Quote Mode',     46, 16, 60, 16, 12, 6, 0, 2, 'Line Window Ask', @Config.UserQuoteWin, Topic);
+
+  Form.Execute;
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
 
 End.

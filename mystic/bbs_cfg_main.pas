@@ -212,6 +212,8 @@ Begin
                 'F' : Configuration_FileSettings;
                 'M' : Configuration_MessageSettings;
                 'O' : Configuration_QWKSettings;
+                '1' : Configuration_NewUser1Settings;
+                '2' : Configuration_NewUser2Settings;
                 'X' : Break;
               Else
                 MenuPtr := 0;
