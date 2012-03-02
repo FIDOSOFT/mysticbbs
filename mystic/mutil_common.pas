@@ -38,7 +38,7 @@ Implementation
 
 Uses
   {$IFDEF UNIX}
-    Unix
+    Unix,
   {$ENDIF}
   DOS,
   m_Types,
