@@ -1336,4 +1336,5 @@ Begin
   TextAttr := 12;
   WriteLn;
   WriteLn ('COMPLETE!');
+  TextAttr := 7;
 End.
