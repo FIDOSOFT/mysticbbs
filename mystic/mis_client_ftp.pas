@@ -131,8 +131,8 @@ End;
 
 Procedure TFTPServer.UpdateUserStats (TFBase: RecFileBase; FDir: RecFileList; DirPos: LongInt);
 Var
-  HistFile: File of HistoryRec;
-  History : HistoryRec;
+  HistFile: File of RecHistory;
+  History : RecHistory;
   FDirFile: File of RecFileList;
   UserFile: File of RecUser;
 Begin
@@ -168,7 +168,7 @@ Begin
   Close   (FDirFile);
 
   Assign  (HistFile, bbsConfig.DataPath + 'history.dat');
-  ioReset (HistFile, SizeOf(HistoryRec), fmReadWrite + fmDenyWrite);
+  ioReset (HistFile, SizeOf(RecHistory), fmReadWrite + fmDenyWrite);
 
   If IoResult <> 0 Then ReWrite(HistFile);
 

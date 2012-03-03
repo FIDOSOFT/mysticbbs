@@ -53,7 +53,7 @@ Type
     TimeChecked   : Boolean;
     ConfigMode    : Boolean;
     InUserEdit    : Boolean;
-    HistoryFile   : File of HistoryRec;
+    HistoryFile   : File of RecHistory;
     HistoryEmails : Word;
     HistoryPosts  : Word;
     HistoryDLs    : Word;
@@ -142,12 +142,12 @@ End;
 
 Procedure TBBSCore.UpdateHistory;
 Var
-  History : HistoryRec;
+  History : RecHistory;
 Begin
   Assign  (HistoryFile, Config.DataPath + 'history.dat');
-  ioReset (HistoryFile, SizeOf(HistoryRec), fmRWDW);
+  ioReset (HistoryFile, SizeOf(RecHistory), fmRWDW);
 
-  If IoResult <> 0 Then ioReWrite(HistoryFile, SizeOf(HistoryRec), fmRWDW);
+  If IoResult <> 0 Then ioReWrite(HistoryFile, SizeOf(RecHistory), fmRWDW);
 
   History.Date := CurDateDos;
 

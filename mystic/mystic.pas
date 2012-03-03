@@ -84,7 +84,9 @@ Begin
   If ErrorAddr <> NIL Then ExitCode := 1;
 
   If Session.User.UserNum <> -1 Then Begin
-    Session.User.ThisUser.LastOn := CurDateDos;
+    Session.User.ThisUser.LastOn   := CurDateDos;
+    Session.User.ThisUser.PeerIP   := Session.UserIPInfo;
+    Session.User.ThisUser.PeerHost := Session.UserHostInfo;
 
     If Session.TimerOn Then
       If (Session.TimeOffset > 0) and (Session.TimeSaved > Session.TimeOffset) Then

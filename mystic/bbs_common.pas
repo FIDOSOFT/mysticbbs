@@ -41,8 +41,8 @@ Var
   Vote        : VoteRec;
   Chat        : ChatRec;
   Room        : RoomRec;
-  LastOnFile  : File of LastOnRec;
-  LastOn      : LastOnRec;
+  LastOnFile  : File of RecLastOn;
+  LastOn      : RecLastOn;
   Config      : RecConfig;
   StatusPtr   : Byte = 1;
 

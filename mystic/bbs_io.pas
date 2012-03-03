@@ -583,9 +583,9 @@ Begin
           End;
     'U' : Case Code[2] of
             '#' : LastMCIValue := strI2S(TBBSCore(Core).User.ThisUser.PermIdx);
-            '1' : LastMCIValue := TBBSCore(Core).User.ThisUser.Optional[1];
-            '2' : LastMCIValue := TBBSCore(Core).User.ThisUser.Optional[2];
-            '3' : LastMCIValue := TBBSCore(Core).User.ThisUser.Optional[3];
+            '1' : LastMCIValue := TBBSCore(Core).User.ThisUser.OptionData[1];
+            '2' : LastMCIValue := TBBSCore(Core).User.ThisUser.OptionData[2];
+            '3' : LastMCIValue := TBBSCore(Core).User.ThisUser.OptionData[3];
             'A' : LastMCIValue := TBBSCore(Core).User.ThisUser.Address;
             'B' : Case TBBSCore(Core).User.ThisUser.FileList of
                     0 : LastMCIValue := 'Normal';

@@ -98,6 +98,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
   rename them automatically.
 - ANSI listbox is terribly inefficient with its output.
 - So much cool stuff to do with the new themes
+- LastOn revamp make sure its not global and new stuff is populated
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
 ===========================================

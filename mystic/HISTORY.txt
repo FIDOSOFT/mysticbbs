@@ -3974,3 +3974,10 @@
       3) Prompts within a prompt file no longer has to be in numerical order.
          More to come on why this change is being made, but generally this
          allows you to categorize prompts.
+
+ + Mystic now saves the last known IP and hostname from each user.
+
+ + Revamped last caller information.  It now saves the IP, Hostname,
+   Gender, and if the user was a new user or not.  In addition, it will now
+   save all 10 custom user questions (not implemented yet).
+

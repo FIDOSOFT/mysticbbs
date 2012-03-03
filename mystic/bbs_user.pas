@@ -460,7 +460,7 @@ Begin
   Else
     Session.io.OutFull (Session.GetPrompt(443));
 
-  ThisUser.Optional[1] := Session.io.GetInput(35, 35, 11, ThisUser.Optional[1]);
+  ThisUser.OptionData[1] := Session.io.GetInput(35, 35, 11, ThisUser.OptionData[1]);
 End;
 
 Procedure TBBSUser.GetOption2 (Edit : Boolean);
@@ -470,7 +470,7 @@ Begin
   Else
     Session.io.OutFull (Session.GetPrompt(445));
 
-  ThisUser.Optional[2] := Session.io.GetInput(35, 35, 11, ThisUser.Optional[2]);
+  ThisUser.OptionData[2] := Session.io.GetInput(35, 35, 11, ThisUser.OptionData[2]);
 End;
 
 Procedure TBBSUser.GetOption3 (Edit : Boolean);
@@ -480,7 +480,7 @@ Begin
   Else
     Session.io.OutFull (Session.GetPrompt(447));
 
-  ThisUser.Optional[3] := Session.io.GetInput(35, 35, 11, ThisUser.Optional[3]);
+  ThisUser.OptionData[3] := Session.io.GetInput(35, 35, 11, ThisUser.OptionData[3]);
 End;
 
 Procedure TBBSUser.GetEditor (Edit : Boolean);
@@ -971,8 +971,8 @@ End;
 
 Procedure TBBSUser.User_Logon3;
 Var
-  A  : Byte;
-  Ch : Char;
+  Count : Byte;
+  Ch    : Char;
 Begin
   {$IFDEF LOGGING} Session.SystemLog('Logon3'); {$ENDIF}
 
@@ -987,24 +987,23 @@ Begin
     Reset (LastOnFile);
 
     If FileSize(LastOnFile) >= 10 Then
-      KillRecord (LastOnFile, 1, SizeOf(LastOnRec));
+      KillRecord (LastOnFile, 1, SizeOf(RecLastOn));
 
-    LastOn.Handle    := ThisUser.Handle;
-    LastOn.City      := ThisUser.City;
-    LastOn.Node      := Session.NodeNum;
-    LastOn.DateTime  := CurDateDos;
-    LastOn.CallNum   := Config.SystemCalls;
-    LastOn.Address   := ThisUser.Address;
-    LastOn.EmailAddr := ThisUser.Email;
-    LastOn.UserInfo  := ThisUser.UserInfo;
-    LastOn.Option1   := ThisUser.Optional[1];
-    LastOn.Option2   := ThisUser.Optional[2];
-    LastOn.Option3   := ThisUser.Optional[3];
+    LastOn.Handle        := ThisUser.Handle;
+    LastOn.City          := ThisUser.City;
+    LastOn.Node          := Session.NodeNum;
+    LastOn.DateTime      := CurDateDos;
+    LastOn.CallNum       := Config.SystemCalls;
+    LastOn.Address       := ThisUser.Address;
+    LastOn.EmailAddr     := ThisUser.Email;
+    LastOn.UserInfo      := ThisUser.UserInfo;
+    LastOn.Gender        := ThisUser.Gender;
+    LastOn.PeerIP        := Session.UserIPInfo;
+    LastOn.PeerHost      := Session.UserHostInfo;
+    LastOn.NewUser       := ThisUser.Calls = 0;
 
-    If Session.LocalMode Then
-      LastOn.Baud := 'LOCAL'
-    Else
-      LastOn.Baud := 'TELNET';
+    For Count := 1 to 10 Do
+      LastOn.OptionData[Count] := ThisUser.OptionData[Count];
 
     Seek  (LastOnFile, FileSize(LastOnFile));
     Write (LastOnFile, LastOn);
@@ -1017,8 +1016,8 @@ Begin
 
 { this (below) causes runtime 201 when range checking is ON }
 
-  For A := 1 to 9 Do
-    Session.io.OutFile ('logon' + strI2S(A), True, 0);
+  For Count := 1 to 9 Do
+    Session.io.OutFile ('logon' + strI2S(Count), True, 0);
 
   Session.io.OutFile ('sl' + strI2S(ThisUser.Security), True, 0);
 
@@ -1036,11 +1035,11 @@ Begin
   While Not Eof(VoteFile) Do Begin
     Read (VoteFile, Vote);
     If Access(Vote.ACS) and Access(Vote.ForceACS) and (ThisUser.Vote[FilePos(VoteFile)] = 0) Then Begin
-      A := FilePos(VoteFile);
+      Count := FilePos(VoteFile);
       Close (VoteFile);
-      Voting_Booth (True, A);
+      Voting_Booth (True, Count);
       Reset (VoteFile);
-      Seek (VoteFile, A);
+      Seek (VoteFile, Count);
     End;
   End;
   Close (VoteFile);

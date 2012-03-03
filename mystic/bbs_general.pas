@@ -434,9 +434,9 @@ Begin
     Session.io.PromptInfo[7]  := strI2S(DaysAgo(TempUser.Birthday) DIV 365);
     Session.io.PromptInfo[8]  := TempUser.Email;
     Session.io.PromptInfo[9]  := TempUser.UserInfo;
-    Session.io.PromptInfo[10] := TempUser.Optional[1];
-    Session.io.PromptInfo[11] := TempUser.Optional[2];
-    Session.io.PromptInfo[12] := TempUser.Optional[3];
+    Session.io.PromptInfo[10] := TempUser.OptionData[1];
+    Session.io.PromptInfo[11] := TempUser.OptionData[2];
+    Session.io.PromptInfo[12] := TempUser.OptionData[3];
 
     If (Data = '') or (Pos(Data, strUpper(TempUser.Handle)) > 0) Then Begin
       Session.io.OutFullLn (Session.GetPrompt(30));
@@ -471,14 +471,13 @@ Begin
     Session.io.PromptInfo[3]  := LastOn.City;
     Session.io.PromptInfo[4]  := DateDos2Str(LastOn.DateTime, Session.User.ThisUser.DateType);
     Session.io.PromptInfo[5]  := TimeDos2Str(LastOn.DateTime, True);
-    Session.io.PromptInfo[6]  := LastOn.Baud;
     Session.io.PromptInfo[7]  := strI2S(LastOn.CallNum);
     Session.io.PromptInfo[8]  := LastOn.Address;
     Session.io.PromptInfo[9]  := LastOn.UserInfo;
     Session.io.PromptInfo[10] := LastOn.EmailAddr;
-    Session.io.PromptInfo[11] := LastOn.Option1;
-    Session.io.PromptInfo[12] := LastOn.Option2;
-    Session.io.PromptInfo[13] := LastOn.Option3;
+    Session.io.PromptInfo[11] := LastOn.OptionData[1];
+    Session.io.PromptInfo[12] := LastOn.OptionData[2];
+    Session.io.PromptInfo[13] := LastOn.OptionData[3];
 
     Session.io.OutFullLn (Session.GetPrompt(142));
   End;
@@ -837,7 +836,7 @@ End;
 
 Procedure ShowBBSHistory (LastDays: Word);
 Var
-  Temp : HistoryRec;
+  Temp : RecHistory;
   Days : Word;
 Begin
   Assign (Session.HistoryFile, Config.DataPath + 'history.dat');

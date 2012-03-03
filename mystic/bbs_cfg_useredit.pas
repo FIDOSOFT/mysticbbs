@@ -169,13 +169,13 @@ Begin
                         Session.io.OutRawLn ('J.     E-mail  ' + strPadR(Session.User.TempUser.Email, 32, ' ') +
                                                                 '5.  Mail Index  ' + Session.io.OutYN(Session.User.TempUser.UseLBMIdx));
 
-                        Session.io.OutRawLn ('K. ' + strPadL(Config.OptionalField[1].Desc, 10, ' ') + '  ' + strPadR(Session.User.TempUser.Optional[1], 32, ' ') +
+                        Session.io.OutRawLn ('K. ' + strPadL(Config.OptionalField[1].Desc, 10, ' ') + '  ' + strPadR(Session.User.TempUser.OptionData[1], 32, ' ') +
                                                                 '6.   Time Left  ' + strI2S(Session.User.TempUser.TimeLeft));
 
-                        Session.io.OutRawLn ('L. ' + strPadL(Config.OptionalField[2].Desc, 10, ' ') + '  ' + strPadR(Session.User.TempUser.Optional[2], 32, ' ') +
+                        Session.io.OutRawLn ('L. ' + strPadL(Config.OptionalField[2].Desc, 10, ' ') + '  ' + strPadR(Session.User.TempUser.OptionData[2], 32, ' ') +
                                                                 '7.   Time Bank  ' + strI2S(Session.User.TempUser.TimeBank));
 
-                        Session.io.OutRawLn ('N. ' + strPadL(Config.OptionalField[3].Desc, 10, ' ') + '  ' + strPadR(Session.User.TempUser.Optional[3], 32, ' ') +
+                        Session.io.OutRawLn ('N. ' + strPadL(Config.OptionalField[3].Desc, 10, ' ') + '  ' + strPadR(Session.User.TempUser.OptionData[3], 32, ' ') +
                                                                 '8. Screen Size  ' + strI2S(Session.User.TempUser.ScreenSize));
 
                         Session.io.OutRawLn ('O.  User Note  ' + strPadR(Session.User.TempUser.UserInfo, 32, ' ') +
@@ -212,9 +212,9 @@ Begin
                                 'H' : Session.User.TempUser.HomePhone := Session.io.InXY (16, 10, 15, 15, 12, Session.User.TempUser.HomePhone);
                                 'I' : Session.User.TempUser.DataPhone := Session.io.InXY (16, 11, 15, 15, 12, Session.User.TempUser.DataPhone);
                                 'J' : Session.User.TempUser.Email     := Session.io.InXY (16, 12, 30, 35, 11, Session.User.TempUser.Email);
-                                'K' : Session.User.TempUser.Optional[1]   := Session.io.InXY (16, 13, 30, 35, 11, Session.User.TempUser.Optional[1]);
-                                'L' : Session.User.TempUser.Optional[2]   := Session.io.InXY (16, 14, 30, 35, 11, Session.User.TempUser.Optional[2]);
-                                'N' : Session.User.TempUser.Optional[3]   := Session.io.InXY (16, 15, 30, 35, 11, Session.User.TempUser.Optional[3]);
+                                'K' : Session.User.TempUser.OptionData[1]   := Session.io.InXY (16, 13, 30, 35, 11, Session.User.TempUser.OptionData[1]);
+                                'L' : Session.User.TempUser.OptionData[2]   := Session.io.InXY (16, 14, 30, 35, 11, Session.User.TempUser.OptionData[2]);
+                                'N' : Session.User.TempUser.OptionData[3]   := Session.io.InXY (16, 15, 30, 35, 11, Session.User.TempUser.OptionData[3]);
                                 'O' : Session.User.TempUser.UserInfo  := Session.io.InXY (16, 16, 30, 30, 11, Session.User.TempUser.UserInfo);
                                 'P' : Begin
                                         Session.User.TempUser.Security := strS2I(Session.io.InXY(16, 17,  3,  3, 12, strI2S(Session.User.TempUser.Security)));

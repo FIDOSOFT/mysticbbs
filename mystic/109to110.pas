@@ -13,6 +13,33 @@ Uses
 {$I RECORDS.PAS}
 
 Type
+  OldLastOnRec = Record                    { CALLERS.DAT                 }
+    Handle    : String[30];             { User's Name                 }
+    City      : String[25];             { City/State                  }
+    Address   : String[30];             { user's address              }
+    Baud      : String[6];              { Baud Rate                   }
+    DateTime  : LongInt;                { Date & Time (UNIX)          }
+    Node      : Byte;                   { Node number of login        }
+    CallNum   : LongInt;                { Caller Number               }
+    EmailAddr : String[35];             { email address }
+    UserInfo  : String[30];             { user info field }
+    Option1   : String[35];             { optional data 1 }
+    Option2   : String[35];             {   "       "   2 }
+    Option3   : String[35];             {   "       "   3 }
+  End;
+
+  OldHistoryRec = Record
+    Date       : LongInt;
+    Emails     : Word;
+    Posts      : Word;
+    Downloads  : Word;
+    Uploads    : Word;
+    DownloadKB : LongInt;
+    UploadKB   : LongInt;
+    Calls      : LongInt;
+    NewUsers   : Word;
+  End;
+
   OldPercentRec = Record                                      // percentage bar record
     BarLen : Byte;
     LoChar : Char;
@@ -708,11 +735,11 @@ Begin
       User.Gender := Gender;
       User.Email := EmailAddr;
 
-      FillChar (User.Optional, SizeOf(User.Optional), #0);
+      FillChar (User.OptionData, SizeOf(User.OptionData), #0);
 
-      User.Optional[1] := Option1;
-      User.Optional[2] := Option2;
-      User.Optional[3] := Option3;
+      User.OptionData[1] := Option1;
+      User.OptionData[2] := Option2;
+      User.OptionData[3] := Option3;
 
       User.UserInfo := UserInfo;
       User.Theme := Language;
@@ -729,7 +756,7 @@ Begin
       User.ScreenSize := ScrnPause;
       User.ScreenCols := 80;
       User.PeerIP := '';
-      User.PeerName := '';
+      User.PeerHost := '';
       User.FirstOn := FirstOn;
       User.LastOn := LastOn;
       User.Calls := Calls;
@@ -1120,6 +1147,100 @@ Begin
   DeleteFile (Config.DataPath + 'fbases.old');
 End;
 
+Procedure ConvertHistory;
+Var
+  Hist         : RecHistory;
+  HistFile     : File of RecHistory;
+  OldHist      : OldHistoryRec;
+  OldHistFile  : File of OldHistoryRec;
+Begin
+  WriteLn ('[-] Updating BBS history...');
+
+  If Not ReNameFile(Config.DataPath + 'history.dat', Config.DataPath + 'history.old') Then Begin
+    WriteLn('[!] UNABLE TO FIND: ' + Config.DataPath + 'history.dat');
+    Exit;
+  End;
+
+  Assign (OldHistFile, Config.DataPath + 'history.old');
+  Reset  (OldHistFile);
+
+  Assign  (HistFile, Config.DataPath + 'history.dat');
+  ReWrite (HistFile);
+
+  While Not Eof(OldHistFile) Do Begin
+    Read (OldHistFile, OldHist);
+
+    FillChar(Hist, SizeOf(Hist), 0);
+
+    Hist.Date   := OldHist.Date;
+    Hist.Emails := OldHist.Emails;
+    Hist.Posts  := OldHist.Posts;
+    Hist.Downloads := OldHist.Downloads;
+    Hist.Uploads := OldHist.Uploads;
+    Hist.DownloadKB := OldHIst.DownloadKB;
+    Hist.UploadKB := OldHIst.UploadKB;
+    Hist.Calls := OldHist.Calls;
+    Hist.NewUsers := OldHist.NewUsers;
+
+    Write (HistFile, Hist);
+  End;
+
+  Close (HIstFile);
+  Close (OldHistFile);
+
+  DeleteFile (Config.DataPath + 'history.old');
+End;
+
+Procedure ConvertLastOn;
+Var
+  Last         : RecLastOn;
+  LastFile     : File of RecLastOn;
+  OldLast      : OldLastOnRec;
+  OldLastFile  : File of OldLastOnRec;
+Begin
+  WriteLn ('[-] Updating last callers...');
+
+  If Not ReNameFile(Config.DataPath + 'callers.dat', Config.DataPath + 'callers.old') Then Begin
+    WriteLn('[!] UNABLE TO FIND: ' + Config.DataPath + 'callers.dat');
+    Exit;
+  End;
+
+  Assign (OldLastFile, Config.DataPath + 'callers.old');
+  Reset  (OldLastFile);
+
+  Assign  (LastFile, Config.DataPath + 'callers.dat');
+  ReWrite (LastFile);
+
+  While Not Eof(OldLastFile) Do Begin
+    Read (OldLastFile, OldLast);
+
+    FillChar(Last, SizeOf(Last), 0);
+
+    With OldLast Do Begin
+      Last.DateTime := DateTime;
+      Last.Node := Node;
+      Last.CallNum := CallNum;
+      Last.Handle := Handle;
+      Last.City := City;
+      Last.Address := Address;
+      Last.Gender := '?';
+      Last.EmailAddr := EmailAddr;
+      Last.UserInfo := UserInfo;
+      Last.OptionData[1] := Option1;
+      Last.OptionData[2] := Option2;
+      Last.OptionData[3] := Option3;
+    End;
+
+    Write (LastFile, Last);
+  End;
+
+  Close (LastFile);
+  Close (OldLastFile);
+
+  DeleteFile (Config.DataPath + 'callers.old');
+End;
+
+
 Procedure ConvertMessageBases;
 Var
   MBase        : RecMessageBase;
@@ -1191,23 +1312,26 @@ Begin
   WarningDisplay;
 
   //COMMENT this out if mystic.dat is being converted:
-  Assign (ConfigFile, 'mystic.dat');
-  Reset  (ConfigFile);
-  Read   (ConfigFile, Config);
-  Close  (ConfigFile);
+//  Assign (ConfigFile, 'mystic.dat');
+//  Reset  (ConfigFile);
+//  Read   (ConfigFile, Config);
+//  Close  (ConfigFile);
 
-//  ConvertConfig;  //1.10a11
-//  ConvertUsers; //1.10a11
-//ConvertSecurity; //1.10a11
-//ConvertFileLists;  //1.10a11
-//ConvertFileBases; //1.10a11
-//ConvertMessageBases; //1.10a11
-//ConvertThemes; //1.10a11
+  ConvertConfig;       //1.10a11
+  ConvertUsers;        //1.10a11
+  ConvertSecurity;     //1.10a11
+  ConvertFileLists;    //1.10a11
+  ConvertFileBases;    //1.10a11
+  ConvertMessageBases; //1.10a11
+  ConvertThemes;       //1.10a11
+  ConvertHistory;      //1.10a11
+  ConvertLastOn;       //1.10a11
 
 //  ConvertArchives; //1.10a1
 //  ConvertGroups;   //1.10a1
 
   PurgeDataWildcard('*.lng');
+  PurgeDataWildcard('node*.dat');
 
   TextAttr := 12;
   WriteLn;

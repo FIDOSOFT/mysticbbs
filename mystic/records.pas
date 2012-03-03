@@ -278,7 +278,7 @@ Type
     Birthday     : LongInt;
     Gender       : Char;                  { M> Male  F> Female           }
     Email        : String[60];            { email address                }
-    Optional     : Array[1..10] of String[60];
+    OptionData   : Array[1..10] of String[60];
     UserInfo     : String[30];            { user comment field           }
     Theme        : String[20];                                  // user's theme file
     AF1          : AccessFlagType;
@@ -294,7 +294,7 @@ Type
     ScreenSize   : Byte;                  { user's screen length         }
     ScreenCols   : Byte;
     PeerIP       : String[20];
-    PeerName     : String[50];
+    PeerHost     : String[50];
     FirstOn      : LongInt;               { Date/Time of First Call      }
     LastOn       : LongInt;               { Date/Time of Last Call       }
     Calls        : LongInt;               { Number of calls to BBS       }
@@ -671,22 +671,24 @@ Type
 (* file is always 10 records long with the most recent caller being the   *)
 (* 10th record.                                                           *)
 
-  LastOnRec = Record                    { CALLERS.DAT                 }
-    Handle    : String[30];             { User's Name                 }
-    City      : String[25];             { City/State                  }
-    Address   : String[30];             { user's address              }
-    Baud      : String[6];              { Baud Rate                   }
-    DateTime  : LongInt;                { Date & Time (UNIX)          }
-    Node      : Byte;                   { Node number of login        }
-    CallNum   : LongInt;                { Caller Number               }
-    EmailAddr : String[35];             { email address }
-    UserInfo  : String[30];             { user info field }
-    Option1   : String[35];             { optional data 1 }
-    Option2   : String[35];             {   "       "   2 }
-    Option3   : String[35];             {   "       "   3 }
+  RecLastOn = Record                                            // CALLERS.DAT
+    DateTime   : LongInt;
+    NewUser    : Boolean;
+    PeerIP     : String[15];
+    PeerHost   : String[50];
+    Node       : Byte;
+    CallNum    : LongInt;
+    Handle     : String[30];
+    City       : String[25];
+    Address    : String[30];
+    Gender     : Char;
+    EmailAddr  : String[35];
+    UserInfo   : String[30];
+    OptionData : Array[1..10] of String[60];
+    Reserved   : Array[1..53] of Byte;
   End;
 
-  HistoryRec = Record
+  RecHistory = Record
     Date       : LongInt;
     Emails     : Word;
     Posts      : Word;
@@ -696,6 +698,13 @@ Type
     UploadKB   : LongInt;
     Calls      : LongInt;
     NewUsers   : Word;
+    Telnet     : Word;
+    FTP        : Word;
+    POP3       : Word;
+    SMTP       : Word;
+    NNTP       : Word;
+    HTTP       : Word;
+    Reserved   : Array[1..26] of Byte;
   End;
 
   RecProtocol = Record

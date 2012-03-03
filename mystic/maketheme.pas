@@ -58,7 +58,7 @@ Begin
   Reset      (TF);
 
   If IoResult <> 0 Then Begin
-    WriteLn ('ERROR: Theme file (' + FName + FExt + ') not found.');
+    WriteLn ('ERROR: Theme file (' + FName + FExt + ') not found');
     Halt (1);
   End;
 
@@ -70,7 +70,7 @@ Begin
   If IoResult <> 0 Then Begin
     WriteLn;
     WriteLn;
-    WriteLn ('ERROR: Cannot run while Mystic is loaded.');
+    WriteLn ('ERROR: Cannot run while Mystic is loaded');
     Halt(1);
   End;
 
@@ -98,7 +98,7 @@ Begin
       If Count > mysMaxThemeText Then Begin
         WriteLn;
         WriteLn;
-        WriteLn ('ERROR: Prompt #', Count, ' was not expected.  Theme file not created.');
+        WriteLn ('ERROR: Prompt #', Count, ' was not expected.  Theme file not created');
         Close (ThemeFile);
         Erase (ThemeFile);
         Halt(1);
@@ -107,7 +107,7 @@ Begin
       If Found[Count] Then Begin
         WriteLn;
         WriteLn;
-        WriteLn ('ERROR: Prompt #', Count, ' was found twice.  Theme file not created.');
+        WriteLn ('ERROR: Prompt #', Count, ' was found twice.  Theme file not created');
         Close (ThemeFile);
         Erase (ThemeFile);
         Halt  (1);
@@ -128,7 +128,7 @@ Begin
   For Count := 0 to mysMaxThemeText Do Begin
     If Not Found[Count] Then Begin
       WriteLn;
-      WriteLn (^G'ERROR: Prompt #', Count, ' was not found.  Theme file not created.');
+      WriteLn (^G'ERROR: Prompt #', Count, ' was not found.  Theme file not created');
       Erase (ThemeFile);
       Halt (1);
     End;
@@ -153,7 +153,7 @@ Begin
   ReWrite(TF);
 
   If IoResult <> 0 Then Begin
-    WriteLn ('ERROR: Unable to create output file.');
+    WriteLn ('ERROR: Unable to create output file');
     Halt(1);
   End;
 
