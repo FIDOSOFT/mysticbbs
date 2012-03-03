@@ -61,9 +61,7 @@ Var
 
   Procedure CheckCommand;
   Var
-    Res   : Boolean;
-    Temp1 : LongInt;
-    Temp2 : LongInt;
+    Res : Boolean;
   Begin
     Res := False;
 
@@ -124,7 +122,6 @@ Var
   Ch1    : Char;
   Ch2    : Char;
   S1     : String;
-  S2     : String;
 Begin
   Data  := '';
   Out   := '';
