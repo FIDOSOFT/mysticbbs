@@ -16,7 +16,7 @@ Uses
 Procedure Lang_Editor;
 var
 	a   : SmallInt;
-  Old : LangRec;
+  Old : RecTheme;
 Begin
 	Session.SystemLog ('*LANG EDITOR*');
 	Old := Session.Lang;
@@ -38,13 +38,13 @@ Begin
               if filesize(Session.LangFile) = 1 then
                 Session.io.OutFullLn ('|CR|14You must have at least one language definition.|CR|PA')
 							Else
-                KillRecord (Session.LangFile, A, SizeOf(LangRec));
+                KillRecord (Session.LangFile, A, SizeOf(RecTheme));
       			end;
 			'I' : begin
               Session.io.OutRaw ('Insert before? (1-' + strI2S(filesize(Session.LangFile)+1) + '): ');
               a := strS2I(Session.io.GetInput(3, 3, 11, ''));
               if (a > 0) and (a <= filesize(Session.LangFile)+1) then begin
-                AddRecord (Session.LangFile, A, SizeOf(LangRec));
+                AddRecord (Session.LangFile, A, SizeOf(RecTheme));
 								Session.lang.filename := '';
 								Session.lang.textpath := '';
 								Session.lang.menupath := '';
@@ -63,28 +63,28 @@ Begin
                   Session.io.OutRawln ('B. Filename   : ' + Session.Lang.FileName);
                   Session.io.OutRawln ('C. Text Path  : ' + Session.Lang.TextPath);
                   Session.io.OutRawln ('D. Menu Path  : ' + Session.Lang.MenuPath);
-                  Session.io.OutRawln ('M. Allow ASCII: ' + Session.io.OutYN(Session.Lang.okASCII));
-                  Session.io.OutRawln ('N. Allow ANSI : ' + Session.io.OutYN(Session.Lang.okANSI));
+                  Session.io.OutRawln ('M. Allow ASCII: ' + Session.io.OutYN(Session.Lang.Flags AND ThmAllowASCII <> 0));
+                  Session.io.OutRawln ('N. Allow ANSI : ' + Session.io.OutYN(Session.Lang.Flags AND ThmAllowANSI <> 0));
 
-                  Session.io.OutFullLn ('|CRE. Use Lightbar Y/N : ' + Session.io.OutYN(Session.Lang.BarYN));
+                  Session.io.OutFullLn ('|CRE. Use Lightbar Y/N : ' + Session.io.OutYN(Session.Lang.Flags AND ThmLightbarYN <> 0));
                   Session.io.OutFull   ('|03|16H. Input Field Color: ');
-                  Session.io.AnsiColor(Session.Lang.FieldCol1);
+                  Session.io.AnsiColor(Session.Lang.FieldColor1);
                   Session.io.OutFullLn ('Test|03|16');
 
                   Session.io.OutRaw ('I. Quote Bar Color  : ');
                   Session.io.AnsiColor(Session.Lang.QuoteColor);
                   Session.io.OutFullLn ('Test|03|16');
 
-                  Session.io.OutRawLn ('J. Echo Character   : ' + Session.Lang.EchoCh);
+                  Session.io.OutRawLn ('J. Echo Character   : ' + Session.Lang.EchoChar);
                   Session.io.OutRawLn ('K. Input Character  : ' + Session.Lang.FieldChar);
-                  Session.io.OutRawLn ('L. File Tag Char    : ' + Session.Lang.TagCh);
+                  Session.io.OutRawLn ('L. File Tag Char    : ' + Session.Lang.TagChar);
 
                   Session.io.OutRaw   ('O. File Search Hi   : ');
-                  Session.io.AnsiColor(Session.Lang.FileHI);
+                  Session.io.AnsiColor(Session.Lang.FileDescHI);
                   Session.io.OutFullLn ('Test|03|16');
 
                   Session.io.OutRaw   ('P. File Desc. Lo    : ');
-                  Session.io.AnsiColor(Session.Lang.FileLO);
+                  Session.io.AnsiColor(Session.Lang.FileDescLO);
                   Session.io.OutFullLn ('Test|03|16');
 
                   Session.io.OutRawLn ('R. LB New Msg Char  : ' + Session.Lang.NewMsgChar);
@@ -95,21 +95,21 @@ Begin
                     'B' : Session.Lang.filename   := Session.io.InXY(17, 4,  8,  8, 11, Session.Lang.filename);
                     'C' : Session.Lang.textpath   := CheckPath(Session.io.InXY(17, 5, 40, 40, 11, Session.Lang.textpath));
                     'D' : Session.Lang.menupath   := CheckPath(Session.io.InXY(17, 6, 40, 40, 11, Session.Lang.MenuPath));
-                    'E' : Session.Lang.BarYN      := Not Session.Lang.BarYN;
-                    'H' : Session.Lang.FieldCol1  := getColor(Session.Lang.FieldCol1);
+                    'E' : Session.Lang.Flags      := Session.Lang.Flags XOR ThmLightbarYN;
+                    'H' : Session.Lang.FieldColor1  := getColor(Session.Lang.FieldColor1);
 										'I' : Session.Lang.QuoteColor := getColor(Session.Lang.QuoteColor);
-                    'J' : Begin Session.io.OutRaw ('Char: '); Session.Lang.EchoCh := Session.io.GetKey; End;
+                    'J' : Begin Session.io.OutRaw ('Char: '); Session.Lang.EchoChar := Session.io.GetKey; End;
 										'K' : Begin
                             Session.io.OutRaw ('Char: ');
                             Session.Lang.FieldChar := Session.io.GetKey;
                             If Not (Session.Lang.FieldChar in [#32..#255]) Then
                               Session.Lang.FieldChar := ' ';
 													End;
-                    'L' : Begin Session.io.OutRaw ('Char: '); Session.Lang.TagCh   := Session.io.GetKey; End;
-                    'M' : Session.Lang.okASCII := Not Session.Lang.okASCII;
-                    'N' : Session.Lang.okANSI := Not Session.Lang.okANSI;
-                    'O' : Session.Lang.FileHI := getColor(Session.Lang.FileHI);
-                    'P' : Session.Lang.FileLo := GetColor(Session.Lang.FileLO);
+                    'L' : Begin Session.io.OutRaw ('Char: '); Session.Lang.TagChar   := Session.io.GetKey; End;
+                    'M' : Session.Lang.Flags := Session.Lang.Flags XOR ThmAllowASCII;
+                    'N' : Session.Lang.Flags := Session.Lang.Flags XOR ThmAllowANSI;
+                    'O' : Session.Lang.FileDescHI := getColor(Session.Lang.FileDescHI);
+                    'P' : Session.Lang.FileDescLo := GetColor(Session.Lang.FileDescLO);
 										'Q' : break;
                     'R' : Begin Session.io.OutRaw('Char: '); Session.Lang.NewMsgChar := Session.io.GetKey; End;
 									end;

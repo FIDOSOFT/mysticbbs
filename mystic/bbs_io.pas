@@ -86,7 +86,7 @@ Type
     Function    OutON            (O : Boolean) : String;
     Procedure   PauseScreen;
     Function    MorePrompt       : Char;
-    Function    DrawPercent      (Bar : PercentRec; Part, Whole : SmallInt; Var Percent : SmallInt) : String;
+    Function    DrawPercent      (Bar : RecPercent; Part, Whole : SmallInt; Var Percent : SmallInt) : String;
     Function    GetInput         (Field, Max, Mode: Byte; Default : String) : String;
     Function    InXY             (X, Y, Field, Max, Mode: Byte; Default: String) : String;
     Function    InKey            : Char;
@@ -1338,7 +1338,7 @@ End;
 
 Function TBBSIO.GetYN (Str: String; Yes: Boolean) : Boolean;
 Begin
-  If TBBSCore(Core).Lang.BarYN and (Graphics = 1) Then Begin
+  If (TBBSCore(Core).Lang.Flags AND ThmLightbarYN <> 0) and (Graphics = 1) Then Begin
     GetYN := GetYNL(Str, Yes);
     Exit;
   End;
@@ -1428,7 +1428,7 @@ Var
   Procedure pWrite (Str : String);
   Begin
     If (Mode = 6) and (Str <> '') Then
-      BufAddStr (strRep(TBBSCore(Core).Lang.EchoCh, Length(Str)))
+      BufAddStr (strRep(TBBSCore(Core).Lang.EchoChar, Length(Str)))
     Else
       BufAddStr (Str);
   End;
@@ -1438,9 +1438,9 @@ Var
     AnsiMoveX (xPos);
 
     pWrite (Copy(Str, Junk, Field));
-    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol2);
+    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor2);
     pWrite (strRep(FieldCh, Field - Length(Copy(Str, Junk, Field))));
-    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol1);
+    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor1);
 
     AnsiMoveX (xPos + CurPos - 1);
   End;
@@ -1448,9 +1448,9 @@ Var
   Procedure ReDrawPart;
   Begin
     pWrite (Copy(Str, StrPos, Field - CurPos + 1));
-    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol2);
+    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor2);
     pWrite (strRep(FieldCh, (Field - CurPos + 1) - Length(Copy(Str, StrPos, Field - CurPos + 1))));
-    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol1);
+    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor1);
 
     AnsiMoveX (xPos + CurPos - 1);
   End;
@@ -1509,9 +1509,9 @@ Begin
     If UseInField and (Graphics = 1) Then Begin
       FieldCh := TBBSCore(Core).Lang.FieldChar;
 
-      AnsiColor (TBBSCore(Core).Lang.FieldCol2);
+      AnsiColor (TBBSCore(Core).Lang.FieldColor2);
       BufAddStr (strRep(FieldCh, Field));
-      AnsiColor (TBBSCore(Core).Lang.FieldCol1);
+      AnsiColor (TBBSCore(Core).Lang.FieldColor1);
       AnsiMoveX (xPos);
     End Else
       UseInField := False;
@@ -1615,9 +1615,9 @@ Begin
                   ScrollLeft
                 Else
                 If StrPos = Length(Str) + 1 Then Begin
-                  If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol2);
+                  If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor2);
                   BufAddStr (#8 + FieldCh + #8);
-                  If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldCol1);
+                  If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor1);
                   Dec (CurPos);
                 End Else Begin
                   BufAddChar (#8);
@@ -1717,7 +1717,7 @@ Begin
   InXY := GetInput (Field, Max, Mode, Default);
 End;
 
-Function TBBSIO.DrawPercent (Bar : PercentRec; Part, Whole : SmallInt; Var Percent : SmallInt) : String;
+Function TBBSIO.DrawPercent (Bar: RecPercent; Part, Whole: SmallInt; Var Percent : SmallInt) : String;
 Var
   FillSize : Byte;
 Begin
@@ -1730,12 +1730,12 @@ Begin
 //    Percent  := 100;
 // this needs work...
   End Else Begin
-    FillSize := Round(Part / Whole * Bar.BarLen);
+    FillSize := Round(Part / Whole * Bar.BarLength);
     Percent  := Round(Part / Whole * 100);
   End;
 
   DrawPercent := Attr2Ansi(Bar.HiAttr) + strRep(Bar.HiChar, FillSize) +
-                 Attr2Ansi(Bar.LoAttr) + strRep(Bar.LoChar, Bar.BarLen - FillSize);
+                 Attr2Ansi(Bar.LoAttr) + strRep(Bar.LoChar, Bar.BarLength - FillSize);
 End;
 
 {$IFDEF UNIX}

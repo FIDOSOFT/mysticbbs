@@ -5,6 +5,7 @@ Unit bbs_cfg_syscfg;
 Interface
 
 Procedure Configuration_SysPaths;
+Procedure Configuration_GeneralSettings;
 Procedure Configuration_LoginMatrix;
 Procedure Configuration_OptionalFields;
 Function  Configuration_EchomailAddress (Edit: Boolean) : Byte;
@@ -19,6 +20,7 @@ Procedure Configuration_NNTPServer;
 Procedure Configuration_MessageSettings;
 Procedure Configuration_NewUser1Settings;
 Procedure Configuration_NewUser2Settings;
+Procedure Configuration_ConsoleSettings;
 
 Implementation
 
@@ -41,20 +43,62 @@ Begin
 
   Box.Header := ' System Directories ';
 
-  Box.Open (5, 7, 75, 17);
+  Box.Open (5, 6, 75, 18);
 
-  VerticalLine (27, 8, 16);
+  VerticalLine (26, 8, 16);
 
-  Form.AddPath ('S', ' System Path',       13,  8, 29,  8, 13, 45, mysMaxPathSize, @Config.SystemPath,   Topic + 'Root Mystic BBS directory');
-  Form.AddPath ('D', ' Data File Path',    10,  9, 29,  9, 16, 45, mysMaxPathSize, @Config.DataPath,     Topic + 'Data file directory');
-  Form.AddPath ('L', ' Log File Path',     11, 10, 29, 10, 15, 45, mysMaxPathSize, @Config.LogsPath,     Topic + 'Log file directory');
-  Form.AddPath ('M', ' Message Base Path',  7, 11, 29, 11, 19, 45, mysMaxPathSize, @Config.MsgsPath,     Topic + 'Message base directory');
-  Form.AddPath ('A', ' File Attach Path',   8, 12, 29, 12, 18, 45, mysMaxPathSize, @Config.AttachPath,   Topic + 'File attachment directory');
-  Form.AddPath ('E', ' Semaphore Path',    10, 13, 29, 13, 16, 45, mysMaxPathSize, @Config.SemaPath,     Topic + 'Semaphore file directory');
-  Form.AddPath ('U', ' Menu File Path',    10, 14, 29, 14, 16, 45, mysMaxPathSize, @Config.MenuPath,     Topic + 'Default menu file directory');
-  Form.AddPath ('T', ' Text File Path',    10, 15, 29, 15, 16, 45, mysMaxPathSize, @Config.TextPath,     Topic + 'Default display file directory');
+  Form.AddPath ('S', ' System Path',       13,  8, 28,  8, 13, 45, mysMaxPathSize, @Config.SystemPath,   Topic + 'Root Mystic BBS directory');
+  Form.AddPath ('D', ' Data File Path',    10,  9, 28,  9, 16, 45, mysMaxPathSize, @Config.DataPath,     Topic + 'Data file directory');
+  Form.AddPath ('L', ' Log File Path',     11, 10, 28, 10, 15, 45, mysMaxPathSize, @Config.LogsPath,     Topic + 'Log file directory');
+  Form.AddPath ('M', ' Message Base Path',  7, 11, 28, 11, 19, 45, mysMaxPathSize, @Config.MsgsPath,     Topic + 'Message base directory');
+  Form.AddPath ('A', ' File Attach Path',   8, 12, 28, 12, 18, 45, mysMaxPathSize, @Config.AttachPath,   Topic + 'File attachment directory');
+  Form.AddPath ('E', ' Semaphore Path',    10, 13, 28, 13, 16, 45, mysMaxPathSize, @Config.SemaPath,     Topic + 'Semaphore file directory');
+  Form.AddPath ('U', ' Menu File Path',    10, 14, 28, 14, 16, 45, mysMaxPathSize, @Config.MenuPath,     Topic + 'Default menu file directory');
+  Form.AddPath ('T', ' Text File Path',    10, 15, 28, 15, 16, 45, mysMaxPathSize, @Config.TextPath,     Topic + 'Default display file directory');
 //  Form.AddPath ('P', ' Template Path',     11, 16, 29, 16, 15, 45, mysMaxPathSize, @Config.TemplatePath, Topic + 'Default template file directory');
-  Form.AddPath ('R', ' Script Path',       13, 16, 29, 16, 13, 45, mysMaxPathSize, @Config.ScriptPath,   Topic + 'Default script (MPL) directory');
+  Form.AddPath ('R', ' Script Path',       13, 16, 28, 16, 13, 45, mysMaxPathSize, @Config.ScriptPath,   Topic + 'Default script (MPL) directory');
+
+  Form.Execute;
+
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
+Procedure Configuration_GeneralSettings;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09General Settings|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Open (5, 5, 75, 18);
+
+  VerticalLine (24, 7, 16);
+  VerticalLine (67, 7, 12);
+
+  Form.AddStr  ('B', ' BBS Name',         14,  7, 26,  7, 10, 25, 30, @Config.BBSName, Topic);
+  Form.AddStr  ('S', ' Sysop Name',       12,  8, 26,  8, 12, 25, 30, @Config.SysopName, Topic);
+  Form.AddPass ('Y', ' Sysop Password',    8,  9, 26,  9, 16, 15, 15, @Config.SysopPW, Topic);
+  Form.AddPass ('T', ' System Password',   7, 10, 26, 10, 17, 15, 15, @Config.SystemPW, Topic);
+  Form.AddStr  ('O', ' Sysop ACS',        13, 11, 26, 11, 11, 25, 30, @Config.ACSSysop, Topic);
+  Form.AddStr  ('F', ' Feedback To',      11, 12, 26, 12, 13, 25, 30, @Config.FeedbackTo, Topic);
+  Form.AddStr  ('A', ' Start Menu',       12, 13, 26, 13, 12, 20, 20, @Config.DefStartMenu, Topic);
+  Form.AddStr  ('C', ' Fallback Menu',     9, 14, 26, 14, 15, 20, 20, @Config.DefFallMenu, Topic);
+  Form.AddStr  ('H', ' Theme',            17, 15, 26, 15,  7, 20, 20, @Config.DefThemeFile, Topic);
+  Form.AddTog  ('E', ' Terminal',         14, 16, 26, 16, 10, 10, 0, 3, 'Ask Detect Detect/Ask ANSI', @Config.DefTermMode, Topic);
+
+  Form.AddBol  ('L', ' Chat Logging',     53,  7, 69,  7, 14,  3, @Config.ChatLogging, Topic);
+  Form.AddByte ('R', ' Hours Start',      54,  8, 69,  8, 13,  2, 0, 24, @Config.ChatStart, Topic);
+  Form.AddByte ('N', ' Hours End',        56,  9, 69,  9, 11,  2, 0, 24, @Config.ChatEnd, Topic);
+  Form.AddBol  ('D', ' Chat Feedback',    52, 10, 69, 10, 15,  3, @Config.ChatFeedback, Topic);
+  Form.AddByte ('Z', ' Screen Size',      54, 11, 69, 11, 13,  2, 1, 25, @Config.DefScreenSize, Topic);
+  Form.AddWord ('I', ' Inactivity',       55, 12, 69, 12, 12,  5, 0, 65535, @Config.Inactivity, Topic + 'Inactivity timeout (seconds) 0/Disable');
 
   Form.Execute;
 
@@ -306,7 +350,6 @@ Begin
 
   Box.Close;
   Box.Free;
-
 End;
 
 Procedure Configuration_Internet;
@@ -566,7 +609,6 @@ Begin
   Box.Free;
 End;
 
-
 Procedure Configuration_NewUser2Settings;
 Var
   Box   : TAnsiMenuBox;
@@ -607,6 +649,38 @@ Begin
   Form.AddTog  ('3', ' Email at Index', 42, 14, 60, 14, 16, 3, 0, 2, 'No Yes Ask', @Config.UserMailIndex, Topic);
   Form.AddTog  ('4', ' Message Editor', 42, 15, 60, 15, 16, 4, 0, 2, 'Line Full Ask', @Config.UserEditorType, Topic);
   Form.AddTog  ('5', ' Quote Mode',     46, 16, 60, 16, 12, 6, 0, 2, 'Line Window Ask', @Config.UserQuoteWin, Topic);
+
+  Form.Execute;
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
+Procedure Configuration_ConsoleSettings;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+  Count : Byte;
+Begin
+  Topic := '|03(|09Console Settings|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Open (5, 5, 76, 16);
+
+  VerticalLine (17, 7, 14);
+  VerticalLine (64, 7, 10);
+
+  For Count := 1 to 8 Do
+    Form.AddStr (strI2S(Count)[1], ' F' + strI2S(Count) + ' Macro', 7, 6 + Count, 19, 6 + Count, 10, 30, 60, @Config.SysopMacro[Count], Topic);
+
+  Form.AddBol  ('S', ' Status Bar',  52,  7, 66,  7, 12, 3, @Config.UseStatusBar, Topic);
+  Form.AddAttr ('1', ' Color 1',     55,  8, 66,  8,  9, @Config.StatusColor1, Topic);
+  Form.AddAttr ('2', ' Color 2',     55,  9, 66,  9,  9, @Config.StatusColor2, Topic);
+  Form.AddAttr ('3', ' Color 3',     55, 10, 66, 10,  9, @Config.StatusColor3, Topic);
 
   Form.Execute;
   Form.Free;

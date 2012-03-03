@@ -227,7 +227,7 @@ End;
 
 Var
 	Old : String[8];
-	OldLang : LangRec;
+	OldLang : RecTheme;
 	DirInfo: SearchRec;
 	A : Byte; {format dir output}
 Begin
@@ -295,7 +295,7 @@ Begin
 	Session.Menu.MenuName := Old;
 	Session.Lang := OldLang;
 	Close (Session.PromptFile);
-	Assign (Session.PromptFile, Config.DataPath + Session.Lang.FileName + '.lng');
+	Assign (Session.PromptFile, Config.DataPath + Session.Lang.FileName + '.thm');
 	Reset (Session.PromptFile);
 End;
 

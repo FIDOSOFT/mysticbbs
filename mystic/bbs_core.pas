@@ -26,13 +26,13 @@ Type
     IO            : TBBSIO;
     Client        : TSocketClass;
     EventFile     : File of EventRec;
-    LangFile      : File of LangRec;
+    LangFile      : File of RecTheme;
     CommHandle    : LongInt;
     ShutDown      : Boolean;
     TempPath      : String;
     Event         : EventRec;
     NextEvent     : EventRec;
-    Lang          : LangRec;
+    Lang          : RecTheme;
     LocalMode     : Boolean;
     Baud          : LongInt;
     ExitLevel     : Byte;
@@ -60,8 +60,8 @@ Type
     HistoryDLKB   : LongInt;
     HistoryULs    : Word;
     HistoryULKB   : LongInt;
-    PromptFile    : File of PromptRec;
-    Prompt        : PromptRec;
+    PromptFile    : File of RecPrompt;
+    Prompt        : RecPrompt;
 
     Constructor Create;
     Destructor  Destroy; Override;
@@ -324,13 +324,13 @@ Begin
     {$ELSE}
     If strUpper(Lang.FileName) = strUpper(Str) Then Begin
     {$ENDIF}
-      If Not FileExist(Config.DataPath + Lang.FileName + '.lng') Then Break;
+      If Not FileExist(Config.DataPath + Lang.FileName + '.thm') Then Break;
 
       {$I-} Close (PromptFile); {$I+}
 
       If IoResult <> 0 Then;
 
-      Assign (PromptFile, Config.DataPath + Lang.FileName + '.lng');
+      Assign (PromptFile, Config.DataPath + Lang.FileName + '.thm');
       Reset (PromptFile);
 
       Result := True;

@@ -82,7 +82,7 @@ Var
   Box      : TAnsiMenuBox;
   Image    : TConsoleImageRec;
   MenuPos  : Array[0..4] of Byte = (1, 1, 1, 1, 1);
-  ThemeOld : LangRec;
+  ThemeOld : RecTheme;
   Res      : Char;
 
   Procedure BoxOpen (X1, Y1, X2, Y2: Byte);
@@ -179,7 +179,7 @@ Begin
               End;
           End;
       1 : Begin
-            BoxOpen      (4, 4, 33, 15);
+            BoxOpen      (4, 4, 33, 16);
             CoolBoxOpen  (3, 'Configuration');
 
             Form.AddNone ('S', ' S System Paths',             5,  5, 28, '');
@@ -192,6 +192,7 @@ Begin
             Form.AddNone ('M', ' M Message Base Settings',    5, 12, 28, '');
             Form.AddNone ('E', ' E Echomail Networks',        5, 13, 28, '');
             Form.AddNone ('O', ' O Offline Mail Settings',    5, 14, 28, '');
+            Form.AddNone ('C', ' C Console Settings',         5, 15, 28, '');
 
             Res        := Form.Execute;
             MenuPos[1] := Form.ItemPos;
@@ -206,6 +207,7 @@ Begin
             End Else
               Case Res of
                 'S' : Configuration_SysPaths;
+                'G' : Configuration_GeneralSettings;
                 'L' : Configuration_LoginMatrix;
                 'E' : Configuration_EchoMailAddress(True);
                 '3' : Configuration_OptionalFields;
@@ -214,6 +216,7 @@ Begin
                 'O' : Configuration_QWKSettings;
                 '1' : Configuration_NewUser1Settings;
                 '2' : Configuration_NewUser2Settings;
+                'C' : Configuration_ConsoleSettings;
                 'X' : Break;
               Else
                 MenuPtr := 0;
@@ -284,10 +287,10 @@ Begin
             End Else Begin
               ThemeOld := Session.Lang;
 
-              Session.Lang.FieldCol1 := 15 + 1 * 16;
-              Session.Lang.FieldCol2 :=  9 + 1 * 16;
+              Session.Lang.FieldColor1 := 15 + 1 * 16;
+              Session.Lang.FieldColor2 :=  9 + 1 * 16;
               Session.Lang.FieldChar := 'm';
-              Session.Lang.EchoCh    := '*';
+              Session.Lang.EchoChar  := '*';
 
               Case Res of
                 'A' : Configuration_ArchiveEditor;

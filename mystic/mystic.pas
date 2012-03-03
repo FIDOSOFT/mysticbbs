@@ -138,7 +138,9 @@ Procedure CheckDIR (Dir: String);
 Begin
   If Not FileDirExists(Dir) Then Begin
     Screen.WriteLine ('ERROR: ' + Dir + ' does not exist.');
+
     DisposeClasses;
+
     Halt(1);
   End;
 End;
@@ -184,14 +186,15 @@ Begin
   End;
 
   If Session.NodeNum = 0 Then Begin
-    WriteLn ('BUSY');
+    WriteLn ('BUSY'); {++lang}
+
     DisposeClasses;
+
     Halt;
   End;
 
   fpSignal (SIGTERM, LinuxEventSignal);
   fpSignal (SIGHUP,  LinuxEventSignal);
-  // do we need sigusr1 and sigusr2 installed?
 
   Write (#27 + '(U');
 End;
@@ -200,7 +203,6 @@ End;
 Procedure CheckPathsAndDataFiles;
 Var
   Count : Byte;
-  PR    : PercentRec;
 Begin
   Randomize;
 
@@ -213,7 +215,7 @@ Begin
 
   DirClean(Session.TempPath, '');
 
-  Assign (Session.LangFile, Config.DataPath + 'language.dat');
+  Assign (Session.LangFile, Config.DataPath + 'theme.dat');
   {$I-} Reset (Session.LangFile); {$I+}
   If IoResult <> 0 Then Begin
     Screen.WriteLine ('ERROR: No theme configuration. Use MYSTIC -CFG');
@@ -224,7 +226,7 @@ Begin
 
   If Not Session.LoadThemeData(Config.DefThemeFile) Then Begin
     If Not Session.ConfigMode Then Begin
-      Screen.WriteLine ('ERROR: Default theme prompts not found [' + Config.DefThemeFile + '.lng]');
+      Screen.WriteLine ('ERROR: Default theme prompts not found [' + Config.DefThemeFile + '.thm]');
       DisposeClasses;
       Halt(1);
     End;
@@ -404,9 +406,11 @@ Begin
 
   If Session.ConfigMode Then Begin
     Configuration_MainMenu;
+
     Screen.TextAttr := 7;
     Screen.ClearScreen;
     Screen.BufFlush;
+
     Halt(0);
   End;
 

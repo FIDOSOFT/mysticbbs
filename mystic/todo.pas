@@ -14,14 +14,11 @@ BUGS AND POSSIBLE ISSUES
 ! After data file review, add missing variables to various MPL Get/Put
   functions.
 ! MYSTPACK has access denied errors (caphood)
-? Reapern66 has expressed that the minimal CPU requirements may be too
-  agressive.  Work with him to sort out his baseline, and potentially reduce
-  the CPU requirement for new versions.  Or just tell people the code is
-  already available GPL and let them compile it if it is a problem?
 ! RAR internal viewer does not work with files that have embedded comments
 ! Investigate strange crashing when Mystic is built in the FPC editor vs
   the makewin script.  Something is out of whack with compiler options?  OR
   FPC BUG?  DirAttr is suspect in MPL is it 1 byte or 4 in size?
+! MDL screensave/restore in local console is broken in Windows(?) only?
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
@@ -35,7 +32,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - MCI code to show how many files are in current filebase
 - Online ANSI file viewer (integrate with art gallery)
 - Online ANSI help system
-- Finish System Configuration rewrite
 - Finish Data structure review
 - NEWAPP.MPS
 - Online text editor / ansi editor?
@@ -44,7 +40,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - File comments and rating system
 - Global node message menu command (0;) = add option to ignore your own node
 - Integrate eventual online ANSI help system into configuration utilities
-- FUPLOAD command that does an automated Mass Upload from MBBSUTIL
 - LEET "TIMER" event menu commands from Mystic 2
 - In fact, replace entire menu engine iwth Mystic 2 engine which is SO far
   beyond anything built in ever... But converting old menus will be the
@@ -65,7 +60,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - NNTP server completion
 - MBBSCGI (or PHP DLL) [Grymmjack might have the only MBBSCGI copy]
 - If not the above then finish the HTTP server?
-- Rework code base to compile with newly released FPC (2.6.0).
 - SDL versions of m_input and m_output and also use SDL if that becomes
   reality for the ability to play WAV/MP3/MIDI files etc as SysOp
   notification of events and pages.  Maybe someone else can take on creating
@@ -94,12 +88,16 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Rename Template filenames to allow more than 8 characters (for clarity)
 - Does anyone use Version 7 compiled nodelists?  Worth supporting?
 - Ignore user inactivity flag per user
-- HOME and END keys added to lightbar file listings
 - Default protocol per user
 - ANSI message upload post processor option: Auto/Disabled/Ask
 - Prompt for disconect after UL or DL (and add option to filebase settings)
 - Finish optional user prompts
 - MCI code for FS ansi viewer?
+- MCI code for # of files in current file area
+- Redo random ANSI system to use A-Z instead of 1-9 can have upgrade util
+  rename them automatically.
+- ANSI listbox is terribly inefficient with its output.
+- So much cool stuff to do with the new themes
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
 ===========================================

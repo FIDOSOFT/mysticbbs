@@ -237,7 +237,7 @@ Type
 Var
 	Txt : Array[1..5000] of ^TxtRec;
 	Config : RecConfig;
-	Lang	 : LangRec;
+	Lang	 : RecTheme;
 
 Procedure ViewTextFile (FN : String);
 Const
@@ -341,7 +341,7 @@ Begin
 	Assign (InFile, Config.SystemPath + 'default.txt');
 	Reset  (InFile);
 
-	Assign	(PromptFile, Config.DataPath + 'default.lng');
+	Assign	(PromptFile, Config.DataPath + 'default.thm');
 	ReWrite (PromptFile);
 
 	While Not Eof(InFile) Do Begin
@@ -399,11 +399,11 @@ Var
 	CfgFile 	: File of RecConfig;
 	MBaseFile : File of RecMessageBase;
 	FBaseFile : File of RecFileBase;
-	LangFile	: File of LangRec;
+	LangFile	: File of RecTheme;
 	Cfg 			: RecConfig;
 	MBase 		: RecMessageBase;
 	FBase 		: RecFileBase;
-	TLang 		: LangRec;
+	TLang 		: RecTheme;
 	TF				: Text;
 Begin
   Screen.WriteXYPipe (23, 19, 7, 45, '|08[|15û|08] |07Updating data files|08...');

@@ -12,10 +12,10 @@
 {$PACKRECORDS 1}
 
 Const
-  mysSoftwareID  = 'Mystic';
-  mysCopyYear    = '1997-2012';
-  mysVersion     = '1.10 A11';
-  mysDataChanged = '1.10 A11';
+  mysSoftwareID  = 'Mystic';                                    // no idea
+  mysCopyYear    = '1997-2012';                                 // its been a long time!
+  mysVersion     = '1.10 A11';                                  // current version
+  mysDataChanged = '1.10 A11';                                  // version of last records change
 
   {$IFDEF WIN32}
     PathChar = '\';
@@ -38,23 +38,23 @@ Const
     OSType   = 2;
   {$ENDIF}
 
-  mysMaxAcsSize      = 30;        // Max ACS string size
+  mysMaxAcsSize      = 30;                                      // Max ACS string size
   mysMaxPathSize     = 80;
-  mysMaxMsgLines     = 1000;      // Max message base lines
-  mysMaxInputHistory = 5;         // Input history stack size
-  mysMaxFileDescLen  = 50;
-  mysMaxBatchQueue   = 50;
-  mysMaxVoteQuestion = 20;        { Max number of voting questions      }
-  mysMaxMenuNameLen  = 20;
-  mysMaxMenuCmds     = 75;        { Maximum menu commands per menu      }
-  mysMaxLanguageStr  = 478;       { Total # of strings in language file }
+  mysMaxMsgLines     = 1000;                                    // Max message base lines
+  mysMaxInputHistory = 5;                                       // Input history stack size
+  mysMaxFileDescLen  = 50;                                      // file description length per line
+  mysMaxBatchQueue   = 50;                                      // max files per queue
+  mysMaxVoteQuestion = 20;                                      // Max number of voting questions
+  mysMaxMenuNameLen  = 20;                                      // menu name size
+  mysMaxMenuCmds     = 75;                                      // Maximum menu commands per menu
+  mysMaxThemeText    = 478;                                     // Total prompts in theme file
 
 Type
   SmallWord = System.Word;
-  Integer   = SmallInt;           { force Integer to be a 2-byte signed }
+  Integer   = SmallInt;
   Word      = SmallWord;
 
-  RecMessageText = Array[1..mysMaxMsgLines] of String[79];
+  RecMessageText = Array[1..mysMaxMsgLines] of String[79];      // large global msg buffer is bad
 
   AccessFlagType = Set of 1..25;
 
@@ -101,11 +101,11 @@ Type
     DefStartMenu    : String[20];                               // Default start menu
     DefFallMenu     : String[20];
     DefThemeFile    : String[20];
-    DefTermMode     : Byte;
+    DefTermMode     : Byte;                                     // 0=ask 1=detect 2=detect/ask 3=ansi
     DefScreenSize   : Byte;
     DefScreenCols   : Byte;
-    ChatStart       : SmallInt;                                 // Chat hour start
-    ChatEnd         : SmallInt;                                 // Chat hour end: mins since midnight
+    ChatStart       : Byte;                                     // Chat hour start
+    ChatEnd         : Byte;                                     // Chat hour end
     ChatFeedback    : Boolean;                                  // E-mail sysop if page isn't answered
     ChatLogging     : Boolean;                                  // Record SysOp chat to CHAT.LOG?
     AcsSysop        : String[mysMaxAcsSize];
@@ -123,7 +123,7 @@ Type
     AcsSeeInvis     : String[mysMaxAcsSize];
     AcsMultiLogin   : String[mysMaxAcsSize];
  // CONSOLE SETTINGS
-    SysopMacro      : Array[1..4] of String[80];                // Sysop Macros f1-f4
+    SysopMacro      : Array[1..8] of String[60];                // Sysop Macros f1-f8
     UseStatusBar    : Boolean;
     StatusColor1    : Byte;
     StatusColor2    : Byte;
@@ -136,7 +136,7 @@ Type
     StartMGroup     : Word;
     StartFGroup     : Word;
     UseUSAPhone     : Boolean;
-    UserNameFormat  : Byte;
+    UserNameFormat  : Byte;                                     // 0=typed 1=upper 2=lower 3=proper
  // NEW USER SETTINGS 2
     UserDateType    : Byte;                                     // 1=MM/DD/YY 2=DD/MM/YY 3=YY/DD/MM 4=Ask
     UserEditorType  : Byte;                                     // 0=Line 1=Full 2=Ask
@@ -144,9 +144,9 @@ Type
     UserFullChat    : Byte;                                     // 0=no 1=yes 2=ask
     UserFileList    : Byte;                                     // 0=Normal 1=Lightbar 2=Ask
     UserReadType    : Byte;                                     // 0=normal 1=ansi 2=ask
-    UserMailIndex   : Byte;
-    UserReadIndex   : Byte;
-    UserQuoteWin    : Byte;
+    UserMailIndex   : Byte;                                     // 0=normal 1=ansi 2=ask
+    UserReadIndex   : Byte;                                     // 0=normal 1=ansi 2=ask
+    UserQuoteWin    : Byte;                                     // 0=line 1=window 2=ask
     UserProtocol    : Byte;
     AskTheme        : Boolean;
     AskRealName     : Boolean;
@@ -264,9 +264,9 @@ Const
   UserNoPWChange = $00000020;
 
 Type
-  RecUser = Record                     { USERS.DAT }
-    PermIdx      : LongInt;                 // permanent user number
-    Flags        : LongInt;                  { User Flags }
+  RecUser = Record                                              // USERS.DAT
+    PermIdx      : LongInt;                                     // permanent user number
+    Flags        : LongInt;                                     // User Flags bitmap
     Handle       : String[30];            { Handle                       }
     RealName     : String[30];            { Real Name                    }
     Password     : String[15];            { Password                     }
@@ -280,7 +280,7 @@ Type
     Email        : String[60];            { email address                }
     Optional     : Array[1..10] of String[60];
     UserInfo     : String[30];            { user comment field           }
-    Theme        : String[20];             { user's language file         }
+    Theme        : String[20];                                  // user's theme file
     AF1          : AccessFlagType;
     AF2          : AccessFlagType;        { access flags set #2          }
     Security     : SmallInt;              { Security Level               }
@@ -398,16 +398,16 @@ Const
   MBCrossPost   = $00000020;
 
 Type
-  RecMessageBase = Record
+  RecMessageBase = Record                                       // MBASES.DAT
     Name      : String[40];
-    QWKName   : String[13];
-    NewsName  : String[60];
+    QWKName   : String[13];                                     // ancient standard.. qwk base name
+    NewsName  : String[60];                                     // newsgroup name spaces are replaced with .
     FileName  : String[40];
     Path      : String[mysMaxPathSize];
-    BaseType  : Byte;                                 // 0=JAM  1=Squish
-    NetType   : Byte;                                 // 0=Local 1=Echo 2=News 3=Net
-    ReadType  : Byte;                                 // 0=User 1=Normal 2=FS
-    ListType  : Byte;                                 // 0=User 1=Normal 2=FS
+    BaseType  : Byte;                                           // 0=JAM  1=Squish
+    NetType   : Byte;                                           // 0=Local 1=Echo 2=News 3=Net
+    ReadType  : Byte;                                           // 0=User 1=Normal 2=FS
+    ListType  : Byte;                                           // 0=User 1=Normal 2=FS
     ListACS   : String[mysMaxAcsSize];
     ReadACS   : String[mysMaxAcsSize];
     PostACS   : String[mysMaxAcsSize];
@@ -419,18 +419,18 @@ Type
     ColTear   : Byte;
     ColOrigin : Byte;
     ColKludge : Byte;
-    NetAddr   : Byte;                                 // Net AKA to use for this base
-    Origin    : String[50];                           // Net origin line for this base
-    DefNScan  : Byte;                                 // 0 = off, 1 = on, 2 = forced
-    DefQScan  : Byte;                                 // 0 = off, 1 = on, 2 = forced
-    MaxMsgs   : Word;
-    MaxAge    : Word;
-    Header    : String[20];
-    RTemplate : String[20];
-    ITemplate : String[20];
-    Index     : Word;
-    Flags     : LongInt;
-    Res       : Array[1..80] of Byte;
+    NetAddr   : Byte;                                           // Net AKA to use for this base
+    Origin    : String[50];                                     // Net origin line for this base
+    DefNScan  : Byte;                                           // 0 = off, 1 = on, 2 = forced
+    DefQScan  : Byte;                                           // 0 = off, 1 = on, 2 = forced
+    MaxMsgs   : Word;                                           // max messages allowed (used for squish)
+    MaxAge    : Word;                                           // max days to keep msg (used for squish)
+    Header    : String[20];                                     // standard reader msgheader
+    RTemplate : String[20];                                     // fullscreen reader template
+    ITemplate : String[20];                                     // lightbar index template
+    Index     : Word;                                           // permanent index
+    Flags     : LongInt;                                        // MB flag bits see above
+    Res       : Array[1..80] of Byte;                           // RESERVED
   End;
 
   FScanRec = Record                    { <Data Path> *.SCN               }
@@ -461,6 +461,7 @@ Type
     DefScan    : Byte;
     Flags      : LongInt;
     Res        : Array[1..36] of Byte;
+    //echomail network adresss?
   End;
 
 (* The file directory listing are stored as <FBaseRec.FileName>.DIR in    *)
@@ -551,14 +552,10 @@ Type
     HiChar    : Char;
     HiAttr    : Byte;
     Format    : Byte;
-  End;
-
-  PercentRec = Record                                      // percentage bar record
-    BarLen : Byte;
-    LoChar : Char;
-    LoAttr : Byte;
-    HiChar : Char;
-    HiAttr : Byte;
+    StartY    : Byte;
+    EndY      : Byte;
+    StartX    : Byte;
+    RESERVED  : LongInt;
   End;
 
 Const
@@ -569,13 +566,16 @@ Const
 
 Type
   RecTheme = Record
+    Flags        : LongInt;
     FileName     : String[20];
     Desc         : String[40];
     TextPath     : String[mysMaxPathSize];
     MenuPath     : String[mysMaxPathSize];
     ScriptPath   : String[mysMaxPathSize];
     TemplatePath : String[mysMaxPathSize];
-    Flags        : LongInt;
+    LineChat1    : Byte;
+    LineChat2    : Byte;
+    UserInputFmt : Byte;
     FieldColor1  : Byte;
     FieldColor2  : Byte;
     FieldChar    : Char;
@@ -585,38 +585,21 @@ Type
     FileDescHi   : Byte;
     FileDescLo   : Byte;
     NewMsgChar   : Char;
+    NewVoteChar  : Char;
     VotingBar    : RecPercent;
     FileBar      : RecPercent;
     MsgBar       : RecPercent;
     GalleryBar   : RecPercent;
     HelpBar      : RecPercent;
     ViewerBar    : RecPercent;
-    ThemeColor   : Array['A'..'Z'] of Byte; //or 0..9 is this overkill?
-    // grep ++lang
-  End;
-
-  LangRec = Record                       { LANGUAGE.DAT                     }
-    FileName   : String[8];              { Language file name               }
-    Desc       : String[30];             { Language description             }
-    TextPath   : String[40];             { Path where text files are stored }
-    MenuPath   : String[40];             { Path where menu files are stored }
-    okASCII    : Boolean;                { Allow ASCII }
-    okANSI     : Boolean;                { Allow ANSI }
-    BarYN      : Boolean;                { Use Lightbar Y/N with this lang  }
-    FieldCol1  : Byte;                   { Field input color                }
-    FieldCol2  : Byte;
-    FieldChar  : Char;
-    EchoCh     : Char;                   { Password echo character          }
-    QuoteColor : Byte;                   { Color for quote lightbar         }
-    TagCh      : Char;                   { File Tagged Char }
-    FileHi     : Byte;                   { Color of file search highlight }
-    FileLo     : Byte;                   { Non lightbar description color }
-    NewMsgChar : Char;                   { Lightbar Msg Index New Msg Char }
-    VotingBar  : PercentRec;             { voting booth bar }
-    FileBar    : PercentRec;             { file list bar }
-    MsgBar     : PercentRec;             { lightbar msg reader bar }
-    GalleryBar : PercentRec;
-    Reserved   : Array[1..95] of Byte;   { RESERVED }
+    IndexBar     : RecPercent;
+    FAreaBar     : RecPercent;
+    FGroupBar    : RecPercent;
+    MAreaBar     : RecPercent;
+    MGroupBar    : RecPercent;
+    MAreaList    : RecPercent;
+    Colors       : Array[0..9] of Byte;
+    Reserved     : Array[1..199] of Byte;
   End;
 
   BBSListRec = Record
@@ -725,7 +708,7 @@ Type
     RecvCmd : String[60];
   End;
 
-  PromptRec = String[255];
+  RecPrompt = String[255];
 
   NodeMsgRec = Record
     FromNode : Byte;

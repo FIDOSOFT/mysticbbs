@@ -2809,7 +2809,7 @@
        comments are supported... //, /* */ and (*  *) comments are used.
 
      - Include files have been changed to {$include Myfile.mps} since # is
-       a part of MPL comment/directive system anymore.
+       not a part of MPL comment/directive system anymore.
 
  + New MIDE replaces old MIDE.  This version does not yet have syntax
    highlighting, but has a nicer pulldown menu interface.  Syntax highlighting
@@ -3383,7 +3383,7 @@
       SetPromptInfo(1, 'Hello!');
       WriteLn ('This MCI code would like to say: |&1');
 
-   On a side note, there is NOT a GetPromptInfo because you can simply use
+   As a side note, there is NOT a GetPromptInfo because you can simply use
    MCI2STR:
 
       WriteLn('This MCI code would like to say: ' + Mci2Str('&1'));
@@ -3506,6 +3506,7 @@
 
      Const
        UserDeleted = $04;  // established bit for userdeleted from records.pas
+                           // note: this value has changed check records.pas!
      Begin
        GetThisUser
 
@@ -3843,7 +3844,7 @@
  + MBBSUTIL has a new function -FUPLOAD.  This goes through every file base
    and looks for new files.  If a new file is found it will be added into
    Mystic's file base listing as a new file.  FILE_ID.DIZ will be imported
-   as well.
+   as well.  This was later moved to MUTIL
 
  ! Mystic will no longer shell to the console and get "stuck" when trying
    to execute an archive that has a blank command line in the configuration
@@ -3934,3 +3935,42 @@
 
  + MBBSUTIL now has an -AREASOUT option which will export a list of all bases
    flagged as Echomail in the AREAS.BBS format.
+
+ + Added a new program called MUTIL.  This will eventually become the
+   replacement for MBBSUTIL and MYSTPACK.  In addition, it will have a ton of
+   new features that MBBSUTIL did not have.  MUTIL and MUTIL.CFG contain more
+   details.
+
+ + MUTIL now has the ability to import FIDONET.NA style files into Mystic's
+   message bases.
+
+ + MUTIL now has the ability to perform an offline "Mass upload" into file
+   bases.  It will also import File_ID.DIZ (optionally) based on the archive
+   configuration.
+
+ + "Languages" have been renamed to Themes.  LANGUAGE.DAT has been renamed to
+   THEME.DAT in the data directory.  A ton of new features await with this new
+   system.  It of course is still possible to use the Theme system to create
+   support for different languages as well.
+
+   Additionally, compile prompt files that used to have the .LNG file
+   extension have been renamed to .THM extension.  The upgrade utility should
+   take care of all this renaming for you.
+
+ - MAKELANG has been removed from Mystic BBS distribution.
+
+ - MakeTHEME has been added to the Mystic BBS distribution.  This utility
+   works much like MAKELANG did but it has a few new options:
+
+      1) The ability to decompile prompt files.  Keep in mind, comments are
+         not added into compiled prompt files, so when you decompile one you
+         will lose that information.
+
+      2) MakeTheme will now check for the existance of a "mysticbbs"
+         environment variable.  If it finds this variable, it will look in that
+         location for MYSTIC.DAT, allowing MakeTheme to no longer be required to
+         be in the root Mystic BBS directory.
+
+      3) Prompts within a prompt file no longer has to be in numerical order.
+         More to come on why this change is being made, but generally this
+         allows you to categorize prompts.

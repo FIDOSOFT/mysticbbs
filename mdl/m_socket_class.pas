@@ -53,29 +53,27 @@ Type
     Constructor Create;
     Destructor  Destroy; Override;
     Procedure   Disconnect;
-    Function    DataWaiting : Boolean;
-    Function    WriteBuf (Var Buf; Len: LongInt) : LongInt;
+    Function    DataWaiting     : Boolean;
+    Function    WriteBuf        (Var Buf; Len: LongInt) : LongInt;
     Procedure   BufFlush;
-    Procedure   BufWriteChar (Ch: Char);
-    Procedure   BufWriteStr (Str: String);
-    Function    WriteLine (Str: String) : LongInt;
-    Function    WriteStr (Str: String) : LongInt;
-    Function    WriteFile (Str: String) : Boolean;
-    Procedure   ProcessBuf (Var Buf: TSocketBuffer; Var Len: LongInt);
-    Function    ReadBuf (Var Buf; Len: LongInt) : LongInt;
-    Function    ReadLine (Var Str: String) : LongInt;
-    Function    SetBlocking (Block: Boolean): LongInt;
-    Function    WaitForData (TimeOut: LongInt) : LongInt;
-    Function    Connect (Address: String; Port: Word) : Boolean;
-    Function    ResolveAddress (Host: String) : LongInt;
-    Procedure   WaitInit (Port: Word);
-    Function    WaitConnection : TSocketClass;
-
+    Procedure   BufWriteChar    (Ch: Char);
+    Procedure   BufWriteStr     (Str: String);
+    Function    WriteLine       (Str: String) : LongInt;
+    Function    WriteStr        (Str: String) : LongInt;
+    Function    WriteFile       (Str: String) : Boolean;
+    Procedure   ProcessBuf      (Var Buf: TSocketBuffer; Var Len: LongInt);
+    Function    ReadBuf         (Var Buf; Len: LongInt) : LongInt;
+    Function    ReadLine        (Var Str: String) : LongInt;
+    Function    SetBlocking     (Block: Boolean): LongInt;
+    Function    WaitForData     (TimeOut: LongInt) : LongInt;
+    Function    Connect         (Address: String; Port: Word) : Boolean;
+    Function    ResolveAddress  (Host: String) : LongInt;
+    Procedure   WaitInit        (Port: Word);
+    Function    WaitConnection  : TSocketClass;
     Procedure   PurgeInputData;
-    Function    ReadChar : Char;
-    Function    WriteChar (Ch: Char) : LongInt;
-
-    Procedure   Status (Str: String);
+    Function    ReadChar        : Char;
+    Function    WriteChar       (Ch: Char) : LongInt;
+    Procedure   Status          (Str: String);
 
     Property SocketHandle : LongInt READ FSocketHandle WRITE FSocketHandle;
     Property PeerPort     : LongInt READ FPort         WRITE FPort;
@@ -170,6 +168,7 @@ Procedure TSocketClass.BufFlush;
 Begin
   If FOutBufPos > 0 Then Begin
     WriteBuf (FOutBuf, FOutBufPos);
+
     FOutBufPos := 0;
   End;
 End;
@@ -181,6 +180,7 @@ Begin
 
   If FOutBufPos > TSocketBufferSize Then Begin
     WriteBuf (FOutBuf, FOutBufPos - 1);
+
     FOutBufPos := 0;
   End;
 End;

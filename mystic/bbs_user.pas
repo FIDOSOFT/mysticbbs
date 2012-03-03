@@ -398,7 +398,7 @@ Procedure TBBSUser.DetectGraphics;
 Var
   Loop : Byte;
 Begin
-  If Not Session.Lang.okANSI Then Begin
+  If Session.Lang.Flags AND ThmAllowANSI = 0 Then Begin
     Session.io.Graphics := 0;
     Exit;
   End;
@@ -783,7 +783,7 @@ End;
 
 Procedure TBBSUser.GetLanguage;
 Var
-  Old : LangRec;
+  Old : RecTheme;
   T   : Byte;
   A   : Byte;
 Begin
@@ -795,8 +795,8 @@ Begin
   Reset (Session.LangFile);
   Repeat
     Read (Session.LangFile, Session.Lang);
-    If ((Not Session.Lang.okASCII) and (Session.io.Graphics = 0)) or
-       ((Not Session.Lang.okANSI)  and (Session.io.Graphics = 1)) Then Continue;
+    If ((Session.Lang.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0)) or
+       ((Session.Lang.Flags AND ThmAllowANSI  = 0) and (Session.io.Graphics = 1)) Then Continue;
     Inc (T);
     Session.io.PromptInfo[1] := strI2S(T);
     Session.io.PromptInfo[2] := Session.Lang.Desc;
@@ -815,8 +815,8 @@ Begin
   Reset (Session.LangFile);
   Repeat
     Read (Session.LangFile, Session.Lang);
-    If ((Not Session.Lang.okASCII) and (Session.io.Graphics = 0)) or
-       ((Not Session.Lang.okANSI)  and (Session.io.Graphics = 1)) Then Continue;
+    If ((Session.Lang.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0)) or
+       ((Session.Lang.Flags AND ThmAllowANSI  = 0) and (Session.io.Graphics = 1)) Then Continue;
     Inc (T);
   Until T = A;
 { Close (Session.LangFile);}
@@ -1188,12 +1188,12 @@ Begin
   If FileExist(Config.ScriptPath + 'startup.mpx') Then
     ExecuteMPL(NIL, 'startup');
 
-  If Not Session.Lang.okASCII and (Session.io.Graphics = 0) Then Begin
+  If (Session.Lang.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(321));
     Session.SystemLog ('ASCII login disabled');
     Halt(0);
   End Else
-  If Not Session.Lang.okANSI and (Session.io.Graphics = 1) Then Begin
+  If (Session.Lang.Flags AND ThmAllowANSI = 0) and (Session.io.Graphics = 1) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(322));
     Session.SystemLog ('ANSI login disabled');
     Halt(0);
@@ -1287,7 +1287,7 @@ Begin
     8   : GetDateFormat(True);
     9   : Repeat
             GetGraphics;
-            If (Not Session.Lang.okASCII and (Session.io.Graphics = 0)) or (Not Session.Lang.okANSI  and (Session.io.Graphics = 1)) Then
+            If ((Session.Lang.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0)) or ((Session.Lang.Flags AND ThmAllowANSI = 0) and (Session.io.Graphics = 1)) Then
               Session.io.OutFullLn (Session.GetPrompt(325))
             Else
               Break;

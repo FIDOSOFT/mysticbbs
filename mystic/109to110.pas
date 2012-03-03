@@ -13,6 +13,38 @@ Uses
 {$I RECORDS.PAS}
 
 Type
+  OldPercentRec = Record                                      // percentage bar record
+    BarLen : Byte;
+    LoChar : Char;
+    LoAttr : Byte;
+    HiChar : Char;
+    HiAttr : Byte;
+  End;
+
+  OldLangRec = Record                       { LANGUAGE.DAT                     }
+    FileName   : String[8];              { Language file name               }
+    Desc       : String[30];             { Language description             }
+    TextPath   : String[40];             { Path where text files are stored }
+    MenuPath   : String[40];             { Path where menu files are stored }
+    okASCII    : Boolean;                { Allow ASCII }
+    okANSI     : Boolean;                { Allow ANSI }
+    BarYN      : Boolean;                { Use Lightbar Y/N with this lang  }
+    FieldCol1  : Byte;                   { Field input color                }
+    FieldCol2  : Byte;
+    FieldChar  : Char;
+    EchoCh     : Char;                   { Password echo character          }
+    QuoteColor : Byte;                   { Color for quote lightbar         }
+    TagCh      : Char;                   { File Tagged Char }
+    FileHi     : Byte;                   { Color of file search highlight }
+    FileLo     : Byte;                   { Non lightbar description color }
+    NewMsgChar : Char;                   { Lightbar Msg Index New Msg Char }
+    VotingBar  : OldPercentRec;             { voting booth bar }
+    FileBar    : OldPercentRec;             { file list bar }
+    MsgBar     : OldPercentRec;             { lightbar msg reader bar }
+    GalleryBar : OldPercentRec;
+    Reserved   : Array[1..95] of Byte;   { RESERVED }
+  End;
+
   OldMBaseRec = Record                    { MBASES.DAT                       }
     Name     : String[40];             { Message base name                }
     QWKName  : String[13];             { QWK (short) message base name    }
@@ -340,6 +372,23 @@ Begin
   Result := (IoResult = 0);
 End;
 
+Procedure PurgeDataWildcard (WC: String);
+Var
+  D : SearchRec;
+Begin
+  FindFirst (Config.DataPath + WC, AnyFile, D);
+
+  While DosError = 0 Do Begin
+    If D.Attr AND Directory <> 0 Then Continue;
+
+    DeleteFile (Config.DataPath + D.Name);
+
+    FindNext(D);
+  End;
+
+  FindClose(D);
+End;
+
 Procedure WarningDisplay;
 Var
   Ch : Char;
@@ -423,6 +472,8 @@ Begin
     Config.AcsSysop       := AcsSysop;
     Config.AcsInvisLogin  := AcsInvLogin;
     Config.AcsSeeInvis    := AcsSeeInvis;
+
+    FillChar(Config.SysopMacro, SizeOf(Config.SysopMacro), #0);
 
     For A := 1 to 4 Do Config.SysopMacro[A] := SysopMacro[A];
 
@@ -775,120 +826,27 @@ Begin
   DeleteFile (Config.DataPath + 'security.old');
 End;
 
-(*
-Procedure ConvertMessageBases;
-Var
-  MBase       : MBaseRec;
-  MBaseFile   : File of MBaseRec;
-  OldBase     : OldMBaseRec;
-  OldBaseFile : File of OldMBaseRec;
-Begin
-  WriteLn ('[-] Updating message base config...');
+Procedure ConvertThemes;
 
-  ReNameFile(Config.DataPath + 'mbases.dat', Config.DataPath + 'mbases.old');
-
-  Assign (OldBaseFile, Config.DataPath + 'mbases.old');
-  Reset  (OldBaseFile);
-
-  Assign  (MBaseFile, Config.DataPath + 'mbases.dat');
-  ReWrite (MBaseFile);
-
-  While Not Eof(OldBaseFile) Do Begin
-    Read (OldBaseFile, OldBase);
-
-    With OldBase Do Begin
-      MBase.Name := Name;
-      MBase.QwkName := QwkName;
-      MBase.FileName := FileName;
-      MBase.Path := Path;
-      MBase.BaseType := BaseType;
-      MBase.NetType := NetType;
-      MBase.PostType := PostType;
-      MBase.ACS := ACS;
-      MBase.ReadACS := ReadACS;
-      MBase.PostACS := PostACS;
-      MBase.SysopACS := SysopACS;
-      MBase.Password := Password;
-      MBase.ColQuote := ColQuote;
-      MBase.ColTear := ColTear;
-      MBase.ColText := ColText;
-      MBase.ColOrigin := ColOrigin;
-      MBase.NetAddr := NetAddr;
-      MBase.Origin := Origin;
-      MBase.UseReal := UseReal;
-      MBase.DefNScan := DefNScan;
-      MBase.DefQScan := DefQScan;
-      MBase.MaxMsgs := MaxMsgs;
-      MBase.MaxAge := MaxAge;
-      MBase.Header := Header;
-      MBase.Index := Index;
-    End;
-
-    Write (MBaseFile, MBase);
+  Function ConvertBar (P: OldPercentRec) : RecPercent;
+  Begin
+    Result.BarLength := P.BarLen;
+    Result.LoChar    := P.LoChar;
+    Result.LoAttr    := P.LoAttr;
+    Result.HiChar    := P.HiChar;
+    Result.HiAttr    := P.HiAttr;
+    Result.Format    := 0;
+    Result.StartY    := 1;
+    Result.EndY      := 20;
+    Result.StartX    := 79;
   End;
 
-  Close (MBaseFile);
-  Close (OldBaseFile);
-
-  DeleteFile (Config.DataPath + 'mbases.old');
-End;
-*)
-(*
-Procedure ConvertFileBases;
 Var
-  FBase       : FBaseRec;
-  FBaseFile   : File of FBaseRec;
-  OldBase     : OldFBaseRec;
-  OldBaseFile : File of OldFBaseRec;
-Begin
-  WriteLn ('[-] Updating file base config...');
-
-  ReNameFile(Config.DataPath + 'fbases.dat', Config.DataPath + 'fbases.old');
-
-  Assign (OldBaseFile, Config.DataPath + 'fbases.old');
-  Reset  (OldBaseFile);
-
-  Assign  (FBaseFile, Config.DataPath + 'fbases.dat');
-  ReWrite (FBaseFile);
-
-  While Not Eof(OldBaseFile) Do Begin
-    Read (OldBaseFile, OldBase);
-
-    With OldBase Do Begin
-      FBase.Name := Name;
-      FBase.FtpName := strStripMCI(FBase.Name);
-      FBase.FileName := FileName;
-      FBase.DispFile := DispFile;
-      FBase.ListACS := ACS;
-      FBase.FtpACS := ACS;
-      FBase.SysopACS := SysopACS;
-      FBase.ULACS := ULACS;
-      FBase.DLACS := DLACS;
-      FBase.Path := Path;
-      FBase.Password := Password;
-      FBase.ShowUL := ShowUL;
-      FBase.DefScan := DefScan;
-      FBase.IsCDROM := IsCDROM;
-      FBase.IsFREE := IsFREE;
-    End;
-
-    Write (FBaseFile, FBase);
-  End;
-
-  Close (FBaseFile);
-  Close (OldBaseFile);
-
-  DeleteFile (Config.DataPath + 'fbases.old');
-End;
-*)
-(*
-Procedure ConvertLanguageDefs;
-Var
-  Lang        : LangRec;
-  LangFile    : File of LangRec;
+  Theme       : RecTheme;
+  ThemeFile   : File of RecTheme;
   OldLang     : OldLangRec;
   OldLangFile : File of OldLangRec;
-  TempBar     : PercentRec;
+  TempBar     : RecPercent;
 Begin
   WriteLn ('[-] Updating language definitions...');
 
@@ -897,50 +855,85 @@ Begin
   Assign (OldLangFile, Config.DataPath + 'language.old');
   Reset  (OldLangFile);
 
-  Assign  (LangFile, Config.DataPath + 'language.dat');
-  ReWrite (LangFile);
+  Assign  (ThemeFile, Config.DataPath + 'theme.dat');
+  ReWrite (ThemeFile);
 
   While Not Eof(OldLangFile) Do Begin
     Read (OldLangFile, OldLang);
 
-    TempBar.BarLen := 10;
+    FillChar(Theme, SizeOf(Theme), 0);
+
+    TempBar.BarLength := 10;
     TempBar.LoChar := '°';
     TempBar.LoAttr := 8;
     TempBar.HiChar := '²';
     TempBar.HiAttr := 25;
+    TempBar.Format := 0;
+    TempBar.StartY := 1;
+    TempBar.EndY   := 20;
+    TempBar.StartX := 79;
 
-    With OldLang Do Begin
-      Lang.FileName := FileName;
-      Lang.Desc := Desc;
-      Lang.TextPath := TextPath;
-      Lang.MenuPath := MenuPath;
-      Lang.okASCII := okASCII;
-      Lang.okANSI := okANSI;
-      Lang.BarYN := BarYN;
-      Lang.FieldCol1 := FieldColor;
-      Lang.FieldCol2 := FieldColor;
-      Lang.FieldChar := InputCh;
-      Lang.EchoCh := EchoCh;
-      Lang.QuoteColor := QuoteColor;
-      Lang.TagCh := TagCh;
-      Lang.FileHi := FileHi;
-      Lang.FileLo := FileLo;
-      Lang.NewMsgChar := NewMsgChar;
+    Theme.FileName     := OldLang.FileName;
+    Theme.Desc         := OldLang.Desc;
+    Theme.TextPath     := OldLang.TextPath;
+    Theme.MenuPath     := OldLang.MenuPath;
+    Theme.ScriptPath   := Config.ScriptPath;
+    Theme.TemplatePath := OldLang.TextPath;
+    Theme.FieldColor1  := OldLang.FieldCol1;
+    Theme.FieldColor2  := OldLang.FieldCol2;
+    Theme.FieldChar    := OldLang.FieldChar;
+    Theme.EchoChar     := OldLang.EchoCh;
+    Theme.QuoteColor   := OldLang.QuoteColor;
+    Theme.TagChar      := OldLang.TagCh;
+    Theme.FileDescHi   := OldLang.FileHi;
+    Theme.FileDescLo   := OldLang.FileLo;
+    Theme.NewMsgChar   := OldLang.NewMsgChar;
+    Theme.NewVoteChar  := '*';
 
-      Lang.VotingBar := TempBar;
-      Lang.FileBar := TempBar;
-      Lang.MsgBar := TempBar;
-    End;
+    Theme.VotingBar    := ConvertBar(OldLang.VotingBar);
+    Theme.FileBar      := ConvertBar(OldLang.FileBar);
+    Theme.MsgBar       := ConvertBar(OldLang.MsgBar);
+    Theme.GalleryBar   := ConvertBar(OldLang.GalleryBar);
+    Theme.IndexBar     := TempBar;
+    Theme.FAreaBar     := TempBar;
+    Theme.FGroupBar    := TempBar;
+    Theme.MAreaBar     := TempBar;
+    Theme.MGroupBar    := TempBar;
+    Theme.MAreaList    := TempBar;
+    Theme.HelpBar      := TempBar;
+    Theme.ViewerBar    := TempBar;
 
-    Write (LangFile, Lang);
+    Theme.UserInputFmt := 0;
+    Theme.LineChat1    := 9;
+    Theme.LineChat2    := 11;
+
+    Theme.Colors[0]      := 1;
+    Theme.Colors[1]      := 9;
+    Theme.Colors[2]      := 11;
+    Theme.Colors[3]      := 8;
+    Theme.Colors[4]      := 7;
+    Theme.Colors[5]      := 15;
+    Theme.Colors[6]      :=  8 + 1 * 16;
+    Theme.Colors[7]      :=  7 + 1 * 16;
+    Theme.Colors[8]      :=  9 + 1 * 16;
+    Theme.Colors[9]      := 15 + 1 * 16;
+
+    Theme.Flags := 0;
+
+    If OldLang.okASCII Then Theme.Flags := Theme.Flags OR ThmAllowASCII;
+    If OldLang.okANSI  Then Theme.Flags := Theme.Flags OR ThmAllowANSI;
+    If OldLang.BarYN   Then Theme.Flags := Theme.Flags OR ThmLightbarYN;
+
+    Theme.Flags := Theme.Flags OR ThmFallback;
+
+    Write (ThemeFile, Theme);
   End;
 
-  Close (LangFile);
+  Close (ThemeFile);
   Close (OldLangFile);
 
   DeleteFile (Config.DataPath + 'language.old');
 End;
-*)
 
 Procedure ConvertArchives;
 Var
@@ -1198,20 +1191,23 @@ Begin
   WarningDisplay;
 
   //COMMENT this out if mystic.dat is being converted:
-//  Assign (ConfigFile, 'mystic.dat');
-//  Reset  (ConfigFile);
-//  Read   (ConfigFile, Config);
-//  Close  (ConfigFile);
+  Assign (ConfigFile, 'mystic.dat');
+  Reset  (ConfigFile);
+  Read   (ConfigFile, Config);
+  Close  (ConfigFile);
 
-  ConvertConfig;  //1.10a11
+//  ConvertConfig;  //1.10a11
 //  ConvertUsers; //1.10a11
 //ConvertSecurity; //1.10a11
 //ConvertFileLists;  //1.10a11
 //ConvertFileBases; //1.10a11
 //ConvertMessageBases; //1.10a11
+//ConvertThemes; //1.10a11
 
 //  ConvertArchives; //1.10a1
 //  ConvertGroups;   //1.10a1
+
+  PurgeDataWildcard('*.lng');
 
   TextAttr := 12;
   WriteLn;

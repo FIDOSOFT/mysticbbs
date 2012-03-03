@@ -1642,7 +1642,7 @@ Var
       Screen.TextAttr := 255;
 
       Insert (
-        Session.io.Attr2Ansi(Session.Lang.FileLo),
+        Session.io.Attr2Ansi(Session.Lang.FileDescLo),
         Temp,
         Pos(Data, strUpper(Temp)) + Length(Data)
       );
@@ -1650,7 +1650,7 @@ Var
       Screen.TextAttr := 255;
 
       Insert (
-        Session.io.Attr2Ansi(Session.Lang.FileHi),
+        Session.io.Attr2Ansi(Session.Lang.FileDescHi),
         Temp,
         Pos(Data, strUpper(Temp)));
 
@@ -1855,7 +1855,7 @@ Var
         For A := 1 to BatchNum Do
           If Batch[A].FileName = FDir.FileName Then Begin
             List[ListSize + 1].Batch := True;
-            Session.io.PromptInfo[3] := Session.Lang.TagCh;
+            Session.io.PromptInfo[3] := Session.Lang.TagChar;
 
             Break;
           End;
@@ -1944,7 +1944,7 @@ Var
     Session.io.PromptInfo[2] := List[CurPos].FileName;
 
     If List[CurPos].Batch Then
-      Session.io.PromptInfo[3] := Session.Lang.TagCh
+      Session.io.PromptInfo[3] := Session.Lang.TagChar
     Else
       Session.io.PromptInfo[3] := ' ';
 
@@ -1979,7 +1979,7 @@ Var
           Session.io.PromptInfo[2] := List[CurPos].FileName;
 
           If List[CurPos].Batch Then
-            Session.io.PromptInfo[3] := Session.Lang.TagCh
+            Session.io.PromptInfo[3] := Session.Lang.TagChar
           Else
             Session.io.PromptInfo[3] := ' ';
 
