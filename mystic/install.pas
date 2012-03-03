@@ -249,7 +249,7 @@ Var
 	Line	 : Integer;
 	Per 	 : LongInt;
 	Per10  : Byte;
-	BarPos : Byte;
+	BarPos : Byte = 0;
 Begin
 	Assign (T, FN);
 	{$I-} Reset(T); {$I+}
@@ -404,7 +404,6 @@ Var
 	MBase 		: RecMessageBase;
 	FBase 		: RecFileBase;
 	TLang 		: RecTheme;
-	TF				: Text;
 Begin
   Screen.WriteXYPipe (23, 19, 7, 45, '|08[|15û|08] |07Updating data files|08...');
 
