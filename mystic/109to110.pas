@@ -707,7 +707,11 @@ Var
 Begin
   WriteLn ('[-] Updating user database...');
 
-  ReNameFile(Config.DataPath + 'users.dat', Config.DataPath + 'users.old');
+  If Not ReNameFile(Config.DataPath + 'users.dat', Config.DataPath + 'users.old') Then Begin
+    WriteLn('ERROR: Unable to copy user database.  Restore a backup and try again after');
+    WriteLn('       eliminating any protential access issues.');
+    Halt(1);
+  End;
 
   Assign (OldUserFile, Config.DataPath + 'users.old');
   Reset  (OldUserFile);
