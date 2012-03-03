@@ -84,7 +84,6 @@ Var
   Count : Byte;
   Str   : String;
   Str2  : String;
-  EndIt : Byte;
 Begin
   Result := True;
 
