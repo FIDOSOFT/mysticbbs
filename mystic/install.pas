@@ -412,6 +412,7 @@ Begin
 	Reset  (CfgFile);
 	Read	 (CfgFile, Cfg);
 
+  Cfg.DataChanged := mysDataChanged;
 	Cfg.SystemPath  := Config.SystemPath;
 	Cfg.AttachPath  := Config.AttachPath;
 	Cfg.DataPath	  := Config.DataPath;
