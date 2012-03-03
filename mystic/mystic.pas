@@ -212,8 +212,9 @@ Begin
 
   {$I-}
   MkDir (Config.SystemPath + 'temp' + strI2S(Session.NodeNum));
-  If IoResult <> 0 Then;
   {$I+}
+
+  If IoResult <> 0 Then;
 
   DirClean(Session.TempPath, '');
 
