@@ -23,7 +23,10 @@ Begin
 {	Reset (LangFile);}
 	Repeat
     Session.io.OutFullLn ('|CL|14Language Editor|CR|CR|15##  FileName  Description|CR|09--  --------  ------------------------------');
-    Reset (Session.LangFile);
+assign(session.langfile, config.datapath+'theme.dat');
+    {$I-} Reset (Session.LangFile);{$I+}
+    if ioresult <> 0 then rewrite(session.langfile);
+
     while not eof(Session.LangFile) do begin
       read (Session.LangFile, Session.Lang);
       Session.io.OutFullLn ('|15' + strPadR(strI2S(filepos(Session.LangFile)), 4, ' ') +
