@@ -21,7 +21,6 @@ Var
   Box   : TAnsiMenuBox;
   Form  : TAnsiMenuForm;
   Topic : String;
-  Count : Byte;
 Begin
   Topic := '|03(|09File Base Edit|03) |01-|09> |15';
   Box   := TAnsiMenuBox.Create;
