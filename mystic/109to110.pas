@@ -399,11 +399,11 @@ Begin
   Result := (IoResult = 0);
 End;
 
-Procedure PurgeDataWildcard (WC: String);
+Procedure PurgeWildcard (WC: String);
 Var
   D : SearchRec;
 Begin
-  FindFirst (Config.DataPath + WC, AnyFile, D);
+  FindFirst (WC, AnyFile, D);
 
   While DosError = 0 Do Begin
     If D.Attr AND Directory <> 0 Then Continue;
@@ -1331,11 +1331,15 @@ Begin
   ConvertHistory;      //1.10a11
   ConvertLastOn;       //1.10a11
 
-//  ConvertArchives; //1.10a1
-//  ConvertGroups;   //1.10a1
+  ConvertArchives; //1.10a1
+  ConvertGroups;   //1.10a1
 
-  PurgeDataWildcard('*.lng');
-  PurgeDataWildcard('node*.dat');
+  PurgeWildcard(Config.DataPath + '*.lng');
+  PurgeWildcard(Config.DataPath + 'node*.dat');
+  PurgeWildcard(Config.DataPath + 'wfcscrn.*');
+  PurgeWildcard(Config.SystemPath + 'mcfg.*');
+  PurgeWildcard(Config.SystemPath + 'makelang.*');
+  PurgeWildcard(Config.ScriptPath + '*.mpe');
 
   TextAttr := 12;
   WriteLn;

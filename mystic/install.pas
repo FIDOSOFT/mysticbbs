@@ -420,6 +420,8 @@ Begin
 	Cfg.QwkPath 	  := Config.QwkPath;
 	Cfg.ScriptPath  := Config.ScriptPath;
 	Cfg.LogsPath	  := Config.LogsPath;
+  Cfg.MenuPath    := Lang.MenuPath;
+  Cfg.TextPath    := Lang.TextPath;
 	Cfg.UserIdxPos  := 0;
   Cfg.SystemCalls := 0;
 
@@ -454,7 +456,7 @@ Begin
 	End;
 	Close (FBaseFile);
 
-	Assign (LangFile, Config.DataPath + 'language.dat');
+	Assign (LangFile, Config.DataPath + 'theme.dat');
 	Reset  (LangFile);
 
 	While Not Eof(LangFile) Do Begin
