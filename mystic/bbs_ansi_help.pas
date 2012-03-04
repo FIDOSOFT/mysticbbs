@@ -321,11 +321,15 @@ Begin
           #72 : Begin
                   If (CurLine = 1) and (TopPage > 1) Then Begin
                     Dec (TopPage);
+
                     DrawPage;
+
                     UpdateCursor;
                   End Else If CurLine > 1 Then Begin
                     LinkOFF(TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
+
                     Dec (CurLine);
+
                     UpdateCursor;
                   End;
                 End;
@@ -345,12 +349,16 @@ Begin
                 End;
           #75 : If (CurLPos > 1) and (Text[TopPage + CurLine - 1].Links > 0) Then Begin
                   LinkOFF(TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
+
                   Dec(CurLPos);
+
                   LinkON;
                 End;
           #77 : If CurLPos < Text[TopPage + CurLine - 1].Links Then Begin
                   LinkOFF(TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
+
                   Inc(CurLPos);
+
                   LinkON;
                 End;
           #79 : If TopPage + WinSize <= Lines Then Begin
@@ -363,29 +371,39 @@ Begin
                 End Else
                 If TopPage + CurLine <= Lines Then Begin
                   LinkOFF (TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
+
                   CurLine := Lines - TopPage + 1;
+
                   UpdateCursor;
                 End;
           #80 : Begin
                   If (CurLine = WinSize) and (TopPage + WinSize <= Lines) Then Begin
                     Inc(TopPage);
+
                     DrawPage;
+
                     UpdateCursor;
                   End Else
                   If (CurLine < WinSize) And (TopPage + CurLine <= Lines) Then Begin
                     LinkOFF(TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
+
                     Inc(CurLine);
+
                     UpdateCursor;
                   End;
                 End;
           #81 : If TopPage + WinSize <= Lines Then Begin
                   PageDown;
+
                   DrawPage;
+
                   UpdateCursor;
                 End Else
                 If TopPage + CurLine <= Lines Then Begin
                   LinkOFF (TopPage + CurLine - 1, WinY1 + CurLine - 1, CurLPos);
+
                   CurLine := Lines - TopPage + 1;
+
                   UpdateCursor;
                 End;
 
