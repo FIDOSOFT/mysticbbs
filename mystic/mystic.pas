@@ -138,7 +138,7 @@ End;
 
 Procedure CheckDIR (Dir: String);
 Begin
-  If Not FileDirExists(Dir) Then Begin
+  If Not DirExists(Dir) Then Begin
     Screen.WriteLine ('ERROR: ' + Dir + ' does not exist.');
 
     DisposeClasses;

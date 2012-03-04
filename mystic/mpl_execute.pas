@@ -1415,7 +1415,7 @@ Begin
           End;
     43  : FileErase(Param[1].S);
     44  : Begin
-            TempBool := FileDirExists(Param[1].S);
+            TempBool := DirExists(Param[1].S);
             Store (TempBool, 1);
           End;
     45  : Begin

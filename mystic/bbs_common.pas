@@ -229,7 +229,7 @@ Function CheckPath (Str: String) : String;
 Begin
   While Str[Length(Str)] = PathChar Do Dec(Str[0]);
 
-  If Not FileDirExists(Str) Then Begin
+  If Not DirExists(Str) Then Begin
     If Session.io.GetYN ('|CR|12Directory doesn''t exist.  Create? |11', True) Then Begin
 
       {$I-} MkDir (Str); {$I+}

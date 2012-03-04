@@ -27,11 +27,11 @@ Function ioBlockWrite (Var F: File; Var Rec; dSize: LongInt; Var Res: LongInt) :
 
 Function  FileExist       (Str: String) : Boolean;
 Function  FileErase       (Str: String) : Boolean;
-Function  FileDirExists   (Str: String) : Boolean;
 Function  JustFileName    (Str: String) : String;
 Function  JustFile        (Str: String) : String;
 Function  JustFileExt     (Str: String) : String;
 Function  JustPath        (Str: String) : String;
+Function  DirExists       (Str: String) : Boolean;
 Function  DirSlash        (Str: String) : String;
 Function  DirChange       (Dir: String) : Boolean;
 Procedure DirClean        (Path: String; Exempt: String);
@@ -391,7 +391,7 @@ Begin
   Result := (DosError = 0) and (Attr And Directory = 0);
 End;
 
-Function FileDirExists (Str: String) : Boolean;
+Function DirExists (Str: String) : Boolean;
 Var
   F    : File;
   Attr : Word;
