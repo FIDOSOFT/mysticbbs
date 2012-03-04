@@ -5,7 +5,7 @@ Unit m_QuickSort;
 Interface
 
 Const
-  mdlMaxSortSize = 5000;
+  mdlMaxSortSize = 10000;
 
 Type
   TSortMethod = (qAscending, qDescending);
@@ -23,8 +23,9 @@ Type
     Constructor Create;
     Destructor  Destroy; Override;
 
-    Function    Add  (Name: String; Ptr: LongInt) : Boolean;
-    Procedure   Sort (Left, Right: Word; Mode: TSortMethod);
+    Function    Add         (Name: String; Ptr: Cardinal) : Boolean;
+    Procedure   Conditional (Name: String; Ptr: Cardinal; ListMin: Word);
+    Procedure   Sort        (Left, Right: Word; Mode: TSortMethod);
     Procedure   Clear;
   End;
 
@@ -54,7 +55,7 @@ Begin
   Total := 0;
 End;
 
-Function TQuickSort.Add (Name: String; Ptr: LongInt) : Boolean;
+Function TQuickSort.Add (Name: String; Ptr: Cardinal) : Boolean;
 Begin
   Result := False;
 
@@ -70,6 +71,20 @@ Begin
   Data[Total]^.Ptr  := Ptr;
 
   Result := True;
+End;
+
+Procedure TQuickSort.Conditional (Name: String; Ptr: Cardinal; ListMin: Word);
+Var
+  Count : Word;
+Begin
+  If Total < ListMin Then
+    Self.Add(Name, Ptr)
+  Else
+    For Count := Total DownTo 1 Do
+      If Data[Count].Name < Name Then Begin
+        Data[Count].Name := Name;
+        Data[Count].Ptr  := Ptr;
+      End;
 End;
 
 Procedure TQuickSort.Sort (Left, Right: Word; Mode: TSortMethod);
