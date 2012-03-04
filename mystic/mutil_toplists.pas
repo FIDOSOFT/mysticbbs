@@ -1,0 +1,232 @@
+Unit MUTIL_TopLists;
+
+{$I M_OPS.PAS}
+
+Interface
+
+Procedure uTopLists;
+
+Implementation
+
+Uses
+  m_QuickSort,
+  m_Strings,
+  m_FileIO,
+  mutil_Common,
+  mutil_Status;
+
+Type
+  TopListType = (TopCall, TopPost, TopDL, TopUL);
+
+Var
+  CreatedLists : LongInt = 0;
+
+Function GenerateList (ListType: TopListType) : Boolean;
+Var
+  UserFile : TBufFile;
+  User     : RecUser;
+  Sort     : TQuickSort;
+
+  Function GetValue : Cardinal;
+  Begin
+    Case ListType of
+      TopCall : Result := User.Calls;
+      TopPost : Result := User.Posts;
+      TopDL   : Result := User.DLs;
+      TopUL   : Result := User.ULs;
+    End;
+  End;
+
+  Function GetPaddedValue : String;
+  Begin
+  End;
+
+  Procedure GenerateOutput;
+  Var
+    InFile  : File;
+    OutFile : Text;
+    Buffer  : Array[1..2048] of Char;
+    BufPos  : LongInt = 0;
+    BufSize : LongInt = 0;
+    Done    : Boolean = False;
+
+    Function GetChar : Char;
+    Begin
+      If BufPos = BufSize Then Begin
+        BlockRead (InFile, Buffer, SizeOf(Buffer), BufSize);
+
+        BufPos := 0;
+
+        If BufSize = 0 Then Begin
+          Done      := True;
+          Buffer[1] := #26;
+        End;
+      End;
+
+      Inc (BufPos);
+
+      Result := Buffer[BufPos];
+    End;
+
+  Var
+    CfgName  : String;
+    Template : String;
+    OutName  : String;
+    Desc     : String;
+    NameLen  : Byte;
+    DataLen  : Byte;
+    Code     : String[2];
+    CodeVal  : String[2];
+    Ch       : Char;
+  Begin
+    Case ListType of
+      TopCall : CfgName := '_call_';
+      TopPost : CfgName := '_post_';
+      TopDL   : CfgName := '_dl_';
+      TopUL   : CfgName := '_ul_';
+    End;
+
+    Template := INI.ReadString  (Header_TopLists, 'top' + CfgName + 'template', 'template.txt');
+    OutName  := INI.ReadString  (Header_TopLists, 'top' + CfgName + 'output', 'top.asc');
+    Desc     := INI.ReadString  (Header_TopLists, 'top' + CfgName + 'desc', 'None');
+    NameLen  := INI.ReadInteger (Header_TopLists, 'top' + CfgName + 'namelen', 30);
+    DataLen  := INI.ReadInteger (Header_TopLists, 'top' + CfgName + 'datalen', 10);
+
+    If Not FileExist(Template) Then Begin
+      ProcessStatus('Template not found');
+      Exit;
+    End;
+
+    Inc (CreatedLists);
+
+    Assign (InFile, Template);
+    Reset  (InFile, 1);
+
+    Assign  (OutFile, OutName);
+    ReWrite (OutFile);
+
+    While Not Done Do Begin
+      Ch := GetChar;
+
+      Case Ch of
+        #26 : Break;
+        '@' : Begin
+                Code := GetChar;
+                Code := Code + GetChar;
+
+                If Code = 'DE' Then
+                  Write (OutFile, Desc)
+                Else
+                If (Code = 'NA') or (Code = 'DA') Then Begin
+                  CodeVal := GetChar;
+                  CodeVal := CodeVal + GetChar;
+
+                  If (CodeVal[1] in ['0'..'9']) And (CodeVal[2] in ['0'..'9']) Then Begin
+                    UserFile.Seek (Pred(Sort.Data[strS2I(CodeVal)]^.Ptr));
+                    UserFile.Read (User);
+
+                    If Code = 'NA' Then
+                      Write (OutFile, strPadR(User.Handle, NameLen, ' '))
+                    Else
+                      Write (OutFile, strPadL(strComma(GetValue), DataLen, ' '));
+
+                  End Else
+                    Write(OutFile, '@' + Code + CodeVal);
+
+                End Else
+                  Write (OutFile, '@' + Code);
+              End;
+      Else
+        Write (OutFile, Ch);
+      End;
+    End;
+
+    Close (InFile);
+    Close (OutFile);
+  End;
+
+Var
+  ExclFile : Text;
+  ExclName : String;
+  Str      : String;
+  Excluded : Boolean;
+Begin
+  Result := True;
+
+  Case ListType of
+    TopCall : ProcessStatus('Top Callers');
+    TopPost : ProcessStatus('Top Posts');
+    TopDL   : ProcessStatus('Top Downloaders');
+    TopUL   : ProcessStatus('Top Uploaders');
+  End;
+
+  ExclName := INI.ReadString(Header_TopLists, 'exclude_list', 'exclude.txt');
+
+  BarOne.Reset;
+
+  UserFile := TBufFile.Create(8192);
+  Sort     := TQuickSort.Create;
+
+  If UserFile.Open(bbsConfig.DataPath + 'users.dat', fmOpen, fmRWDN, SizeOf(RecUser)) Then Begin
+    While Not UserFile.EOF Do Begin
+      UserFile.Read (User);
+
+      If User.Flags And UserDeleted <> 0 Then Continue;
+
+      BarOne.Update(UserFile.FilePos, UserFile.FileSize);
+
+      Excluded := False;
+
+      Assign (ExclFile, ExclName);
+
+      {$I-} Reset(ExclFile); {$I+}
+
+      If IoResult = 0 Then Begin
+        While Not Eof(ExclFile) Do Begin
+          ReadLn(ExclFile, Str);
+
+          Str := strUpper(strStripB(Str, ' '));
+
+          If (Str = '') or (Str[1] = ';') Then Continue;
+
+          If (strUpper(User.Handle) = Str) or (strUpper(User.RealName) = Str) Then Begin
+            Excluded := True;
+            Break;
+          End;
+        End;
+
+        Close(ExclFile);
+      End;
+
+      If Not Excluded Then
+        Sort.Conditional(strPadL(strI2S(GetValue), 10, '0'), UserFile.FilePos, 99);
+    End;
+
+    Sort.Sort (1, Sort.Total, qDescending);
+
+    GenerateOutput;
+
+  End Else
+    Result := False;
+
+  BarOne.Update(100, 100);
+
+  UserFile.Free;
+  Sort.Free;
+End;
+
+Procedure uTopLists;
+Begin
+  ProcessName   ('Generating Top Lists', True);
+  ProcessResult (rWORKING, False);
+
+  If INI.ReadString(Header_TopLists, 'top_call', '0') = '1' Then GenerateList(TopCall);
+  If INI.ReadString(Header_TopLists, 'top_post', '0') = '1' Then GenerateList(TopPost);
+  If INI.ReadString(Header_TopLists, 'top_dl',   '0') = '1' Then GenerateList(TopDL);
+  If INI.ReadString(Header_TopLists, 'top_ul',   '0') = '1' Then GenerateList(TopUL);
+
+  ProcessStatus ('Created |15' + strI2S(CreatedLists) + ' |07list(s)');
+  ProcessResult (rDONE, True);
+End;
+
+End.
