@@ -19,6 +19,7 @@ BUGS AND POSSIBLE ISSUES
   the makewin script.  Something is out of whack with compiler options?  OR
   FPC BUG?  DirAttr is suspect in MPL is it 1 byte or 4 in size?
 ! MDL screensave/restore in local console is broken in Windows(?) only?
+! View archive not working if its external view? [Griffin]
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
