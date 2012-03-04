@@ -377,11 +377,16 @@ Begin
   End;
 
   Case Code[1] of
-    '!' : Begin
+    '!' : If Code[2] in ['0'..'9'] Then Begin
             A := strS2I(Code[2]);
+
             ScreenInfo[A].X := Screen.CursorX;
             ScreenInfo[A].Y := Screen.CursorY;
             ScreenInfo[A].A := Screen.TextAttr;
+          End Else Begin
+            Result := False;
+
+            Exit;
           End;
     '$' : Case Code[2] of
             'C' : Begin

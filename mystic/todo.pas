@@ -100,6 +100,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - So much cool stuff to do with the new themes
 - LastOn revamp make sure its not global and new stuff is populated
 - ANSI online help that can execute menu commands/restore screen
+- MPL fAppend?  Why didnt I add that?
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
 ===========================================

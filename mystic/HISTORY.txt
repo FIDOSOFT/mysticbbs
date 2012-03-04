@@ -3985,3 +3985,6 @@
    and their directories (if they do not already exist).  See MUTIL.CFG for
    more information.
 
+ ! The MCI parser for |!x MCI codes now checks for validity of the number
+   or otherwise does not parse the code.
+
