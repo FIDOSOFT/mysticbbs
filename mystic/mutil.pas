@@ -45,6 +45,7 @@ Uses
   mutil_Common,
   mutil_Status,
   mutil_ImportNA,
+  mutil_FileBone,
   mutil_Upload;
 
 {$I MUTIL_ANSI.PAS}
@@ -147,6 +148,7 @@ End;
 
 Var
   DoImportNA   : Boolean;
+  DoFileBone   : Boolean;
   DoMassUpload : Boolean;
 Begin
   ApplicationStartup;
@@ -154,6 +156,7 @@ Begin
   // Build process list
 
   DoImportNA   := CheckProcess(Header_IMPORTNA);
+  DoFileBone   := CheckProcess(Header_FILEBONE);
   DoMassUpload := CheckProcess(Header_UPLOAD);
 
   // Exit with an error if nothing is configured
@@ -169,5 +172,6 @@ Begin
   // We're good lets execute this stuff!
 
   If DoImportNA   Then uImportNA;
+  If DoFileBone   Then uImportFileBone;
   If DoMassUpload Then uMassUpload;
 End.

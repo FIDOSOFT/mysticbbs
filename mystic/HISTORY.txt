@@ -3981,3 +3981,7 @@
    Gender, and if the user was a new user or not.  In addition, it will now
    save all 10 custom user questions (not implemented yet).
 
+ + MUTIL can now import FILEBONE.NA format files, creating both file bases
+   and their directories (if they do not already exist).  See MUTIL.CFG for
+   more information.
+
