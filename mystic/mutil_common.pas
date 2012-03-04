@@ -27,6 +27,7 @@ Const
   Header_IMPORTNA = 'Import_FIDONET.NA';
   Header_FILEBONE = 'Import_FILEBONE.NA';
   Header_UPLOAD   = 'MassUpload';
+  Header_TOPLISTS = 'GenerateTopLists';
 
 Function  strAddr2Str        (Addr : RecEchoMailAddr) : String;
 Function  GenerateMBaseIndex : LongInt;
