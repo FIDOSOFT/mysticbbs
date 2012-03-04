@@ -241,9 +241,18 @@ Begin
 
   While Count < Num Do Begin
     Temp := Pos(Ch, Str);
+
     If Temp = 0 Then Exit;
+
     Delete (Str, 1, Temp);
+
+    While Str[1] = Ch Do Begin
+      Delete (Str, 1, 1);
+      Inc (Temp);
+    End;
+
     Inc (Count);
+
     Inc (Result, Temp);
   End;
 End;
