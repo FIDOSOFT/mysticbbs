@@ -81,9 +81,11 @@ Begin
     Self.Add(Name, Ptr)
   Else
     For Count := Total DownTo 1 Do
-      If Data[Count].Name < Name Then Begin
-        Data[Count].Name := Name;
-        Data[Count].Ptr  := Ptr;
+      If Data[Count]^.Name < Name Then Begin
+        Data[Count]^.Name := Name;
+        Data[Count]^.Ptr  := Ptr;
+
+        Break;
       End;
 End;
 
