@@ -313,8 +313,8 @@ Begin
           AddVar ({$IFDEF MPLPARSER} 'userlaston',    {$ENDIF} iLongInt);
           AddVar ({$IFDEF MPLPARSER} 'userdatetype',  {$ENDIF} iByte);
           AddVar ({$IFDEF MPLPARSER} 'usercalls',     {$ENDIF} iLongInt);
-          AddVar ({$IFDEF MPLPARSER} 'userpassword',  {$ENDIF} iString);
-          AddVar ({$IFDEF MPLPARSER} 'userflags',     {$ENDIF} iByte);
+          AddStr ({$IFDEF MPLPARSER} 'userpassword',  {$ENDIF} iString, 15);
+          AddVar ({$IFDEF MPLPARSER} 'userflags',     {$ENDIF} iLongInt);
         End;
     2 : Begin
           AddPointer ({$IFDEF MPLPARSER} 'cfgsyspath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.SystemPath     {$ELSE} NIL {$ENDIF});
@@ -336,10 +336,10 @@ Begin
 
           AddVar ({$IFDEF MPLPARSER} 'mbaseindex',    {$ENDIF} iInteger);
           AddStr ({$IFDEF MPLPARSER} 'mbasename',     {$ENDIF} iString, 40);
-          AddStr ({$IFDEF MPLPARSER} 'mbaseacs',      {$ENDIF} iString, 20);
-          AddStr ({$IFDEF MPLPARSER} 'mbaseracs',     {$ENDIF} iString, 20);
-          AddStr ({$IFDEF MPLPARSER} 'mbasepacs',     {$ENDIF} iString, 20);
-          AddStr ({$IFDEF MPLPARSER} 'mbasesacs',     {$ENDIF} iString, 20);
+          AddStr ({$IFDEF MPLPARSER} 'mbaseacs',      {$ENDIF} iString, 30);
+          AddStr ({$IFDEF MPLPARSER} 'mbaseracs',     {$ENDIF} iString, 30);
+          AddStr ({$IFDEF MPLPARSER} 'mbasepacs',     {$ENDIF} iString, 30);
+          AddStr ({$IFDEF MPLPARSER} 'mbasesacs',     {$ENDIF} iString, 30);
         End;
     4 : Begin
           {$IFNDEF MPLPARSER} TInterpEngine(S).IdxVarMGroup := X + 1; {$ENDIF}
