@@ -26,6 +26,8 @@ Begin
   Box   := TAnsiMenuBox.Create;
   Form  := TAnsiMenuForm.Create;
 
+  Box.Header := ' Index ' + strI2S(FBase.Index) + ' ';
+
   Box.Open (6, 5, 75, 20);
 
   VerticalLine (22, 7, 19);
