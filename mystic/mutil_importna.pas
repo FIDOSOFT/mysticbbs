@@ -46,8 +46,8 @@ Begin
 
     If (Str[1] = ';') or (Str = '') Then Continue;
 
-    TagName  := strWordGet(1, Str, ' ');
-    BaseName := strStripB(Copy(Str, Pos(' ', Str), 255), ' ');
+    TagName  := strStripLow(strWordGet(1, Str, ' '));
+    BaseName := strStripLow(strStripB(Copy(Str, Pos(' ', Str), 255), ' '));
 
     ProcessStatus (BaseName);
 
