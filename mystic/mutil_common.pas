@@ -25,12 +25,16 @@ Var
 Const
   Header_GENERAL  = 'General';
   Header_IMPORTNA = 'Import_FIDONET.NA';
+  Header_FILEBONE = 'Import_FILEBONE.NA';
   Header_UPLOAD   = 'MassUpload';
 
 Function  strAddr2Str        (Addr : RecEchoMailAddr) : String;
 Function  GenerateMBaseIndex : LongInt;
+Function  GenerateFBaseIndex : LongInt;
 Function  IsDupeMBase        (FN: String) : Boolean;
+Function  IsDupeFBase        (FN: String) : Boolean;
 Procedure AddMessageBase     (Var MBase: RecMessageBase);
+Procedure AddFileBase        (Var FBase: RecFileBase);
 Function  ShellDOS           (ExecPath: String; Command: String) : LongInt;
 Procedure ExecuteArchive     (FName: String; Temp: String; Mask: String; Mode: Byte);
 
@@ -81,6 +85,30 @@ Begin
   Close (MBaseFile);
 End;
 
+Function IsDupeFBase (FN: String) : Boolean;
+Var
+  FBaseFile : File of RecFileBase;
+  FBase     : RecFileBase;
+Begin
+  Result := False;
+
+  Assign (FBaseFile, bbsConfig.DataPath + 'fbases.dat');
+  {$I-} Reset (FBaseFile); {$I+}
+
+  If IoResult <> 0 Then Exit;
+
+  While Not Eof(FBaseFile) Do Begin
+    Read (FBaseFile, FBase);
+
+    If strUpper(FBase.FileName) = strUpper(FN) Then Begin
+      Result := True;
+      Break;
+    End;
+  End;
+
+  Close (FBaseFile);
+End;
+
 Function GenerateMBaseIndex : LongInt;
 Var
   MBaseFile : File of RecMessageBase;
@@ -103,6 +131,28 @@ Begin
   Close (MBaseFile);
 End;
 
+Function GenerateFBaseIndex : LongInt;
+Var
+  FBaseFile : File of RecFileBase;
+  FBase     : RecFileBase;
+Begin
+  Assign (FBaseFile, bbsConfig.DataPath + 'fbases.dat');
+  Reset  (FBaseFile);
+
+  Result := FileSize(FBaseFile);
+
+  While Not Eof(FBaseFile) Do Begin
+    Read (FBaseFile, FBase);
+
+    If FBase.Index = Result Then Begin
+      Inc   (Result);
+      Reset (FBaseFile);
+    End;
+  End;
+
+  Close (FBaseFile);
+End;
+
 Procedure AddMessageBase (Var MBase: RecMessageBase);
 Var
   MBaseFile : File of RecMessageBase;
@@ -112,6 +162,17 @@ Begin
   Seek   (MBaseFile, FileSize(MBaseFile));
   Write  (MBaseFile, MBase);
   Close  (MBaseFile);
+End;
+
+Procedure AddFileBase (Var FBase: RecFileBase);
+Var
+  FBaseFile : File of RecFileBase;
+Begin
+  Assign (FBaseFile, bbsConfig.DataPath + 'fbases.dat');
+  Reset  (FBaseFile);
+  Seek   (FBaseFile, FileSize(FBaseFile));
+  Write  (FBaseFile, FBase);
+  Close  (FBaseFile);
 End;
 
 Function ShellDOS (ExecPath: String; Command: String) : LongInt;
