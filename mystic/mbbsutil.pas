@@ -114,7 +114,7 @@ Begin
   WriteLn;
   WriteLn ('The following command line options are available:');
   WriteLn;
-  WriteLn ('-AREAOUT  <File>            Export AREAS.BBS format file in <File>');
+  WriteLn ('-AREASOUT <File>            Export AREAS.BBS format file in <File>');
   WriteLn ('-BKILL    <ID> <Days>       Delete BBSes which haven''t been verified in <DAYS>');
   WriteLn ('-BPACK                      Pack all BBS lists');
   WriteLn ('-BSORT    <ID> <Type>       Sorts and packs BBS list by <type>');
