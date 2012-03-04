@@ -31,6 +31,7 @@ Function  JustFileName    (Str: String) : String;
 Function  JustFile        (Str: String) : String;
 Function  JustFileExt     (Str: String) : String;
 Function  JustPath        (Str: String) : String;
+Function  DirCreate       (Str: String) : Boolean;
 Function  DirExists       (Str: String) : Boolean;
 Function  DirSlash        (Str: String) : String;
 Function  DirChange       (Dir: String) : Boolean;
@@ -281,6 +282,37 @@ Begin
   {$I-} ReName (OldF, NewFN); {$I+}
 
   Result := (IoResult = 0);
+End;
+
+Function DirCreate (Str: String) : Boolean;
+Var
+  Count  : Byte;
+  CurDir : String;
+  Prefix : String;
+Begin
+  Result := True;
+  Prefix := '';
+  Str    := DirSlash(Str);
+
+  Count := Pos(PathSep, Str);
+
+  While (Count > 0) Do Begin
+    CurDir := Copy(Str, 1, Count);
+
+    Delete (Str, 1, Count);
+
+    Prefix := Prefix + CurDir;
+
+    If Not DirExists(Prefix) Then Begin
+      {$I-} MkDIR (Prefix); {$I+}
+      If IoResult <> 0 Then Begin
+        Result := False;
+        Exit;
+      End;
+    End;
+
+    Count := Pos(PathSep, Str);
+  End;
 End;
 
 Procedure DirClean (Path: String; Exempt: String);
