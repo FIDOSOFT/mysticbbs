@@ -37,10 +37,6 @@ Var
     End;
   End;
 
-  Function GetPaddedValue : String;
-  Begin
-  End;
-
   Procedure GenerateOutput;
   Var
     InFile  : File;
