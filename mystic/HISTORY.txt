@@ -3996,3 +3996,6 @@
    supplied as well.  IE:  mutil mutil.cfg -noscreen This is useful for
    Linux/OSX people that may want to execute MUTIL during a login or
    something but do not want their users to see the MUTIL screen.
+
+ + Mystic now has 10 colors definable per theme, with 10 new MCI codes
+   |T0 to |T9 to display them.

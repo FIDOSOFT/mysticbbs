@@ -579,6 +579,8 @@ Begin
             'X' : LastMCIValue := strI2S(TBBSCore(Core).User.Security.MaxDLs);
           End;
     'T' : Case Code[2] of
+            '0'..
+            '9' : LastMCIValue := Attr2Ansi(Session.Lang.Colors[strS2I(Code[2])]);
             'B' : LastMCIValue := strI2S(TBBSCore(Core).User.ThisUser.TimeBank);
             'C' : LastMCIValue := strI2S(Config.SystemCalls);
             'E' : If Graphics = 1 Then LastMCIValue := 'Ansi' Else LastMCIValue := 'Ascii'; //++lang

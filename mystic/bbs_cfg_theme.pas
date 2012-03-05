@@ -175,12 +175,12 @@ Begin
   List.LoChars  := #13#27#47;
   List.NoWindow := True;
 
-  Box.Open (8, 6, 73, 18);
+  Box.Open (8, 6, 73, 19);
 
   WriteXY (10,  8, 112, 'File Name             Description');
   WriteXY (10,  9, 112, strRep(#196, 62));
-  WriteXY (10, 16, 112, strRep(#196, 62));
-  WriteXY (29, 17, 112, cfgCommandList);
+  WriteXY (10, 17, 112, strRep(#196, 62));
+  WriteXY (29, 18, 112, cfgCommandList);
 
   Repeat
     List.Clear;
@@ -195,7 +195,7 @@ Begin
 
     List.Add ('', 0);
 
-    List.Open (8, 9, 73, 16);
+    List.Open (8, 9, 73, 17);
     List.Close;
 
     Case List.ExitCode of
