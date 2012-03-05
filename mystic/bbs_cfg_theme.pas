@@ -273,7 +273,6 @@ Begin
                       ThemeFile.RecordInsert (List.Picked);
                       ThemeFile.Write        (Copied);
                     End;
-
             End;
       #13 : If (List.ListMax > 0) And (List.Picked <> List.ListMax) Then
               If Select Then Begin
