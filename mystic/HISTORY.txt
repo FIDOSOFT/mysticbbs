@@ -3990,3 +3990,9 @@
 
  + MUTIL can now generate top 1-99 callers, posters, downloaders, and
    uploaders all configurable by templates.
+
+ + MUTIL now has a -NOSCREEN option which disables the screen output when
+   executing.  When suppling this on the command line, a .cfg file must be
+   supplied as well.  IE:  mutil mutil.cfg -noscreen This is useful for
+   Linux/OSX people that may want to execute MUTIL during a login or
+   something but do not want their users to see the MUTIL screen.
