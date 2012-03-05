@@ -85,9 +85,9 @@ Var
   CF : File of RecConfig;
 Begin
   ExitProc := @ApplicationShutdown;
-  Console  := TOutput.Create(True);
+  Console  := TOutput.Create(strUpper(ParamStr(2)) <> '-NOSCREEN');
 
-  DrawStatusScreen;
+  If Console.Active Then DrawStatusScreen;
 
   Console.SetWindow(5, 14, 76, 21, True);
 
@@ -99,7 +99,7 @@ Begin
   Else Begin
     ProcessName   ('Load configuration', False);
     ProcessStatus ('Missing file');
-    ProcessResult (rFATAL, True);
+    ProcessResult (rFATAL, False);
 
     Halt(1);
   End;
@@ -115,7 +115,7 @@ Begin
   If IoResult <> 0 Then Begin
     ProcessName   ('Load configuration', False);
     ProcessStatus ('Missing MYSTIC.DAT');
-    ProcessResult (rFATAL, True);
+    ProcessResult (rFATAL, False);
 
     Halt(1);
   End;
@@ -126,7 +126,7 @@ Begin
   If bbsConfig.DataChanged <> mysDataChanged Then Begin
     ProcessName   ('Load configuration', False);
     ProcessStatus ('Version mismatch');
-    ProcessResult (rFATAL, True);
+    ProcessResult (rFATAL, False);
 
     Halt(1);
   End;
@@ -166,8 +166,8 @@ Begin
 
   If ProcessTotal = 0 Then Begin
     ProcessName   ('Load configuration', False);
-    ProcessStatus ('No processes are configured!');
-    ProcessResult (rFATAL, True);
+    ProcessStatus ('No processes configured!');
+    ProcessResult (rFATAL, False);
 
     Halt(1);
   End;
