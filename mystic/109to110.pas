@@ -868,7 +868,6 @@ Procedure ConvertThemes;
     Result.HiAttr    := P.HiAttr;
     Result.Format    := 0;
     Result.StartY    := 1;
-    Result.EndY      := 20;
     Result.StartX    := 79;
   End;
 
@@ -901,7 +900,6 @@ Begin
     TempBar.HiAttr := 25;
     TempBar.Format := 0;
     TempBar.StartY := 1;
-    TempBar.EndY   := 20;
     TempBar.StartX := 79;
 
     Theme.FileName     := OldLang.FileName;

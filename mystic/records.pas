@@ -553,9 +553,9 @@ Type
     HiAttr    : Byte;
     Format    : Byte;
     StartY    : Byte;
-    EndY      : Byte;
+    Reserved2 : Byte;
     StartX    : Byte;
-    RESERVED  : LongInt;
+    Reserved  : LongInt;
   End;
 
 Const

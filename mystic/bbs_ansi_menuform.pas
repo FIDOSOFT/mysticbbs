@@ -6,7 +6,8 @@ Interface
 
 Uses
   m_Types,
-  bbs_ansi_MenuInput;
+  bbs_Ansi_MenuInput,
+  bbs_Common;
 
 Const
   FormMaxItems = 50;
@@ -31,7 +32,8 @@ Type
     ItemPass,
     ItemPipe,
     ItemCaps,
-    ItemBits
+    ItemBits,
+    ItemBar
   );
 
   FormItemPTR = ^FormItemRec;
@@ -56,6 +58,7 @@ Type
     L         : ^LongInt;
     C         : ^Char;
     F         : ^TMenuFormFlagsRec;
+    R         : ^RecPercent;
     Toggle    :  String[68];
   End;
 
@@ -65,6 +68,7 @@ Type
 
   TAnsiMenuForm = Class
   Private
+    Procedure EditPercentBar  (Var Bar: RecPercent);
     Function  GetColorAttr    (C: Byte) : Byte;
     Function  DrawAccessFlags (Var Flags: TMenuFormFlagsRec) : String;
     Procedure EditAccessFlags (Var Flags: TMenuFormFlagsRec);
@@ -121,6 +125,7 @@ Type
     Procedure   AddDate (HK: Char; D: String; X, Y, FX, FY, DS: Byte; P: Pointer; H: String);
     Procedure   AddCaps (HK: Char; D: String; X, Y, FX, FY, DS, FS, MX: Byte; P: Pointer; H: String);
     Procedure   AddBits (HK: Char; D: String; X, Y, FX, FY, DS: Byte; Flag: LongInt; P: Pointer; H: String);
+    Procedure   AddBar  (HK: Char; D: String; X, Y, FX, FY, DS: Byte; P: Pointer; H: String);
     Function    Execute : Char;
   End;
 
@@ -179,6 +184,40 @@ Begin
   Items   := 0;
   ItemPos := 1;
   Changed := False;
+End;
+
+Procedure TAnsiMenuForm.EditPercentBar (Var Bar: RecPercent);
+Var
+  Box  : TAnsiMenuBox;
+  Form : TAnsiMenuForm;
+Begin
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Open (7, 5, 73, 12);
+
+  VerticalLine (23, 7, 10);
+  VerticalLine (61, 7, 10);
+
+  Form.AddTog  ('F', ' Bar Format'  , 11,  7, 25,  7, 12, 10, 0, 1, 'Horizontal Vertical', @Bar.Format, '');
+  Form.AddChar ('B', ' BG Character',  9,  8, 25,  8, 14, 32, 255, @Bar.LoChar, '');
+  Form.AddAttr ('G', ' BG Color',     13,  9, 25,  9, 10, @Bar.LoAttr, '');
+  Form.AddByte ('X', ' Start X',      14, 10, 25, 10,  9,  2, 1, 50, @Bar.StartX, '');
+  Form.AddByte ('A', ' Bar Length',   49,  7, 63,  7, 12,  2, 1, 50, @Bar.BarLength, '');
+  Form.AddChar ('C', ' FG Character', 47,  8, 63,  8, 14, 32, 255, @Bar.Hichar, '');
+  Form.AddAttr ('O', ' FG Color',     51,  9, 63,  9, 10, @Bar.HiAttr, '');
+  Form.AddByte ('Y', ' Start Y',      52, 10, 63, 10,  9,  2, 1, 50, @Bar.StartY, '');
+
+  Repeat
+    Case Form.Execute of
+      #27 : Break;
+    End;
+  Until False;
+
+  Box.Close;
+
+  Form.Free;
+  Box.Free;
 End;
 
 Function TAnsiMenuForm.DrawAccessFlags (Var Flags: TMenuFormFlagsRec) : String;
@@ -322,6 +361,7 @@ Begin
       ItemLong    : L := P;
       ItemChar    : C := P;
       ItemFlags   : F := P;
+      ItemBar     : R := P;
     End;
   End;
 End;
@@ -455,6 +495,13 @@ Begin
   AddBasic (HK, D, X, Y, FX, FY, DS, 8, 8, ItemDate, P, H);
 End;
 
+Procedure TAnsiMenuForm.AddBar (HK: Char; D: String; X, Y, FX, FY, DS: Byte; P: Pointer; H: String);
+Begin
+  If Items = FormMaxItems Then Exit;
+
+  AddBasic (HK, D, X, Y, FX, FY, DS, 8, 8, ItemBar, P, H);
+End;
+
 Procedure TAnsiMenuForm.BarON;
 Var
   A : Byte;
@@ -477,27 +524,22 @@ End;
 
 Procedure TAnsiMenuForm.BarOFF (RecPos: Word);
 Var
-  A : Byte;
+  Count : Byte;
 Begin
   If RecPos = 0 Then Exit;
 
   With ItemData[RecPos]^ Do Begin
     WriteXY (DescX, DescY, cLo, strPadR(Desc, DescSize, ' '));
 
-    A := Pos(HotKey, strUpper(Desc));
+    Count := Pos(HotKey, strUpper(Desc));
 
-    If A > 0 Then
-      WriteXY (DescX + A - 1, DescY, cLoKey, Desc[A]);
+    If Count > 0 Then
+      WriteXY (DescX + Count - 1, DescY, cLoKey, Desc[Count]);
   End;
 End;
 
 Procedure TAnsiMenuForm.FieldWrite (RecPos : Word);
 Begin
-  // This could be changed to case itemtype and save display into string
-  // variable.  Then we would only require a single Screen.WriteXY function.
-  // It would be a tiny bit slower (obviously, not really noticable) but
-  // would reduce code size.
-
   With ItemData[RecPos]^ Do Begin
     Case ItemType of
       ItemPass    : WriteXY (FieldX, FieldY, cData, strPadR(strRep('*', Length(S^)), FieldSize, ' '));
@@ -515,6 +557,10 @@ Begin
       ItemFlags   : WriteXY (FieldX, FieldY, cData, DrawAccessFlags(F^));
       ItemPipe    : WriteXYPipe (FieldX, FieldY, 7, FieldSize, S^);
       ItemBits    : WriteXY (FieldX, FieldY, cData, strPadR(YesNoStr[L^ AND MaxNum <> 0], FieldSize, ' '));
+      ItemBar     : Begin
+                      WriteXY (FieldX,     FieldY, R^.HiAttr, strRep(R^.HiChar, 3));
+                      WriteXY (FieldX + 3, FieldY, R^.LoAttr, strRep(R^.LoChar, 3));
+                    End;
     End;
   End;
 End;
@@ -561,6 +607,7 @@ Begin
                       TempLong := TempLong XOR MaxNum;
                       L^       := TempLong;
                     End;
+      ItemBar     : EditPercentBar(R^);
     End;
 
   FieldWrite (ItemPos);

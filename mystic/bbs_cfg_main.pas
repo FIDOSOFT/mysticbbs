@@ -24,11 +24,11 @@ Uses
   bbs_cfg_MsgBase,
   bbs_cfg_Groups,
   bbs_cfg_SecLevel,
+  bbs_cfg_Theme,
 
   //old editors to be rewritten
   bbs_cfg_useredit,
   bbs_cfg_events,
-  bbs_cfg_language,
   bbs_cfg_vote,
   bbs_cfg_menuedit;
 
@@ -124,7 +124,6 @@ Var
     Case Mode of
       'U' : User_Editor(False, False);
       'M' : Menu_Editor;
-      'T' : Lang_Editor;
       'E' : Event_Editor;
       'V' : Vote_Editor;
     End;
@@ -288,9 +287,12 @@ Begin
               ThemeOld := Session.Lang;
 
               Session.Lang.FieldColor1 := 15 + 1 * 16;
-              Session.Lang.FieldColor2 :=  9 + 1 * 16;
-              Session.Lang.FieldChar := 'm';
+              Session.Lang.FieldColor2 :=  7 + 1 * 16;
+              Session.Lang.FieldChar := #176;
               Session.Lang.EchoChar  := '*';
+
+              // theme will need to be reloaded after the theme edito
+              // just in case that specific theme is changed.
 
               Case Res of
                 'A' : Configuration_ArchiveEditor;
@@ -300,9 +302,9 @@ Begin
                 'P' : Configuration_ProtocolEditor;
                 'R' : Configuration_GroupEditor(False);
                 'S' : Configuration_SecurityEditor(True);
+                'T' : Configuration_ThemeEditor(False);
                 'U',
                 'M',
-                'T',
                 'E',
                 'V' : ExecuteOldConfiguration(Res);
                 'X' : Break;
