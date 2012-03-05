@@ -355,8 +355,6 @@ Begin
 End;
 
 Procedure TParserEngine.OutString (Str: String);
-Var
-  Count : Byte;
 Begin
   If UpdateInfo.ErrorType <> 0 Then Exit;
 
@@ -1610,8 +1608,6 @@ End;
 // {$include blah.mps}
 
 Procedure TParserEngine.DefineConst;
-Var
-  TempStr : String;
 Begin
   If CurConstNum = mplMaxConsts Then
     Error(mpsMaxConsts, '');
@@ -1712,7 +1708,7 @@ End;
 Procedure TParserEngine.DefineVariable;
 Var
   Info    : TParserVarInfoRec;
-  BaseRec : TParserVarInfoRec;
+//  BaseRec : TParserVarInfoRec;
   Count   : LongInt;
 Begin
   ParseVariableInfo(False, False, Info);
@@ -1721,12 +1717,12 @@ Begin
     OutString (Char(opTypeRec));
     OutWord   (RecData[Info.StrLen]^.NumFields);
 
-    BaseRec := Info;
+//    BaseRec := Info;
 
-    BaseRec.Prefix   := '';
-    BaseRec.NumVars  := 1;
-    BaseRec.StrLen   := 0;
-    BaseRec.ArrDem   := 0;
+//    BaseRec.Prefix   := '';
+//    BaseRec.NumVars  := 1;
+//    BaseRec.StrLen   := 0;
+//    BaseRec.ArrDem   := 0;
 
     (*
     writeln('baserecord');
@@ -1809,7 +1805,6 @@ End;
 Procedure TParserEngine.DefineRecord;
 // get rid of this crap kludge and do records the right way...
 Var
-  RecNum : LongInt;
   Ident  : String;
   Info   : TParserVarInfoRec;
 Begin
