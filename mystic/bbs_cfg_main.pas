@@ -82,7 +82,6 @@ Var
   Box      : TAnsiMenuBox;
   Image    : TConsoleImageRec;
   MenuPos  : Array[0..4] of Byte = (1, 1, 1, 1, 1);
-  ThemeOld : RecTheme;
   Res      : Char;
 
   Procedure BoxOpen (X1, Y1, X2, Y2: Byte);
@@ -284,16 +283,6 @@ Begin
                 #77 : MenuPtr := 4;
               End;
             End Else Begin
-              ThemeOld := Session.Lang;
-
-              Session.Lang.FieldColor1 := 15 + 1 * 16;
-              Session.Lang.FieldColor2 :=  7 + 1 * 16;
-              Session.Lang.FieldChar := #176;
-              Session.Lang.EchoChar  := '*';
-
-              // theme will need to be reloaded after the theme edito
-              // just in case that specific theme is changed.
-
               Case Res of
                 'A' : Configuration_ArchiveEditor;
                 'B' : Configuration_MessageBaseEditor;
@@ -311,8 +300,6 @@ Begin
               Else
                 MenuPtr := 0;
               End;
-
-              Session.Lang := ThemeOld;
             End;
           End;
       4 : Begin

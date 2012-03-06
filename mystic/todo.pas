@@ -20,6 +20,7 @@ BUGS AND POSSIBLE ISSUES
   FPC BUG?  DirAttr is suspect in MPL is it 1 byte or 4 in size?
 ! MDL screensave/restore in local console is broken in Windows(?) only?
 ! View archive not working if its external view? [Griffin]
+! Editing current theme will prob not save right [g00r00]
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================

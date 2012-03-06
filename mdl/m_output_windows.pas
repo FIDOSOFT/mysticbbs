@@ -682,18 +682,20 @@ Begin
 
   //If PosY > ScreenSize Then PosY := ScreenSize;
 
-  BufSize.Y     := PosY - (Y - 1);
-  BufSize.X     := Width;
-  BufCoord.X    := 0;
-  BufCoord.Y    := 0;
-  Region.Left   := X - 1;
-  Region.Top    := Y - 1;
-  Region.Right  := Width - 1;
-  Region.Bottom := PosY - 1;
+//  If Active Then Begin
+    BufSize.Y     := PosY - (Y - 1);
+    BufSize.X     := Width;
+    BufCoord.X    := 0;
+    BufCoord.Y    := 0;
+    Region.Left   := X - 1;
+    Region.Top    := Y - 1;
+    Region.Right  := Width - 1;
+    Region.Bottom := PosY - 1;
 
-  WriteConsoleOutput (ConOut, @Screen[1][1], BufSize, BufCoord, Region);
+    WriteConsoleOutput (ConOut, @Screen[1][1], BufSize, BufCoord, Region);
 
-  CursorXY(PosX, PosY);
+    CursorXY(PosX, PosY);
+//  End;
 End;
 
 Function TOutputWindows.ReadCharXY (X, Y: Byte) : Char;

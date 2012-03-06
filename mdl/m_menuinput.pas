@@ -244,7 +244,9 @@ Begin
   Str     := Default;
   StrPos  := Length(Str) + 1;
   Junk    := Length(Str) - Field + 1;
+
   If Junk < 1 Then Junk := 1;
+
   CurPos  := StrPos - Junk + 1;
 
   Console.CursorXY (X, Y);
@@ -254,9 +256,11 @@ Begin
 
   Repeat
     Ch := Key.ReadKey;
+
     Case Ch of
       #00 : Begin
               Ch := Key.ReadKey;
+
               Case Ch of
                 #77 : If StrPos < Length(Str) + 1 Then Begin
                         If (CurPos = Field) and (StrPos < Length(Str)) Then ScrollRight;

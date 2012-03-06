@@ -94,18 +94,49 @@ Uses
 
 Procedure WriteXY (X, Y, A: Byte; S: String);
 Begin
-  Session.io.AnsiGotoXY(X, Y);
-  Session.io.AnsiColor(A);
-  Session.io.OutRaw(S);
+  Session.io.AnsiGotoXY (X, Y);
+  Session.io.AnsiColor  (A);
+  Session.io.OutRaw     (S);
 End;
 
 Procedure WriteXYPipe (X, Y, A, SZ: Byte; S: String);
+Var
+  Count : Byte;
+  Code  : String[2];
 Begin
-  Session.io.AnsiGotoXY(X, Y);
-  Session.io.AnsiColor(A);
-  Session.io.OutPipe(S);
+  Session.io.AnsiGotoXY (X, Y);
+  Session.io.AnsiColor  (A);
 
-  While Screen.CursorX < SZ Do Session.io.BufAddChar(' ');
+  Count := 1;
+
+  While Count <= Length(S) Do Begin
+    If S[Count] = '|' Then Begin
+      Code := Copy(S, Count + 1, 2);
+
+      If (Code[1] in ['0'..'2']) and (Code[2] in ['0'..'9']) Then Begin
+        Inc (Count, 2);
+
+        Session.io.BufAddStr(Session.io.Pipe2Ansi(strS2I(Code)));
+      End Else Begin
+        Session.io.BufAddChar(S[Count]);
+        Dec (SZ);
+      End;
+    End Else Begin
+      Session.io.BufAddChar(S[Count]);
+      Dec (SZ);
+    End;
+
+    If SZ = 0 Then Break;
+
+    Inc (Count);
+  End;
+
+  While SZ > 0 Do Begin
+    Session.io.BufAddChar(' ');
+    Dec(SZ);
+  End;
+
+  Session.io.BufFlush;
 End;
 
 Function InXY (X, Y, Field, Max, Mode: Byte; Default: String) : String;
@@ -189,7 +220,8 @@ Begin
         Until False;
   End;
 
-  MsgBox.Close;
+  If BoxType < 2 Then MsgBox.Close;
+
   MsgBox.Free;
 End;
 
@@ -556,6 +588,8 @@ Begin
 
           Inc (A);
         End;
+
+        Update;
       End;
   Until False;
 End;

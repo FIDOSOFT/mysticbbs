@@ -1094,7 +1094,7 @@ End;
 {$IFDEF UNIX}
 Function TBBSIO.InKey : Char;
 Begin
-  Result  := #1;
+  Result  := #255;
   IsArrow := False;
 
   If Input.KeyWait(1000) Then Begin
@@ -1109,7 +1109,7 @@ Begin
         Exit;
       End;
 
-      Result := #1;
+      Result := #255;
     End;
   End;
 End;
@@ -1121,7 +1121,7 @@ Var
   Handles : Array[0..1] of THandle;
   InType  : Byte;
 Begin
-  Result := #1;
+  Result := #255;
 
   Handles[0] := Input.ConIn;
 
@@ -1162,10 +1162,10 @@ Begin
 
             ProcessSysopCommand(Result);
 
-            Result := #1;
+            Result := #255;
           End;
 
-          If Not Screen.Active Then Result := #1;
+          If Not Screen.Active Then Result := #255;
         End;
     2 : Begin // SOCKET read event
           If TBBSCore(Core).Client.ReadBuf(Result, 1) < 0 Then Begin
@@ -1179,12 +1179,14 @@ Begin
             IsArrow := True;
 
             Case Result of
+(*
               #03 : Result := #81; { pgdn  }
               #04 : Result := #77; { right }
               #05 : Result := #72; { up    }
               #18 : Result := #73; { pgup  }
               #19 : Result := #75; { left  }
               #24 : Result := #80; { down  }
+*)
               #27 : Begin
                       If Not TBBSCore(Core).Client.DataWaiting Then WaitMS(25);
                       If Not TBBSCore(Core).Client.DataWaiting Then WaitMS(25);
@@ -1218,7 +1220,7 @@ Var
   TimeCount : LongInt;
   LastSec   : LongInt;
 Begin
-  Result := #1;
+  Result := #255;
 
   TBBSCore(Core).TimeOut := TimerSeconds;
 
@@ -1286,7 +1288,7 @@ Begin
     End;
 
     Result := InKey;
-  Until Result <> #1;
+  Until Result <> #255;
 End;
 
 Function TBBSIO.GetYNL (Str: String; Yes: Boolean) : Boolean;

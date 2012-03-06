@@ -23,11 +23,11 @@ Type
     Constructor Create;
     Destructor  Destroy; Override;
 
-    Function    GetStr (X, Y, Field, Len, Mode: Byte; Default: String) : String;
-    Function    GetNum (X, Y, Field, Len: Byte; Min, Max, Default: LongInt) : LongInt;
-    Function    GetChar (X, Y : Byte; Default: Char) : Char;
+    Function    GetStr   (X, Y, Field, Len, Mode: Byte; Default: String) : String;
+    Function    GetNum   (X, Y, Field, Len: Byte; Min, Max, Default: LongInt) : LongInt;
+    Function    GetChar  (X, Y : Byte; Default: Char) : Char;
     Function    GetEnter (X, Y, Len: Byte; Default : String) : Boolean;
-    Function    GetYN (X, Y : Byte; Default: Boolean) : Boolean;
+    Function    GetYN    (X, Y : Byte; Default: Boolean) : Boolean;
   End;
 
 Implementation
@@ -161,23 +161,190 @@ Begin
   GetEnter := Res;
 End;
 
+// 0 = numbers only  1 = as typed   2 = all caps  3 = date input
 Function TAnsiMenuInput.GetStr (X, Y, Field, Len, Mode : Byte; Default : String) : String;
-{ mode options:      }
-{   0 = numbers only }
-{   1 = as typed     }
-{   2 = all caps     }
-{   3 = date input   }
 Var
-  Str : String;
-Begin
-  Session.io.AnsiGotoXY(X, Y);
+  Ch     : Char;
+  Str    : String;
+  StrPos : Integer;
+  Junk   : Integer;
+  CurPos : Integer;
 
-  Case Mode of
-    0,
-    1 : Str := Session.io.GetInput(Field, Len, 11, Default);
-    2 : Str := Session.io.GetInput(Field, Len, 12, Default);
-    3 : Str := Session.io.GetInput(Field, Len, 15, Default);
+  Procedure ReDraw;
+  Var
+    T : String;
+  Begin
+    T := Copy(Str, Junk, Field);
+
+    WriteXY  (X, Y, Attr, T);
+    WriteXY  (X + Length(T), Y, FillAttr, strRep(FillChar, Field - Length(T)));
+
+    Session.io.AnsiGotoXY (X + CurPos - 1, Screen.CursorY);
   End;
+
+  Procedure ReDrawPart;
+  Begin
+    Session.io.AnsiColor (Attr);
+    Session.io.BufAddStr (Copy(Str, StrPos, Field - CurPos + 1));
+    Session.io.AnsiColor (FillAttr);
+    Session.io.BufAddStr (strRep(FillChar, (Field - CurPos + 1) - Length(Copy(Str, StrPos, Field - CurPos + 1))));
+    Session.io.AnsiMoveX (X + CurPos - 1);
+  End;
+
+  Procedure ScrollRight;
+  Begin
+    Inc (Junk);
+
+    If Junk > Length(Str) Then Junk := Length(Str);
+    If Junk > Len then Junk := Len;
+
+    CurPos := StrPos - Junk + 1;
+
+    ReDraw;
+  End;
+
+  Procedure ScrollLeft;
+  Begin
+    If Junk > 1 Then Begin
+      Dec (Junk);
+
+      CurPos := StrPos - Junk + 1;
+
+      ReDraw;
+    End;
+  End;
+
+  Procedure AddChar (Ch : Char);
+  Begin
+    If Length(Str) >= Len Then Exit;
+
+    If (CurPos >= Field) and (Field <> Len) Then ScrollRight;
+
+    Insert (Ch, Str, StrPos);
+
+    If StrPos < Length(Str) Then ReDrawPart;
+
+    Inc (StrPos);
+    Inc (CurPos);
+
+    Session.io.AnsiColor  (Attr);
+    Session.io.BufAddChar (Ch);
+  End;
+
+Begin
+  Changed := False;
+  Str     := Default;
+  StrPos  := Length(Str) + 1;
+  Junk    := Length(Str) - Field + 1;
+
+  If Junk < 1 Then Junk := 1;
+
+  CurPos := StrPos - Junk + 1;
+
+  ReDraw;
+
+  Repeat
+    Ch := Session.io.GetKey;
+
+    If Session.io.IsArrow Then Begin
+      Case Ch of
+        #77 : If StrPos < Length(Str) + 1 Then Begin
+                If (CurPos = Field) and (StrPos < Length(Str)) Then ScrollRight;
+
+                 Inc (CurPos);
+                 Inc (StrPos);
+
+                 Session.io.AnsiGotoXY (Screen.CursorX + 1, Screen.CursorY);
+              End;
+        #75 : If StrPos > 1 Then Begin
+                If CurPos = 1 Then ScrollLeft;
+
+                Dec (StrPos);
+                Dec (CurPos);
+
+                Session.io.AnsiGotoXY (Screen.CursorX - 1, Screen.CursorY);
+              End;
+        #71 : If StrPos > 1 Then Begin
+                StrPos := 1;
+                Junk   := 1;
+                CurPos := 1;
+
+                ReDraw;
+              End;
+        #79 : Begin
+                StrPos := Length(Str) + 1;
+                Junk   := Length(Str) - Field + 1;
+
+                If Junk < 1 Then Junk := 1;
+
+                CurPos := StrPos - Junk + 1;
+
+                ReDraw;
+              End;
+        #83 : If (StrPos <= Length(Str)) and (Length(Str) > 0) Then Begin
+                Delete (Str, StrPos, 1);
+
+                ReDrawPart;
+              End;
+      Else
+        If Pos(Ch, HiChars) > 0 Then Begin
+          ExitCode := Ch;
+
+          Break;
+        End;
+      End;
+    End Else
+      Case Ch of
+        #08 : If StrPos > 1 Then Begin
+                Dec (StrPos);
+
+                Delete (Str, StrPos, 1);
+
+                If CurPos = 1 Then
+                  ScrollLeft
+                Else Begin
+                  Session.io.AnsiMoveX(Screen.CursorX - 1);
+
+                  Dec (CurPos);
+
+                  ReDrawPart;
+                End;
+              End;
+        ^Y  : Begin
+                Str    := '';
+                StrPos := 1;
+                Junk   := 1;
+                CurPos := 1;
+
+                ReDraw;
+              End;
+        #32..
+        #254: Case Mode of
+                0 : If Ch in ['0'..'9', '-'] Then AddChar(Ch);
+                1 : AddChar (Ch);
+                2 : AddChar (UpCase(Ch));
+                3 : If (Ch > '/') and (Ch < ':') Then
+                      Case StrPos of
+                        2,5 : Begin
+                                AddChar (Ch);
+                                AddChar ('/');
+                              End;
+                        3,6 : Begin
+                                AddChar ('/');
+                                AddChar (Ch);
+                              End;
+                      Else
+                        AddChar (Ch);
+                      End;
+              End;
+      Else
+        If Pos(Ch, LoChars) > 0 Then Begin
+          ExitCode := Ch;
+
+          Break;
+        End;
+      End;
+  Until False;
 
   Changed := (Str <> Default);
   Result  := Str;
