@@ -3953,7 +3953,7 @@
    system.  It of course is still possible to use the Theme system to create
    support for different languages as well.
 
-   Additionally, compile prompt files that used to have the .LNG file
+   Additionally, compiled prompt files that used to have the .LNG file
    extension have been renamed to .THM extension.  The upgrade utility should
    take care of all this renaming for you.
 
@@ -3999,3 +3999,29 @@
 
  + Mystic now has 10 colors definable per theme, with 10 new MCI codes
    |T0 to |T9 to display them.
+
+ + Mystic's internal Language editor has now been replaced with a theme
+   editor.  This editor is full ANSI lightbar-capable like other newer
+   configurations.  It can also edit all prompts and compile prompt files
+   all internally.  It support at least the features of the old MCFG editor
+   including prompt text search, jumping, copy/paste, undo, etc.
+
+ + Mystic now checks for messages between nodes every 3 seconds while waiting
+   for input.  Previously Mystic would check based on situation (ie, before
+   menu prompt, in between messages, etc) but never while idle waiting on
+   input as it does now.
+
+ ! Mystic was not allowing node messages within MPL programs.  It is not clear
+   if this was introduced in the 1.10 alphas or if the problem existed in the
+   past.
+
+ + Mystic now saves and restores the user's screen before and after showing a
+   node message.  You can now place a clear screen comfortably in those
+   prompts to make a really clean look when users are interrupted with node
+   messages.
+   
+ + Mystic now has less chance of a "ghost" user situation occuring in Linux.
+
+ + MIS Linux can now accept telnet connections and properly redirect STDIO
+   while spawning Mystic.  This means it can entirely replace a Linux
+   telnet daemon if desired.  It has had little testing though at the moment.

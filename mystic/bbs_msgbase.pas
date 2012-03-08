@@ -1429,8 +1429,6 @@ Var
     Ansi_View_Message := False;
 
     Repeat
-      CheckNodeMessages;
-
       Set_Node_Action (Session.GetPrompt(348));
 
       Set_Message_Security;
@@ -1733,8 +1731,6 @@ Var
 
     Procedure FullReDraw;
     Begin
-      CheckNodeMessages;
-
       Session.io.OutFile (MBase.ITemplate, True, 0);
 
       PageSize := Session.io.ScreenInfo[2].Y - Session.io.ScreenInfo[1].Y + 1;
@@ -2064,8 +2060,6 @@ Var
       Session.io.AllowPause := False;
 
       Repeat
-        CheckNodeMessages;
-
         Session.io.PromptInfo[1]  := strI2S(MsgBase^.GetMsgNum);
         Session.io.PromptInfo[2]  := strI2S(MsgBase^.GetHighMsgNum);
 

@@ -119,7 +119,8 @@ Begin
   If Session.ExitLevel <> 0 Then ExitCode := Session.ExitLevel;
   If Session.EventRunAfter  Then ExitCode := Session.NextEvent.ErrLevel;
 
-  DirClean (Session.TempPath, '');
+  DirClean  (Session.TempPath, '');
+  FileErase (Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
 
   {$IFNDEF LOGGING}
     {$IFNDEF UNIX}
@@ -208,7 +209,7 @@ Var
 Begin
   Randomize;
 
-  Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
+   Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
 
   {$I-}
   MkDir (Config.SystemPath + 'temp' + strI2S(Session.NodeNum));
@@ -217,23 +218,6 @@ Begin
   If IoResult <> 0 Then;
 
   DirClean(Session.TempPath, '');
-
-  Assign (Session.LangFile, Config.DataPath + 'theme.dat');
-  {$I-} Reset (Session.LangFile); {$I+}
-  If IoResult <> 0 Then Begin
-    Screen.WriteLine ('ERROR: No theme configuration. Use MYSTIC -CFG');
-    DisposeClasses;
-    Halt(1);
-  End;
-  Close (Session.LangFile);
-
-  If Not Session.LoadThemeData(Config.DefThemeFile) Then Begin
-    If Not Session.ConfigMode Then Begin
-      Screen.WriteLine ('ERROR: Default theme prompts not found [' + Config.DefThemeFile + '.thm]');
-      DisposeClasses;
-      Halt(1);
-    End;
-  End;
 
   Assign (Session.User.UserFile, Config.DataPath + 'users.dat');
   {$I-} Reset (Session.User.UserFile); {$I+}
@@ -252,6 +236,23 @@ Begin
   {$I-} Reset (VoteFile); {$I+}
   If IoResult <> 0 Then ReWrite (VoteFile);
   Close (VoteFile);
+
+  Assign (Session.LangFile, Config.DataPath + 'theme.dat');
+  {$I-} Reset (Session.LangFile); {$I+}
+  If IoResult <> 0 Then Begin
+    Screen.WriteLine ('ERROR: No theme configuration.');
+    DisposeClasses;
+    Halt(1);
+  End;
+  Close (Session.LangFile);
+
+  If Not Session.LoadThemeData(Config.DefThemeFile) Then Begin
+    If Not Session.ConfigMode Then Begin
+      Screen.WriteLine ('ERROR: Default theme prompts not found [' + Config.DefThemeFile + '.thm]');
+      DisposeClasses;
+      Halt(1);
+    End;
+  End;
 
   If Session.ConfigMode Then Exit;
 

@@ -17,6 +17,9 @@ Uses
   BBS_Menus,
   MPL_Execute;
 
+Const
+  mysMessageThreshold = 3;
+
 Type
   TBBSCore = Class
     User          : TBBSUser;
@@ -53,6 +56,9 @@ Type
     TimeChecked   : Boolean;
     ConfigMode    : Boolean;
     InUserEdit    : Boolean;
+    AllowMessages : Boolean;
+    InMessage     : Boolean;
+    MessageCheck  : Byte;
     HistoryFile   : File of RecHistory;
     HistoryEmails : Word;
     HistoryPosts  : Word;
@@ -110,6 +116,9 @@ Begin
   TimeChecked   := False;
   ConfigMode    := False;
   InUserEdit    := False;
+  AllowMessages := True;
+  InMessage     := False;
+  MessageCheck  := mysMessageThreshold;
 
   {$IFDEF WINDOWS}
     Client := TSocketClass.Create;

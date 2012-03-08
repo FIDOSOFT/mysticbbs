@@ -41,6 +41,7 @@ Uses
   bbs_User,
   bbs_NodeChat,
   bbs_NodeInfo,
+  bbs_UserChat,
   bbs_ansi_Help,
   MPL_Execute,
   bbs_cfg_MenuEdit,
@@ -258,6 +259,7 @@ Begin
     'N' : Case Cmd[2] of
             'A' : Set_Node_Action (Data);
             'C' : Node_Chat;
+            'P' : PageUserForChat;
             'S' : Send_Node_Message (3, Data, 0);
             'W' : Show_Whos_Online;
           End;
@@ -793,8 +795,6 @@ Begin
     Done := False;
 
     Set_Node_Action (Session.GetPrompt(346));
-
-    CheckNodeMessages;
 
     Keys    := #13;
     ExtKeys := '';

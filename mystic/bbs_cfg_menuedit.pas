@@ -231,6 +231,8 @@ Var
 	DirInfo: SearchRec;
 	A : Byte; {format dir output}
 Begin
+  If session.lang.filename = '' then exit;
+
 	Old 		:= Session.Menu.MenuName;
 	OldLang := Session.Lang;
 	Session.SystemLog ('*MENU EDITOR*');

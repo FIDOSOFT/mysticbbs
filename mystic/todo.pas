@@ -103,6 +103,10 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - LastOn revamp make sure its not global and new stuff is populated
 - ANSI online help that can execute menu commands/restore screen
 - MPL fAppend?  Why didnt I add that?
+- MCI code to save and restore user screen?
+- BBS email forward to e-mail address
+- Email pasword resets
+- Email verification
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
 ===========================================

@@ -86,7 +86,7 @@ Begin
   Session.io.OutRaw (strPadR(Room.Name, 40, ' '));
 End;
 
-Function GetKeyNodeChatFunc (Forced : Boolean) : Boolean;
+Function GetKeyNodeChatFunc (Forced: Boolean) : Boolean;
 { 1 = node chat broadcast message (if room = 0)
       node chat regular text (if room = room user is in)
   4 = node chat private message
@@ -361,6 +361,7 @@ Procedure Node_Chat;
     Until False;
 
     TopPage := TopSave;
+
     FullReDraw;
   End;
 

@@ -109,7 +109,8 @@ Implementation
 Uses
   DOS,
   bbs_Core,
-  bbs_General;
+  bbs_General,
+  bbs_NodeInfo;
 
 Constructor TBBSIO.Create (Var Owner: Pointer);
 Begin
@@ -260,8 +261,6 @@ Begin
   SavedAttr := Screen.TextAttr;
 
   OutFull (TBBSCore(Core).GetPrompt(132));
-
-  PurgeInputBuffer;
 
   Ch := OneKey('YNC' + #13, False);
 
@@ -1251,6 +1250,16 @@ Begin
           Halt(0);
         End;
 
+      If Session.AllowMessages And Not Session.InMessage Then Begin
+        Dec (Session.MessageCheck);
+
+        If Session.MessageCheck = 0 Then Begin
+          CheckNodeMessages;
+
+          Session.MessageCheck := mysMessageThreshold;
+        End;
+      End;
+
       TimeCount := TBBSCore(Core).TimeLeft;
 
       If TimeCount <> Session.LastTimeLeft Then Begin
@@ -1743,8 +1752,9 @@ Begin
     Percent  := Round(Part / Whole * 100);
   End;
 
-  DrawPercent := Attr2Ansi(Bar.HiAttr) + strRep(Bar.HiChar, FillSize) +
-                 Attr2Ansi(Bar.LoAttr) + strRep(Bar.LoChar, Bar.BarLength - FillSize);
+  Result := Attr2Ansi(Bar.HiAttr) + strRep(Bar.HiChar, FillSize) +
+            Attr2Ansi(Bar.LoAttr) + strRep(Bar.LoChar, Bar.BarLength - FillSize) +
+            Attr2Ansi(7);
 End;
 
 {$IFDEF UNIX}

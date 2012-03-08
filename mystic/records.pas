@@ -725,12 +725,15 @@ Type
     ToWho    : String[30];
     Message  : String[250];
     MsgType  : Byte;
-    { 1 = Chat Pub and broadcast }
-    { 2 = System message }
-    { 3 = User message }
-    { 4 = Chat Private }
-    { 5 = chat status note }
-    { 6 = chat action }
-    { 7 = chat topic update }
+    { 1  = Chat Pub and broadcast }
+    { 2  = System message }
+    { 3  = User message }
+    { 4  = Chat Private }
+    { 5  = chat status note }
+    { 6  = chat action }
+    { 7  = chat topic update }
+    { 8  = user 2 user page }
+    { 9  = user 2 user forced }
+    { 10 = chat accepted }
     Room     : Byte;  { Chat room number. 0 = chat broadcast }
   End;

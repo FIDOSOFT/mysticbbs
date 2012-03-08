@@ -13,11 +13,14 @@ Procedure Set_Node_Action   (Action: String);
 Implementation
 
 Uses
+  m_Types,
   m_DateTime,
   m_Strings,
+  m_FileIO,
   bbs_Common,
   bbs_Core,
-  bbs_User;
+  bbs_User,
+  bbs_UserChat;
 
 Function Is_User_Online (Name: String) : Word;
 Var
@@ -197,9 +200,8 @@ Begin
 
         Assign (NodeMsgFile, Config.SystemPath + 'temp' + strI2S(A) + PathChar + 'chat.tmp');
 
-        {$I-} Reset (NodeMsgFile); {$I+}
-
-        If IoResult <> 0 Then ReWrite(NodeMsgFile);
+        If Not ioReset (NodeMsgFile, SizeOf(NodeMsg), fmReadWrite + fmDenyAll) Then
+          ioReWrite(NodeMsgFile, SizeOf(NodeMsg), fmReadWrite + fmDenyAll);
 
         Seek  (NodeMsgFile, FileSize(NodeMsgFile));
         Write (NodeMsgFile, NodeMsg);
@@ -211,42 +213,54 @@ End;
 
 Function CheckNodeMessages : Boolean;
 Var
-  Str : String;
+  Str   : String;
+  Image : TConsoleImageRec;
 Begin
   Result   := False;
   FileMode := 66;
 
   Assign (NodeMsgFile, Session.TempPath + 'chat.tmp');
 
-  {$I-} Reset (NodeMsgFile); {$I+}
+  If Not ioReset(NodeMsgFile, SizeOf(NodeMsg), fmReadWrite + fmDenyAll) Then
+    Exit;
 
-  If IoResult <> 0 Then Exit;
-
-  // 2 = system broadcast message (ie, not from user, from mystic)
-  // 3 = user to user node message
-
-  While Not Eof(NodeMsgFile) Do Begin
-    Result := True;
-
-    Read (NodeMsgFile, NodeMsg);
-
-    Session.io.PromptInfo[1] := NodeMsg.FromWho;
-    Session.io.PromptInfo[2] := strI2S(NodeMsg.FromNode);
-
-    Case NodeMsg.MsgType of
-      2 : Begin
-            Session.io.OutFullLn (Session.GetPrompt(179) + NodeMsg.Message);
-            Session.io.OutFullLn (Session.GetPrompt(180));
-          End;
-      3 : Begin
-            Session.io.OutFullLn (Session.GetPrompt(144) + '|CR' + NodeMsg.Message);
-            Session.io.OutFull (Session.GetPrompt(145));
-          End;
-    End;
+  If FileSize(NodeMsgFile) = 0 Then Begin
+    Close (NodeMsgFile);
+    Exit;
   End;
 
-  Close (NodeMsgFile);
-  Erase (NodeMsgFile);
+  Session.InMessage := True;
+  CheckNodeMessages := True;
+
+  Read       (NodeMsgFile, NodeMsg);
+  KillRecord (NodeMsgFile, 1, SizeOf(NodeMsg));
+  Close      (NodeMsgFile);
+
+  Screen.GetScreenImage (1, 1, 79, 24, Image);
+
+  Session.io.PromptInfo[1] := NodeMsg.FromWho;
+  Session.io.PromptInfo[2] := strI2S(NodeMsg.FromNode);
+  Session.io.PromptInfo[3] := NodeMsg.Message;
+
+  Case NodeMsg.MsgType of
+    2 : Begin
+          Session.io.OutFullLn (Session.GetPrompt(179) + NodeMsg.Message);
+          Session.io.OutFullLn (Session.GetPrompt(180));
+        End;
+    3 : Begin
+          Session.io.OutFullLn (Session.GetPrompt(144) + '|CR' + NodeMsg.Message);
+          Session.io.OutFull (Session.GetPrompt(145));
+        End;
+    8 : If Session.io.GetYN('|CL|15|&1 is requesting user to user chat.  Accept? |11', True) Then Begin
+          Send_Node_Message (10,  strI2S(NodeMsg.FromNode) + ';C', 0);
+          OpenUserChat(False, NodeMsg.FromNode);
+        End;
+    9 : Begin
+          Send_Node_Message (10, strI2S(NodeMsg.FromNode) + ';C', 0);
+          OpenUserChat(True, NodeMsg.FromNode);
+        End;
+    10: OpenUserChat(False, NodeMsg.FromNode);
+  End;
 
   If Result And (NodeMsg.MsgType = 3) Then
     If Session.io.OneKey(#13 + 'R', True) = 'R' Then Begin
@@ -256,6 +270,10 @@ Begin
 
       If Str <> '' Then Send_Node_Message(3, Session.io.PromptInfo[2] + ';' + Str, 0);
     End;
+
+  Session.io.RemoteRestore(Image);
+
+  Session.InMessage := False;
 End;
 
 End.
