@@ -352,7 +352,6 @@ Begin
 
   Console.SetWindowTitle(WinTitle);
 
-  {$IFDEF WINDOWS}
   If bbsConfig.InetTNUse Then Begin
     TelnetServer := TServerManager.Create(bbsConfig, bbsConfig.InetTNPort, bbsConfig.INetTNNodes, NodeData, @CreateTelnet);
 
@@ -361,7 +360,6 @@ Begin
 
     Started := True;
   End;
-  {$ENDIF}
 
   If bbsConfig.InetSMTPUse Then Begin
     SMTPServer := TServerManager.Create(bbsConfig, bbsConfig.INetSMTPPort, bbsConfig.inetSMTPMax, NodeData, @CreateSMTP);
