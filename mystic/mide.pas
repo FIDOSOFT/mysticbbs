@@ -39,6 +39,8 @@ Uses
   m_FileIO,
   MPL_Compile;
 
+{$I RECORDS.PAS}
+
 Const
   mideVersion      = '2.0.0';
   mideMaxFileLines = 10000;
@@ -775,12 +777,15 @@ Begin
   If CurWin[CurWinNum] = NIL Then Exit;
 
   SaveFile(CurWinNum, True, True);
+
   DisposeText;
 
   If CurWinNum = TotalWinNum Then Begin
     CurWin[CurWinNum]^.Box.Free;
     Dispose (CurWin[CurWinNum], Done);
+
     CurWin[CurWinNum] := NIL;
+
     Dec (CurWinNum);
     Dec (TotalWinNum);
   End Else Begin
@@ -871,6 +876,7 @@ Begin
 
     Inc (TotalLines);
     New(TextData[TotalLines]);
+
     For A := TotalLines DownTo Num + 1 Do Begin
       S := TextData[A-1]^;
       TextData[A]^ := S;
@@ -1034,18 +1040,24 @@ Begin
     If (CurLine > 1) and (CurX = 1) and (ScrlX = 0) Then Begin
       S  := TextData[CurLine-1]^;
       S2 := TextData[CurLine]^;
+
       If Length(S) + Length(S2) > mideMaxLineSize Then Begin
         CurX := mideMaxLineSize + 1;
         UpArrow;
         Exit;
       End;
+
       CurX := Length(S) + 1;
-      S := S + strStripR(S2, ' ');
+      S    := S + strStripR(S2, ' ');
+
       TextData[CurLine-1]^ := S;
+
       DeleteLine(False);
       UpArrow;
+
       If CurX > 77 Then ScrlX := CurX - 77 Else ScrlX := 0;
       If ScrlX > 0 Then CurX := 77;
+
       DrawPage;
       Exit;
     End;
@@ -1075,6 +1087,7 @@ Begin
     If CurLine > 20 Then Begin
       Dec (TopPage, 20);
       Dec (CurLine, 20);
+
       If TopPage < 1 Then Begin
         TopPage := 1;
         CurY    := CurLine - TopPage + 1;
@@ -1138,6 +1151,7 @@ Begin
 
     S2 := strStripB(Copy(S1, CurX+ScrlX, 255) + S2, ' ');
     Delete (S1, CurX+ScrlX, 255);
+
     TextData[CurLine]^   := strStripR(S1, ' ');
     TextData[CurLine+1]^ := strRep(' ', Indent - 1) + S2;
 
@@ -1171,7 +1185,7 @@ Begin
 
   Console.WriteXY (21,  8,  31, strPadC('MIDE', 40, ' '));
   Console.WriteXY (21,  9, 112, strRep('Ä', 40));
-  Console.WriteXY (22, 11, 113, 'Copyright (C) 2002-2012 By James Coyle');
+  Console.WriteXY (22, 11, 113, 'Copyright (C) ' + mysCopyYear + ' By James Coyle');
   Console.WriteXY (31, 12, 113, 'All Rights Reserved');
   Console.WriteXY (21, 14, 113, strPadC('Version ' + mideVersion + ' (MPL v' + mplVer + ')', 40, ' '));
   Console.WriteXY (32, 16, 113, 'www.mysticbbs.com');
@@ -1692,7 +1706,7 @@ Begin
   Console.TextAttr := 7;
   Console.ClearScreen;
   Console.WriteLine('Mystic Integrated Development Environment Version ' + mideVersion);
-  Console.WriteLine('Copyright (C) 2002-2012 By James Coyle.  All Rights Reserved');
+  Console.WriteLine('Copyright (C) ' + mysCopyYear + ' By James Coyle.  All Rights Reserved');
 
   Input.Free;
   Console.Free;
