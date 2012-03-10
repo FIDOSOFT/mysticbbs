@@ -16,7 +16,7 @@ Uses
   mutil_Status;
 
 Type
-  TopListType = (TopCall, TopPost, TopDL, TopUL);
+  TopListType = (TopCall, TopPost, TopDL, TopUL, TopPCR);
 
 Var
   CreatedLists : LongInt = 0;
@@ -29,11 +29,14 @@ Var
 
   Function GetValue : Cardinal;
   Begin
+    Result := 0;
+
     Case ListType of
       TopCall : Result := User.Calls;
       TopPost : Result := User.Posts;
       TopDL   : Result := User.DLs;
       TopUL   : Result := User.ULs;
+      TopPCR  : If User.Calls > 0 Then Result  := Round(User.Posts / User.Calls * 100);
     End;
   End;
 
@@ -80,6 +83,7 @@ Var
       TopPost : CfgName := '_post_';
       TopDL   : CfgName := '_dl_';
       TopUL   : CfgName := '_ul_';
+      TopPCR  : CfgName := '_pcr_';
     End;
 
     Template := INI.ReadString  (Header_TopLists, 'top' + CfgName + 'template', 'template.txt');
@@ -118,8 +122,14 @@ Var
                   CodeVal := CodeVal + GetChar;
 
                   If (CodeVal[1] in ['0'..'9']) And (CodeVal[2] in ['0'..'9']) Then Begin
-                    UserFile.Seek (Pred(Sort.Data[strS2I(CodeVal)]^.Ptr));
-                    UserFile.Read (User);
+                    If Sort.Data[strS2I(CodeVal)] <> NIL Then Begin
+                      UserFile.Seek (Pred(Sort.Data[strS2I(CodeVal)]^.Ptr));
+                      UserFile.Read (User);
+                    End Else Begin
+                      FillChar (User, SizeOf(User), 0);
+
+                      User.Handle := INI.ReadString(Header_TopLists, 'no_user', 'No one');
+                    End;
 
                     If Code = 'NA' Then
                       Write (OutFile, strPadR(User.Handle, NameLen, ' '))
@@ -146,6 +156,7 @@ Var
   ExclName : String;
   Str      : String;
   Excluded : Boolean;
+  SortMode : TSortMethod;
 Begin
   Result := True;
 
@@ -154,9 +165,15 @@ Begin
     TopPost : ProcessStatus('Top Posts');
     TopDL   : ProcessStatus('Top Downloaders');
     TopUL   : ProcessStatus('Top Uploaders');
+    TopPCR  : ProcessStatus('Top Post/Call Ratio');
   End;
 
   ExclName := INI.ReadString(Header_TopLists, 'exclude_list', 'exclude.txt');
+
+  If INI.ReadInteger(Header_TopLists, 'sort_top', 1) = 1 Then
+    SortMode := qDescending
+  Else
+    SortMode := qAscending;
 
   BarOne.Reset;
 
@@ -195,10 +212,10 @@ Begin
       End;
 
       If Not Excluded Then
-        Sort.Conditional(strPadL(strI2S(GetValue), 10, '0'), UserFile.FilePos, 99);
+        Sort.Conditional(strPadL(strI2S(GetValue), 10, '0'), UserFile.FilePos, 99, SortMode);
     End;
 
-    Sort.Sort (1, Sort.Total, qDescending);
+    Sort.Sort (1, Sort.Total, SortMode);
 
     GenerateOutput;
 
@@ -220,6 +237,7 @@ Begin
   If INI.ReadString(Header_TopLists, 'top_post', '0') = '1' Then GenerateList(TopPost);
   If INI.ReadString(Header_TopLists, 'top_dl',   '0') = '1' Then GenerateList(TopDL);
   If INI.ReadString(Header_TopLists, 'top_ul',   '0') = '1' Then GenerateList(TopUL);
+  If INI.ReadString(Header_TopLists, 'top_pcr',  '0') = '1' Then GenerateList(TopPCR);
 
   ProcessStatus ('Created |15' + strI2S(CreatedLists) + ' |07list(s)');
   ProcessResult (rDONE, True);

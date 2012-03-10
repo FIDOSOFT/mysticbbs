@@ -24,7 +24,7 @@ Type
     Destructor  Destroy; Override;
 
     Function    Add         (Name: String; Ptr: Cardinal) : Boolean;
-    Procedure   Conditional (Name: String; Ptr: Cardinal; ListMin: Word);
+    Procedure   Conditional (Name: String; Ptr: Cardinal; ListMin: Word; Mode: TSortMethod);
     Procedure   Sort        (Left, Right: Word; Mode: TSortMethod);
     Procedure   Clear;
   End;
@@ -73,20 +73,27 @@ Begin
   Result := True;
 End;
 
-Procedure TQuickSort.Conditional (Name: String; Ptr: Cardinal; ListMin: Word);
+Procedure TQuickSort.Conditional (Name: String; Ptr: Cardinal; ListMin: Word; Mode: TSortMethod);
 Var
   Count : Word;
+  Ok    : Boolean;
 Begin
   If Total < ListMin Then
     Self.Add(Name, Ptr)
   Else
-    For Count := Total DownTo 1 Do
-      If Data[Count]^.Name < Name Then Begin
+    For Count := Total DownTo 1 Do Begin
+      Case Mode of
+        qDescending : Ok := Data[Count]^.Name < Name;
+        qAscending  : Ok := Data[Count]^.Name > Name;
+      End;
+
+      If Ok Then Begin
         Data[Count]^.Name := Name;
         Data[Count]^.Ptr  := Ptr;
 
         Break;
       End;
+    End;
 End;
 
 Procedure TQuickSort.Sort (Left, Right: Word; Mode: TSortMethod);
