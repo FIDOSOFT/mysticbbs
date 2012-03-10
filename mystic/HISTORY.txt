@@ -4019,9 +4019,15 @@
    node message.  You can now place a clear screen comfortably in those
    prompts to make a really clean look when users are interrupted with node
    messages.
-   
- + Mystic now has less chance of a "ghost" user situation occuring in Linux.
 
  + MIS Linux can now accept telnet connections and properly redirect STDIO
    while spawning Mystic.  This means it can entirely replace a Linux
    telnet daemon if desired.  It has had little testing though at the moment.
+
+ + Prompt 000 now has new MCI prompt info codes:
+      &1 = Login attempt number
+      &2 = Max login attempts
+      &3 = Attempts remaining
+
+ + The scrollback buffer in node chat has been expanded to the same size as
+   the maximum message size (1000 lines up from 200).
