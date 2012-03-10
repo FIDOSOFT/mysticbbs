@@ -89,7 +89,7 @@ Type
     Function    DrawPercent      (Bar : RecPercent; Part, Whole : SmallInt; Var Percent : SmallInt) : String;
     Function    GetInput         (Field, Max, Mode: Byte; Default : String) : String;
     Function    InXY             (X, Y, Field, Max, Mode: Byte; Default: String) : String;
-    Function    InKey            : Char;
+    Function    InKey            (Wait: LongInt) : Char;
     Function    GetYNL           (Str: String; Yes: Boolean) : Boolean;
     Function    GetKey           : Char;
     Function    GetYN            (Str: String; Yes: Boolean) : Boolean;
@@ -1091,12 +1091,12 @@ Begin
 End;
 
 {$IFDEF UNIX}
-Function TBBSIO.InKey : Char;
+Function TBBSIO.InKey (Wait: LongInt) : Char;
 Begin
   Result  := #255;
   IsArrow := False;
 
-  If Input.KeyWait(1000) Then Begin
+  If Input.KeyWait(Wait) Then Begin
     Result     := Input.ReadKey;
     LocalInput := True;
 
@@ -1115,7 +1115,7 @@ End;
 {$ENDIF}
 
 {$IFDEF WINDOWS}
-Function TBBSIO.InKey : Char;
+Function TBBSIO.InKey (Wait: LongInt) : Char;
 Var
   Handles : Array[0..1] of THandle;
   InType  : Byte;
@@ -1130,14 +1130,14 @@ Begin
     WSAResetEvent  (Handles[1]);
     WSAEventSelect (TBBSCore(Core).Client.FSocketHandle, Handles[1], FD_READ OR FD_CLOSE);
 
-    Case WaitForMultipleObjects(2, @Handles, False, 1000) of
+    Case WaitForMultipleObjects(2, @Handles, False, Wait) of
       WAIT_OBJECT_0     : InType := 1;
       WAIT_OBJECT_0 + 1 : InType := 2;
     Else
       Exit;
     End;
   End Else
-    Case WaitForSingleObject (Handles[0], 1000) of
+    Case WaitForSingleObject (Handles[0], Wait) of
       WAIT_OBJECT_0 : InType := 1;
     Else
       Exit;
@@ -1296,7 +1296,7 @@ Begin
       End;
     End;
 
-    Result := InKey;
+    Result := InKey(1000);
   Until Result <> #255;
 End;
 
@@ -1738,7 +1738,10 @@ End;
 Function TBBSIO.DrawPercent (Bar: RecPercent; Part, Whole: SmallInt; Var Percent : SmallInt) : String;
 Var
   FillSize : Byte;
+  Attr     : Byte;
 Begin
+  Attr := Screen.TextAttr;
+
   Screen.TextAttr := 0;  // kludge to force it to return full ansi codes
 
   If (Part = 0) or (Whole = 0) or (Part > Whole) Then Begin
@@ -1754,7 +1757,7 @@ Begin
 
   Result := Attr2Ansi(Bar.HiAttr) + strRep(Bar.HiChar, FillSize) +
             Attr2Ansi(Bar.LoAttr) + strRep(Bar.LoChar, Bar.BarLength - FillSize) +
-            Attr2Ansi(7);
+            Attr2Ansi(Attr);
 End;
 
 {$IFDEF UNIX}
