@@ -220,14 +220,16 @@ End;
 
 Function TBBSCore.GetPrompt (N : Word) : String;
 Begin
-  If N >= FileSize(PromptFile) Then Begin
-    io.OutFull ('|CR|12Error Reading Prompt #' + strI2S(N) + ': Inform SysOp|CR|CR|PA');
-    SystemLog ('Error Reading Prompt ' + strI2S(N));
-    Halt(1);
-  End;
-
+  {$I-}
   Seek (PromptFile, N);
   Read (PromptFile, Prompt);
+  {$I+}
+
+  If IoResult <> 0 Then Begin
+    io.OutFull ('|CR|12Error reading prompt ' + strI2S(N) + '|DE|DE');
+    SystemLog  ('Error reading prompt ' + strI2S(N));
+    Halt       (1);
+  End;
 
   If Prompt[1] = '@' Then Begin
     io.OutFile (Copy(Prompt, 2, Length(Prompt)), True, 0);
@@ -328,6 +330,7 @@ Begin
 
   While Not Eof(LangFile) Do Begin
     Read (LangFile, Lang);
+
     {$IFDEF FS_SENSITIVE}
     If Lang.FileName = Str Then Begin
     {$ELSE}
@@ -340,9 +343,9 @@ Begin
       If IoResult <> 0 Then;
 
       Assign (PromptFile, Config.DataPath + Lang.FileName + '.thm');
-      Reset (PromptFile);
 
-      Result := True;
+      Result := ioReset(PromptFile, SizeOf(RecPrompt), fmRWDN);
+
       Break;
     End;
   End;
