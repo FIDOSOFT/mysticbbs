@@ -707,6 +707,8 @@ Var
 Begin
   WriteLn ('[-] Updating user database...');
 
+  FileMode := 66;
+
   If Not ReNameFile(Config.DataPath + 'users.dat', Config.DataPath + 'users.old') Then Begin
     WriteLn('ERROR: Unable to copy user database.  Restore a backup and try again after');
     WriteLn('       eliminating any protential access issues.');
@@ -869,6 +871,7 @@ Procedure ConvertThemes;
     Result.Format    := 0;
     Result.StartY    := 1;
     Result.StartX    := 79;
+    Result.Active    := True;
   End;
 
 Var
@@ -901,6 +904,7 @@ Begin
     TempBar.Format := 0;
     TempBar.StartY := 1;
     TempBar.StartX := 79;
+    TempBar.Active := True;
 
     Theme.FileName     := OldLang.FileName;
     Theme.Desc         := OldLang.Desc;
