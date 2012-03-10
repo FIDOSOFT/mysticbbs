@@ -4,7 +4,11 @@ Unit bbs_NodeInfo;
 
 Interface
 
-Function  Is_User_Online    (Name : String) : Word;
+Uses
+  bbs_Common;
+
+Function  GetChatRecord     (Node: Byte; Var Chat: ChatRec) : Boolean;
+Function  IsUserOnline      (UserName: String) : Word;
 Procedure Show_Whos_Online;
 Procedure Send_Node_Message (MsgType: Byte; Data: String; Room: Byte);
 Function  CheckNodeMessages : Boolean;
@@ -17,12 +21,25 @@ Uses
   m_DateTime,
   m_Strings,
   m_FileIO,
-  bbs_Common,
   bbs_Core,
   bbs_User,
   bbs_UserChat;
 
-Function Is_User_Online (Name: String) : Word;
+Function GetChatRecord (Node: Byte; Var Chat: ChatRec) : Boolean;
+Begin
+  Result := False;
+
+  Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Node) + '.dat');
+
+  If Not ioReset(ChatFile, SizeOf(ChatFile), fmRWDN) Then Exit;
+
+  Read  (ChatFile, Chat);
+  Close (ChatFile);
+
+  Result := True;
+End;
+
+Function IsUserOnline (UserName: String) : Word;
 Var
   TempChat : ChatRec;
   Count    : Word;
@@ -30,19 +47,11 @@ Begin
   Result := 0;
 
   For Count := 1 to Config.INetTNNodes Do Begin
-    Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Count) + '.dat');
-
-    {$I-} Reset(ChatFile); {$I+}
-
-    If IoResult <> 0 Then Continue;
-
-    Read  (ChatFile, TempChat);
-    Close (ChatFile);
-
-    If (Count <> Session.NodeNum) and (TempChat.Active) and (TempChat.Name = Name) Then Begin
-      Result := Count;
-      Exit;
-    End;
+    If GetChatRecord(Count, TempChat) Then
+      If (Count <> Session.NodeNum) and (TempChat.Active) and (TempChat.Name = UserName) Then Begin
+        Result := Count;
+        Exit;
+      End;
   End;
 End;
 
@@ -74,7 +83,7 @@ Begin
   Close  (ChatFile);
 
   {$IFDEF WINDOWS}
-    Screen.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum) + ' - ' + Session.User.ThisUser.Handle + ' - ' + Action);
+    Screen.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum) + ' - ' + Session.User.ThisUser.Handle + ' - ' + strStripPipe(Action));
   {$ENDIF}
 End;
 
@@ -122,6 +131,9 @@ Var
   A, B, C : Byte;
   Temp    : ChatRec;
   Str     : String[3];
+  NodeMsgFile : File of NodeMsgRec;
+  NodeMsg     : NodeMsgRec;
+
 Begin
   If Data = '' Then Begin
     Repeat
@@ -156,17 +168,8 @@ Begin
     End;
   End;
 
-  For A := B to C Do Begin
-    FileMode := 66;
-
-    Assign (ChatFile, Config.DataPath + 'chat' + strI2S(A) + '.dat');
-
-    {$I-} Reset (ChatFile); {$I+}
-
-    If IoResult = 0 Then Begin
-      Read  (ChatFile, Temp);
-      Close (ChatFile);
-
+  For A := B to C Do
+    If GetChatRecord(A, Temp) Then Begin
       If (Not Temp.Active) and (ToNode > 0) Then Begin
         Session.io.OutFullLn (Session.GetPrompt(147));
         Exit;
@@ -208,61 +211,62 @@ Begin
         Close (NodeMsgFile);
       End;
     End;
-  End;
 End;
 
 Function CheckNodeMessages : Boolean;
 Var
-  Str   : String;
-  Image : TConsoleImageRec;
+  Str     : String;
+  Image   : TConsoleImageRec;
+  Msg     : NodeMsgRec;
+  MsgFile : File of NodeMsgRec;
 Begin
   Result   := False;
   FileMode := 66;
 
-  Assign (NodeMsgFile, Session.TempPath + 'chat.tmp');
+  Assign (MsgFile, Session.TempPath + 'chat.tmp');
 
-  If Not ioReset(NodeMsgFile, SizeOf(NodeMsg), fmReadWrite + fmDenyAll) Then
+  If Not ioReset(MsgFile, SizeOf(Msg), fmReadWrite + fmDenyAll) Then
     Exit;
 
-  If FileSize(NodeMsgFile) = 0 Then Begin
-    Close (NodeMsgFile);
+  If FileSize(MsgFile) = 0 Then Begin
+    Close (MsgFile);
     Exit;
   End;
 
   Session.InMessage := True;
   CheckNodeMessages := True;
 
-  Read       (NodeMsgFile, NodeMsg);
-  KillRecord (NodeMsgFile, 1, SizeOf(NodeMsg));
-  Close      (NodeMsgFile);
+  Read       (MsgFile, Msg);
+  KillRecord (MsgFile, 1, SizeOf(Msg));
+  Close      (MsgFile);
 
   Screen.GetScreenImage (1, 1, 79, 24, Image);
 
-  Session.io.PromptInfo[1] := NodeMsg.FromWho;
-  Session.io.PromptInfo[2] := strI2S(NodeMsg.FromNode);
-  Session.io.PromptInfo[3] := NodeMsg.Message;
+  Session.io.PromptInfo[1] := Msg.FromWho;
+  Session.io.PromptInfo[2] := strI2S(Msg.FromNode);
+  Session.io.PromptInfo[3] := Msg.Message;
 
-  Case NodeMsg.MsgType of
+  Case Msg.MsgType of
     2 : Begin
-          Session.io.OutFullLn (Session.GetPrompt(179) + NodeMsg.Message);
+          Session.io.OutFullLn (Session.GetPrompt(179) + Msg.Message);
           Session.io.OutFullLn (Session.GetPrompt(180));
         End;
     3 : Begin
-          Session.io.OutFullLn (Session.GetPrompt(144) + '|CR' + NodeMsg.Message);
-          Session.io.OutFull (Session.GetPrompt(145));
+          Session.io.OutFullLn (Session.GetPrompt(144) + '|CR' + Msg.Message);
+          Session.io.OutFull   (Session.GetPrompt(145));
         End;
     8 : If Session.io.GetYN('|CL|15|&1 is requesting user to user chat.  Accept? |11', True) Then Begin
-          Send_Node_Message (10,  strI2S(NodeMsg.FromNode) + ';C', 0);
-          OpenUserChat(False, NodeMsg.FromNode);
+          Send_Node_Message (10,  strI2S(Msg.FromNode) + ';C', 0);
+          OpenUserChat(False, Msg.FromNode);
         End;
     9 : Begin
-          Send_Node_Message (10, strI2S(NodeMsg.FromNode) + ';C', 0);
-          OpenUserChat(True, NodeMsg.FromNode);
+          Send_Node_Message (10, strI2S(Msg.FromNode) + ';C', 0);
+          OpenUserChat(True, Msg.FromNode);
         End;
-    10: OpenUserChat(False, NodeMsg.FromNode);
+    10: OpenUserChat(False, Msg.FromNode);
   End;
 
-  If Result And (NodeMsg.MsgType = 3) Then
+  If Result And (Msg.MsgType = 3) Then
     If Session.io.OneKey(#13 + 'R', True) = 'R' Then Begin
       Session.io.OutFullLn(Session.GetPrompt(360));
 

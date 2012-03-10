@@ -27,8 +27,8 @@ Var
 
 Procedure FullReDraw;
 Var
-  Count   : Byte;
-  Temp    : Byte;
+  Count : Byte;
+  Temp  : Byte;
 Begin
   If Not Full Then Exit;
 
@@ -80,8 +80,8 @@ Begin
 
   Session.io.OutRaw (strPadR(strI2S(CurRoom), 2, ' '));
 
-  Session.io.AnsiGotoXY   (Session.io.ScreenInfo[5].X, Session.io.ScreenInfo[5].Y);
-  Session.io.AnsiColor (Session.io.ScreenInfo[5].A);
+  Session.io.AnsiGotoXY (Session.io.ScreenInfo[5].X, Session.io.ScreenInfo[5].Y);
+  Session.io.AnsiColor  (Session.io.ScreenInfo[5].A);
 
   Session.io.OutRaw (strPadR(Room.Name, 40, ' '));
 End;
@@ -96,12 +96,12 @@ Function GetKeyNodeChatFunc (Forced: Boolean) : Boolean;
 
   Procedure AddText (Str : String);
   Var
-    Count : Byte;
+    Count : Integer;
   Begin
-    If TextPos < 200 Then
+    If TextPos < mysMaxMsgLines Then
       Inc (TextPos)
     Else
-      For Count := 2 to 200 Do
+      For Count := 2 to mysMaxMsgLines Do
         Session.Msgs.MsgText[Count - 1] := Session.Msgs.MsgText[Count];
 
     Session.Msgs.MsgText[TextPos] := Str;
@@ -111,10 +111,12 @@ Var
   Str     : String;
   StrLen  : Byte;
   Indent  : Byte;
-  Lines   : Byte;
+  Lines   : Integer;
   OldAttr : Byte;
   OldX    : Byte;
   OldY    : Byte;
+  MsgFile : File of NodeMsgRec;
+  Msg     : NodeMsgRec;
 Begin
   GetKeyNodeChatFunc := False;
 
@@ -122,32 +124,31 @@ Begin
 
   If (TimerSeconds - ChatUpdate <> 0) or Forced Then Begin
 
-    Assign (NodeMsgFile, Session.TempPath + 'chat.tmp');
-    FileMode := 66;
-    {$I-} Reset (NodeMsgFile); {$I+}
-    If IoResult = 0 Then Begin
+    Assign (MsgFile, Session.TempPath + 'chat.tmp');
+
+    If ioReset(MsgFile, SizeOf(Msg), fmRWDN) Then Begin
 
       OldAttr := Screen.TextAttr;
       OldX    := Screen.CursorX;
       OldY    := Screen.CursorY;
 
-      While Not Eof(NodeMsgFile) Do Begin
-        Read (NodeMsgFile, NodeMsg);
+      While Not Eof(MsgFile) Do Begin
+        Read (MsgFile, Msg);
 
-        If NodeMsg.MsgType in [1, 4..7] Then Begin
+        If Msg.MsgType in [1, 4..7] Then Begin
           Session.io.OutRaw (Session.io.Pipe2Ansi(16));
 
-          Case NodeMsg.MsgType of
-            1 : If NodeMsg.Room = 0 Then
-                  Str := strReplace(Session.GetPrompt(319), '|&1', NodeMsg.FromWho)
+          Case Msg.MsgType of
+            1 : If Msg.Room = 0 Then
+                  Str := strReplace(Session.GetPrompt(319), '|&1', Msg.FromWho)
                 Else
-                If NodeMsg.Room = CurRoom Then
-                  Str := strReplace(Session.GetPrompt(181), '|&1', NodeMsg.FromWho)
+                If Msg.Room = CurRoom Then
+                  Str := strReplace(Session.GetPrompt(181), '|&1', Msg.FromWho)
                 Else
                   Continue;
-            4 : Str := strReplace(Session.GetPrompt(218), '|&1', NodeMsg.FromWho);
+            4 : Str := strReplace(Session.GetPrompt(218), '|&1', Msg.FromWho);
             5 : Str := Session.GetPrompt(226);
-            6 : Str := strReplace(Session.GetPrompt(229), '|&1', NodeMsg.FromWho);
+            6 : Str := strReplace(Session.GetPrompt(229), '|&1', Msg.FromWho);
             7 : Begin
                   Reset (RoomFile);
                   Seek  (RoomFile, CurRoom - 1);
@@ -167,13 +168,13 @@ Begin
             Repeat
               Inc (Lines);
 
-              If Length(Str + NodeMsg.Message) > 79 Then Begin
-                Str := Str + Copy(NodeMsg.Message, 1, 79 - StrLen);
+              If Length(Str + Msg.Message) > 79 Then Begin
+                Str := Str + Copy(Msg.Message, 1, 79 - StrLen);
                 AddText(Str);
-                Delete (NodeMsg.Message, 1, 79 - StrLen);
+                Delete (Msg.Message, 1, 79 - StrLen);
                 Str := strRep(' ', Indent);
               End Else Begin
-                AddText(Str + NodeMsg.Message);
+                AddText(Str + Msg.Message);
                 Break;
               End;
             Until False;
@@ -201,14 +202,14 @@ Begin
               Session.io.AnsiClrEOL;
             End;
 
-            Session.io.OutPipe (Str);
-            Session.io.OutPipeLn (NodeMsg.Message);
+            Session.io.OutPipe   (Str);
+            Session.io.OutPipeLn (Msg.Message);
           End;
         End;
       End;
 
-      Close (NodeMsgFile);
-      Erase (NodeMsgFile);
+      Close (MsgFile);
+      Erase (MsgFile);
 
       If Not Full And Not Forced Then Begin
         Session.io.PromptInfo[1] := Session.User.ThisUser.Handle;
@@ -251,25 +252,21 @@ Procedure Node_Chat;
   Begin
     Session.io.OutFullLn (Session.GetPrompt(332));
 
-    For A := 1 to Config.INetTNNodes Do Begin
-      Assign (ChatFile, Config.DataPath + 'chat' + strI2S(A) + '.dat');
-      {$I-} Reset (ChatFile); {$I+}
-      If IoResult = 0 Then Begin
-        Read (ChatFile, Temp);
-        Close (ChatFile);
+    For A := 1 to Config.INetTNNodes Do
+      If GetChatRecord(A, Temp) Then
         If Temp.InChat Then Begin
           Reset (RoomFile);
           Seek  (RoomFile, Temp.Room - 1);
           Read  (RoomFile, RM);
           Close (RoomFile);
+
           Session.io.PromptInfo[1] := Temp.Name;
           Session.io.PromptInfo[2] := strI2S(A);
           Session.io.PromptInfo[3] := strI2S(Temp.Room);
           Session.io.PromptInfo[4] := RM.Name;
+
           Session.io.OutFullLn (Session.GetPrompt(333));
         End;
-      End;
-    End;
 
     Session.io.OutFullLn (Session.GetPrompt(453));
 
@@ -289,18 +286,12 @@ Procedure Node_Chat;
 
     If Text = '' Then Exit;
 
-    For Count := 1 to Config.INetTNNodes Do Begin
-      Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Count) + '.dat');
-      {$I-} Reset (ChatFile); {$I+}
-      If IoResult = 0 Then Begin
-        Read  (ChatFile, Temp);
-        Close (ChatFile);
+    For Count := 1 to Config.INetTNNodes Do
+      If GetChatRecord(Count, Temp) Then
         If strUpper(Temp.Name) = UserName Then Begin
           Send_Node_Message (4, strI2S(Count) + ';' + Text, 0);
           Exit;
         End;
-      End;
-    End;
 
     Send_Node_Message (5, strI2S(Session.NodeNum) + ';' + 'User ' + UserName + ' not found', 0); //++lang
   End;
@@ -397,6 +388,8 @@ Begin
 
   FullReDraw;
 
+  Session.AllowMessages := False;
+
   GetKeyFunc := GetKeyNodeChatFunc;
 
   Repeat
@@ -484,6 +477,8 @@ Begin
   GetKeyFunc     := NoGetKeyFunc;
   Chat.InChat    := False;
   Chat.Available := Avail;
+
+  Session.AllowMessages := True;
 
   Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
   Reset  (ChatFile);
