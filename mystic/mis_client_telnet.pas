@@ -10,6 +10,7 @@ Uses
     Classes,
     Process,
     SysUtils,
+    m_FileIO,
   {$ENDIF}
   {$IFDEF WINDOWS}
     Windows,
@@ -142,10 +143,12 @@ Begin
       If bWrite > 0 Then
         Proc.Input.Write(Buffer, bWrite);
     End Else
-      Sleep(25);
+      Sleep(10);
   End;
 
   Proc.Free;
+
+  FileErase (bbsConfig.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
 
   NI.Busy   := False;
   NI.IP     := '';
