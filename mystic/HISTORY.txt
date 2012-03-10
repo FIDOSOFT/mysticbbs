@@ -3844,7 +3844,7 @@
  + MBBSUTIL has a new function -FUPLOAD.  This goes through every file base
    and looks for new files.  If a new file is found it will be added into
    Mystic's file base listing as a new file.  FILE_ID.DIZ will be imported
-   as well.  This was later moved to MUTIL
+   as well.  **This was later moved to MUTIL**
 
  ! Mystic will no longer shell to the console and get "stuck" when trying
    to execute an archive that has a blank command line in the configuration
@@ -3988,8 +3988,8 @@
  ! The MCI parser for |!x MCI codes now checks for validity of the number
    or otherwise does not parse the code.
 
- + MUTIL can now generate top 1-99 callers, posters, downloaders, and
-   uploaders all configurable by templates.
+ + MUTIL can now generate top 1-99 callers, posters, downloaders, uploaders
+   and post/call ratio all configurable by templates.
 
  + MUTIL now has a -NOSCREEN option which disables the screen output when
    executing.  When suppling this on the command line, a .cfg file must be
@@ -4030,4 +4030,8 @@
       &3 = Attempts remaining
 
  + The scrollback buffer in node chat has been expanded to the same size as
-   the maximum message size (1000 lines up from 200).
+   the maximum message size (1000 lines up from 200).  Its possible this
+   will change in the future again.
+
+ + MUTIL now has the option to reverse sorting of top lists, meaning you can
+   create the "bottom 99" for each of the types of bulletins.
