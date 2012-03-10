@@ -60,7 +60,7 @@ Begin
         End;
 
   Repeat
-                UserNode := Is_User_Online(Session.User.TempUser.Handle);
+                UserNode := IsUserOnline(Session.User.TempUser.Handle);
 
     Session.io.OutFull ('|16|CL|14User Editor: ' + strI2S(FilePos(Session.User.UserFile)) + ' of ' + strI2S(FileSize(Session.User.UserFile)) +
                                         ' |03(Idx: ' + strI2S(Session.User.TempUser.PermIdx) + ')');
