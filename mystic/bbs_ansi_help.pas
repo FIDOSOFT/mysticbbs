@@ -1,21 +1,5 @@
 Unit bbs_Ansi_Help;
 
-// leet online ansi help system (html-like with pipe colors too)
-// ripped from genesis engine (my ansi editor) and slowly port into mystic
-
-// 2. completely redo loading so text is stored in pointer of records...
-//    we can allow larger help files.
-// 4. needs to use ansi template
-// 5. quickjump/sitemap option
-// 6. add linking to OTHER .hlp files?
-// 7. how to better integrate with the bbs?  execute MPL command? what else?
-//
-// needs to support lines longer than 255 characters too
-//
-// template, percentage bar, what to do with topic?
-// export to text / download
-// history view / jump to history
-
 {$I M_OPS.PAS}
 
 Interface
@@ -26,14 +10,16 @@ Const
   mysMaxHelpLineLinks = 10;
 
 Type
-  TLineInfoRec = Record  // make into pointer
-    Text  : String;  // make into pointer of string
+  TLinkInfoRec = Record
+    Key     : String[mysMaxHelpKeyLen];
+    LinkPos : Byte;
+    LinkLen : Byte;
+  End;
+
+  TLineInfoRec = Record
+    Text  : String;
     Links : Byte;
-    Link  : Array[1..mysMaxHelpLineLinks] of Record  //make into pointer
-              Key     : String[mysMaxHelpKeyLen];
-              LinkPos : Byte;
-              LinkLen : Byte;
-            End;
+    Link  : Array[1..mysMaxHelpLineLinks] of TLinkInfoRec
   End;
 
   TAnsiMenuHelp = Class
@@ -54,8 +40,9 @@ Implementation
 
 Uses
   m_Strings,
+  bbs_Ansi_MenuBox,
   bbs_Core,
-  bbs_Ansi_MenuBox;
+  MPL_Execute;
 
 Constructor TAnsiMenuHelp.Create;
 Begin
@@ -79,7 +66,7 @@ Begin
 
     If A > 0 Then Begin
       B := 1;
-      while Str[A + 6 + B] <> '>' Do Inc(B);
+      While Str[A + 6 + B] <> '>' Do Inc(B);
       Delete (Str, A, 7 + B);
 
       A := Pos('</link>', Str);
@@ -172,7 +159,7 @@ Const
   WinY2 : Byte = 22;
 Var
   FN       : String;
-  Template : String;
+  Template : String[20];
   Keyword  : String;
   TopPage  : Integer;
   CurLine  : Integer;
@@ -248,6 +235,16 @@ Var
       CurLine := Lines;
   End;
 
+  Procedure ShowTemplate;
+  Begin
+    Session.io.OutFile(Template, False, 0);
+
+    WinX1 := Session.io.ScreenInfo[1].X;
+    WinY1 := Session.io.ScreenInfo[1].Y;
+    WinX2 := Session.io.ScreenInfo[2].X;
+    WinY2 := Session.io.SCreenInfo[2].Y;
+  End;
+
 Var
   OK    : Boolean;
   Count : Byte;
@@ -264,12 +261,7 @@ Begin
 
   Close  (HelpFile);
 
-  Session.io.OutFile(Template, False, 0);
-
-  WinX1 := Session.io.ScreenInfo[1].X;
-  WinY1 := Session.io.ScreenInfo[1].Y;
-  WinX2 := Session.io.ScreenInfo[2].X;
-  WinY2 := Session.io.SCreenInfo[2].Y;
+  ShowTemplate;
 
   TopPage := 1;
   CurLine := 1;
@@ -280,15 +272,10 @@ Begin
 
   If Not OK and (CurKey <> 'INDEX') Then Begin
     CurKey := 'INDEX';
-    OK := ReadKeywordData;
+    OK     := ReadKeywordData;
   End;
 
   If Not OK Then Exit;
-
-//  Session.io.PurgeInputBuffer;
-
-//  DrawPage;
-//  UpdateCursor;
 
   While OK Do Begin
     TopPage := 1;
@@ -436,14 +423,24 @@ Begin
                       Dec (LastPos);
                     End;
                   End Else Begin
-                    If LastPos < 10 Then
-                      Inc (LastPos)
+                    Case Text[TopPage + CurLine - 1].Link[CurLPos].Key[1] of
+                      '!' : Begin
+                              Session.io.AnsiColor(7);
+
+                              ExecuteMPL(NIL, Copy(Text[TopPage + CurLine - 1].Link[CurLPos].Key, 2, 255));
+
+                              ShowTemplate;
+                            End;
                     Else
-                      For Count := 1 to 9 Do LastKey[Count] := LastKey[Count + 1];
+                      If LastPos < 10 Then
+                        Inc (LastPos)
+                      Else
+                        For Count := 1 to 9 Do LastKey[Count] := LastKey[Count + 1];
 
-                    LastKey[LastPos] := CurKey;
+                      LastKey[LastPos] := CurKey;
 
-                    CurKey := Text[TopPage + CurLine - 1].Link[CurLPos].Key;
+                      CurKey := Text[TopPage + CurLine - 1].Link[CurLPos].Key;
+                    End;
                   End;
 
                   OK := ReadKeywordData;
