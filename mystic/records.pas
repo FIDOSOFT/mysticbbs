@@ -553,9 +553,10 @@ Type
     HiAttr    : Byte;
     Format    : Byte;
     StartY    : Byte;
-    Reserved2 : Byte;
+    Active    : Boolean;
     StartX    : Byte;
-    Reserved  : LongInt;
+    LastPos   : Byte;
+    Reserved  : Array[1..3] of Byte;
   End;
 
 Const
@@ -645,6 +646,9 @@ Type
 (* CHATx.DAT is created upon startup, where X is the node number being    *)
 (* loaded.  These files are used to store all the user information for a  *)
 (* node.                                                                  *)
+
+// need to have terminal emulation and remove baud rate
+// add IP/host?  change booleans to bitmap? user perm index
 
   ChatRec = Record                     { CHATx.DAT }
     Active    : Boolean;               { Is there a user on this node?   }
