@@ -382,6 +382,7 @@ Begin
 
   For Loop := 1 to 12 Do Begin
     WaitMS(500);
+
     While Input.KeyPressed Do
       If Input.ReadKey in [#27, '[', '0'..'9', ';', 'R'] Then Begin
         Session.io.Graphics := 1;
@@ -1076,7 +1077,7 @@ Begin
   Inc (ThisUser.Calls);
   Inc (ThisUser.CallsToday);
 
-  If (Not Access(Config.AcsMultiLogin)) and (Is_User_Online(ThisUser.Handle) <> 0) Then Begin
+  If (Not Access(Config.AcsMultiLogin)) and (IsUserOnline(ThisUser.Handle) <> 0) Then Begin
     Session.io.OutFullLn(Session.GetPrompt(426));
     Halt(0);
   End;
@@ -1216,12 +1217,17 @@ Begin
 
     Session.io.OutFile ('prelogon', True, 0);
 
-    Count := 0;
+    Count := 1;
 
     Repeat
-      If Count = Config.LoginAttempts Then Halt;
+      If Count > Config.LoginAttempts Then Halt;
+
+      Session.io.PromptInfo[1] := strI2S(Count);
+      Session.io.PromptInfo[2] := strI2S(Config.LoginAttempts);
+      Session.io.PromptInfo[3] := strI2S(Config.LoginAttempts - Count);
 
       Session.io.OutFull (Session.GetPrompt(0));
+
       ThisUser.Handle := strStripB(Session.io.GetInput(30, 30, 18, ''), ' ');
 
       If Not FindUser(ThisUser.Handle, True) Then Begin
