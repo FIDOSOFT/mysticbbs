@@ -32,8 +32,6 @@ Var
   Screen      : TOutput;
   Input       : TInput;
   CurRoom     : Byte;
-  NodeMsgFile : File of NodeMsgRec;
-  NodeMsg     : NodeMsgRec;
   ConfigFile  : File of RecConfig;
   ChatFile    : File of ChatRec;
   RoomFile    : File of RoomRec;
