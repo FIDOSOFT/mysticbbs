@@ -2497,7 +2497,7 @@ Begin
       Inc (Session.User.ThisUser.Emails);
       Inc (Session.HistoryEmails);
 
-      A := Is_User_Online(MsgTo);
+      A := IsUserOnline(MsgTo);
 
       If A <> 0 Then Begin
         TempStr := Session.GetPrompt(465);
