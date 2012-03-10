@@ -194,19 +194,20 @@ Begin
   Box  := TAnsiMenuBox.Create;
   Form := TAnsiMenuForm.Create;
 
-  Box.Open (7, 5, 73, 12);
+  Box.Open (7, 5, 73, 13);
 
-  VerticalLine (23, 7, 10);
-  VerticalLine (61, 7, 10);
+  VerticalLine (23, 7, 11);
+  VerticalLine (61, 8, 11);
 
-  Form.AddTog  ('F', ' Bar Format'  , 11,  7, 25,  7, 12, 10, 0, 1, 'Horizontal Vertical', @Bar.Format, '');
-  Form.AddChar ('B', ' BG Character',  9,  8, 25,  8, 14, 32, 255, @Bar.LoChar, '');
-  Form.AddAttr ('G', ' BG Color',     13,  9, 25,  9, 10, @Bar.LoAttr, '');
-  Form.AddByte ('X', ' Start X',      14, 10, 25, 10,  9,  2, 1, 50, @Bar.StartX, '');
-  Form.AddByte ('A', ' Bar Length',   49,  7, 63,  7, 12,  2, 1, 50, @Bar.BarLength, '');
-  Form.AddChar ('C', ' FG Character', 47,  8, 63,  8, 14, 32, 255, @Bar.Hichar, '');
-  Form.AddAttr ('O', ' FG Color',     51,  9, 63,  9, 10, @Bar.HiAttr, '');
-  Form.AddByte ('Y', ' Start Y',      52, 10, 63, 10,  9,  2, 1, 50, @Bar.StartY, '');
+  Form.AddBol  ('T', ' Active',       15,  7, 25,  7,  8, 3, @Bar.Active, '');
+  Form.AddTog  ('F', ' Bar Format'  , 11,  8, 25,  8, 12, 10, 0, 1, 'Horizontal Vertical', @Bar.Format, '');
+  Form.AddChar ('B', ' BG Character',  9,  9, 25,  9, 14, 32, 255, @Bar.LoChar, '');
+  Form.AddAttr ('G', ' BG Color',     13, 10, 25, 10, 10, @Bar.LoAttr, '');
+  Form.AddByte ('X', ' Start X',      14, 11, 25, 11,  9,  2, 1, 50, @Bar.StartX, '');
+  Form.AddByte ('A', ' Bar Length',   49,  8, 63,  8, 12,  2, 1, 50, @Bar.BarLength, '');
+  Form.AddChar ('C', ' FG Character', 47,  9, 63,  9, 14, 32, 255, @Bar.Hichar, '');
+  Form.AddAttr ('O', ' FG Color',     51, 10, 63, 10, 10, @Bar.HiAttr, '');
+  Form.AddByte ('Y', ' Start Y',      52, 11, 63, 11,  9,  2, 1, 50, @Bar.StartY, '');
 
   Repeat
     Case Form.Execute of
