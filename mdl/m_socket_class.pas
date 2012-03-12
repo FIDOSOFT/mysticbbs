@@ -487,8 +487,13 @@ End;
 Procedure TSocketClass.WaitInit (Port: Word);
 Var
   SIN : TINetSockAddr;
+  Opt : LongInt;
 Begin
   FSocketHandle := fpSocket(PF_INET, SOCK_STREAM, 0);
+
+  Opt := 1;
+
+  fpSetSockOpt (FSocketHandle, SOL_SOCKET, SO_REUSEADDR, @Opt, SizeOf(Opt));
 
   SIN.sin_family      := PF_INET;
   SIN.sin_addr.s_addr := 0;
