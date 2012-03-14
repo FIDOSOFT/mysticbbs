@@ -289,7 +289,9 @@ Var
   Code  : String[2];
 Begin
   If FmtString Then Begin
+
     FmtString := False;
+
     Case FmtType of
       1  : Str := strPadR(Str, FmtLen + Length(Str) - Length(strStripPipe(Str)), ' ');
       2  : Str := strPadL(Str, FmtLen + Length(Str) - Length(strStripPipe(Str)), ' ');
@@ -403,6 +405,10 @@ Begin
             'R' : Begin
                     FmtString := True;
                     FmtType   := 1;
+                  End;
+            'X' : Begin
+                    FmtString := True;
+                    FmtType   := 17;
                   End;
           End;
     '&' : Case Code[2] of
@@ -770,6 +776,13 @@ Begin
 
                 FmtString := False;
               End;
+          17: Begin
+                Inc (A);
+                FmtString := False;
+
+                If Screen.CursorX < FmtLen Then
+                  BufAddStr (strRep(Str[A], FmtLen - Screen.CursorX + 1));
+              End;
         End;
       End;
     End Else
@@ -1075,6 +1088,12 @@ Begin
                   16: Begin
                         BaudEmulator := FmtLen;
                         FmtString    := False;
+                      End;
+                  17: Begin
+                        FmtString := False;
+
+                        If Screen.CursorX < FmtLen Then
+                          BufAddStr (strRep(GetChar, FmtLen - Screen.CursorX + 1));
                       End;
                 End;
               End;
