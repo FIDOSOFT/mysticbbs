@@ -50,7 +50,7 @@ Begin
 
   Session.io.PromptInfo[1] := TempChat.Name;
 
-  Session.io.OutFull('|CRSending chat request to |&1...|DE|DE|CR');
+  Session.io.OutFull('|CR|15Sending chat request to |&1...|DE|DE|CR');
 
   Send_Node_Message (ReqType, strI2S(ToNode) + ';C' + Str, 0);
 End;
@@ -60,6 +60,8 @@ Var
   fOut : File;
   fIn  : File;
   Ch   : Char;
+  Str1 : String  = '';
+  Str2 : String  = '';
   Done : Boolean = False;
 Begin
   Session.io.OutFullLn('|CR|15Chat mode begin.|CR');
@@ -93,6 +95,16 @@ Begin
     Ch := Session.io.InKey(25);
 
     Case Ch of
+      #08 : If Screen.CursorX > 1 Then Begin
+              Str2 := #8#32#8;
+              BlockWrite (fOut, Str2[1], 3);
+              Session.io.OutBS(1, True);
+            End;
+      #13 : Begin
+              Str2 := #13#10;
+              BlockWrite (fOut, Str2[1], 2);
+              Session.io.OutRawLn('');
+            End;
       #27 : If Not Forced Then Begin
               Ch := #255;
               BlockWrite (fOut, Ch, 1);
