@@ -4022,7 +4022,7 @@
 
  + MIS Linux can now accept telnet connections and properly redirect STDIO
    while spawning Mystic.  This means it can entirely replace a Linux
-   telnet daemon if desired.  It has had little testing though at the moment.
+   telnet daemon if desired such as ddTelnet or xinetd, etc.
 
  + Prompt 000 now has new MCI prompt info codes:
       &1 = Login attempt number
@@ -4035,3 +4035,49 @@
 
  + MUTIL now has the option to reverse sorting of top lists, meaning you can
    create the "bottom 99" for each of the types of bulletins.
+
+ + New formatting MCI code $X##C
+
+   This works similar to the $D MCI code except that the D version will
+   duplicate a character ## amount of times.  The X version will only
+   duplicate the character until the cursor reaches column ##.
+
+   So for example:
+
+   |CLThis is a line of text|$X79!
+
+   The above example will print the ! character until the 79th column:
+
+   This is a line of text!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+ + Mystic now has user to user (node to node) private chat and paging system
+   so that users can page each other and chat.  Linux and OSX sysops can use
+   this to chat with their users if needed.  Any user with the Sysop ACS
+   level will have the option to force the user into chat and any users in a
+   forced chat session cannot leave.
+
+   A new menu command of NP will now allow a node to page another node for
+   a private chat session.
+
+   The following new prompts go along with this:
+
+   ; User2User chat page which node?
+   479 |CR|09Enter node to chat with |01[|10?|01/|10List|01]|09: |XX
+
+   ; User2User node/user is unavailable
+   480 |CR|15That user is marked unavailable.|CR|CR|PA
+
+   ; User2User force user into chat?
+   481 |CR|12Force user into chat? |XX
+
+   ; User2User sending chat request &1=User &2=Node
+   482 |CR|15Sending chat request to |&1...|DE|DE|CR
+
+   ; User2User chat mode starting
+   483 |CL|09|17 ° |15Chat mode engaged.|$X70 ESC/Quit |16|CR
+
+   ; User2User chat mode ended
+   484 |CL|09|17 ° |15Chat mode end.|$X79 |16|DE|DE
+
+   ; User2User accept chat page request? &1=user &2=Node
+   485 |CL|15|&1 is requesting private user chat.  Accept? |11
