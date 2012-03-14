@@ -209,7 +209,7 @@ Var
 Begin
   Randomize;
 
-   Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
+  Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
 
   {$I-}
   MkDir (Config.SystemPath + 'temp' + strI2S(Session.NodeNum));
@@ -217,7 +217,7 @@ Begin
 
   If IoResult <> 0 Then;
 
-  DirClean(Session.TempPath, '');
+  DirClean (Session.TempPath, '');
 
   Assign (Session.User.UserFile, Config.DataPath + 'users.dat');
   {$I-} Reset (Session.User.UserFile); {$I+}
