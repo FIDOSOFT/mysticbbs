@@ -215,10 +215,11 @@ End;
 
 Function CheckNodeMessages : Boolean;
 Var
-  Str     : String;
-  Image   : TConsoleImageRec;
-  Msg     : NodeMsgRec;
-  MsgFile : File of NodeMsgRec;
+  Str       : String;
+  Image     : TConsoleImageRec;
+  Msg       : NodeMsgRec;
+  MsgFile   : File of NodeMsgRec;
+  SplitChat : Boolean;
 Begin
   Result   := False;
   FileMode := 66;
@@ -246,6 +247,8 @@ Begin
   Session.io.PromptInfo[2] := strI2S(Msg.FromNode);
   Session.io.PromptInfo[3] := Msg.Message;
 
+  SplitChat := (strS2I(Msg.Message) > 0) and (Session.io.Graphics > 0);
+
   Case Msg.MsgType of
     2 : Begin
           Session.io.OutFullLn (Session.GetPrompt(179) + Msg.Message);
@@ -255,15 +258,15 @@ Begin
           Session.io.OutFullLn (Session.GetPrompt(144) + '|CR' + Msg.Message);
           Session.io.OutFull   (Session.GetPrompt(145));
         End;
-    8 : If Session.io.GetYN('|CL|15|&1 is requesting user to user chat.  Accept? |11', True) Then Begin
-          Send_Node_Message (10,  strI2S(Msg.FromNode) + ';C', 0);
-          OpenUserChat(False, Msg.FromNode);
+    8 : If Session.io.GetYN(Session.GetPrompt(485), True) Then Begin
+          Send_Node_Message (10,  strI2S(Msg.FromNode) + ';' + strI2S(Session.io.Graphics), 0);
+          OpenUserChat(SplitChat, False, Msg.FromNode);
         End;
     9 : Begin
-          Send_Node_Message (10, strI2S(Msg.FromNode) + ';C', 0);
-          OpenUserChat(True, Msg.FromNode);
+          Send_Node_Message (10, strI2S(Msg.FromNode) + ';' + strI2S(Session.io.Graphics), 0);
+          OpenUserChat(SplitChat, True, Msg.FromNode);
         End;
-    10: OpenUserChat(False, Msg.FromNode);
+    10: OpenUserChat(SplitChat, False, Msg.FromNode);
   End;
 
   If Result And (Msg.MsgType = 3) Then
