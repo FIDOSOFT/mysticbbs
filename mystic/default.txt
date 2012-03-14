@@ -928,3 +928,17 @@
 477 |CR|12Your account has expired and is now marked for deletion.
 ; User required password change
 478 |CR|14This BBS requires a password change every |PW days.
+; User2User chat page which node?
+479 |CR|09Enter node to chat with |01[|10?|01/|10List|01]|09: |XX
+; User2User node/user is unavailable
+480 |CR|15That user is marked unavailable.|CR|CR|PA
+; User2User force user into chat?
+481 |CR|12Force user into chat? |XX
+; User2User sending chat request &1=User &2=Node
+482 |CR|15Sending chat request to |&1...|DE|DE|CR
+; User2User chat mode starting
+483 |CL|09|17 ° |15Chat mode engaged.|$X70 ESC/Quit |16|CR
+; User2User chat mode ended
+484 |CL|09|17 ° |15Chat mode end.|$X79 |16|DE|DE
+; User2User accept chat page request? &1=user &2=Node
+485 |CL|15|&1 is requesting private user chat.  Accept? |11
