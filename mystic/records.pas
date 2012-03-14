@@ -47,7 +47,7 @@ Const
   mysMaxVoteQuestion = 20;                                      // Max number of voting questions
   mysMaxMenuNameLen  = 20;                                      // menu name size
   mysMaxMenuCmds     = 75;                                      // Maximum menu commands per menu
-  mysMaxThemeText    = 478;                                     // Total prompts in theme file
+  mysMaxThemeText    = 485;                                     // Total prompts in theme file
 
 Type
   SmallWord = System.Word;
