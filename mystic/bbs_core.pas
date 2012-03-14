@@ -226,9 +226,17 @@ Begin
   {$I+}
 
   If IoResult <> 0 Then Begin
-    io.OutFull ('|CR|12Error reading prompt ' + strI2S(N) + '|DE|DE');
-    SystemLog  ('Error reading prompt ' + strI2S(N));
-    Halt       (1);
+    {$I-}
+    Reset (PromptFile);
+    Seek  (PromptFile, N);
+    Read  (PromptFile, Prompt);
+    {$I+}
+
+    If IoResult <> 0 Then Begin
+      io.OutFull ('|CR|12Error reading prompt ' + strI2S(N) + '|DE|DE');
+      SystemLog  ('Error reading prompt ' + strI2S(N));
+      Halt       (1);
+    End;
   End;
 
   If Prompt[1] = '@' Then Begin
