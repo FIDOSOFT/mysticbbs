@@ -24,7 +24,7 @@ Uses
 
 Const
   WinConsoleTitle = 'Mystic Node ';
-  CopyID          = 'Copyright (C) 1997-2012 By James Coyle.  All Rights Reserved.';
+  CopyID          = 'Copyright (C) ' + mysCopyYear + ' By James Coyle.  All Rights Reserved.';
   DateTypeStr : Array[1..4] of String[8] = ('MM/DD/YY', 'DD/MM/YY', 'YY/DD/MM', 'Ask     ');
   GetKeyFunc  : Function (Forced : Boolean) : Boolean = NIL;
 
@@ -47,13 +47,11 @@ Var
 Procedure EditAccessFlags (Var Flags : AccessFlagType);
 Function  DrawAccessFlags (Var Flags : AccessFlagType) : String;
 Function  NoGetKeyFunc    (Forced : Boolean) : Boolean;
-Function  getColor        (A: Byte) : Byte;
 Procedure KillRecord      (Var dFile; RecNum: LongInt; RecSize: Word);
 Procedure AddRecord       (var dFile; RecNum: LongInt; RecSize: Word);
 Function  Bool_Search     (Mask: String; Str: String) : Boolean;
 Function  strAddr2Str     (Addr: RecEchoMailAddr) : String;
 Function  strStr2Addr     (S : String; Var Addr: RecEchoMailAddr) : Boolean;
-Function  CheckPath       (Str: String) : String;
 Function  ShellDOS        (ExecPath: String; Command: String) : LongInt;
 
 {$IFNDEF UNIX}
@@ -102,19 +100,6 @@ Begin
     Else
       Flags := Flags + [Ord(Ch) - 64];
   Until False;
-End;
-
-Function GetColor (A: Byte) : Byte;
-{ Used by SYSOPx.PAS files only }
-Var
-  FG,
-  BG : Byte;
-Begin
-  Session.io.OutFull ('|CRFG Color: ');
-  FG := strS2I(Session.io.GetInput(2, 2, 12, strI2S(A AND $F)));
-  Session.io.OutFull ('BG Color: ');
-  BG := strS2I(Session.io.GetInput(2, 2, 12, strI2S((A SHR 4) AND 7)));
-  getColor := FG + BG * 16;
 End;
 
 Procedure AddRecord (var dFile; RecNum: LongInt; RecSize: Word);
@@ -221,23 +206,6 @@ End;
 Function NoGetKeyFunc (Forced : Boolean): Boolean;
 Begin
   Result := False;
-End;
-
-Function CheckPath (Str: String) : String;
-Begin
-  While Str[Length(Str)] = PathChar Do Dec(Str[0]);
-
-  If Not DirExists(Str) Then Begin
-    If Session.io.GetYN ('|CR|12Directory doesn''t exist.  Create? |11', True) Then Begin
-
-      {$I-} MkDir (Str); {$I+}
-
-      If IoResult <> 0 Then
-        Session.io.OutFull ('|CR|14Error creating directory!|CR|PA');
-    End;
-  End;
-
-  CheckPath := Str + PathChar;
 End;
 
 Function ShellDOS (ExecPath: String; Command: String) : LongInt;
