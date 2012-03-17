@@ -113,10 +113,23 @@ Begin
     If S[Count] = '|' Then Begin
       Code := Copy(S, Count + 1, 2);
 
-      If (Code[1] in ['0'..'2']) and (Code[2] in ['0'..'9']) Then Begin
-        Inc (Count, 2);
+      If (Code[2] in ['0'..'9']) Then Begin
+        Case Code[1] of
+          '0'..
+          '2' : Begin
+                  Inc (Count, 2);
 
-        Session.io.BufAddStr(Session.io.Pipe2Ansi(strS2I(Code)));
+                  Session.io.BufAddStr(Session.io.Pipe2Ansi(strS2I(Code)));
+                End;
+          'T' : Begin
+                  Inc (Count, 2);
+
+                  Session.io.BufAddStr(Session.io.Attr2Ansi(Session.Lang.Colors[strS2I(Code[2])]));
+                End;
+        Else
+          Session.io.BufAddChar(S[Count]);
+          Dec (SZ);
+        End;
       End Else Begin
         Session.io.BufAddChar(S[Count]);
         Dec (SZ);
@@ -131,9 +144,9 @@ Begin
     Inc (Count);
   End;
 
-  While SZ > 0 Do Begin
-    Session.io.BufAddChar(' ');
-    Dec(SZ);
+  If SZ > 0 Then Begin
+    Session.io.AnsiColor (7);
+    Session.io.BufAddStr (strRep(' ', SZ));
   End;
 
   Session.io.BufFlush;

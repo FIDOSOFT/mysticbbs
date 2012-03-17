@@ -397,13 +397,14 @@ Var
   End;
 
 Var
-  EditStr : String;
-  UndoStr : String;
-  CurStr  : String[3];
-  Changed : Boolean = False;
-  Saved   : Boolean = False;
-  Count   : Integer;
-  Image   : TConsoleImageRec;
+  EditStr    : String;
+  UndoStr    : String;
+  CurStr     : String[3];
+  Changed    : Boolean = False;
+  Saved      : Boolean = False;
+  Count      : Integer;
+  Image      : TConsoleImageRec;
+  SavedTheme : RecTheme;
 Begin
   Screen.GetScreenImage(1, 1, 79, 24, Image);
 
@@ -413,6 +414,10 @@ Begin
 
   Session.io.AnsiColor(7);
   Session.io.AnsiClear;
+
+  SavedTheme := Session.Lang;
+
+  Move (Theme.Colors, Session.Lang.Colors, SizeOf(Theme.Colors));
 
   Box   := TAnsiMenuBox.Create;
   Input := TAnsiMenuInput.Create;
@@ -547,6 +552,8 @@ Begin
   Input.Free;
 
   Session.io.RemoteRestore(Image);
+
+  Session.Lang := SavedTheme;
 End;
 
 Procedure EditBars (Var Theme: RecTheme);
