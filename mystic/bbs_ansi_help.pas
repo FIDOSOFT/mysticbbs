@@ -42,6 +42,7 @@ Uses
   m_Strings,
   bbs_Ansi_MenuBox,
   bbs_Core,
+  bbs_Common,
   MPL_Execute;
 
 Constructor TAnsiMenuHelp.Create;
@@ -254,7 +255,9 @@ Begin
   Template := strWordGet(2, Str, ';');
   Keyword  := strWordGet(3, Str, ';');
 
-  Assign (HelpFile, FN);
+  If Pos(PathChar, FN) = 0 Then FN := Session.Lang.TextPath + FN;
+
+  Assign (HelpFile, FN + '.hlp');
   {$I-} Reset (HelpFile); {$I+}
 
   If IoResult <> 0 Then Exit;
