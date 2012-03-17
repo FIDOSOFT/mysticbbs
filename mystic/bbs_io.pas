@@ -1144,16 +1144,20 @@ Begin
   Handles[0] := Input.ConIn;
 
   If Not TBBSCore(Core).LocalMode Then Begin
-    Handles[1] := SocketEvent;
+    If TBBSCore(Core).Client.DataWaiting Then
+      InType := 2
+    Else Begin
+      Handles[1] := SocketEvent;
 
-    WSAResetEvent  (Handles[1]);
-    WSAEventSelect (TBBSCore(Core).Client.FSocketHandle, Handles[1], FD_READ OR FD_CLOSE);
+      WSAResetEvent  (Handles[1]);
+      WSAEventSelect (TBBSCore(Core).Client.FSocketHandle, Handles[1], FD_READ OR FD_CLOSE);
 
-    Case WaitForMultipleObjects(2, @Handles, False, Wait) of
-      WAIT_OBJECT_0     : InType := 1;
-      WAIT_OBJECT_0 + 1 : InType := 2;
-    Else
-      Exit;
+      Case WaitForMultipleObjects(2, @Handles, False, Wait) of
+        WAIT_OBJECT_0     : InType := 1;
+        WAIT_OBJECT_0 + 1 : InType := 2;
+      Else
+        Exit;
+      End;
     End;
   End Else
     Case WaitForSingleObject (Handles[0], Wait) of
@@ -1197,14 +1201,12 @@ Begin
             IsArrow := True;
 
             Case Result of
-(*
               #03 : Result := #81; { pgdn  }
               #04 : Result := #77; { right }
               #05 : Result := #72; { up    }
               #18 : Result := #73; { pgup  }
               #19 : Result := #75; { left  }
               #24 : Result := #80; { down  }
-*)
               #27 : Begin
                       If Not TBBSCore(Core).Client.DataWaiting Then WaitMS(25);
                       If Not TBBSCore(Core).Client.DataWaiting Then WaitMS(25);
