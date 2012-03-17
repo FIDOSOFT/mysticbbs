@@ -65,6 +65,10 @@ Var
   Str2     : String  = '';
   InRemote : Byte;
 
+  Procedure SplitChat;
+  Begin
+  End;
+
   Procedure LineChat;
   Begin
     Session.io.BufFlush;

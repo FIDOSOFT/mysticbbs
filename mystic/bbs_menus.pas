@@ -325,7 +325,7 @@ Begin
               'M' : Configuration_ExecuteEditor('B');
               'P' : Configuration_ExecuteEditor('P');
               'S' : Configuration_MainMenu;
-              'U' : User_Editor(False, False);
+              'U' : Configuration_UserEditor;
               'V' : Vote_Editor;
             End;
           End;

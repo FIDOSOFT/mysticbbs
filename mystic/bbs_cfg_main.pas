@@ -25,9 +25,9 @@ Uses
   bbs_cfg_Groups,
   bbs_cfg_SecLevel,
   bbs_cfg_Theme,
+  bbs_cfg_UserEdit,
 
-  //old editors to be rewritten
-  bbs_cfg_useredit,
+  // old shit to rewrite
   bbs_cfg_events,
   bbs_cfg_vote,
   bbs_cfg_menuedit;
@@ -44,8 +44,9 @@ Begin
     'F' : Configuration_FileBaseEditor;
     'G' : Configuration_GroupEditor(True);
     'L' : Configuration_SecurityEditor(True);
-    'R' : Configuration_GroupEditor(False);
     'P' : Configuration_ProtocolEditor;
+    'R' : Configuration_GroupEditor(False);
+    'U' : Configuration_UserEditor;
   End;
 
   Session.io.RemoteRestore(TmpImage);
@@ -121,7 +122,6 @@ Var
     Session.io.AnsiClear;
 
     Case Mode of
-      'U' : User_Editor(False, False);
       'M' : Menu_Editor;
       'E' : Event_Editor;
       'V' : Vote_Editor;
@@ -292,7 +292,7 @@ Begin
                 'R' : Configuration_GroupEditor(False);
                 'S' : Configuration_SecurityEditor(True);
                 'T' : Configuration_ThemeEditor(False);
-                'U',
+                'U' : Configuration_UserEditor;
                 'M',
                 'E',
                 'V' : ExecuteOldConfiguration(Res);
@@ -333,7 +333,6 @@ Begin
   ReWrite (ConfigFile);
   Write   (ConfigFile, Config);
   Close   (ConfigFile);
-
 End;
 
 End.

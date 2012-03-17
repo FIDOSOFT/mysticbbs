@@ -555,6 +555,8 @@ Procedure TSocketClass.Status (Str: String);
 Var
   Res : String;
 Begin
+  If SocketStatus = NIL Then Exit;
+
   Try
     If SocketStatus.Count > 20 Then
       SocketStatus.Delete(0);

@@ -58,7 +58,7 @@ Var
   tFile : Text;
   A     : Byte;
 Begin
-  Assign (tFile, Session.TempPath + 'DORINFO1.DEF');
+  Assign  (tFile, Session.TempPath + 'DORINFO1.DEF');
   Rewrite (tFile);
 
   Write (tFile, Config.BBSName + Ending);

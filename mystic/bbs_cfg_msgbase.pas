@@ -93,6 +93,10 @@ Var
   MBaseFile : TBufFile;
   MBase     : RecMessageBase;
 
+  Procedure GlobalEdit;
+  Begin
+  End;
+
   Procedure MakeList;
   Var
     Tag : Byte;
@@ -145,6 +149,7 @@ Var
       ITemplate   := 'ansimlst';
       SysopACS    := 's255';
       NetAddr     := 1;
+      Origin      := Config.Origin;
       ColQuote    := Config.ColorQuote;
       ColText     := Config.ColorText;
       ColTear     := Config.ColorTear;
@@ -195,7 +200,7 @@ Begin
     List.Close;
 
     Case List.ExitCode of
-      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
+      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|G-Global|') of
               'I' : If List.Picked > 1 Then Begin
                       AssignRecord(False);
                       MakeList;
@@ -232,7 +237,10 @@ Begin
 
                       MakeList;
                     End;
-
+              'G' : If List.Marked = 0 Then
+                      ShowMsgBox(0, 'You must tag areas for global edit')
+                    Else
+                      GlobalEdit;
             End;
       #13 : If List.Picked < List.ListMax Then Begin
               MBaseFile.Seek (List.Picked - 1);

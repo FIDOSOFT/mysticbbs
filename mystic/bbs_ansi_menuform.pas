@@ -625,7 +625,9 @@ Var
 Begin
   Session.io.AllowArrow := True;
 
-  WasHiExit := False;
+  WasHiExit    := False;
+  WasFirstExit := False;
+  WasLastExit  := False;
 
   Input.Attr     := cField1;
   Input.FillAttr := cField2;

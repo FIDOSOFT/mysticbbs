@@ -88,7 +88,7 @@ Begin
       Console.WriteXY (24, LinePosition + 1, 25, PerStr);
     End;
 
-    Console.WriteXY (75, LinePosition + 1,  7, strPadR(strI2S(Percent), 3, ' '));
+    Console.WriteXY (75, LinePosition + 1,  15, strPadR(strI2S(Percent), 3, ' '));
   End;
 End;
 
@@ -105,6 +105,5 @@ Destructor TStatusBar.Destroy;
 Begin
   Inherited Destroy;
 End;
-
 
 End.

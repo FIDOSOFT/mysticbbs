@@ -4081,3 +4081,9 @@
 
    ; User2User accept chat page request? &1=user &2=Node
    485 |CL|15|&1 is requesting private user chat.  Accept? |11
+
+ + Mystic now has a new User Editor redesigned with the ANSI menu interface.
+
+ + The ALT-U local Sysop command has been removed (moved to user editor).
+   Alt-E now opens a local user editor for the user which also contains the
+   Upgrade option.

@@ -330,27 +330,8 @@ Begin
   If Not Screen.Active And (Cmd <> #47) Then Exit;
 
   Case Cmd of
-{U} #22 : Begin
-            X := Screen.CursorX;
-            Y := Screen.CursorY;
-            UpdateStatusLine (0, 'Upgrade Security Level: ');
-            Screen.SetWindow (1, 25, 80, 25, False);
-            Screen.TextAttr := 8 + 7 * 16;
-            Screen.CursorXY (52, 2);
-            LS := Session.LocalMode;
-            Session.LocalMode := True;
-            A := strS2I(Session.io.GetInput(3, 3, 9, strI2S(Session.User.ThisUser.Security)));
-            Session.LocalMode := LS;
-            If (A > 0) and (A < 256) Then Begin
-              Upgrade_User_Level (True, Session.User.ThisUser, A);
-              Session.SetTimeLeft(Session.User.ThisUser.TimeLeft);
-            End;
-
-            UpdateStatusLine(StatusPtr, '');
-
-            Screen.CursorXY (X, Y);
-          End;
-{E} #18 : If (Not Session.InUserEdit) and (Session.User.UserNum <> -1) Then User_Editor(True, True);
+{E} #18 : If (Not Session.InUserEdit) and (Session.User.UserNum <> -1) Then
+            Configuration_LocalUserEdit;
 {T} #20 : Begin
 //            X := Screen.CursorX;
 //            Y := Screen.CursorY;

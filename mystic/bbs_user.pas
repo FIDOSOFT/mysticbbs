@@ -1119,7 +1119,7 @@ Begin
     Session.SetTimeLeft (ThisUser.TimeLeft);
 
     // check account expired -- DONE
-    // check password change
+    // check password change -- DONE
     // check auto-upgrades posts/calls/downloads/uploads/etc
 
   If DateValid(Session.User.ThisUser.Expires) Then

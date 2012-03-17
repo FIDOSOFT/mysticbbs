@@ -1,346 +1,333 @@
-Unit bbs_cfg_UserEdit;
-
-{$I M_OPS.PAS}
+Unit bbs_Cfg_UserEdit;
 
 Interface
 
 Uses
-  m_Types,
-  m_DateTime,
-  m_Strings,
-  bbs_Common,
-  bbs_Core;
+  bbs_Common;
 
-Procedure User_Editor (LocalEdit, OneUser : Boolean);
+Procedure Configuration_EditUser       (Var U: RecUser);
+Procedure Configuration_UserEditor;
+Procedure Configuration_LocalUserEdit;
 
 Implementation
 
 Uses
-  bbs_User,
-  bbs_NodeInfo,
-  bbs_General;
+  m_Types,
+  m_Strings,
+  m_DateTime,
+  m_FileIO,
+  bbs_Ansi_MenuBox,
+  bbs_Ansi_MenuForm,
+  bbs_io,
+  bbs_Core,
+  bbs_General,
+  bbs_Cfg_SecLevel;
 
-Procedure User_Editor (LocalEdit, OneUser : Boolean);
-Const
-        ModeTypeStr : Array[0..1] of String[8] = ('Standard', 'Lightbar');
-        More        : Boolean = False;
+Procedure Configuration_EditUser (Var U: RecUser);
 Var
-        ValidStr  : String;
-        UserNode  : Word;
-        LocalSave : Boolean;
-        Image     : TConsoleImageRec;
-        Str       : String;
-        A         : LongInt;
+  Box      : TAnsiMenuBox;
+  Form     : TAnsiMenuForm;
+  BoxImage : TConsoleImageRec;
+  PagePos  : Byte = 1;
+  Topic    : String;
+  Changed  : Boolean = False;
+  NeedForm : Boolean = False;
+
+  Procedure UpdatePage (Restore: Boolean);
+  Begin
+    If Restore Then Session.io.RemoteRestore(BoxImage);
+
+    VerticalLine (21, 6, 20);
+
+    WriteXY (62,  6, 112, 'Information');
+    WriteXY (63,  7, 112, 'Settings 1');
+    WriteXY (63,  8, 112, 'Settings 2');
+    WriteXY (63,  9, 112, 'Statistics');
+    WriteXY (60, 10, 112, 'Optional Data');
+    WriteXY (68, 11, 112, 'Flags');
+
+    WriteXY (59, 13, 120, 'CTRL-U/Upgrade');
+
+    WriteXY (65, 20, 112, 'Page ' + strI2S(PagePos) + '/6');
+
+    Case PagePos of
+      1 : WriteXY (62,  6, 127, 'INFORMATION');
+      2 : WriteXY (63,  7, 127, 'SETTINGS 1');
+      3 : WriteXY (63,  8, 127, 'SETTINGS 2');
+      4 : WriteXY (63,  9, 127, 'STATISTICS');
+      5 : WriteXY (60, 10, 127, 'OPTIONAL DATA');
+      6 : WriteXY (68, 11, 127, 'FLAGS');
+    End;
+
+    NeedForm := True;
+  End;
+
+Var
+  Birthdate : String[8];
+  FirstCall : String[8];
+  LastCall  : String[8];
+  Temp      : Integer;
+  SavedUser : RecUser;
 Begin
-        Reset (Session.User.UserFile);
+  Topic     := '|03(|09User Editor|03) |01-|09> |15';
+  SavedUser := U;
 
-        If Eof(Session.User.UserFile) Then Begin
-                Close (Session.User.UserFile);
-                Exit;
-        End;
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
 
-        Session.SystemLog ('*USER EDIT*');
+  Box.Header       := ' ' + U.Handle + ' (ID ' + strI2S(U.PermIdx) + ') ';
+  Form.LoExitChars := #21;
+  Form.HiExitChars := #71#73#79#81;
 
-        Session.InUserEdit := True;
+  Box.Open (6, 5, 74, 21);
 
-  {$IFNDEF UNIX}
-        If LocalEdit Then Begin
-                Screen.GetScreenImage(1, 1, 80, 25, Image);
-                LocalSave := Session.LocalMode;
-                Session.LocalMode := True;
-                Session.User.TempUser := Session.User.ThisUser;
-        End;
-  {$ENDIF}
+  Screen.GetScreenImage (6, 5, 74, 21, BoxImage);
 
-        If Not OneUser Then Begin
-                Read (Session.User.UserFile, Session.User.TempUser);
+  Birthdate := DateJulian2Str(U.Birthday, 1);
+  FirstCall := DateDos2Str(U.FirstOn, 1);
+  LastCall  := DateDos2Str(U.LastOn, 1);
 
-                If Session.User.UserNum = FilePos(Session.User.UserFile) Then
-                        Session.User.TempUser := Session.User.ThisUser;
-        End;
+  UpdatePage(False);
 
   Repeat
-                UserNode := IsUserOnline(Session.User.TempUser.Handle);
+    Form.ExitOnFirst := True;
+    Form.ExitOnLast  := True;
 
-    Session.io.OutFull ('|16|CL|14User Editor: ' + strI2S(FilePos(Session.User.UserFile)) + ' of ' + strI2S(FileSize(Session.User.UserFile)) +
-                                        ' |03(Idx: ' + strI2S(Session.User.TempUser.PermIdx) + ')');
+    Case PagePos of
+      1 : Form.ExitOnFirst := False;
+      6 : Form.ExitOnLast  := False;
+    End;
 
-                If UserNode > 0 Then
-                        Session.io.OutFull (' |10(On Node ' + strI2S(UserNode) + ')');
+    If NeedForm Then
+    Case PagePos of
+      1 : Begin
+            WriteXY ( 8, 19, 112, 'Caller ID');
+            WriteXY (23, 19, 113, U.PeerIP);
+            WriteXY (23, 20, 113, U.PeerHost);
 
-    If LocalEdit Then
-      Session.io.OutFullLn (' |12(Local Display)')
-    Else
-      Session.io.OutRawLn ('');
+            Form.Clear;
 
-    Session.io.OutFullLn ('|08|$D79Ä|03');
+            Form.AddStr  ('H', ' Handle'    ,  7,  6, 23,  6, 14, 30, 30, @U.Handle, Topic + 'User''s account handle');
+            Form.AddStr  ('R', ' Real Name' ,  7,  7, 23,  7, 14, 30, 30, @U.RealName, Topic + 'User''s real name');
+            Form.AddPass ('W', ' Password'  ,  7,  8, 23,  8, 14, 20, 20, @U.Password, Topic + 'User''s password');
+            Form.AddStr  ('A', ' Address'   ,  7,  9, 23,  9, 14, 30, 30, @U.Address, Topic + 'User''s street address');
+            Form.AddStr  ('C', ' City'      ,  7, 10, 23, 10, 14, 25, 25, @U.City, Topic + 'User''s city and state');
+            Form.AddStr  ('Z', ' Zip Code'  ,  7, 11, 23, 11, 14, 10, 10, @U.ZipCode, Topic + 'User''s postal code');
+            Form.AddStr  ('P', ' Home Phone',  7, 12, 23, 12, 14, 15, 15, @U.HomePhone, Topic + 'User''s home phone number');
+            Form.AddStr  ('O', ' Data Phone',  7, 13, 23, 13, 14, 15, 15, @U.DataPhone, Topic + 'User''s data phone number');
+            Form.AddStr  ('E', ' E-Mail'    ,  7, 14, 23, 14, 14, 40, 40, @U.Email, Topic + 'User''s email address');
+            Form.AddStr  ('U', ' User Note' ,  7, 15, 23, 15, 14, 40, 40, @U.UserInfo, Topic + 'User''s user note');
+            Form.AddChar ('G', ' Gender'    ,  7, 16, 23, 16, 14, 32, 254, @U.Gender, Topic + 'User''s gender. M/Male, F/Female');
+            Form.AddDate ('B', ' Birthdate' ,  7, 17, 23, 17, 14, @Birthdate, Topic + 'User''s birthdate (MM/DD/YY)');
+          End;
+      2 : Begin
+            Form.Clear;
 
-                If More Then Begin
-                        Session.io.OutFullLn ('|12Additional settings for ' + Session.User.TempUser.Handle + ':|03|CR');
+            Form.AddByte ('S', ' Security'  , 7,  6, 23,  6, 14,  3, 0, 255, @U.Security, Topic + 'User''s security level');
+            Form.AddFlag ('1', ' Flags #1'  , 7,  7, 23,  7, 14, @U.AF1, Topic + 'User''s access flags: Set 1');
+            Form.AddFlag ('2', ' Flags #2'  , 7,  8, 23,  8, 14, @U.AF2, Topic + 'User''s access flags: Set 2');
+            Form.AddWord ('T', ' Time Left' , 7,  9, 23,  9, 14, 10, 0, 1440, @U.TimeLeft, Topic + 'Total number of minutes left for today');
+            Form.AddWord ('I', ' Time Bank' , 7, 10, 23, 10, 14,  5, 0, 65000, @U.TimeBank, Topic + 'Total minutes in time bank');
+            Form.AddDate ('X', ' Expires'   , 7, 11, 23, 11, 14, @U.Expires, Topic + 'User''s account expiration date (00/00/00: Disabled)');
+            Form.AddByte ('O', ' To'        , 7, 12, 23, 12, 14, 3, 0, 255, @U.ExpiresTo, Topic + 'Security profile to give user after expiration');
+            Form.AddStr  ('T', ' Theme'     , 7, 13, 23, 13, 14, 20,  20, @U.Theme, Topic + 'Filename of user''s theme');
+            Form.AddStr  ('A', ' Start Menu', 7, 14, 23, 14, 14, 20, 20, @U.StartMenu, Topic + 'User is sent to this menu after logging in');
+            Form.AddStr  ('V', ' Archive'   , 7, 15, 23, 15, 14,  4,  4, @U.Archive, Topic + 'User''s archive type extension');
+            Form.AddChar ('P', ' Protocol'  , 7, 16, 23, 16, 14, 32, 254, @U.Protocol, Topic + 'Default protocol hotkey');
+            Form.AddByte ('C', ' Screensize', 7, 17, 23, 17, 14,  2,  0, 50, @U.ScreenSize, Topic + 'User''s terminal size in lines');
+            Form.AddBol  ('K', ' Hot Keys'  , 7, 18, 23, 18, 14,  3,  @U.HotKeys, Topic + 'User''s hotkey input status');
+            Form.AddBol  ('U', ' Auto-Sig'  , 7, 19, 23, 19, 14,  3,  @U.SigUse, Topic + 'Use auto signature?');
+            Form.AddBol  ('Q', ' QWK Files' , 7, 20, 23, 20, 14,  3,  @U.QwkFiles, Topic + 'New files in QWK?');
+          End;
+      3 : Begin
+            Form.Clear;
 
-                        Session.io.OutRawLn ('A. Full NodeChat ' + Session.io.OutYN(Session.User.TempUser.UseFullChat));
-                        Session.io.OutRawLn ('B. Expires Date  ' + Session.User.TempUser.Expires);
-                        Session.io.OutRawLn ('C. Expires To    ' + strI2S(Session.User.TempUser.ExpiresTo));
+            Form.AddTog  ('D', ' Date Format' , 7,  6, 23,  6, 14,  8,  1,  3, 'MM/DD/YY DD/MM/YY YY/MM/DD', @U.DateType, Topic + 'User''s date format');
+            Form.AddTog  ('E', ' FS Editor'   , 7,  7, 23,  7, 14,  3,  0,  1, 'Line Full', @U.EditType, Topic + 'User''s full screen editor setting');
+            Form.AddBol  ('Q', ' Quote Window', 7,  8, 23,  8, 14,  3,  @U.UseLBQuote, Topic + 'User''s FS editor quote window status');
+            Form.AddTog  ('F', ' File Listing', 7,  9, 23,  9, 14,  8,  0,  1, 'Standard Full', @U.FileList, Topic + 'User''s file listing type');
+            Form.AddTog  ('M', ' Msg Reader'  , 7, 10, 23, 10, 14,  8,  0,  1, 'Standard Full', @U.MReadType, Topic + 'Full screen message reader status');
+            Form.AddBol  ('X', ' Msg Index'   , 7, 11, 23, 11, 14,  3,  @U.UseLBIndex, Topic + 'Start reading at message index');
+            Form.AddBol  ('I', ' Mail Index'  , 7, 12, 23, 12, 14,  3,  @U.UseLBMIdx, Topic + 'Start reading email at message index');
+            Form.AddTog  ('N', ' Node Chat'   , 7, 13, 23, 13, 14,  8,  0,  1, 'Standard Full', @U.UseFullChat, Topic + 'User''s node chat type');
+          End;
+      4 : Begin
+            Form.Clear;
 
-            For A := 1 to 10 Do Session.io.OutRawLn('');
+            Form.AddDate ('F', ' First Call'    ,  7,  6, 23,  6, 14, @FirstCall, Topic + 'Date of first call (MM/DD/YY)');
+            Form.AddDate ('A', ' Last Call'     ,  7,  7, 23,  7, 14, @LastCall, Topic + 'Date of last call (MM/DD/YY)');
+            Form.AddLong ('C', ' Calls'         ,  7,  8, 23,  8, 14,  7, 0, 9999999, @U.Calls, Topic + 'Total number of calls to the BBS');
+            Form.AddWord ('L', ' Calls Today'   ,  7,  9, 23,  9, 14,  5, 0, 65000, @U.CallsToday, Topic + 'Total number of calls today');
+            Form.AddLong ('D', ' Downloads'     ,  7, 10, 23, 10, 14,  7, 0, 9999999, @U.DLs, Topic + 'Total number of downloads');
+            Form.AddWord ('T', ' DLs Today'     ,  7, 11, 23, 11, 14,  5, 0, 65000, @U.DLsToday, Topic + 'Total downloads today');
+            Form.AddLong ('W', ' DL KB'         ,  7, 12, 23, 12, 14, 10, 0, 2000000000, @U.DLk, Topic + 'Total downloads in kilobytes');
+            Form.AddLong ('K', ' DL KB Today'   ,  7, 13, 23, 13, 14, 10, 0, 2000000000, @U.DLkToday, Topic + 'Downloads in kilobytes today');
+            Form.AddLong ('U', ' Uploads'       ,  7, 14, 23, 14, 14, 10, 0, 2000000000, @U.ULs, Topic + 'Total number of uploads');
+            Form.AddLong ('B', ' Upload KB'     ,  7, 15, 23, 15, 14, 10, 0, 2000000000, @U.ULk, Topic + 'Total uploads in kilobytes');
+            Form.AddLong ('M', ' Msg Posts'     ,  7, 16, 23, 16, 14, 10, 0, 2000000000, @U.Posts, Topic + 'Total number of message posts');
+            Form.AddWord ('E', ' E-Mails'       ,  7, 17, 23, 17, 14,  5, 0, 65000, @U.Emails, Topic + 'Number of e-mails sent');
+            Form.AddLong ('I', ' File Ratings'  ,  7, 18, 23, 18, 14, 10, 0, 2000000000, @U.FileRatings, Topic + 'Total file ratings');
+            Form.AddLong ('N', ' File Comments' ,  7, 19, 23, 19, 14, 10, 0, 2000000000, @U.FileComment, Topic + 'Total file comments');
+            Form.AddDate ('P', ' Last PW Date'  ,  7, 20, 23, 20, 14, @U.LastPWChange, Topic + 'Date of last password change');
+          End;
+      5 : Begin
+            Form.Clear;
 
-            Session.io.OutFullLn ('|10(1)|08|$D24Ä|10(2)|08|$D23Ä|10(3)|08|$D23Ä|03');
+            For Temp := 1 to 9 Do
+              Form.AddStr (strI2S(Temp)[1], ' ' + Config.OptionalField[Temp].Desc, 7, 5 + Temp, 23, 5 + Temp, 14, 33, 60, @U.OptionData[Temp], Topic + 'User optional field #' + strI2S(Temp));
 
-            Session.io.OutRawLn ('Calls        ' + strPadR(strI2S(Session.User.TempUser.Calls), 14, ' ') +
-                    'First Call  ' + strPadR(DateDos2Str(Session.User.TempUser.FirstOn, Session.User.ThisUser.DateType), 14, ' ') +
-                  'Msg Posts   ' + strI2S(Session.User.TempUser.Posts));
-            Session.io.OutRawLn ('Calls Today  ' + strPadR(strI2S(Session.User.TempUser.CallsToday), 14, ' ') +
-                    'Last Call   ' + strPadR(DateDos2Str(Session.User.TempUser.LastOn, Session.User.ThisUser.DateType), 14, ' ') +
-                  'Sent Email  ' + strI2S(Session.User.TempUser.Emails));
-            Session.io.OutRawLn ('Downloads    ' + strPadR(strI2S(Session.User.TempUser.DLs), 14, ' ') +
-                    'Download K  ' + strPadR(strI2S(Session.User.TempUser.DLk), 14, ' ') +
-                  'Uploads     ' + strI2S(Session.User.TempUser.ULs));
-            Session.io.OutRawLn ('DLs Today    ' + strPadR(strI2S(Session.User.TempUser.DLsToday), 14, ' ') +
-                    'DLk Today   ' + strPadR(strI2S(Session.User.TempUser.DLkToday), 14, ' ') +
-                  'Upload KB   ' + strI2S(Session.User.TempUser.ULk));
+            Form.AddStr ('0', ' ' + Config.OptionalField[10].Desc, 7, 15, 23, 15, 14, 33, 60, @U.OptionData[10], Topic + 'User optional field #10');
+          End;
+      6 : Begin
+            Form.Clear;
 
-                        Session.io.OutFullLn ('|08|$D79Ä');
-            Session.io.OutFull   ('|09(Q)uit: ');
+            Form.AddBits ('D', ' Deleted'     , 7, 6, 23, 6, 14, UserDeleted,    @U.Flags, Topic + 'Is this account marked as deleted?');
+            Form.AddBits ('L', ' Locked Out'  , 7, 7, 23, 7, 14, UserLockedOut,  @U.Flags, Topic + 'Is this account locked out of the system?');
+            Form.AddBits ('N', ' No Ratios'   , 7, 8, 23, 8, 14, UserNoRatio,    @U.Flags, Topic + 'Ignore file ratios?');
+          End;
+    End;
 
-                        If UserNode > 0 Then
-                                ValidStr := 'Q'
-                        Else
-                                ValidStr := 'ABC123Q';
+    NeedForm := False;
 
-                        Case Session.io.OneKey(ValidStr, True) of
-                                'A' : Session.User.TempUser.UseFullChat := Not Session.User.TempUser.UseFullChat;
-                                'B' : Session.User.TempUser.Expires := Session.io.InXY(18, 6, 8, 8, 5, Session.User.TempUser.Expires);
-                                'C' : Session.User.TempUser.ExpiresTo := strS2I(Session.io.InXY(18, 7, 3, 3, 1, strI2S(Session.User.TempUser.ExpiresTo)));
-                                'Q' : More := False;
-              '1' : Begin
-                    Session.User.TempUser.Calls      := strS2I(Session.io.InXY(14, 17, 5, 5, 12, strI2S(Session.User.TempUser.Calls)));
-                  Session.User.TempUser.CallsToday := strS2I(Session.io.InXY(14, 18, 5, 5, 12, strI2S(Session.User.TempUser.CallsToday)));
-                Session.User.TempUser.DLs        := strS2I(Session.io.InXY(14, 19, 5, 5, 12, strI2S(Session.User.TempUser.DLs)));
-                      Session.User.TempUser.DLsToday   := strS2I(Session.io.InXY(14, 20, 5, 5, 12, strI2S(Session.User.TempUser.DLsToday)));
-                  End;
-          '2' : Begin
-                Session.User.TempUser.FirstOn  := DateStr2Dos(Session.io.InXY(40, 17, 8, 8, 15, DateDos2Str(Session.User.TempUser.FirstOn, Session.User.ThisUser.DateType)));
-                      Session.User.TempUser.LastOn   := DateStr2Dos(Session.io.InXY(40, 18, 8, 8, 15, DateDos2Str(Session.User.TempUser.LastOn, Session.User.ThisUser.DateType)));
-                    Session.User.TempUser.DLK      := strS2I(Session.io.InXY(40, 19, 10, 10, 12, strI2S(Session.User.TempUser.DLK)));
-                      Session.User.TempUser.DLKToday := strS2I(Session.io.InXY(40, 20, 10, 10, 12, strI2S(Session.User.TempUser.DLKToday)));
-                  End;
-          '3' : Begin
-                Session.User.TempUser.Posts  := strS2I(Session.io.InXY(66, 17, 10, 10, 12, strI2S(Session.User.TempUser.Posts)));
-                      Session.User.TempUser.Emails := strS2I(Session.io.InXY(66, 18, 10, 10, 12, strI2S(Session.User.TempUser.Emails)));
-                    Session.User.TempUser.ULS    := strS2I(Session.io.InXY(66, 19, 10, 10, 12, strI2S(Session.User.TempUser.ULS)));
-                  Session.User.TempUser.ULK    := strS2I(Session.io.InXY(66, 20, 10, 10, 12, strI2S(Session.User.TempUser.ULK)));
+    If Form.WasFirstExit Then Form.ItemPos := Form.Items;
+    If Form.WasLastExit  Then Form.ItemPos := 1;
+
+    Case Form.Execute of
+      #21 : Begin
+              Temp := Configuration_SecurityEditor(False);
+
+              If Temp <> -1 Then Begin
+                Changed := True;
+
+                Upgrade_User_Level(True, U, Temp);
               End;
-                        End;
-                End Else Begin
-                        Session.io.OutRawLn ('A.      Alias  ' + strPadR(Session.User.TempUser.Handle, 32, ' ') +
-                                                                'V.  Start Menu  ' + Session.User.TempUser.StartMeNU);
-
-                        Session.io.OutRawLn ('B.  Real Name  ' + strPadR(Session.User.TempUser.RealName, 32, ' ') +
-                                                                'W.    Language  ' + Session.User.TempUser.Theme);
-
-                        Session.io.OutRawLn ('C.    Address  ' + strPadR(Session.User.TempUser.Address, 32, ' ') +
-                                                                'X.    Hot Keys  ' + Session.io.OutYN(Session.User.TempUser.HotKeys));
-
-                        Session.io.OutRawLn ('D.       City  ' + strPadR(Session.User.TempUser.City, 32, ' ') +
-                                                                'Y.   Date Type  ' + DateTypeStr[Session.User.TempUser.DateType]);
-
-                        Session.io.OutRawLn ('E.   Zip Code  ' + strPadR(Session.User.TempUser.ZipCode, 32, ' ') +
-                                                                'Z.  FList Type  ' + ModeTypeStr[Session.User.TempUser.FileList]);
-
-                        Session.io.OutRaw   ('F.  Birthdate  ' + DateJulian2Str(Session.User.TempUser.Birthday, Session.User.ThisUser.DateType) +
-                                                                ' - Age ' + strPadR(strI2S(DaysAgo(Session.User.TempUser.Birthday) DIV 365), 17, ' ') +
-                                                                '1.  Msg Editor  ');
-
-            Case Session.User.TempUser.EditType of
-            0 : Session.io.OutRawLn ('Line');
-          1 : Session.io.OutRawLn ('Full');
-              2 : Session.io.OutRawLn ('Ask');
             End;
+      #27 : Begin
+              Changed := Changed or Form.Changed;
+              Break;
+            End;
+      #71 : If PagePos <> 1 Then Begin
+              PagePos := 1;
+              UpdatePage(True);
+            End;
+      #72,
+      #73 : If PagePos > 1 Then Begin
+              Dec(PagePos);
+              UpdatePage(True);
+            End;
+      #79 : If PagePos <> 6 Then Begin
+              PagePos := 6;
+              UpdatePage(True);
+            End;
+      #80,
+      #81 : If PagePos < 6 Then Begin
+              Inc (PagePos);
+              UpdatePage(True);
+            End;
+    End;
 
-                        Session.io.OutRawLn ('G.     Gender  ' + strPadR(Session.User.TempUser.Gender, 32, ' ') +
-                                                                '2.   Msg Quote  ' + ModeTypeStr[Ord(Session.User.TempUser.UseLBQuote)]);
+    Changed := Changed or Form.Changed;
+  Until False;
 
-                        Session.io.OutRawLn ('H. Home Phone  ' + strPadR(Session.User.TempUser.HomePhone, 32, ' ') +
-                                                                '3.  Msg Reader  ' + ModeTypeStr[Session.User.TempUser.MReadType]);
+  U.Birthday := DateStr2Julian(Birthdate);
+  U.FirstOn  := DateStr2Dos(FirstCall);
+  U.LastOn   := DateStr2Dos(LastCall);
 
-                        Session.io.OutRawLn ('I. Data Phone  ' + strPadR(Session.User.TempUser.DataPhone, 32, ' ') +
-                                                                '4.       Index  ' + Session.io.OutYN(Session.User.TempUser.UseLBIndex));
+  Box.Close;
+  Box.Free;
+  Form.Free;
 
-                        Session.io.OutRawLn ('J.     E-mail  ' + strPadR(Session.User.TempUser.Email, 32, ' ') +
-                                                                '5.  Mail Index  ' + Session.io.OutYN(Session.User.TempUser.UseLBMIdx));
+  If Changed Then
+    If Not ShowMsgBox(1, 'Save changes?') Then
+      U := SavedUser;
+End;
 
-                        Session.io.OutRawLn ('K. ' + strPadL(Config.OptionalField[1].Desc, 10, ' ') + '  ' + strPadR(Session.User.TempUser.OptionData[1], 32, ' ') +
-                                                                '6.   Time Left  ' + strI2S(Session.User.TempUser.TimeLeft));
+Procedure Configuration_UserEditor;
+Var
+  Box      : TAnsiMenuBox;
+  List     : TAnsiMenuList;
+  UserFile : TBufFile;
+  User     : RecUser;
 
-                        Session.io.OutRawLn ('L. ' + strPadL(Config.OptionalField[2].Desc, 10, ' ') + '  ' + strPadR(Session.User.TempUser.OptionData[2], 32, ' ') +
-                                                                '7.   Time Bank  ' + strI2S(Session.User.TempUser.TimeBank));
+  Procedure MakeList;
+  Begin
+    List.Clear;
 
-                        Session.io.OutRawLn ('N. ' + strPadL(Config.OptionalField[3].Desc, 10, ' ') + '  ' + strPadR(Session.User.TempUser.OptionData[3], 32, ' ') +
-                                                                '8. Screen Size  ' + strI2S(Session.User.TempUser.ScreenSize));
+    UserFile.Reset;
 
-                        Session.io.OutRawLn ('O.  User Note  ' + strPadR(Session.User.TempUser.UserInfo, 32, ' ') +
-                                                                '!.   Ignore LC  ' + Session.io.OutYN(Session.User.TempUser.Flags AND UserNoCaller <> 0));
+    While Not UserFile.EOF Do Begin
+      UserFile.Read (User);
 
-                        Session.io.OutRawLn ('P.   Security  ' + strPadR(strI2S(Session.User.TempUser.Security), 36, ' ') +
-                                                                'Locked out  ' + Session.io.OutYN(Session.User.TempUser.Flags AND UserLockedOut <> 0));
+      If User.Flags AND UserDeleted <> 0 Then
+        List.Add (strPadR(User.Handle, 37, ' ') + 'DELETED', 0)
+      Else
+        List.Add (strPadR(User.Handle, 32, ' ') +
+                  strPadL(strI2S(User.Security), 5, ' ') +
+                  strPadL(strI2S(User.PermIdx), 10, ' '), 0);
+    End;
+  End;
 
-                        Session.io.OutRawLn ('R.   Password  ' + strPadR(strRep('*', Length(Session.User.TempUser.Password)), 39, ' ') +
-                                                                'Deleted  ' + Session.io.OutYN(Session.User.TempUser.Flags AND UserDeleted <> 0));
+Begin
+  UserFile := TBufFile.Create(8192);
 
-                        Session.io.OutRawLn ('S.   Flags #1  ' + DrawAccessFlags(Session.User.TempUser.AF1) + '           ' +
-                                                                'No Delete  ' + Session.io.OutYN(Session.User.TempUser.Flags AND UserNoKill <> 0));
+  If Not UserFile.Open(Config.DataPath + 'users.dat', fmOpenCreate, fmRWDN, SizeOf(RecUser)) Then Begin
+    UserFile.Free;
+    Exit;
+  End;
 
-                        Session.io.OutRawLn ('T.   Flags #2  ' + DrawAccessFlags(Session.User.TempUser.AF2) + '           ' +
-                                                                'No Ratios  ' + Session.io.OutYN(Session.User.TempUser.Flags AND UserNoRatio <> 0));
+  Box  := TAnsiMenuBox.Create;
+  List := TAnsiMenuList.Create;
 
-                        Session.io.OutFullLn ('|08|$D79Ä');
-            Session.io.OutFull   ('|09([) Prev, (]) Next, (U)pgrade, (*) Search, (M)ore, (Q)uit: ');
+  List.NoWindow := True;
+  List.LoChars  := #13#27;
 
-                        If UserNode > 0 Then
-                                ValidStr := '[]*Q'
-                        Else
-                                ValidStr := '[]*ABCDEFGHIJKLMNOPQRSTUVWXYZ12345678!';
+  Box.Header := ' User Editor ';
 
-                        Case Session.io.OneKey(ValidStr, True) of
-                                'A' : Session.User.TempUser.Handle   := Session.io.InXY(16, 3, 30, 30, 18, Session.User.TempUser.Handle);
-                                'B' : Session.User.TempUser.RealName := Session.io.InXY(16, 4, 30, 30, 18, Session.User.TempUser.RealName);
-                                'C' : Session.User.TempUser.Address  := Session.io.InXY(16, 5, 30, 30, 18, Session.User.TempUser.Address);
-                                'D' : Session.User.TempUser.City     := Session.io.InXY(16, 6, 25, 25, 18, Session.User.TempUser.City);
-                                'E' : Session.User.TempUser.ZipCode  := Session.io.InXY(16, 7,  9,  9, 12, Session.User.TempUser.ZipCode);
-                                'F' : Session.User.TempUser.Birthday     := DateStr2Julian(Session.io.InXY (16, 8, 8, 8, 15, DateJulian2Str(Session.User.TempUser.Birthday, Session.User.ThisUser.DateType)));
-                                'G' : If Session.User.TempUser.Gender = 'M' Then Session.User.TempUser.Gender := 'F' Else Session.User.TempUser.Gender := 'M';
-                                'H' : Session.User.TempUser.HomePhone := Session.io.InXY (16, 10, 15, 15, 12, Session.User.TempUser.HomePhone);
-                                'I' : Session.User.TempUser.DataPhone := Session.io.InXY (16, 11, 15, 15, 12, Session.User.TempUser.DataPhone);
-                                'J' : Session.User.TempUser.Email     := Session.io.InXY (16, 12, 30, 35, 11, Session.User.TempUser.Email);
-                                'K' : Session.User.TempUser.OptionData[1]   := Session.io.InXY (16, 13, 30, 35, 11, Session.User.TempUser.OptionData[1]);
-                                'L' : Session.User.TempUser.OptionData[2]   := Session.io.InXY (16, 14, 30, 35, 11, Session.User.TempUser.OptionData[2]);
-                                'N' : Session.User.TempUser.OptionData[3]   := Session.io.InXY (16, 15, 30, 35, 11, Session.User.TempUser.OptionData[3]);
-                                'O' : Session.User.TempUser.UserInfo  := Session.io.InXY (16, 16, 30, 30, 11, Session.User.TempUser.UserInfo);
-                                'P' : Begin
-                                        Session.User.TempUser.Security := strS2I(Session.io.InXY(16, 17,  3,  3, 12, strI2S(Session.User.TempUser.Security)));
-                                        If (Session.User.TempUser.Security > 255) or (Session.User.TempUser.Security < 0) Then Session.User.TempUser.Security := 0;
-                                      End;
-                                'R' : Session.User.TempUser.Password := Session.io.InXY (16, 18, 15, 15, 12, Session.User.TempUser.Password);
-                                'S' : EditAccessFlags(Session.User.TempUser.AF1);
-                                'T' : EditAccessFlags(Session.User.TempUser.AF2);
-                                'V' : Session.User.TempUser.StartMeNU := Session.io.InXY (64, 3, 8, 8, 11, Session.User.TempUser.StartMeNU);
-                                'W' : Session.User.TempUser.Theme := Session.io.InXY (64, 4, 8, 8, 11, Session.User.TempUser.Theme);
-                                'X' : Session.User.TempUser.HotKeys := Not Session.User.TempUser.HotKeys;
-                                'Y' : If Session.User.TempUser.DateType < 3 Then Inc (Session.User.TempUser.DateType) Else Session.User.TempUser.DateType := 1;
-                                'Z' : Session.User.TempUser.FileList := Ord(Not Boolean(Session.User.TempUser.FileList));
-                                '1' : If Session.User.TempUser.EditType < 2 Then Inc (Session.User.TempUser.EditType) Else Session.User.TempUser.EditType := 0;
-                                '2' : Session.User.TempUser.UseLBQuote := Not Session.User.TempUser.UseLBQuote;
-                                '3' : Session.User.TempUser.MReadType  := Ord(Not Boolean(Session.User.TempUser.MReadType));
-                                '4' : Session.User.TempUser.UseLBIndex := Not Session.User.TempUser.UseLBIndex;
-                                '5' : Session.User.TempUser.UseLBMIdx  := Not Session.User.TempUser.UseLBMIdx;
-                                '6' : Begin
-                                        Session.User.TempUser.TimeLeft := strS2I(Session.io.InXY(64, 13, 3, 3, 12, strI2S(Session.User.TempUser.TimeLeft)));
-                                        If OneUser or (Session.User.UserNum = FilePos(Session.User.UserFile)) Then
-                                          Session.SetTimeLeft(Session.User.TempUser.TimeLeft);
-                                      End;
-                                '7' : Session.User.TempUser.TimeBank   := strS2I(Session.io.InXY(64, 14, 3, 3, 12, strI2S(Session.User.TempUser.TimeBank)));
-                                '8' : Session.User.TempUser.ScreenSize := strS2I(Session.io.InXY(64, 15, 2, 2, 12, strI2S(Session.User.TempUser.ScreenSize)));
-              '!' : Begin
-                    Session.io.OutRaw ('(C)aller, (D)elete, (I)gnore Ratios, (L)ockOut, (N)oKill, (Q)uit: ');
-                  Case Session.io.OneKey('CDILNQ', True) of
-                                                                        'C' : Session.User.TempUser.Flags := Session.User.TempUser.Flags XOR UserNoCaller;
-                        'D' : Session.User.TempUser.Flags := Session.User.TempUser.Flags XOR UserDeleted;
-                        'I' : Session.User.TempUser.Flags := Session.User.TempUser.Flags XOR UserNoRatio;
-                        'L' : Session.User.TempUser.Flags := Session.User.TempUser.Flags XOR UserLockedOut;
-                                                                        'N' : Session.User.TempUser.Flags := Session.User.TempUser.Flags XOR UserNoKill;
-                    End;
-                End;
-                                '[' : If Not OneUser Then Begin
+  Box.Open (15, 5, 65, 21);
 
-                                                                If Session.User.UserNum = FilePos(Session.User.UserFile) Then
-                                                                        Session.User.ThisUser := Session.User.TempUser;
+  WriteXY (17, 7, 112, 'User Name                       Level    UserID');
+  WriteXY (16, 8, 112,  strRep(#196, 49));
 
-                                                                Seek  (Session.User.UserFile, Pred(FilePos(Session.User.UserFile)));
-                                                                Write (Session.User.UserFile, Session.User.TempUser);
+  Repeat
+    MakeList;
 
-                                                                If FilePos(Session.User.UserFile) > 1 Then Begin
-                              Seek (Session.User.UserFile, FilePos(Session.User.UserFile)-2);
-                            Read (Session.User.UserFile, Session.User.TempUser);
-                                                                End Else Begin
-                                                                        Seek (Session.User.UserFile, FileSize(Session.User.UserFile) - 1);
-                                                                        Read (Session.User.UserFile, Session.User.TempUser);
-                                                                End;
-                                                        End;
-              ']' : If Not OneUser Then Begin
-                                                                If Session.User.UserNum = FilePos(Session.User.UserFile) Then
-                                                                        Session.User.ThisUser := Session.User.TempUser;
+    List.Open (15, 8, 65, 21);
+    List.Close;
 
-                    Seek  (Session.User.UserFile, Pred(FilePos(Session.User.UserFile)));
-                  Write (Session.User.UserFile, Session.User.TempUser);
-                                                                If Eof(Session.User.UserFile) Then Reset(Session.User.UserFile);
-                      Read  (Session.User.UserFile, Session.User.TempUser);
-                                                        End;
-                                '*' : If Not OneUser Then Begin
-                                                                Session.io.OutFull ('User name / number: ');
-                                                                Str := Session.io.GetInput(30, 30, 12, '');
+    Case List.ExitCode of
+      #13 : Begin
+              UserFile.Seek (List.Picked - 1);
+              UserFile.Read (User);
 
-                                                                If Session.User.UserNum = FilePos(Session.User.UserFile) Then
-                                                                        Session.User.ThisUser := Session.User.TempUser;
+              Configuration_EditUser(User);
 
-                                                                A := FilePos(Session.User.UserFile) - 1;
-                                                                Seek  (Session.User.UserFile, A);
-                                                                Write (Session.User.UserFile, Session.User.TempUser);
+              UserFile.Seek  (List.Picked - 1);
+              UserFile.Write (User);
+            End;
+      #27 : Break;
+    End;
+  Until False;
 
-           If (strS2I(Str) > 0) and (strS2I(Str) < FileSize(Session.User.UserFile)) Then
-                                                                        A := strS2I(Str) - 1
-                                                                Else Begin
-                                                                        Reset (Session.User.UserFile);
-                                                                        While Not Eof(Session.User.UserFile) Do Begin
-                                                                                Read (Session.User.UserFile, Session.User.TempUser);
-                                     If (Pos(Str, strUpper(Session.User.TempUser.Handle)) > 0) or (Pos(Str, strUpper(Session.User.TempUser.RealName)) > 0) Then Begin
-                                                                                  Session.io.PromptInfo[1] := Session.User.TempUser.Handle;
-                                                                                    If Session.io.GetYN(Session.GetPrompt(155), True) Then Begin
-                                                                                                A := FilePos(Session.User.UserFile) - 1;
-                                                                                                Break;
-                                                                                        End;
-                                                                                End;
-                                                                        End;
-                                                                End;
+  Box.Close;
 
-                                                                Seek (Session.User.UserFile, A);
-                                                                Read (Session.User.UserFile, Session.User.TempUser);
-                                                        End;
-                                'M' : More := True;
-                                'Q' : Break;
-                                'U' : Begin
-                                                                Session.io.OutFull ('|CR|09Upgrade to level (0-255): ');
-                                                                A := strS2I(Session.io.GetInput(3, 3, 12, strI2S(Session.User.TempUser.Security)));
-                                                                If (A > 255) or (A <= 0) Then A := 1;
-                                                                Upgrade_User_Level(False, Session.User.TempUser, A);
-                                                        End;
-                        End;
-                End;
+  UserFile.Free;
+  List.Free;
+  Box.Free;
+End;
 
-        Until False;
+Procedure Configuration_LocalUserEdit;
+Var
+  SavedLocal : Boolean;
+Begin
+  SavedLocal := Session.LocalMode;
 
-        If Not OneUser Then Begin
-                If Session.User.UserNum = FilePos(Session.User.UserFile) Then
-                        Session.User.ThisUser := Session.User.TempUser;
+  Session.InUserEdit := True;
+  Session.LocalMode  := True;
 
-          Seek  (Session.User.UserFile, Pred(FilePos(Session.User.UserFile)));
-          Write (Session.User.UserFile, Session.User.TempUser);
-        End;
-
-  {$IFNDEF UNIX}
-        If LocalEdit Then Begin
-                Session.LocalMode := LocalSave;
-                Session.User.ThisUser := Session.User.TempUser;
-
-                Screen.PutScreenImage(Image);
-
-                Session.SetTimeLeft (Session.User.TempUser.TimeLeft);
-                UpdateStatusLine    (StatusPtr, '');
-        End;
-        {$ENDIF}
-
-        Close (Session.User.UserFile);
+  Configuration_EditUser (Session.User.ThisUser);
 
   Session.InUserEdit := False;
+  Session.LocalMode  := SavedLocal;
 End;
 
 End.
