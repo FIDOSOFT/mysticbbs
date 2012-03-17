@@ -166,7 +166,7 @@ Begin
   Repeat
     NewClient := Server.WaitConnection;
 
-    If NewClient = NIL Then Break;  // time to shutdown the server...
+    If NewClient = NIL Then Break; // time to shutdown the server...
 
     If (ClientMax > 0) And (ClientActive >= ClientMax) Then Begin
       Inc (ClientRefused);

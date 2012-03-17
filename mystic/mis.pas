@@ -26,10 +26,13 @@ Program MIS;
 Uses
   {$IFDEF DEBUG}
     HeapTrc,
+    LineInfo,
   {$ENDIF}
   {$IFDEF UNIX}
     cThreads,
+    BaseUnix,
   {$ENDIF}
+  DOS,
   m_Output,
   m_Input,
   m_DateTime,
@@ -56,7 +59,7 @@ Const
 
 Var
   Console      : TOutput;
-  Input        : TInput;
+  Keyboard     : TInput;
   TelnetServer : TServerManager;
   FTPServer    : TServerManager;
   POP3Server   : TServerManager;
@@ -67,16 +70,22 @@ Var
   TopPage      : Integer;
   BarPos       : Integer;
   NodeData     : TNodeData;
+  DaemonMode   : Boolean = False;
 
 {$I MIS_ANSIWFC.PAS}
 
 Procedure ReadConfiguration;
 Var
   FileConfig : TBufFile;
+  DatLoc     : String;
 Begin
+  DatLoc := GetEnv('mysticbbs');
+
+  If DatLoc <> '' Then DatLoc := DirSlash(DatLoc);
+
   FileConfig := TBufFile.Create(SizeOf(RecConfig));
 
-  If Not FileConfig.Open('mystic.dat', fmOpen, fmReadWrite + fmDenyNone, SizeOf(RecConfig)) Then Begin
+  If Not FileConfig.Open(DatLoc + 'mystic.dat', fmOpen, fmReadWrite + fmDenyNone, SizeOf(RecConfig)) Then Begin
     WriteLn;
     WriteLn ('ERROR: Unable to read MYSTIC.DAT.  This file must exist in the same');
     WriteLn ('directory as MIS');
@@ -90,6 +99,8 @@ Begin
     WriteLn('ERROR: Data files are not current and must be upgraded.');
     Halt(1);
   End;
+
+  DirChange(bbsConfig.SystemPath);
 End;
 
 Procedure ReadChatData;
@@ -114,7 +125,7 @@ Begin
 
             NodeData.SetNodeInfo(NI.Num, NI);
           End;
-	End;
+        End;
       	Close (ChatFile);
       End;
     End;
@@ -290,10 +301,10 @@ Begin
           Term.ProcessBuf(Buffer, Res);
         Until Res <> BufferSize;
       End Else
-      If Input.KeyPressed Then Begin
-        Ch := Input.ReadKey;
+      If Keyboard.KeyPressed Then Begin
+        Ch := Keyboard.ReadKey;
         Case Ch of
-          #00 : Case Input.ReadKey of
+          #00 : Case Keyboard.ReadKey of
                   #45 : Break;
                   #71 : Client.WriteStr(#27 + '[H');
                   #72 : Client.WriteStr(#27 + '[A');
@@ -326,6 +337,32 @@ Begin
   SwitchFocus;
 End;
 
+{$IFDEF UNIX}
+Procedure ExecuteDaemon;
+Var
+  PID : TPID;
+  SID : TPID;
+  offset:longint;
+Begin
+  PID := fpFork;
+
+  If PID < 0 Then Halt(1);
+  If PID > 0 Then Halt(0);
+
+  SID := fpSetSID;
+
+  If SID < 0 Then Halt(1);
+
+  Close (Input);
+  Close (Output);
+  //CLOSE STDERR
+
+  Repeat
+    WaitMS(60000);
+  Until False;
+End;
+{$ENDIF}
+
 Const
   WinTitle = 'Mystic Internet Server';
 
@@ -333,6 +370,10 @@ Var
   Count   : Integer;
   Started : Boolean;
 Begin
+  {$IFDEF UNIX}
+    DaemonMode := Pos('-D', strUpper(ParamStr(1))) > 0;
+  {$ENDIF}
+
   Randomize;
 
   {$IFDEF DEBUG}
@@ -346,11 +387,14 @@ Begin
   POP3Server   := NIL;
   Started      := False;
 
-  Console  := TOutput.Create(True);
-  Input    := TInput.Create;
-  NodeData := TNodeData.Create(bbsConfig.INetTNNodes);
+  NodeData     := TNodeData.Create(bbsConfig.INetTNNodes);
 
-  Console.SetWindowTitle(WinTitle);
+  If Not DaemonMode Then Begin
+    Console  := TOutput.Create(True);
+    Keyboard := TInput.Create;
+
+    Console.SetWindowTitle(WinTitle);
+  End;
 
   If bbsConfig.InetTNUse Then Begin
     TelnetServer := TServerManager.Create(bbsConfig, bbsConfig.InetTNPort, bbsConfig.INetTNNodes, NodeData, @CreateTelnet);
@@ -398,13 +442,14 @@ Begin
   End;
 
   If Not Started Then Begin
-    Console.ClearScreen;
-
-    Console.WriteLine('ERROR: No servers are configured as active.  Run MYSTIC -CFG to configure');
-    Console.WriteLine('Internet server options.');
+    If Not DaemonMode Then Begin
+      Console.ClearScreen;
+      Console.WriteLine('ERROR: No servers are configured as active.  Run MYSTIC -CFG to configure');
+      Console.WriteLine('Internet server options.');
+    End;
 
     NodeData.Free;
-    Input.Free;
+    Keyboard.Free;
     Console.Free;
 
     Halt(10);
@@ -412,15 +457,20 @@ Begin
 
   Count := 0;
 
-  DrawStatusScreen;
+  If Not DaemonMode Then Begin
+    DrawStatusScreen;
+    FocusCurrent := FocusMax;
+    SwitchFocus;
+  End;
 
-  FocusCurrent := FocusMax;
-  SwitchFocus;
+  {$IFDEF UNIX}
+    If DaemonMode Then ExecuteDaemon;
+  {$ENDIF}
 
   Repeat
-    If Input.KeyWait(1000) Then
-      Case Input.ReadKey of
-        #00 : Case Input.ReadKey of
+    If Keyboard.KeyWait(1000) Then
+      Case Keyboard.ReadKey of
+        #00 : Case Keyboard.ReadKey of
                 #72 : If BarPos > TopPage Then Begin
                         Dec(BarPos);
                         UpdateConnectionList;
@@ -502,7 +552,7 @@ Begin
   Console.WriteLine (' (DONE)');
 
   NodeData.Free;
-  Input.Free;
+  Keyboard.Free;
   Console.Free;
 
   Halt(255);
