@@ -321,11 +321,6 @@ Begin
 End;
 
 Procedure ProcessSysopCommand (Cmd: Char);
-Var
-  A  : Integer;
-  X,
-  Y  : Byte;
-  LS : Boolean;
 Begin
   If Not Screen.Active And (Cmd <> #47) Then Exit;
 
@@ -333,9 +328,6 @@ Begin
 {E} #18 : If (Not Session.InUserEdit) and (Session.User.UserNum <> -1) Then
             Configuration_LocalUserEdit;
 {T} #20 : Begin
-//            X := Screen.CursorX;
-//            Y := Screen.CursorY;
-
             Config.UseStatusBar := Not Config.UseStatusBar;
 
             If Not Config.UseStatusBar Then Begin

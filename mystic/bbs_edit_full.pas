@@ -40,7 +40,7 @@ Var
   InsertMode   : Boolean = True;
   CutPasted    : Boolean = False;
   CutTextPos   : Word    = 0;
-  CutText      : Array[1..MaxCutText] of CutTextPtr;
+  CutText      : Array[1..MaxCutText] of CutTextPTR;
   Done         : Boolean;
   Save         : Boolean;
   Ch           : Char;

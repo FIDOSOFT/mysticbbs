@@ -271,11 +271,6 @@ Var
     End;
   End;
 
-Var
-  A     : Byte;
-  B     : Byte;
-  W     : String;
-  InStr : Boolean;
 Begin
   Console.WriteXY (2, Y, colTextNormal, strPadR(Copy(S, CurWin[CurWinNum]^.ScrlX + 1, 255), 77, ' '));
 End;
@@ -619,7 +614,6 @@ Var
   InKey : TMenuInput;
   Str   : String;
   Save  : Boolean;
-//  TF    : Text;
 Begin
   Save := True;
 
@@ -716,7 +710,6 @@ End;
 
 Procedure CompileStatusUpdate (Info: TParserUpdateInfo);
 Var
-  SavedX  : Byte;
   Percent : Byte;
 Begin
   Case Info.Mode of

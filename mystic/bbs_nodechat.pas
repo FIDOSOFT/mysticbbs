@@ -18,11 +18,11 @@ Uses
   bbs_Core;
 
 Var
-  ChatSize   : Byte;
+  ChatSize   : Integer;
   ChatUpdate : LongInt;
-  TextPos    : Byte;
-  TopPage    : Byte;
-  LinePos    : Byte;
+  TextPos    : Integer;
+  TopPage    : Integer;
+  LinePos    : Integer;
   Full       : Boolean;
 
 Procedure FullReDraw;

@@ -102,8 +102,8 @@ Begin
     Case PagePos of
       1 : Begin
             WriteXY ( 8, 19, 112, 'Caller ID');
-            WriteXY (23, 19, 113, U.PeerIP);
-            WriteXY (23, 20, 113, U.PeerHost);
+            WriteXY (23, 19, 113, U.PeerHost);
+            WriteXY (23, 20, 113, U.PeerIP);
 
             Form.Clear;
 
@@ -223,7 +223,8 @@ Begin
       #81 : If PagePos < 6 Then Begin
               Inc (PagePos);
               UpdatePage(True);
-            End;
+            End Else
+              Form.ItemPos := Form.Items;
     End;
 
     Changed := Changed or Form.Changed;

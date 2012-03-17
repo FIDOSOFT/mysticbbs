@@ -251,6 +251,8 @@ Var
   Count : Byte;
   Ch    : Char;
 Begin
+  FillChar(LastKey, SizeOf(LastKey), 0);
+
   FN       := strWordGet(1, Str, ';');
   Template := strWordGet(2, Str, ';');
   Keyword  := strWordGet(3, Str, ';');

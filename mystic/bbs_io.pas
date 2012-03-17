@@ -1238,7 +1238,7 @@ End;
 Function TBBSIO.GetKey : Char;
 Var
   TimeCount : LongInt;
-  LastSec   : LongInt;
+  LastSec   : LongInt = 0;
 Begin
   Result := #255;
 
