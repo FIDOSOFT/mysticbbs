@@ -164,7 +164,7 @@ Var
   Keyword  : String;
   TopPage  : Integer;
   CurLine  : Integer;
-  CurLPos  : Byte;
+  CurLPos  : Byte = 1;
   WinSize  : Integer;
   LastPos  : Byte;
   LastKey  : Array[1..10] of String[mysMaxHelpKeyLen];
@@ -244,6 +244,33 @@ Var
     WinY1 := Session.io.ScreenInfo[1].Y;
     WinX2 := Session.io.ScreenInfo[2].X;
     WinY2 := Session.io.SCreenInfo[2].Y;
+  End;
+
+  Procedure ExecuteMenuCommands;
+  Var
+    Key  : String;
+    Temp : String;
+    Cmd  : String[2];
+    Data : String;
+  Begin
+    Session.io.AnsiColor(7);
+
+    Key := Text[TopPage + CurLine - 1].Link[CurLPos].Key;
+
+    Repeat
+      Delete (Key, 1, 1);
+
+      Temp := strWordGet(1, Key, ']');
+
+      Cmd  := strWordGet(1, Temp, ';');
+      Data := strWordGet(2, Temp, ';');
+
+      Delete (Key, 1, Length(Temp) + 1);
+
+      Session.Menu.ExecuteCommand (Cmd, Data);
+    Until Key = '';
+
+    ShowTemplate;
   End;
 
 Var
@@ -436,6 +463,7 @@ Begin
 
                               ShowTemplate;
                             End;
+                      '[' : ExecuteMenuCommands;
                     Else
                       If LastPos < 10 Then
                         Inc (LastPos)
