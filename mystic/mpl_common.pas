@@ -1,57 +1,61 @@
 
-Function cGetVarChar (T: TIdentTypes) : Char;
+Function VarType2Char (T: TIdentTypes) : Char;
 Begin
   Case T of
-    iString  : Result := 's';
-    iChar    : Result := 'c';
-    iByte    : Result := 'b';
-    iShort   : Result := 'h';
-    iWord    : Result := 'w';
-    iInteger : Result := 'i';
-    iLongInt : Result := 'l';
-    iReal    : Result := 'r';
-    iBool    : Result := 'o';
-    iFile    : Result := 'f';
-    iRecord  : Result := 'x';
+    iString   : Result := 's';
+    iChar     : Result := 'c';
+    iByte     : Result := 'b';
+    iShort    : Result := 'h';
+    iWord     : Result := 'w';
+    iInteger  : Result := 'i';
+    iLongInt  : Result := 'l';
+    iCardinal : Result := 'a';
+    iReal     : Result := 'r';
+    iBool     : Result := 'o';
+    iFile     : Result := 'f';
+    iRecord   : Result := 'x';
+    iPointer  : Result := 'p';
   Else
     Result := ' ';
   End;
 End;
 
-Function cVarType (C: Char) : TIdentTypes;
-begin
-  case UpCase(c) of
-    'S' : cVarType := iString;
-    'C' : cVarType := iChar;
-    'B' : cVarType := iByte;
-    'H' : cVarType := iShort;
-    'W' : cVarType := iWord;
-    'I' : cVarType := iInteger;
-    'L' : cVarType := iLongInt;
-    'R' : cVarType := iReal;
-    'O' : cVarType := iBool;
-    'F' : cVarType := iFile;
-    'X' : cVarType := iRecord;
-  else
-    cVarType := iNone;
-  end;
-end;
+Function Char2VarType (C: Char) : TIdentTypes;
+Begin
+  Case UpCase(c) of
+    'S' : Result := iString;
+    'C' : Result := iChar;
+    'B' : Result := iByte;
+    'H' : Result := iShort;
+    'W' : Result := iWord;
+    'I' : Result := iInteger;
+    'L' : Result := iLongInt;
+    'A' : Result := iCardinal;
+    'R' : Result := iReal;
+    'O' : Result := iBool;
+    'F' : Result := iFile;
+    'X' : Result := iRecord;
+    'P' : Result := iPointer;
+  Else
+    Result := iNone;
+  End;
+End;
 
-Function xVarSize (T: TIdentTypes) : Word;
+Function GetVarSize (T: TIdentTypes) : Word;
 Begin
   Case T of
     iRecord,
-    iNone    : xVarSize := 0;
-    iString  : xVarSize := 256;
-    iChar    : xVarSize := 1;
-    iByte    : xVarSize := 1;
-    iShort   : xVarSize := 1;
-    iWord    : xVarSize := 2;
-    iInteger : xVarSize := 2;
-    iLongInt : xVarSize := 4;
-    iReal    : xVarSize := SizeOf(Real); // {$IFDEF FPC}8{$ELSE}6{$ENDIF};
-    iBool    : xVarSize := 1;
-    iFile    : xVarSize := SizeOf(File); // was 128;
+    iNone    : Result := 0;
+    iString  : Result := 256;
+    iChar    : Result := 1;
+    iByte    : Result := 1;
+    iShort   : Result := 1;
+    iWord    : Result := 2;
+    iInteger : Result := 2;
+    iLongInt : Result := 4;
+    iReal    : Result := SizeOf(Real); // {$IFDEF FPC}8{$ELSE}6{$ENDIF};
+    iBool    : Result := 1;
+    iFile    : Result := SizeOf(File); // was 128;
   End;
 End;
 
@@ -113,7 +117,7 @@ Procedure InitProcedures (O: Pointer; S: Pointer; Var CV: VarDataRec; Var X: Wor
 
   Procedure AddVar ({$IFDEF MPLPARSER} I: String; {$ENDIF} T: TIdentTypes);
   Begin
-    AddStr ({$IFDEF MPLPARSER} I, {$ENDIF} T, xVarSize(T) - 1);
+    AddStr ({$IFDEF MPLPARSER} I, {$ENDIF} T, GetVarSize(T) - 1);
   End;
 
   Procedure AddPointer ({$IFDEF MPLPARSER} I: String; {$ENDIF} T: TIdentTypes; SI: Word; PD: Pointer);
@@ -298,7 +302,7 @@ Begin
           AddPointer ({$IFDEF MPLPARSER} 'dirname',    {$ENDIF} iString,  256, {$IFNDEF MPLPARSER} @TInterpEngine(S).DirInfo.Name {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'dirsize',    {$ENDIF} iLongInt,   4, {$IFNDEF MPLPARSER} @TInterpEngine(S).DirInfo.Size {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'dirtime',    {$ENDIF} iLongInt,   4, {$IFNDEF MPLPARSER} @TInterpEngine(S).DirInfo.Time {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'dirattr',    {$ENDIF} iByte,      1, {$IFNDEF MPLPARSER} @TInterpEngine(S).DirInfo.Attr {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'dirattr',    {$ENDIF} iLongInt,   SizeOf(SearchRec.Attr), {$IFNDEF MPLPARSER} @TInterpEngine(S).DirInfo.Attr {$ELSE} NIL {$ENDIF});
         End;
     1 : Begin
           {$IFNDEF MPLPARSER} TInterpEngine(S).IdxVarUser := X + 1; {$ENDIF}

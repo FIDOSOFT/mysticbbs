@@ -1,10 +1,19 @@
+Unit MPL_Compile;
+
 {$I M_OPS.PAS}
 
-Unit MPL_Compile;
+// OKAY SO iRECORD HAS DATAPTR ALLOCATED TO ITS FULL SIZE.
+// WHEN A RECORD VARIABLE (iRECORD) is DEFINED, EACH VAR
+// IS CREATED WITH A POINTER TO iRECORD.DATAPTR[OFFSET]
+// IRECORD THEN CAN BE REFERENCED AS EXPECTED.
+// ALSO NEED TO FIGURE OUT SIZEOF TOO
+
+// REMOVE VARTYPE2CHAR ETC AND USE ORDINAL
 
 Interface
 
 Uses
+  DOS,
   m_Strings,
   m_FileIO,
   MPL_FileIO;
@@ -60,6 +69,7 @@ Type
     ArrEnd   : Array[1..mplMaxArrayDem] of LongInt;
     NumVars  : Word;
     StrLen   : Byte;
+    VarSize  : LongInt;
   End;
 
   PRecordRec = ^TRecordRec;
@@ -67,6 +77,7 @@ Type
     Ident     : String[mplMaxIdentLen];
     Fields    : Array[1..mplMaxRecFields] of TParserVarInfoRec;
     NumFields : Word;
+//    RecSize   : Word;
   End;
 
   PConstRec = ^TConstRec;
@@ -135,7 +146,7 @@ Type
     Procedure ParseVariable     (VT: TIdentTypes);
     Procedure ParseArray        (VN: Word);
 
-    Procedure DefineRecord;
+    Procedure DefineRecordType;
     Procedure DefineVariable;
     Procedure DefineConst;
     Procedure DefineGoto;
@@ -537,7 +548,6 @@ Begin
                        If GetIdent(False) Then Begin
                          If IdentStr = 'include' Then Begin
                            Str := GetDirective;
-//                           getchar;
                            SavePosition;
                            InFile[CurFile].SavedInfo := UpdateInfo;
                            OpenSourceFile(Str);
@@ -1489,10 +1499,29 @@ Procedure TParserEngine.ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var I
     Until (UpdateInfo.ErrorType <> 0) Or (Not GetStr(tkw[wVarSep], False, False));
   End;
 
+  Function GetDataSize : LongInt;
+  Var
+    DimSize : LongInt;
+    OneSize : LongInt;
+    Count   : Byte;
+  Begin
+    OneSize := Info.VarSize;
+
+    If Info.ArrDem = 0 Then
+      DimSize := OneSize
+    Else Begin
+      DimSize := (Info.ArrEnd[Info.ArrDem] - Info.ArrStart[Info.ArrDem] + 1) * OneSize;
+
+      For Count := Pred(Info.ArrDem) DownTo 1 Do
+        DimSize := DimSize * (Info.ArrEnd[Count] - Info.ArrStart[Count] + 1);
+    End;
+
+    Result := DimSize;
+  End;
+
   Procedure ParseVarType;
   Var
     Count   : LongInt;
-    RecSize : LongInt;
   Begin
     GetIdent(False);
 
@@ -1536,14 +1565,14 @@ Procedure TParserEngine.ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var I
 
     If Info.vType <> iRecord Then Begin
       If Info.vType = iString Then
-        RecSize := Info.StrLen + 1
+        Info.VarSize := Info.StrLen + 1
       Else
-        RecSize := xVarSize(Info.vType);
+        Info.VarSize := GetVarSize(Info.vType);
 
       If Info.ArrDem > 0 Then
-        RecSize := RecSize * Info.ArrEnd[1] * Info.ArrDem;
+        Info.VarSize := GetDataSize;
 
-      If RecSize > mplMaxDataSize Then
+      If Info.VarSize > mplMaxDataSize Then
         Error (mpsDataTooBig, '');
     End;
   End;
@@ -1708,8 +1737,9 @@ End;
 Procedure TParserEngine.DefineVariable;
 Var
   Info    : TParserVarInfoRec;
-//  BaseRec : TParserVarInfoRec;
+  BaseRec : TParserVarInfoRec;
   Count   : LongInt;
+  RecSize : LongInt;
 Begin
   ParseVariableInfo(False, False, Info);
 
@@ -1717,29 +1747,32 @@ Begin
     OutString (Char(opTypeRec));
     OutWord   (RecData[Info.StrLen]^.NumFields);
 
-//    BaseRec := Info;
+    RecSize := 0;
 
-//    BaseRec.Prefix   := '';
-//    BaseRec.NumVars  := 1;
-//    BaseRec.StrLen   := 0;
-//    BaseRec.ArrDem   := 0;
+    For Count := 1 to RecData[Info.StrLen]^.NumFields Do
+      Inc (RecSize, RecData[Info.StrLen]^.Fields[Count].VarSize);
 
-    (*
-    writeln('baserecord');
-    writeln('   ident: ', baserec.ident[1]);
-    writeln('  prefix: ', baserec.prefix);
-    writeln('   vtype: ', baserec.vtype);
-    writeln('  arrdem: ', baserec.arrdem);
-    writeln(' numvars: ', baserec.numvars);
-    writeln('  strlen: ', baserec.strlen);
-    writeln('arrstart: ', baserec.arrstart[1]);
-    writeln('  arrend: ', baserec.arrend[1]);
-    *)
-//    CreateVariable(BaseRec);
+    If RecSize > mplMaxDataSize Then Begin
+      Error (mpsDataTooBig, '');
+      Exit;
+    End;
+
+    OutWord (RecSize);
+
+    BaseRec := Info;
+
+    BaseRec.Prefix  := '';
+    BaseRec.NumVars := 1;
+    BaseRec.StrLen  := 0;
+    BaseRec.ArrDem  := 0;
+
+    CreateVariable(BaseRec);
 
     // how do we support an array here with this terrible idea of
     // a record system?  redone data system is complete but i dont have
     // the drive to implement it into MPL just yet
+
+    // IRECORD should be whatever it is... same as anything.
 
     For Count := 1 to RecData[Info.StrLen]^.NumFields Do Begin
       RecData[Info.StrLen]^.Fields[Count].Prefix := Info.Prefix;
@@ -1754,7 +1787,7 @@ Var
   Count  : LongInt;
 Begin
   OutString (Char(opVarDeclare));
-  OutString (cGetVarChar(Info.vType));
+  OutString (VarType2Char(Info.vType));
 
   If (Info.vType = iString) and (Info.StrLen > 0) Then
     OutString(Char(opStrSize) + Char(opOpenNum) + strI2S(Info.StrLen) + Char(opCloseNum));
@@ -1773,8 +1806,6 @@ Begin
   For Count := 1 To Info.NumVars Do Begin
     Inc (CurVarNum);
     New (VarData[CurVarNum]);
-
-//    WriteLn ('Creating new var.  ID: ', CurVarID, '  Num: ', CurVarNum);
 
     With VarData[CurVarNum]^ Do Begin
       VarID := CurVarID;
@@ -1802,7 +1833,7 @@ Begin
   End;
 End;
 
-Procedure TParserEngine.DefineRecord;
+Procedure TParserEngine.DefineRecordType;
 // get rid of this crap kludge and do records the right way...
 Var
   Ident  : String;
@@ -1897,7 +1928,7 @@ Begin
       If Params + Info.NumVars >= mplMaxProcParams Then
         Error (mpsTooManyParams,'');
 
-      VarChar := cGetVarChar(Info.vType);
+      VarChar := VarType2Char(Info.vType);
 
       If Info.vType = iFile Then
         Error (mpsFileParamVar, '');
@@ -1958,7 +1989,7 @@ Begin
     Else
       Error (mpsUnknownIdent, IdentStr);
 
-    VarChar := cGetVarChar(VarType);
+    VarChar := VarType2Char(VarType);
 
     VarData[ProcVar]^.vType := VarType;
 
@@ -1997,7 +2028,7 @@ Begin
 
         RV := FindVariable(IdentStr);
 
-        If (VarData[RV]^.vType <> cVarType(VarData[VN]^.Params[Count])) And (VarData[VN]^.Params[Count] <> '*') Then
+        If (VarData[RV]^.vType <> Char2VarType(VarData[VN]^.Params[Count])) And (VarData[VN]^.Params[Count] <> '*') Then
           Error (mpsTypeMismatch, '');
 
 //        OutString   (Char(opVariable)); // i dont think we need this
@@ -2007,11 +2038,11 @@ Begin
         // if = '*' and type iString then...do the string index
       End Else Begin
 // use setvariable here??  cant cuz ifile isnt processed in setvariable...
-        If cVarType(VarData[VN]^.Params[Count]) in vNums  Then ParseVarNumber  Else
-        If cVarType(VarData[VN]^.Params[Count]) = iString Then ParseVarString  Else
-        If cVarType(VarData[VN]^.Params[Count]) = iChar   Then ParseVarChar    Else
-        If cVarType(VarData[VN]^.Params[Count]) = iBool   Then ParseVarBoolean Else
-        If cVarType(VarData[VN]^.Params[Count]) = iFile   Then ParseVarFile;
+        If Char2VarType(VarData[VN]^.Params[Count]) in vNums  Then ParseVarNumber  Else
+        If Char2VarType(VarData[VN]^.Params[Count]) = iString Then ParseVarString  Else
+        If Char2VarType(VarData[VN]^.Params[Count]) = iChar   Then ParseVarChar    Else
+        If Char2VarType(VarData[VN]^.Params[Count]) = iBool   Then ParseVarBoolean Else
+        If Char2VarType(VarData[VN]^.Params[Count]) = iFile   Then ParseVarFile;
       End;
 
       OutString(Char(opParamSep));
@@ -2516,7 +2547,7 @@ Begin
       DefineVariable;
     End Else
     If GetStr(tkw[wType], False, True) Then Begin
-      DefineRecord;
+      DefineRecordType;
       GotVar   := False;
       GotConst := False;
     End Else

@@ -933,7 +933,7 @@ Begin
 
   NextChar;
 
-  VarType  := cVarType(Ch);
+  VarType  := Char2VarType(Ch);
 
   NextChar;
 
@@ -979,7 +979,7 @@ Begin
           If VarType = iString Then
             VarSize := StrSize
           Else
-            VarSize := xVarSize(VarType);
+            VarSize := GetVarSize(VarType);
 
           Kill      := True;
           ArrPos    := ArrayPos;
@@ -1143,6 +1143,7 @@ Begin
           'l' : Param[Count].L := Trunc(EvaluateNumber);
           'r' : Param[Count].R := EvaluateNumber;
           'o' : Param[Count].O := EvaluateBoolean;
+          'x' : //getmem, set dataptr to record data, but we need to free at end!;
         End;
       End;
 
@@ -1171,7 +1172,7 @@ Begin
 
       With VarData[CurVarNum]^ Do Begin
         VarID     := VarData[VarNum]^.pID[Count];
-        vType     := cVarType(VarData[VarNum]^.Params[Count]);
+        vType     := Char2VarType(VarData[VarNum]^.Params[Count]);
         NumParams := 0;
         ProcPos   := 0;
         ArrPos    := 0;
@@ -1179,7 +1180,7 @@ Begin
         If vType = iString Then
           VarSize := Param[Count].vSize
         Else
-          VarSize := xVarSize(vType);
+          VarSize := GetVarSize(vType);
 
         DataSize := GetDataSize(CurVarNum);
 
@@ -1205,6 +1206,7 @@ Begin
             'l' : LongInt(Pointer(Data)^)  := Param[Count].L;
             'r' : Real(Pointer(Data)^)     := Param[Count].R;
             'o' : Boolean(Pointer(Data)^)  := Param[Count].O;
+            'x' : ;
           end;
 
           Kill := True;
@@ -1763,8 +1765,8 @@ Begin
   If Ch = Char(opProcType) Then Begin
     NextChar;
 
-    VarData[CurVarNum]^.vType   := cVarType(Ch);
-    VarData[CurVarNum]^.VarSize := xVarSize(VarData[CurVarNum]^.vType);
+    VarData[CurVarNum]^.vType   := Char2VarType(Ch);
+    VarData[CurVarNum]^.VarSize := GetVarSize(VarData[CurVarNum]^.vType);
   End Else
     PrevChar;
 
@@ -1999,24 +2001,33 @@ Begin
   Inc (CurRecNum);
   New (RecData[CurRecNum]);
 
-  RecData[CurRecNum]^.RecStart  := CurVarNum + 1;
+  // Holds ID info for all variables in this record
+
+  RecData[CurRecNum]^.RecStart  := CurVarNum + 2; {+1 is base}
   RecData[CurRecNum]^.NumFields := W;
 
-//  DefineVariable; // base record variable
+  NextWord;
 
-  RecSize := 0;
+  RecSize := W;
+
+  NextChar; // opVarDeclare
+
+  DefineVariable; // Base var
+
+  // get mem the dataptr for recsize
+  // THIS IS WHERE YOU LEFT OFF LAST TIME PICK IT UP HERE
+  // TURN DEBUGGING ON SO WE CATCH MEMORY LEAKS NOW
 
   For Count := 1 to RecData[CurRecNum]^.NumFields Do Begin
     NextChar;
 
-    Inc (RecSize, DefineVariable);
+    Inc (RecSize, DefineVariable);  // create myrecvar.element ID
+    // DefineVariable should have a RecAllocate that is NIL UNLESS
+    // it is a Record element.  In that case a Pointer to DATAPTR[OFFSET]
+    // is passed and no getmem is done
   End;
 
-  // now we need to build something to create a record block of data
-  // and to dispose it based on the variables
-  // this method will not work for records in records or arrays of records
-  // and really should be re-done.  the problem is, the evaluators will
-  // take a lot of changes to suport iRecord correctly.
+//  session.io.outfull('Record vars: ' + strI2S(RecData[CurRecNum]^.NumFields) + ' size: ' + strI2S(RecSize));
 End;
 
 Function TInterpEngine.ExecuteBlock (StartVar, StartRec: Word) : Byte;

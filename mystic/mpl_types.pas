@@ -8,10 +8,12 @@ Type
     iWord,
     iInteger,
     iLongInt,
+    iCardinal,
     iReal,
     iBool,
     iFile,
-    iRecord
+    iRecord,
+    iPointer
   );
 
   TTokenOpsRec  = (
@@ -75,7 +77,7 @@ Type
   );
 
 Const
-  mplVer           = '110';
+  mplVer           = '11?';
   mplVersion       = '[MPX ' + mplVer +']' + #26;
   mplVerLength     = 10;
   mplExtSource     = '.mps';
@@ -174,7 +176,8 @@ Const
      tkv : Array[TIdentTypes] of String[mplMaxIdentLen] = (
              'none',            'string',         'char',       'byte',
              'shortint',        'word',           'integer',    'longint',
-             'real',            'boolean',        'file',       'record');
+             'cardinal',        'real',           'boolean',    'file',
+             'record',          'pointer');
 
 Type
      TTokenWordType = Array[TTokenWordRec] of String[mplMaxIdentLen];
@@ -196,7 +199,7 @@ Const
              ':',               'function',       'array',      'case',
              'of',              '..',             'type',       'const',
              'break',           'continue',       'uses',       'exit',
-             '$',               'and',            'or',         'xor',  
+             '$',               'and',            'or',         'xor',
              'shl',             'shr'
            );
 
@@ -216,7 +219,7 @@ Const
              ':',               'func',           'array',      'switch',
              'of',              '..',             'type',       'const',
              'break',           'continue',       'uses',       'exit',
-             '$',               '&',              '|',          'xor', 
+             '$',               '&',              '|',          'xor',
              '<<',              '>>'
            );
 
