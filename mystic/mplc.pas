@@ -19,15 +19,17 @@
 //
 // ====================================================================
 
-{$I m_OPS.PAS}
-
 Program MPLC;
 
+{$I M_OPS.PAS}
+
 Uses
+  DOS,
   m_Output,
   m_Strings,
-  Dos,
   MPL_Compile;
+
+{$I RECORDS.PAS}
 
 Var
   SavedX   : Byte;
@@ -63,7 +65,7 @@ Begin
   Console  := TOutput.Create(True);
 
   Console.WriteLine (#13#10'Mystic BBS Programming Language Compiler Version ' + mysVersion);
-  Console.WriteLine ('Copyright (C) 1997-2011 By James Coyle.  All Rights Reserved.'#13#10);
+  Console.WriteLine ('Copyright (C) ' + mysCopyYear + ' By James Coyle.  All Rights Reserved.'#13#10);
 
   If ParamCount = 0 Then
     WriteLn ('MPLC [filename] or MPLC -ALL')
