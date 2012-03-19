@@ -225,7 +225,7 @@ Const
 
   {$ENDIF}
 
-  vNums    : Set of TIdentTypes = [iByte, iShort, iWord, iInteger, iLongInt, iReal];
+  vNums    : Set of TIdentTypes = [iByte, iShort, iWord, iInteger, iLongInt, iCardinal, iReal];
   vStrings : Set of TIdentTypes = [iChar, iString];
 
 Type

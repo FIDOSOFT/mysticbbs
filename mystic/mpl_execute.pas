@@ -70,7 +70,7 @@ Type
     Procedure SetNumber   (VN: Word; R: Real; Var A: TArrayInfo);
     Procedure SetVariable (VarNum: Word);
 
-    Function  DefineVariable : LongInt;
+    Function  DefineVariable   (DataStart: Pointer; RecSize: Word) : LongInt;
     Procedure DefineProcedure;
     Procedure DefineRecord;
 
@@ -919,7 +919,7 @@ Begin
   End;
 End;
 
-Function TInterpEngine.DefineVariable : LongInt;
+Function TInterpEngine.DefineVariable (DataStart: Pointer; RecSize: Word) : LongInt;
 Var
   VarType   : TIdentTypes;
   NumVars   : Word;
@@ -933,12 +933,12 @@ Begin
 
   NextChar;
 
-  VarType  := Char2VarType(Ch);
+  VarType := Char2VarType(Ch);
 
   NextChar;
 
-  StrSize   := 256;
-  ArrayPos  := 0;
+  StrSize  := 256;
+  ArrayPos := 0;
 
   For Count := 1 To mplMaxArrayDem Do ArrayData[Count] := 1;
 
@@ -975,20 +975,34 @@ Begin
           vType     := VarType;
           NumParams := 0;
           ProcPos   := 0;
-
-          If VarType = iString Then
-            VarSize := StrSize
-          Else
-            VarSize := GetVarSize(VarType);
-
-          Kill      := True;
           ArrPos    := ArrayPos;
           ArrDim    := ArrayData;
-          DataSize  := GetDataSize(CurVarNum);
-          Result    := DataSize;
 
-          GetMem   (Data, DataSize);
-          FillChar (Data^, DataSize, 0);
+          Case VarType of
+            iString : Begin
+                        VarSize  := StrSize;
+                        DataSize := GetDataSize(CurVarNum);
+                      End;
+            iRecord : Begin
+                        VarSize  := RecSize;
+                        DataSize := RecSize;
+                      End;
+          Else
+            VarSize  := GetVarSize(VarType);
+            DataSize := GetDataSize(CurVarNum);
+          End;
+
+          Result := DataSize;
+
+          If DataStart = NIL Then Begin
+            GetMem   (Data, DataSize);
+            FillChar (Data^, DataSize, 0);
+
+            Kill := True;
+          End Else Begin
+            Data := DataStart;
+            Kill := False;
+          End;
         End;
     End;
 
@@ -1206,8 +1220,8 @@ Begin
             'l' : LongInt(Pointer(Data)^)  := Param[Count].L;
             'r' : Real(Pointer(Data)^)     := Param[Count].R;
             'o' : Boolean(Pointer(Data)^)  := Param[Count].O;
-            'x' : ;
-          end;
+            'x' : // still need to redo all of this nonsense;
+          End;
 
           Kill := True;
         End;
@@ -1972,9 +1986,6 @@ Begin
 
   Ok := EvaluateBoolean;
 
-  //tbbscore(owner).systemlog('if statement');
-  //if ok then tbbscore(owner).systemlog('is true') else tbbscore(owner).systemlog('is false');
-
   If Ok Then
     Result := ExecuteBlock(CurVarNum, CurRecNum)
   Else
@@ -2012,22 +2023,15 @@ Begin
 
   NextChar; // opVarDeclare
 
-  DefineVariable; // Base var
+  DefineVariable (NIL, RecSize); // Base record identifier
 
-  // get mem the dataptr for recsize
-  // THIS IS WHERE YOU LEFT OFF LAST TIME PICK IT UP HERE
-  // TURN DEBUGGING ON SO WE CATCH MEMORY LEAKS NOW
+  RecSize := 1;
 
   For Count := 1 to RecData[CurRecNum]^.NumFields Do Begin
-    NextChar;
+    NextChar;  // opVarDeclare
 
-    Inc (RecSize, DefineVariable);  // create myrecvar.element ID
-    // DefineVariable should have a RecAllocate that is NIL UNLESS
-    // it is a Record element.  In that case a Pointer to DATAPTR[OFFSET]
-    // is passed and no getmem is done
+    Inc (RecSize, DefineVariable(@TStack(VarData[RecData[CurRecNum]^.RecStart - 1]^.Data^)[RecSize], 0));
   End;
-
-//  session.io.outfull('Record vars: ' + strI2S(RecData[CurRecNum]^.NumFields) + ' size: ' + strI2S(RecSize));
 End;
 
 Function TInterpEngine.ExecuteBlock (StartVar, StartRec: Word) : Byte;
@@ -2059,7 +2063,7 @@ Begin
                        Self.ExecuteBlock(CurVarNum, CurRecNum);
                      End;
 {1}   opBlockClose : Break;
-{2}   opVarDeclare : DefineVariable;
+{2}   opVarDeclare : DefineVariable (NIL, 0);
 {12}  opSetVar     : Begin
                        NextWord;
                        SetVariable(FindVariable(W));
@@ -2069,6 +2073,7 @@ Begin
 {21}  opFor        : StatementForLoop;
 {34}  opIf         : Begin
                        Result := StatementIfThenElse;
+
                        If Result > 0 Then Begin
                          MoveToPos(BlockStart + BlockSize);
                          Break;
@@ -2083,6 +2088,7 @@ Begin
 {49}  opHalt       : Done := True;
 {50}  opCase       : Begin
                        Result := StatementCase;
+
                        If Result > 0 Then Begin
                          MoveToPos(BlockStart + BlockSize);
                          Break;
@@ -2120,6 +2126,13 @@ Begin
   Until (ErrNum <> 0) or Done or DataFile^.EOF;
 
   {$IFDEF LOGGING}
+    Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock KILL REC: ' + strI2S(CurRecNum) + ' to ' + strI2S(StartRec + 1));
+  {$ENDIF}
+
+  For Count := CurRecNum DownTo StartRec + 1 Do
+    Dispose(RecData[Count]);
+
+  {$IFDEF LOGGING}
     Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock KILL VAR: ' + strI2S(CurVarNum) + ' to ' + strI2S(StartVar + 1));
   {$ENDIF}
 
@@ -2142,15 +2155,6 @@ Begin
 
     Dispose (VarData[Count]);
   End;
-
-  {$IFDEF LOGGING}
-    Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock KILL REC: ' + strI2S(CurRecNum) + ' to ' + strI2S(StartRec + 1));
-  {$ENDIF}
-
-  For Count := CurRecNum DownTo StartRec + 1 Do
-    Dispose(RecData[Count]);
-    // dispose record data block?  or just calc it whenever there is an
-    // assignment or filewrite, etc?
 
   CurVarNum := StartVar;
   CurRecNum := StartRec;
