@@ -1600,6 +1600,10 @@ Begin
             TempStr := strStripPipe(Param[1].S);
             Store (TempStr, 256);
           End;
+    89  : Begin // neeed to figure out SIZEOF.. time to redo this PARAM garbage finally
+          End;
+    90  : FillChar (Param[1].vData^, Param[2].L, Param[3].C);
+          // should check vDataSize once we get that figured out
     500 : Begin
             TempStr := Session.io.GetInput(Param[1].B, Param[2].B, Param[3].B, Param[4].S);
             Store (TempStr, 256);

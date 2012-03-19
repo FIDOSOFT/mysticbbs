@@ -240,6 +240,8 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'textcolor',      {$ENDIF} 'b',      iNone);    // 86
           AddProc    ({$IFDEF MPLPARSER} 'addslash',       {$ENDIF} 's',      iString);  // 87
           AddProc    ({$IFDEF MPLPARSER} 'strippipe',      {$ENDIF} 's',      iString);  // 88
+          AddProc    ({$IFDEF MPLPARSER} 'sizeof',         {$ENDIF} '*',      iLongInt); // 89
+          AddProc    ({$IFDEF MPLPARSER} 'fillchar',       {$ENDIF} '*lc',    iNone);    // 90
 
           IW := 500; // BEGIN BBS-SPECIFIC STUFF
 
