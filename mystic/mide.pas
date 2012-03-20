@@ -55,10 +55,11 @@ Const
   colTextKeyword = 31;  { 31 }
   colTextComment = 23;  { 23 }
   colTextNormal  = 23;  { 30 }
+
   colEditBorder  = 25;  { 31 }
   colEditHeader  = 31;  { 31 }
   colEditStatus  = 19;  { 19 }
-  colEditPosBar  = 19;  { 49 }
+  colEditPosBar  = 9 + 1 * 16;
 
 Type
   PEditorWindow = ^TEditorWindow;
@@ -303,7 +304,8 @@ Begin
 
   Box.Open (1, mideTopY, 80, mideBotY);
 
-  For A := 2 to 23 Do Console.WriteXY (80, A, colEditStatus, '°');
+  For A := mideTopY + 1 to mideBotY - 1 Do
+    Console.WriteXY (80, A, colEditStatus, '°');
 
   DrawPage;
 End;
@@ -325,13 +327,16 @@ Begin
     Reset  (F, 1);
 
     If IoResult = 0 Then Begin
-      GetFTime (F, Time);
+      GetFTime   (F, Time);
       UnpackTime (Time, DT);
+
       Time := FileSize(F);
+
       Close (F);
     End;
 
     Str := strZero(DT.Month) + '/' + strZero(DT.Day) + '/' + strI2S(DT.Year) + ' ' + strZero(DT.Hour) + ':' + strZero(DT.Min);
+
     Console.WriteXY (8, 19, 120, strPadL(strComma(Time) + ' ' + Str, 31, ' '));
   End;
 End;
@@ -566,14 +571,14 @@ End;
 
 Procedure DrawStatus;
 Begin
-  Console.WriteXY (1, 25, 112, ' MIDE v' + mideVersion + ' ³' + strRep(' ', 55) + '³ ESC/Menu ');
+  Console.WriteXY (1, mideBotY + 1, 112, ' MIDE v' + mideVersion + ' ³' + strRep(' ', 55) + '³ ESC/Menu ');
 End;
 
 Procedure FillScreen;
 Var
   Count : Byte;
 Begin
-  For Count := 1 to 24 Do
+  For Count := 1 to mideBotY Do
     Console.WriteXY (1, Count, 8, strRep('°', 80));
 
   DrawStatus;
@@ -1536,6 +1541,7 @@ Begin
   Form.Free;
 
   Console.PutScreenImage(Image);
+
   DrawStatus;
 End;
 
@@ -1546,6 +1552,7 @@ Var
   FN  : String;
 Begin
   GetDir (0, StartDir);
+
   StartDir := StartDir + PathSep;
 
   Console := TOutput.Create(True);
@@ -1574,8 +1581,7 @@ Begin
   Repeat
     If CurWinNum > 0 Then Begin
       With CurWin[CurWinNum]^ Do Begin
-        Console.WriteXY (6, 24, colEditBorder, strPadL(strI2S(CurLine), 4, 'Í') + ':' + strPadR(strI2S(CurX + ScrlX), 3, 'Í'));
-
+        Console.WriteXY ( 6, mideBotY, colEditBorder, strPadL(strI2S(CurLine), 4, 'Í') + ':' + strPadR(strI2S(CurX + ScrlX), 3, 'Í'));
         Console.WriteXY (80, BarPos, colEditStatus, '°');
 
         If CurLine = 1 Then
