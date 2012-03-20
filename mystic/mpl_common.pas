@@ -45,17 +45,18 @@ Function GetVarSize (T: TIdentTypes) : Word;
 Begin
   Case T of
     iRecord,
-    iNone    : Result := 0;
-    iString  : Result := 256;
-    iChar    : Result := 1;
-    iByte    : Result := 1;
-    iShort   : Result := 1;
-    iWord    : Result := 2;
-    iInteger : Result := 2;
-    iLongInt : Result := 4;
-    iReal    : Result := SizeOf(Real); // {$IFDEF FPC}8{$ELSE}6{$ENDIF};
-    iBool    : Result := 1;
-    iFile    : Result := SizeOf(File); // was 128;
+    iNone     : Result := 0;
+    iString   : Result := 256;
+    iChar     : Result := 1;
+    iByte     : Result := 1;
+    iShort    : Result := 1;
+    iWord     : Result := 2;
+    iInteger  : Result := 2;
+    iLongInt  : Result := 4;
+    iCardinal : Result := 4;
+    iReal     : Result := SizeOf(Real); // {$IFDEF FPC}8{$ELSE}6{$ENDIF};
+    iBool     : Result := 1;
+    iFile     : Result := SizeOf(File); // was 128;
   End;
 End;
 

@@ -70,6 +70,7 @@ Type
     NumVars  : Word;
     StrLen   : Byte;
     VarSize  : LongInt;
+    DataSize : LongInt;
   End;
 
   PRecordRec = ^TRecordRec;
@@ -133,6 +134,7 @@ Type
     Function  FindConst         (Str: String) : Integer;
     Function  FindIdent         (Str: String) : Boolean;
  // CODE PROCESSING
+    Function  GetDataSize       (Info: TParserVarInfoRec) : LongInt;
     Procedure CreateVariable    (Var Info: TParserVarInfoRec);
     Procedure ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var Info: TParserVarInfoRec);
     Procedure ParseIdent;
@@ -1348,6 +1350,7 @@ Procedure TParserEngine.ParseVarBoolean;
         iWord,
         iInteger,
         iLongInt,
+        iCardinal,
         iReal     : ParseVarNumber;
         iBool     : NewBooleanCrap;
       Else
@@ -1432,6 +1435,26 @@ Begin
   If VT = iFile   Then Error(mpsInStatement,'');
 End;
 
+Function TParserEngine.GetDataSize (Info: TParserVarInfoRec) : LongInt;
+Var
+  DimSize : LongInt;
+  OneSize : LongInt;
+  Count   : Byte;
+Begin
+  OneSize := Info.VarSize;
+
+  If Info.ArrDem = 0 Then
+    DimSize := OneSize
+  Else Begin
+    DimSize := (Info.ArrEnd[Info.ArrDem] - Info.ArrStart[Info.ArrDem] + 1) * OneSize;
+
+    For Count := Pred(Info.ArrDem) DownTo 1 Do
+      DimSize := DimSize * (Info.ArrEnd[Count] - Info.ArrStart[Count] + 1);
+  End;
+
+  Result := DimSize;
+End;
+
 Procedure TParserEngine.ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var Info: TParserVarInfoRec);
 
   Function ParseNum : LongInt;
@@ -1499,26 +1522,6 @@ Procedure TParserEngine.ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var I
     Until (UpdateInfo.ErrorType <> 0) Or (Not GetStr(tkw[wVarSep], False, False));
   End;
 
-  Function GetDataSize : LongInt;
-  Var
-    DimSize : LongInt;
-    OneSize : LongInt;
-    Count   : Byte;
-  Begin
-    OneSize := Info.VarSize;
-
-    If Info.ArrDem = 0 Then
-      DimSize := OneSize
-    Else Begin
-      DimSize := (Info.ArrEnd[Info.ArrDem] - Info.ArrStart[Info.ArrDem] + 1) * OneSize;
-
-      For Count := Pred(Info.ArrDem) DownTo 1 Do
-        DimSize := DimSize * (Info.ArrEnd[Count] - Info.ArrStart[Count] + 1);
-    End;
-
-    Result := DimSize;
-  End;
-
   Procedure ParseVarType;
   Var
     Count   : LongInt;
@@ -1530,20 +1533,22 @@ Procedure TParserEngine.ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var I
     IdentStr := strLower(IdentStr);
 
     // separate function?
-    If IdentStr = tkv[iString ] Then Info.vType := iString  Else
-    If IdentStr = tkv[iChar   ] Then Info.vType := iChar    Else
-    If IdentStr = tkv[iByte   ] Then Info.vType := iByte    Else
-    If IdentStr = tkv[iShort  ] Then Info.vType := iShort   Else
-    If IdentStr = tkv[iWord   ] Then Info.vType := iWord    Else
-    If IdentStr = tkv[iInteger] Then Info.vType := iInteger Else
-    If IdentStr = tkv[iLongInt] Then Info.vType := iLongInt Else
-    If IdentStr = tkv[iReal   ] Then Info.vType := iReal    Else
-    If IdentStr = tkv[iBool   ] Then Info.vType := iBool    Else
-    If IdentStr = tkv[iFile   ] Then Begin
+    If IdentStr = tkv[iString  ] Then Info.vType := iString   Else
+    If IdentStr = tkv[iChar    ] Then Info.vType := iChar     Else
+    If IdentStr = tkv[iByte    ] Then Info.vType := iByte     Else
+    If IdentStr = tkv[iShort   ] Then Info.vType := iShort    Else
+    If IdentStr = tkv[iWord    ] Then Info.vType := iWord     Else
+    If IdentStr = tkv[iInteger ] Then Info.vType := iInteger  Else
+    If IdentStr = tkv[iLongInt ] Then Info.vType := iLongInt  Else
+    If IdentStr = tkv[iCardinal] Then Info.vType := iCardinal Else
+    If IdentStr = tkv[iReal    ] Then Info.vType := iReal     Else
+    If IdentStr = tkv[iBool    ] Then Info.vType := iBool     Else
+    If IdentStr = tkv[iFile    ] Then Begin
       If IsRec Then Error(mpsSyntaxError, 'Cannot define file in record');
       Info.vType := iFile;
     End Else Begin
       Count := FindRecord(IdentStr);
+
       If Count = 0 Then
         Error(mpsUnknownIdent, IdentStr)
       Else If IsRec Then
@@ -1552,6 +1557,8 @@ Procedure TParserEngine.ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var I
         Info.vType  := iRecord;
         Info.Prefix := Info.Ident[1] + '.';
         Info.StrLen := Count;
+
+        // this crap needs to go?
       End;
     End;
 
@@ -1570,7 +1577,7 @@ Procedure TParserEngine.ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var I
         Info.VarSize := GetVarSize(Info.vType);
 
       If Info.ArrDem > 0 Then
-        Info.VarSize := GetDataSize;
+        Info.VarSize := GetDataSize(Info);
 
       If Info.VarSize > mplMaxDataSize Then
         Error (mpsDataTooBig, '');
@@ -1739,7 +1746,6 @@ Var
   Info    : TParserVarInfoRec;
   BaseRec : TParserVarInfoRec;
   Count   : LongInt;
-  RecSize : LongInt;
 Begin
   ParseVariableInfo(False, False, Info);
 
@@ -1747,32 +1753,29 @@ Begin
     OutString (Char(opTypeRec));
     OutWord   (RecData[Info.StrLen]^.NumFields);
 
-    RecSize := 0;
+    BaseRec := Info;
+
+    BaseRec.VarSize  := 0;
+    BaseRec.ArrDem   := Info.ArrDem;
+    BaseRec.ArrStart := Info.ArrStart;
+    BaseRec.ArrEnd   := Info.ArrEnd;
+    BaseRec.Prefix   := '';
+    BaseRec.NumVars  := 1;
+    BaseRec.StrLen   := 0;
 
     For Count := 1 to RecData[Info.StrLen]^.NumFields Do
-      Inc (RecSize, RecData[Info.StrLen]^.Fields[Count].VarSize);
+      Inc (BaseRec.VarSize, RecData[Info.StrLen]^.Fields[Count].VarSize);
 
-    If RecSize > mplMaxDataSize Then Begin
+    If BaseRec.VarSize > mplMaxDataSize Then Begin
       Error (mpsDataTooBig, '');
       Exit;
     End;
 
-    OutWord (RecSize);
+    BaseRec.DataSize := GetDataSize(BaseRec);
 
-    BaseRec := Info;
-
-    BaseRec.Prefix  := '';
-    BaseRec.NumVars := 1;
-    BaseRec.StrLen  := 0;
-    BaseRec.ArrDem  := 0;
+    OutWord (BaseRec.DataSize);
 
     CreateVariable(BaseRec);
-
-    // how do we support an array here with this terrible idea of
-    // a record system?  redone data system is complete but i dont have
-    // the drive to implement it into MPL just yet
-
-    // IRECORD should be whatever it is... same as anything.
 
     For Count := 1 to RecData[Info.StrLen]^.NumFields Do Begin
       RecData[Info.StrLen]^.Fields[Count].Prefix := Info.Prefix;
@@ -1797,6 +1800,7 @@ Begin
   Else Begin
     OutString (Char(opArrDef));
     OutWord   (Info.ArrDem);
+
     For Count := 1 to Info.ArrDem Do
       OutString (Char(opOpenNum) + strI2S(Info.ArrEnd[Count]) + Char(opCloseNum));
   End;
@@ -1975,16 +1979,17 @@ Begin
     IdentStr := strLower(IdentStr);
 
     // make this into a separate function???
-    If IdentStr = tkv[iString ] Then VarType := iString  Else
-    If IdentStr = tkv[iChar   ] Then VarType := iChar    Else
-    If IdentStr = tkv[iByte   ] Then VarType := iByte    Else
-    If IdentStr = tkv[iShort  ] Then VarType := iShort   Else
-    If IdentStr = tkv[iWord   ] Then VarType := iWord    Else
-    If IdentStr = tkv[iInteger] Then VarType := iInteger Else
-    If IdentStr = tkv[iLongInt] Then VarType := iLongInt Else
-    If IdentStr = tkv[iReal   ] Then VarType := iReal    Else
-    If IdentStr = tkv[iBool   ] Then VarType := iBool    Else
-    If IdentStr = tkv[iFile   ] Then
+    If IdentStr = tkv[iString  ] Then VarType := iString   Else
+    If IdentStr = tkv[iChar    ] Then VarType := iChar     Else
+    If IdentStr = tkv[iByte    ] Then VarType := iByte     Else
+    If IdentStr = tkv[iShort   ] Then VarType := iShort    Else
+    If IdentStr = tkv[iWord    ] Then VarType := iWord     Else
+    If IdentStr = tkv[iInteger ] Then VarType := iInteger  Else
+    If IdentStr = tkv[iLongInt ] Then VarType := iLongInt  Else
+    If IdentStr = tkv[iCardinal] Then VarType := iCardinal Else
+    If IdentStr = tkv[iReal    ] Then VarType := iReal     Else
+    If IdentStr = tkv[iBool    ] Then VarType := iBool     Else
+    If IdentStr = tkv[iFile    ] Then
       Error (mpsBadFunction, '')
     Else
       Error (mpsUnknownIdent, IdentStr);
@@ -2038,6 +2043,7 @@ Begin
         // if = '*' and type iString then...do the string index
       End Else Begin
 // use setvariable here??  cant cuz ifile isnt processed in setvariable...
+// need irecord
         If Char2VarType(VarData[VN]^.Params[Count]) in vNums  Then ParseVarNumber  Else
         If Char2VarType(VarData[VN]^.Params[Count]) = iString Then ParseVarString  Else
         If Char2VarType(VarData[VN]^.Params[Count]) = iChar   Then ParseVarChar    Else
@@ -2204,6 +2210,7 @@ Begin
       iWord,
       iInteger,
       iLongInt,
+      iCardinal,
       iReal  : Repeat
                  ParseVarNumber;
 

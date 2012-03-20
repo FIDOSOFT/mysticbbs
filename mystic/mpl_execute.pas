@@ -418,24 +418,26 @@ End;
 Function TInterpEngine.GetNumber(VN: Word; Var A: TArrayInfo) : Real;
 Begin
   Case VarData[VN]^.vType of
-    iByte    : Result := Byte(GetDataPtr(VN, A)^);
-    iShort   : Result := ShortInt(GetDataPtr(VN, A)^);
-    iWord    : Result := Word(GetDataPtr(VN, A)^);
-    iInteger : Result := Integer(GetDataPtr(VN, A)^);
-    iLongInt : Result := LongInt(GetDataPtr(VN, A)^);
-    iReal    : Result := Real(GetDataPtr(VN, A)^);
+    iByte     : Result := Byte(GetDataPtr(VN, A)^);
+    iShort    : Result := ShortInt(GetDataPtr(VN, A)^);
+    iWord     : Result := Word(GetDataPtr(VN, A)^);
+    iInteger  : Result := Integer(GetDataPtr(VN, A)^);
+    iLongInt  : Result := LongInt(GetDataPtr(VN, A)^);
+    iCardinal : Result := Cardinal(GetDataPtr(VN, A)^);
+    iReal     : Result := Real(GetDataPtr(VN, A)^);
   End;
 End;
 
 Function TInterpEngine.RecastNumber (Var Num; T: TIdentTypes) : Real;
 Begin
   Case T of
-    iByte    : Result := Byte(Num);
-    iShort   : Result := ShortInt(Num);
-    iWord    : Result := Word(Num);
-    iInteger : Result := Integer(Num);
-    iLongInt : Result := LongInt(Num);
-    iReal    : Result := Real(Num);
+    iByte     : Result := Byte(Num);
+    iShort    : Result := ShortInt(Num);
+    iWord     : Result := Word(Num);
+    iInteger  : Result := Integer(Num);
+    iLongInt  : Result := LongInt(Num);
+    iCardinal : Result := Cardinal(Num);
+    iReal     : Result := Real(Num);
   End;
 End;
 
@@ -511,6 +513,7 @@ Var
 
         While CheckChar = '^' Do Begin
           ParseNext;
+
           If Result <> 0 Then
             Result := Exp(Ln(Abs(Result)) * SignedOp)
           Else
@@ -520,14 +523,18 @@ Var
 
     Begin
       Result := Power;
+
       While CheckChar in ['%','*','/'] Do Begin
         OpChar := CheckChar;
+
         ParseNext;
+
         Case OpChar of
           '%' : Result := Trunc(Result) MOD Trunc(Power);
           '*' : Result := Result * Power;
           '/' : Begin
                   PowerRes := Power;
+
                   If PowerRes = 0 Then
                     Error (mpxDivisionByZero, '')
                   Else
@@ -542,7 +549,9 @@ Var
 
     While CheckChar in ['+','-','&','|','@','<','>'] Do Begin
       OpChar := CheckChar;
+
       ParseNext;
+
       Case OpChar of
         '+' : Result := Result + MultiplyDivide;
         '-' : Result := Result - MultiplyDivide;
@@ -554,9 +563,12 @@ Var
       End;
     End;
   End;
+
 Begin
   NextChar;
+
   ParseNext;
+
   Result := AddSubtract;
 End;
 
@@ -872,39 +884,41 @@ Begin
 
   Case VarData[VarNum]^.vType of
     iChar,
-    iString: Begin
-               NextChar;
+    iString   : Begin
+                  NextChar;
 
-               If Ch = Char(opStrArray) Then Begin
-                 TempStr         := String(GetDataPtr(VarNum, ArrayData)^);
-                 Target          := Byte(Trunc(EvaluateNumber));
-                 TempStr[Target] := EvaluateString[1];
+                  If Ch = Char(opStrArray) Then Begin
+                    TempStr         := String(GetDataPtr(VarNum, ArrayData)^);
+                    Target          := Byte(Trunc(EvaluateNumber));
+                    TempStr[Target] := EvaluateString[1];
 
-                 SetString (VarNum, ArrayData, TempStr);
-               End Else Begin
-                 PrevChar;
-                 SetString (VarNum, ArrayData, EvaluateString);
-               End;
-             End;
-    iByte    : Byte(GetDataPtr(VarNum, ArrayData)^)     := Trunc(EvaluateNumber);
-    iShort   : ShortInt(GetDataPtr(VarNum, ArrayData)^) := Trunc(EvaluateNumber);
-    iWord    : Word(GetDataPtr(VarNum, ArrayData)^)     := Trunc(EvaluateNumber);
-    iInteger : Integer(GetDataPtr(VarNum, ArrayData)^)  := Trunc(EvaluateNumber);
-    iLongInt : LongInt(GetDataPtr(VarNum, ArrayData)^)  := Trunc(EvaluateNumber);
-    iReal    : Real(GetDataPtr(VarNum, ArrayData)^)     := EvaluateNumber;
-    iBool    : ByteBool(GetDataPtr(VarNum, ArrayData)^) := EvaluateBoolean;
+                    SetString (VarNum, ArrayData, TempStr);
+                  End Else Begin
+                    PrevChar;
+                    SetString (VarNum, ArrayData, EvaluateString);
+                  End;
+                End;
+    iByte     : Byte(GetDataPtr(VarNum, ArrayData)^)     := Trunc(EvaluateNumber);
+    iShort    : ShortInt(GetDataPtr(VarNum, ArrayData)^) := Trunc(EvaluateNumber);
+    iWord     : Word(GetDataPtr(VarNum, ArrayData)^)     := Trunc(EvaluateNumber);
+    iInteger  : Integer(GetDataPtr(VarNum, ArrayData)^)  := Trunc(EvaluateNumber);
+    iLongInt  : LongInt(GetDataPtr(VarNum, ArrayData)^)  := Trunc(EvaluateNumber);
+    iCardinal : Cardinal(GetDataPtr(VarNum, ArrayData)^) := Trunc(EvaluateNumber);
+    iReal     : Real(GetDataPtr(VarNum, ArrayData)^)     := EvaluateNumber;
+    iBool     : ByteBool(GetDataPtr(VarNum, ArrayData)^) := EvaluateBoolean;
   End;
 End;
 
 Procedure TInterpEngine.SetNumber (VN: Word; R: Real; Var A: TArrayInfo);
 Begin
   Case VarData[VN]^.vType of
-    iByte    : Byte(GetDataPtr(VN, A)^)     := Trunc(R);
-    iShort   : ShortInt(GetDataPtr(VN, A)^) := Trunc(R);
-    iWord    : Word(GetDataPtr(VN, A)^)     := Trunc(R);
-    iInteger : Integer(GetDataPtr(VN, A)^)  := Trunc(R);
-    iLongInt : LongInt(GetDataPtr(VN, A)^)  := Trunc(R);
-    iReal    : Real(GetDataPtr(VN, A)^)     := R;
+    iByte     : Byte(GetDataPtr(VN, A)^)     := Trunc(R);
+    iShort    : ShortInt(GetDataPtr(VN, A)^) := Trunc(R);
+    iWord     : Word(GetDataPtr(VN, A)^)     := Trunc(R);
+    iInteger  : Integer(GetDataPtr(VN, A)^)  := Trunc(R);
+    iLongInt  : LongInt(GetDataPtr(VN, A)^)  := Trunc(R);
+    iCardinal : Cardinal(GetDataPtr(VN, A)^) := Trunc(R);
+    iReal     : Real(GetDataPtr(VN, A)^)     := R;
   end;
 end;
 
@@ -914,6 +928,7 @@ Var
 Begin
   With VarData[VarNum]^ Do Begin
     Result := VarSize;
+
     For Count := 1 To ArrPos Do
       Result := Result * ArrDim[Count];
   End;
@@ -949,7 +964,9 @@ Begin
 
   If Ch = Char(opArrDef) Then Begin
     NextWord;
+
     ArrayPos := W;
+
     For Count := 1 to ArrayPos Do ArrayData[Count] := Trunc(EvaluateNumber);
   End;
 
@@ -1082,15 +1099,16 @@ Type
     vID   : Word;
     vData : PStack;
     Case TIdentTypes of // this all needs to go... push to vData
-      iChar    : (C : Char);
-      iString  : (S : String);
-      iByte    : (B : Byte);
-      iShort   : (H : ShortInt);
-      iWord    : (W : Word);
-      iInteger : (I : Integer);
-      iLongInt : (L : LongInt);
-      iReal    : (R : Real);
-      iBool    : (O : Boolean);
+      iChar     : (C : Char);
+      iString   : (S : String);
+      iByte     : (B : Byte);
+      iShort    : (H : ShortInt);
+      iWord     : (W : Word);
+      iInteger  : (I : Integer);
+      iLongInt  : (L : LongInt);
+      iCardinal : (A : Cardinal);
+      iReal     : (R : Real);
+      iBool     : (O : Boolean);
   End;
 
 Var

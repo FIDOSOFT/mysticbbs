@@ -4087,3 +4087,5 @@
  + The ALT-U local Sysop command has been removed (moved to user editor).
    Alt-E now opens a local user editor for the user which also contains the
    Upgrade option.
+
+ + Added CARDINAL (Unsigned 32-bit Integer) type to MPL
