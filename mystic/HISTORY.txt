@@ -4089,3 +4089,7 @@
    Upgrade option.
 
  + Added CARDINAL (Unsigned 32-bit Integer) type to MPL
+
+ + MPLC and MIDE now calculate the error position in the file (line and
+   column) after the error has occured.  This takes a little bit of time
+   but it ensures that the column/line error position is accurate.

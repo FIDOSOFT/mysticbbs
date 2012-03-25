@@ -230,9 +230,20 @@ Const
 
 Type
   {$IFNDEF MPLPARSER}
-    PStack     = ^TStack;
-    TStack     = Array[1..mplMaxDataSize] of Byte;
-    TArrayInfo = Array[1..mplMaxArrayDem] of Word;
+    PStack      = ^TStack;
+    TStack      = Array[1..mplMaxDataSize] of Byte;
+    TArrayInfo  = Array[1..mplMaxArrayDem] of Word;
+    TRecordInfo = Record
+                    vType    : Byte;
+                    Offset   : Word;
+                    DataSize : Word;
+                  End;
+    //TVarInfo   = Record
+    //               AInfo : Array[1..mplMaxArrayDem] of Word;
+    //               RInfo : Word;
+    //             End;
+    // Basically, an ArrayInfo will have an appended Offset for DataPtr
+    // if it is a record and probably some sort of record element ID
 
 (*
 // MEMORY SAVING... could be 28 bytes per var?!?!
@@ -265,11 +276,17 @@ Type
        ArrDim    : TArrayInfo;
     End;
 
+    TRecordElement = Record
+      ESize  : Word;
+      Offset : Word;
+    End;
+
     PRecordRec = ^TRecordRec;
     TRecordRec = Record
-//      RecID     : Word; needed when Record variable type is added
-      RecStart  : Word;
-      NumFields : Word;
+      RecID    : Word;
+      Fields   : Word;
+      DataSize : Word;
+      Element  : Array[1..mplMaxRecFields] of TRecordElement;
     End;
 
     VarDataRec = Array[1..mplMaxVars] of PVarRec;
@@ -285,6 +302,7 @@ Type
        InProc    : Boolean;
        Proc      : Boolean;
        ArrPos    : Byte;
+       RecID     : Word;
     End;
 
     PGotoRec = ^TGotoRec;

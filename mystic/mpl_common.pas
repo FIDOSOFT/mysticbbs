@@ -22,7 +22,7 @@ End;
 
 Function Char2VarType (C: Char) : TIdentTypes;
 Begin
-  Case UpCase(c) of
+  Case UpCase(C) of
     'S' : Result := iString;
     'C' : Result := iChar;
     'B' : Result := iByte;

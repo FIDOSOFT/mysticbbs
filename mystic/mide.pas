@@ -58,7 +58,7 @@ Const
 
   colEditBorder  = 25;  { 31 }
   colEditHeader  = 31;  { 31 }
-  colEditStatus  = 19;  { 19 }
+  colEditStatus  = 9 + 1 * 16;
   colEditPosBar  = 9 + 1 * 16;
 
 Type

@@ -48,8 +48,8 @@ Type
     {$ENDIF}
 
     Function  GetErrorMsg : String;
-    Procedure Error (Err: Byte; Str: String);
-    Procedure MoveToPos (Num: LongInt);
+    Procedure Error        (Err: Byte; Str: String);
+    Procedure MoveToPos    (Num: LongInt);
     Procedure SkipBlock;
     Function  CurFilePos : LongInt;
     Procedure NextChar;
@@ -70,9 +70,9 @@ Type
     Procedure SetNumber   (VN: Word; R: Real; Var A: TArrayInfo);
     Procedure SetVariable (VarNum: Word);
 
-    Function  DefineVariable   (DataStart: Pointer; RecSize: Word) : LongInt;
+    Function  DefineVariable : LongInt;
     Procedure DefineProcedure;
-    Procedure DefineRecord;
+    //Procedure DefineRecordType;
 
     Procedure StatementRepeatUntil;
     Function  StatementIfThenElse : Byte;
@@ -147,7 +147,7 @@ Begin
 //       ProcPos   : LongInt;
 //       Data      : PStack;
 //       ArrPos    : Byte;
-//       ArrDim    : TArrayInfo;
+//       ArrDims    : TArrayInfo;
 
 End;
 {$ENDIF}
@@ -934,12 +934,13 @@ Begin
   End;
 End;
 
-Function TInterpEngine.DefineVariable (DataStart: Pointer; RecSize: Word) : LongInt;
+Function TInterpEngine.DefineVariable : LongInt;
 Var
   VarType   : TIdentTypes;
   NumVars   : Word;
   SavedVar  : Word;
   StrSize   : Word;
+  RecSize   : Word;
   Count     : Word;
   ArrayPos  : Word;
   ArrayData : TArrayInfo;
@@ -959,6 +960,14 @@ Begin
 
   If Ch = Char(opStrSize) Then Begin
     StrSize := Trunc(EvaluateNumber) + 1;
+    NextChar;
+  End;
+
+  If Ch = Char(opTypeRec) Then Begin
+    NextWord;
+
+    RecSize := W;
+
     NextChar;
   End;
 
@@ -1011,15 +1020,10 @@ Begin
 
           Result := DataSize;
 
-          If DataStart = NIL Then Begin
-            GetMem   (Data, DataSize);
-            FillChar (Data^, DataSize, 0);
+          GetMem   (Data, DataSize);
+          FillChar (Data^, DataSize, 0);
 
-            Kill := True;
-          End Else Begin
-            Data := DataStart;
-            Kill := False;
-          End;
+          Kill := True;
         End;
     End;
 
@@ -2024,37 +2028,10 @@ Begin
     PrevChar;
 End;
 
-Procedure TInterpEngine.DefineRecord;
-Var
-  Count   : LongInt;
-  RecSize : LongInt;
-Begin
-  NextWord;
-
-  Inc (CurRecNum);
-  New (RecData[CurRecNum]);
-
-  // Holds ID info for all variables in this record
-
-  RecData[CurRecNum]^.RecStart  := CurVarNum + 2; {+1 is base}
-  RecData[CurRecNum]^.NumFields := W;
-
-  NextWord;
-
-  RecSize := W;
-
-  NextChar; // opVarDeclare
-
-  DefineVariable (NIL, RecSize); // Base record identifier
-
-  RecSize := 1;
-
-  For Count := 1 to RecData[CurRecNum]^.NumFields Do Begin
-    NextChar;  // opVarDeclare
-
-    Inc (RecSize, DefineVariable(@TStack(VarData[RecData[CurRecNum]^.RecStart - 1]^.Data^)[RecSize], 0));
-  End;
-End;
+//Procedure TInterpEngine.DefineRecordType;
+//Begin
+//asdf
+//End;
 
 Function TInterpEngine.ExecuteBlock (StartVar, StartRec: Word) : Byte;
 Var
@@ -2085,7 +2062,7 @@ Begin
                        Self.ExecuteBlock(CurVarNum, CurRecNum);
                      End;
 {1}   opBlockClose : Break;
-{2}   opVarDeclare : DefineVariable (NIL, 0);
+{2}   opVarDeclare : DefineVariable;
 {12}  opSetVar     : Begin
                        NextWord;
                        SetVariable(FindVariable(W));
@@ -2116,7 +2093,7 @@ Begin
                          Break;
                        End;
                      End;
-{52}  opTypeRec    : DefineRecord;
+//{52}  opTypeRec    : DefineRecordType;
 {53}  opBreak      : Begin
                        MoveToPos (BlockStart + BlockSize);
                        Result := 1;
