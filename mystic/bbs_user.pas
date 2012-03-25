@@ -1140,7 +1140,7 @@ Begin
     If Not DateValid(Session.User.ThisUser.LastPWChange) Then
       Session.User.ThisUser.LastPWChange := DateDos2Str(CurDateDos, 1)
     Else
-    If CurDateJulian - DateStr2Julian(Session.User.ThisUser.LastPWChange) >= 0 Then Begin
+    If CurDateJulian - DateStr2Julian(Session.User.ThisUser.LastPWChange) >= Config.PWChange Then Begin
       Session.SystemLog('Required password change');
       Session.io.OutFullLn(Session.GetPrompt(478));
       Session.User.GetPassword(False);
