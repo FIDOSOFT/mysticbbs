@@ -21,6 +21,7 @@ BUGS AND POSSIBLE ISSUES
 ! MDL screensave/restore in local console is broken in Windows(?) only?
 ! View archive not working if its external view? [Griffin]
 ! Editing current theme will prob not save right [g00r00]
+! GetThisUser
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
@@ -73,7 +74,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - How feasible is an Amiga port?  Can an emulator on the PC side be good
   enough to use as a development environment?  How reliable/complete is FPC
   for Amiga?  Does anyone even care? :)
-- MBBSTOP rewrite [Sudden Death might have done similar]
 - MVIEW rewrite to mimic oldskool AcidView type deals, which would be amazing
   combined with the SDL stuff if that happens.
 - Mystic-DOS rewrite or just code a file manager which would probably be a
@@ -85,7 +85,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - PCBoard-style "quickscan"?  Yes?  No?
 - This line intentionally means nothing.
 - Filebase allow anonymous flag for FTP or just use FreeFiles
-- Build in "telnetd" STDIO redirection into MIS in Linux/OSX
 - Template system similar to Mystic 2 (ansiedit.ans ansiedit.ans.cfg)
 - Rename Template filenames to allow more than 8 characters (for clarity)
 - Does anyone use Version 7 compiled nodelists?  Worth supporting?
