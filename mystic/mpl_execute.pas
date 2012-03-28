@@ -22,9 +22,7 @@ Type
     DataFile     : PCharFile;
     CurVarNum    : Word;
     CurVarID     : Word;
-    CurRecNum    : Word;
     VarData      : VarDataRec;
-    RecData      : RecDataRec;
     Ch           : Char;
     W            : Word;
     IoError      : LongInt;
@@ -55,24 +53,24 @@ Type
     Procedure NextChar;
     Procedure NextWord;
     Procedure PrevChar;
-    Function  GetDataPtr   (VN: Word; Var A: TArrayInfo) : Pointer;
+    Function  GetDataPtr   (VN: Word; Var A: TArrayInfo; Var R: TRecInfo) : Pointer;
     Function  GetDataSize  (VarNum: Word) : Word;
     Function  FindVariable (ID: Word) : Word;
-    Procedure CheckArray   (VN: Word; Var A: TArrayInfo);
-    Function  GetNumber    (VN: Word; Var A: TArrayInfo) : Real;
+    Procedure CheckArray   (VN: Word; Var A: TArrayInfo; Var R: TRecInfo);
+    Function  GetNumber    (VN: Word; Var A: TArrayInfo; Var R: TRecInfo) : Real;
     Function  RecastNumber (Var Num; T: TIdentTypes) : Real;
 
     Function  EvaluateNumber : Real;
     Function  EvaluateString : String;
     Function  EvaluateBoolean : Boolean;
 
-    Procedure SetString   (VarNum: Word; Var A: TArrayInfo; Str: String);
-    Procedure SetNumber   (VN: Word; R: Real; Var A: TArrayInfo);
+    Procedure SetString   (VarNum: Word; Var A: TArrayInfo; Var R: TRecInfo; Str: String);
+    Procedure SetNumber   (VN: Word; Num: Real; Var A: TArrayInfo; Var R: TRecInfo);
+
     Procedure SetVariable (VarNum: Word);
 
     Function  DefineVariable : LongInt;
     Procedure DefineProcedure;
-    //Procedure DefineRecordType;
 
     Procedure StatementRepeatUntil;
     Function  StatementIfThenElse : Byte;
@@ -81,7 +79,7 @@ Type
     Procedure StatementWhileDo;
 
     Function  ExecuteProcedure (DP: Pointer) : TIdentTypes;
-    Function  ExecuteBlock     (StartVar, StartRec: Word) : Byte;
+    Function  ExecuteBlock     (StartVar: Word) : Byte;
 
  // BBS DATA ACCESS FUNCTIONS
     Procedure FileReadLine  (Var F: File; Var Str: String);
@@ -314,11 +312,7 @@ Begin
     Dispose(VarData[Count]);
   End;
 
-  For Count := 1 to CurRecNum Do
-    Dispose(RecData[Count]);
-
   CurVarNum := 0;
-  CurRecNum := 0;
 
   Inherited Destroy;
 End;
@@ -392,39 +386,77 @@ Begin
   Until (Count = 0);
 End;
 
-Function TInterpEngine.GetDataPtr (VN: Word; Var A: TArrayInfo) : Pointer;
+Function TInterpEngine.GetDataPtr (VN: Word; Var A: TArrayInfo; Var R: TRecInfo) : Pointer;
 Begin
   With VarData[VN]^ Do
     Case ArrPos of
-      0 : Result := Data;
-      1 : Result := @Data^[VarSize * (A[1] - 1) + 1];
-      2 : Result := @Data^[VarSize * ((A[1] - 1) * ArrDim[2] + A[2])];
-      3 : Result := @Data^[VarSize * ((A[1] - 1) * (ArrDim[2] * ArrDim[3]) + (A[2] - 1) * ArrDim[3] + A[3])];
+      0 : Result := @Data^[R.Offset + 1];
+      1 : Result := @Data^[VarSize * (A[1] - 1) + 1 + R.Offset];
+      2 : Result := @Data^[VarSize * ((A[1] - 1) * ArrDim[2] + A[2]) + R.Offset];
+      3 : Result := @Data^[VarSize * ((A[1] - 1) * (ArrDim[2] * ArrDim[3]) + (A[2] - 1) * ArrDim[3] + A[3]) + R.Offset];
     End;
 End;
 
-Procedure TInterpEngine.CheckArray (VN: Word; Var A: TArrayInfo);
+Procedure TInterpEngine.CheckArray (VN: Word; Var A: TArrayInfo; Var R: TRecInfo);
 Var
-  Count : Word;
+  Count  : Word;
+  Temp   : TArrayInfo;
+  Offset : Word;
 Begin
   For Count := 1 to mplMaxArrayDem Do A[Count] := 1;
 
-  If VarData[VN]^.ArrPos = 0 Then Exit;
+  R.Offset  := 0;
+  R.vType   := VarData[VN]^.vType;
+  R.OneSize := VarData[VN]^.VarSize;
 
-  For Count := 1 to VarData[VN]^.ArrPos Do
-    A[Count] := Trunc(EvaluateNumber);
+  If VarData[VN]^.ArrPos > 0 Then Begin
+    For Count := 1 to VarData[VN]^.ArrPos Do
+      A[Count] := Trunc(EvaluateNumber);
+  End;
+
+  If VarData[VN]^.vType = iRecord Then Begin
+    // blockread this crap instead of this?
+
+    NextChar;
+
+    R.vType := Char2VarType(Ch);
+
+    NextWord;
+
+    R.OneSize := W;
+
+    NextWord;
+
+    R.Offset := W;
+
+    NextWord;
+
+    R.ArrDem := W;
+
+    If R.ArrDem > 0 Then Begin
+      For Count := 1 to R.ArrDem Do
+        Temp[Count] := Trunc(EvaluateNumber);
+
+      Offset := 0;
+
+      For Count := 1 to R.ArrDem Do
+        Offset := Offset + ((Temp[Count] - 1) * R.OneSize);
+
+      R.Offset := R.Offset + Offset;
+    End;
+  End;
 End;
 
-Function TInterpEngine.GetNumber(VN: Word; Var A: TArrayInfo) : Real;
+Function TInterpEngine.GetNumber (VN: Word; Var A: TArrayInfo; Var R: TRecInfo) : Real;
 Begin
-  Case VarData[VN]^.vType of
-    iByte     : Result := Byte(GetDataPtr(VN, A)^);
-    iShort    : Result := ShortInt(GetDataPtr(VN, A)^);
-    iWord     : Result := Word(GetDataPtr(VN, A)^);
-    iInteger  : Result := Integer(GetDataPtr(VN, A)^);
-    iLongInt  : Result := LongInt(GetDataPtr(VN, A)^);
-    iCardinal : Result := Cardinal(GetDataPtr(VN, A)^);
-    iReal     : Result := Real(GetDataPtr(VN, A)^);
+  Case R.vType of
+    iByte     : Result := Byte(GetDataPtr(VN, A, R)^);
+    iShort    : Result := ShortInt(GetDataPtr(VN, A, R)^);
+    iWord     : Result := Word(GetDataPtr(VN, A, R)^);
+    iInteger  : Result := Integer(GetDataPtr(VN, A, R)^);
+    iLongInt  : Result := LongInt(GetDataPtr(VN, A, R)^);
+    iCardinal : Result := Cardinal(GetDataPtr(VN, A, R)^);
+    iReal     : Result := Real(GetDataPtr(VN, A, R)^);
   End;
 End;
 
@@ -450,6 +482,7 @@ Var
   Procedure ParseNext;
   Begin
     NextChar;
+
     If Ch = Char(opCloseNum) Then CheckChar := ^M Else CheckChar := Ch;
   End;
 
@@ -469,6 +502,7 @@ Var
           Var
             Start     : LongInt;
             ArrayInfo : TArrayInfo;
+            RecInfo   : TRecInfo;
             NumStr    : String;
           Begin
             Case TTokenOpsRec(Byte(CheckChar)) of
@@ -479,9 +513,13 @@ Var
                             End;
               opVariable  : Begin
                               NextWord;
-                              VarNum := FindVariable(w);
-                              CheckArray(VarNum, ArrayInfo);
-                              Result := GetNumber(VarNum, ArrayInfo);
+
+                              VarNum := FindVariable(W);
+
+                              CheckArray (VarNum, ArrayInfo, RecInfo);
+
+                              Result := GetNumber(VarNum, ArrayInfo, RecInfo);
+
                               ParseNext;
                             End;
               opProcExec  : Begin
@@ -576,6 +614,7 @@ Function TInterpEngine.EvaluateString : String;
 Var
   VarNum    : Word;
   ArrayData : TArrayInfo;
+  RecInfo   : TRecInfo;
   Res       : LongInt;
 Begin
   Result := '';
@@ -586,12 +625,14 @@ Begin
     opVariable   : Begin
                      NextWord;
                      VarNum := FindVariable(W);
-                     CheckArray (VarNum, ArrayData);
-                     If VarData[VarNum].vType = iChar Then Begin
+
+                     CheckArray (VarNum, ArrayData, RecInfo);
+
+                     If RecInfo.vType = iChar Then Begin
                        Result[0] := #1;
-                       Result[1] := Char(GetDataPtr(VarNum, ArrayData)^);
+                       Result[1] := Char(GetDataPtr(VarNum, ArrayData, RecInfo)^);
                      End Else
-                       Result := String(GetDataPtr(VarNum, ArrayData)^);
+                       Result := String(GetDataPtr(VarNum, ArrayData, RecInfo)^);
                    End;
     opOpenString : Begin
                      NextChar;
@@ -646,6 +687,7 @@ Var
   StringA   : String;
   StringB   : String;
   ArrayData : TArrayInfo;
+  RecInfo   : TRecInfo;
 Begin
 // set default result?
   VarType1 := iNone;
@@ -668,28 +710,32 @@ Begin
                      End;
       opVariable   : Begin
                        NextWord;
+
                        VarNum := FindVariable(W);
-                       CheckArray(VarNum, ArrayData);
-                       VarType1 := VarData[VarNum]^.vType;
+
+                       CheckArray(VarNum, ArrayData, RecInfo);
+
+                       VarType1 := RecInfo.vType;
 
                        If VarType1 = iBool Then
-                         BooleanA := ByteBool(GetDataPtr(VarNum, ArrayData)^)
+                         BooleanA := ByteBool(GetDataPtr(VarNum, ArrayData, RecInfo)^)
                        Else
                        If (VarType1 in vStrings) Then Begin
                          NextChar;
+
                          If Ch = Char(opStrArray) Then
-                           StringA := String(GetDataPtr(VarNum, ArrayData)^)[Trunc(EvaluateNumber)]
+                           StringA := String(GetDataPtr(VarNum, ArrayData, RecInfo)^)[Trunc(EvaluateNumber)]
                          Else Begin
                            PrevChar;
-                           If VarData[VarNum]^.vType = iChar Then Begin
+                           If VarType1 = iChar Then Begin
                              StringA[0] := #1;
-                             StringA[1] := Char(GetDataPtr(VarNum, ArrayData)^);
+                             StringA[1] := Char(GetDataPtr(VarNum, ArrayData, RecInfo)^);
                            End Else
-                             StringA := String(GetDataPtr(VarNum, ArrayData)^);
+                             StringA := String(GetDataPtr(VarNum, ArrayData, RecInfo)^);
                          End;
                        End Else
                        If VarType1 in vNums Then
-                         RealA := GetNumber(VarNum, ArrayData);  // evalnumber here
+                         RealA := GetNumber(VarNum, ArrayData, RecInfo);  // evalnumber here
 
                        GotA := True;
                      End;
@@ -760,28 +806,32 @@ Begin
                        End;
         opVariable   : Begin
                          NextWord;
-                         VarNum := FindVariable(w);
-                         CheckArray (VarNum, ArrayData);
-                         VarType2 := VarData[VarNum]^.vType;
+
+                         VarNum := FindVariable(W);
+
+                         CheckArray (VarNum, ArrayData, RecInfo);
+
+                         VarType2 := RecInfo.vType;
 
                          If VarType2 = iBool Then
-                           BooleanB := ByteBool(GetDataPtr(VarNum,ArrayData)^)
+                           BooleanB := ByteBool(GetDataPtr(VarNum,ArrayData, RecInfo)^)
                          Else
                          If (VarType2 in vStrings) Then Begin
                            NextChar;
                            If Ch = Char(opStrArray) Then
-                             StringB := String(GetDataPtr(VarNum, ArrayData)^)[Trunc(EvaluateNumber)]
+                             StringB := String(GetDataPtr(VarNum, ArrayData, RecInfo)^)[Trunc(EvaluateNumber)]
                            Else Begin
                              PrevChar;
-                             If VarData[VarNum]^.vType = iChar Then Begin
+
+                             If VarType2 = iChar Then Begin
                                StringB[0] := #1;
-                               StringB[1] := Char(GetDataPtr(VarNum, ArrayData)^);
+                               StringB[1] := Char(GetDataPtr(VarNum, ArrayData, RecInfo)^);
                              End Else
-                               StringB := String(GetDataPtr(VarNum, ArrayData)^);
+                               StringB := String(GetDataPtr(VarNum, ArrayData, RecInfo)^);
                            End;
                          End Else
                          If VarType2 in vNums Then
-                           RealB := GetNumber(VarNum, ArrayData);
+                           RealB := GetNumber(VarNum, ArrayData, RecInfo);
 
                          GotB := True;
                        End;
@@ -863,62 +913,64 @@ Begin
   End;
 End;
 
-Procedure TInterpEngine.SetString (VarNum: Word; Var A: TArrayInfo; Str: String);
+Procedure TInterpEngine.SetString (VarNum: Word; Var A: TArrayInfo; Var R: TRecInfo; Str: String);
 Begin
-  If VarData[VarNum].vType = iString Then Begin
-    If Ord(Str[0]) >= VarData[VarNum]^.VarSize Then
-      Str[0] := Chr(VarData[VarNum]^.VarSize - 1);
+  If R.vType = iString Then Begin
+    If Ord(Str[0]) >= R.OneSize Then
+      Str[0] := Chr(R.OneSize - 1);
 
-    Move (Str, GetDataPtr(VarNum, A)^, VarData[VarNum]^.VarSize);
+    Move (Str, GetDataPtr(VarNum, A, R)^, R.OneSize);
   End Else
-    Move (Str[1], GetDataPtr(VarNum, A)^, 1);
+    Move (Str[1], GetDataPtr(VarNum, A, R)^, 1);
 End;
 
 Procedure TInterpEngine.SetVariable (VarNum: Word);
 Var
   ArrayData : TArrayInfo;
+  RecInfo   : TRecInfo;
   Target    : Byte;
   TempStr   : String;
 Begin
-  CheckArray (VarNum, ArrayData);
+  CheckArray (VarNum, ArrayData, RecInfo);
 
-  Case VarData[VarNum]^.vType of
+  Case RecInfo.vType of
     iChar,
     iString   : Begin
                   NextChar;
 
                   If Ch = Char(opStrArray) Then Begin
-                    TempStr         := String(GetDataPtr(VarNum, ArrayData)^);
+                    TempStr         := String(GetDataPtr(VarNum, ArrayData, RecInfo)^);
                     Target          := Byte(Trunc(EvaluateNumber));
                     TempStr[Target] := EvaluateString[1];
 
-                    SetString (VarNum, ArrayData, TempStr);
+                    SetString (VarNum, ArrayData, RecInfo, TempStr);
                   End Else Begin
                     PrevChar;
-                    SetString (VarNum, ArrayData, EvaluateString);
+
+                    SetString (VarNum, ArrayData, RecInfo, EvaluateString);
                   End;
                 End;
-    iByte     : Byte(GetDataPtr(VarNum, ArrayData)^)     := Trunc(EvaluateNumber);
-    iShort    : ShortInt(GetDataPtr(VarNum, ArrayData)^) := Trunc(EvaluateNumber);
-    iWord     : Word(GetDataPtr(VarNum, ArrayData)^)     := Trunc(EvaluateNumber);
-    iInteger  : Integer(GetDataPtr(VarNum, ArrayData)^)  := Trunc(EvaluateNumber);
-    iLongInt  : LongInt(GetDataPtr(VarNum, ArrayData)^)  := Trunc(EvaluateNumber);
-    iCardinal : Cardinal(GetDataPtr(VarNum, ArrayData)^) := Trunc(EvaluateNumber);
-    iReal     : Real(GetDataPtr(VarNum, ArrayData)^)     := EvaluateNumber;
-    iBool     : ByteBool(GetDataPtr(VarNum, ArrayData)^) := EvaluateBoolean;
+    iByte     : Byte(GetDataPtr(VarNum, ArrayData, RecInfo)^)     := Trunc(EvaluateNumber);
+    iShort    : ShortInt(GetDataPtr(VarNum, ArrayData, RecInfo)^) := Trunc(EvaluateNumber);
+    iWord     : Word(GetDataPtr(VarNum, ArrayData, RecInfo)^)     := Trunc(EvaluateNumber);
+    iInteger  : Integer(GetDataPtr(VarNum, ArrayData, RecInfo)^)  := Trunc(EvaluateNumber);
+    iLongInt  : LongInt(GetDataPtr(VarNum, ArrayData, RecInfo)^)  := Trunc(EvaluateNumber);
+    iCardinal : Cardinal(GetDataPtr(VarNum, ArrayData, RecInfo)^) := Trunc(EvaluateNumber);
+    iReal     : Real(GetDataPtr(VarNum, ArrayData, RecInfo)^)     := EvaluateNumber;
+    iBool     : ByteBool(GetDataPtr(VarNum, ArrayData, RecInfo)^) := EvaluateBoolean;
   End;
 End;
 
-Procedure TInterpEngine.SetNumber (VN: Word; R: Real; Var A: TArrayInfo);
+Procedure TInterpEngine.SetNumber (VN: Word; Num: Real; Var A: TArrayInfo; Var R: TRecInfo);
 Begin
-  Case VarData[VN]^.vType of
-    iByte     : Byte(GetDataPtr(VN, A)^)     := Trunc(R);
-    iShort    : ShortInt(GetDataPtr(VN, A)^) := Trunc(R);
-    iWord     : Word(GetDataPtr(VN, A)^)     := Trunc(R);
-    iInteger  : Integer(GetDataPtr(VN, A)^)  := Trunc(R);
-    iLongInt  : LongInt(GetDataPtr(VN, A)^)  := Trunc(R);
-    iCardinal : Cardinal(GetDataPtr(VN, A)^) := Trunc(R);
-    iReal     : Real(GetDataPtr(VN, A)^)     := R;
+  Case R.vType of
+    iByte     : Byte(GetDataPtr(VN, A, R)^)     := Trunc(Num);
+    iShort    : ShortInt(GetDataPtr(VN, A, R)^) := Trunc(Num);
+    iWord     : Word(GetDataPtr(VN, A, R)^)     := Trunc(Num);
+    iInteger  : Integer(GetDataPtr(VN, A, R)^)  := Trunc(Num);
+    iLongInt  : LongInt(GetDataPtr(VN, A, R)^)  := Trunc(Num);
+    iCardinal : Cardinal(GetDataPtr(VN, A, R)^) := Trunc(Num);
+    iReal     : Real(GetDataPtr(VN, A, R)^)     := Num;
   end;
 end;
 
@@ -1011,7 +1063,7 @@ Begin
                       End;
             iRecord : Begin
                         VarSize  := RecSize;
-                        DataSize := RecSize;
+                        DataSize := GetDataSize(CurVarNum);
                       End;
           Else
             VarSize  := GetVarSize(VarType);
@@ -1129,6 +1181,7 @@ Var
   TempInt   : SmallInt;
   Sub       : LongInt;
   ArrayData : TArrayInfo;
+  RecInfo   : TRecInfo;
 
   Procedure Store (Var Dat; Siz: Word);
   Begin
@@ -1153,9 +1206,10 @@ Begin
         NextWord;
 
         Param[Count].vID := FindVariable(W);
-        CheckArray(Param[Count].vID, ArrayData);
 
-        Param[Count].vData := GetDataPtr(Param[Count].vID, ArrayData);
+        CheckArray(Param[Count].vID, ArrayData, RecInfo);
+
+        Param[Count].vData := GetDataPtr(Param[Count].vID, ArrayData, RecInfo);
 
         If VarData[Param[Count].vID]^.vType = iString Then
           Param[Count].vSize := VarData[Param[Count].vID]^.VarSize;
@@ -1179,7 +1233,6 @@ Begin
           'l' : Param[Count].L := Trunc(EvaluateNumber);
           'r' : Param[Count].R := EvaluateNumber;
           'o' : Param[Count].O := EvaluateBoolean;
-          'x' : //getmem, set dataptr to record data, but we need to free at end!;
         End;
       End;
 
@@ -1221,7 +1274,6 @@ Begin
         DataSize := GetDataSize(CurVarNum);
 
         If VarData[VarNum]^.Params[Count] = UpCase(VarData[VarNum]^.Params[Count]) Then Begin
-//          Data := VarData[Param[Count].vID]^.Data;
           Data := Param[Count].vData;
           Kill := False;
         End Else Begin
@@ -1242,7 +1294,6 @@ Begin
             'l' : LongInt(Pointer(Data)^)  := Param[Count].L;
             'r' : Real(Pointer(Data)^)     := Param[Count].R;
             'o' : Boolean(Pointer(Data)^)  := Param[Count].O;
-            'x' : // still need to redo all of this nonsense;
           End;
 
           Kill := True;
@@ -1258,7 +1309,7 @@ Begin
       FillChar (VarData[VarNum]^.Data^, VarData[VarNum]^.DataSize, 0);
     End;
 
-    ExecuteBlock (SavedVar, CurRecNum);
+    ExecuteBlock (SavedVar);
 
     If ExitProc Then Begin
       ExitProc := False;
@@ -1820,6 +1871,7 @@ Procedure TInterpEngine.StatementForLoop;
 Var
   VarNum    : Word;
   VarArray  : TArrayInfo;
+  RecInfo   : TRecInfo;
   LoopStart : Real;
   LoopEnd   : Real;
   Count     : Real;
@@ -1830,7 +1882,7 @@ Begin
 
   VarNum := FindVariable(W);
 
-  CheckArray (VarNum, VarArray);
+  CheckArray (VarNum, VarArray, RecInfo);
 
   LoopStart := EvaluateNumber;
 
@@ -1846,17 +1898,17 @@ Begin
   Else
   If CountTo Then
     While (Count <= LoopEnd) And Not Done Do Begin
-      SetNumber(VarNum, Count, VarArray);
+      SetNumber(VarNum, Count, VarArray, RecInfo);
       MoveToPos(SavedPos);
-      If ExecuteBlock (CurVarNum, CurRecNum) = 1 Then Break;
-      Count := GetNumber(VarNum, VarArray) + 1;
+      If ExecuteBlock (CurVarNum) = 1 Then Break;
+      Count := GetNumber(VarNum, VarArray, RecInfo) + 1;
     End
   Else
   While (Count >= LoopEnd) And Not Done Do Begin
-    SetNumber(VarNum, Count, VarArray);
+    SetNumber(VarNum, Count, VarArray, RecInfo);
     MoveToPos(SavedPos);
-    If ExecuteBlock (CurVarNum, CurRecNum) = 1 Then Break;
-    Count := GetNumber(VarNum, VarArray) - 1;
+    If ExecuteBlock (CurVarNum) = 1 Then Break;
+    Count := GetNumber(VarNum, VarArray, RecInfo) - 1;
   End;
 End;
 
@@ -1872,7 +1924,7 @@ begin
     IsTrue := EvaluateBoolean;
 
     If IsTrue Then Begin
-      If ExecuteBlock (CurVarNum, CurRecNum) = 1 Then Begin
+      If ExecuteBlock (CurVarNum) = 1 Then Begin
         MoveToPos (StartPos);
         EvaluateBoolean;
         SkipBlock;
@@ -1892,7 +1944,7 @@ Begin
 
   Repeat
     MoveToPos (StartPos);
-    If ExecuteBlock (CurVarNum, CurRecNum) = 1 Then Begin
+    If ExecuteBlock (CurVarNum) = 1 Then Begin
       EvaluateBoolean;
       Break;
     End;
@@ -1983,7 +2035,7 @@ Begin
     End;
 
     If Found Then Begin
-      Result := ExecuteBlock (CurVarNum, CurRecNum);
+      Result := ExecuteBlock (CurVarNum);
       MoveToPos (StartPos + EndPos);
       Exit;
     End Else
@@ -1993,7 +2045,7 @@ Begin
 
     If Ch = Char(opElse) Then Begin
       // we probably want to skip the open block here in compiler
-      Result := ExecuteBlock(CurVarNum, CurRecNum);
+      Result := ExecuteBlock(CurVarNum);
       Break;
     End Else
     If Ch = Char(opBlockClose) Then
@@ -2013,7 +2065,7 @@ Begin
   Ok := EvaluateBoolean;
 
   If Ok Then
-    Result := ExecuteBlock(CurVarNum, CurRecNum)
+    Result := ExecuteBlock(CurVarNum)
   Else
     SkipBlock;
 
@@ -2021,19 +2073,14 @@ Begin
 
   If Ch = Char(opElse) Then Begin
     If Not Ok Then
-      Result := ExecuteBlock(CurVarNum, CurRecNum)
+      Result := ExecuteBlock(CurVarNum)
     Else
       SkipBlock;
   End Else
     PrevChar;
 End;
 
-//Procedure TInterpEngine.DefineRecordType;
-//Begin
-//asdf
-//End;
-
-Function TInterpEngine.ExecuteBlock (StartVar, StartRec: Word) : Byte;
+Function TInterpEngine.ExecuteBlock (StartVar: Word) : Byte;
 Var
   Count      : Word;
   BlockStart : LongInt;
@@ -2059,7 +2106,7 @@ Begin
     Case TTokenOpsRec(Byte(Ch)) of
 {0}   opBlockOpen  : Begin
                        PrevChar;
-                       Self.ExecuteBlock(CurVarNum, CurRecNum);
+                       Self.ExecuteBlock(CurVarNum);
                      End;
 {1}   opBlockClose : Break;
 {2}   opVarDeclare : DefineVariable;
@@ -2093,7 +2140,6 @@ Begin
                          Break;
                        End;
                      End;
-//{52}  opTypeRec    : DefineRecordType;
 {53}  opBreak      : Begin
                        MoveToPos (BlockStart + BlockSize);
                        Result := 1;
@@ -2125,13 +2171,6 @@ Begin
   Until (ErrNum <> 0) or Done or DataFile^.EOF;
 
   {$IFDEF LOGGING}
-    Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock KILL REC: ' + strI2S(CurRecNum) + ' to ' + strI2S(StartRec + 1));
-  {$ENDIF}
-
-  For Count := CurRecNum DownTo StartRec + 1 Do
-    Dispose(RecData[Count]);
-
-  {$IFDEF LOGGING}
     Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock KILL VAR: ' + strI2S(CurVarNum) + ' to ' + strI2S(StartVar + 1));
   {$ENDIF}
 
@@ -2156,7 +2195,6 @@ Begin
   End;
 
   CurVarNum := StartVar;
-  CurRecNum := StartRec;
 
   {$IFDEF LOGGING}
     Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock END');
@@ -2173,7 +2211,6 @@ Begin
   Result     := 0;
   CurVarNum  := 0;
   CurVarID   := 0;
-  CurRecNum  := 0;
   ReloadMenu := False;
   Done       := False;
   ExitProc   := False;
@@ -2227,7 +2264,7 @@ Begin
   End;
 
   InitProcedures (Owner, Self, VarData, CurVarNum, CurVarID, 0);
-  ExecuteBlock   (CurVarNum, CurRecNum);
+  ExecuteBlock   (CurVarNum);
 
   DataFile^.Close;
 
