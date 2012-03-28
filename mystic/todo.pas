@@ -106,6 +106,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - BBS email forward to e-mail address
 - Email pasword resets
 - Email verification
+- MPL trunc/round?
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
 ===========================================
