@@ -688,6 +688,8 @@ Begin
 
   Seek (RecNum);
 
+  FillBuffer;
+
   FreeMem (TempBuf, RecordSize);
 End;
 
@@ -714,6 +716,8 @@ Begin
   System.Truncate (BufFile);
 
   Seek (RecNum);
+
+  FillBuffer;
 
   FreeMem (TempBuf, RecordSize);
 End;
