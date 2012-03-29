@@ -265,16 +265,16 @@ Begin
 
     Case MBase.NetType of
       1 : Begin
-            Assign (SemFile, Config.SemaPath + 'echomail.now');
+            Assign (SemFile, Config.SemaPath + fn_SemFileEcho);
             If Session.ExitLevel > 5 Then Session.ExitLevel := 7 Else Session.ExitLevel := 5;
           End;
       2 : Begin
-            Assign (SemFile, Config.SemaPath + 'netmail.now');
-            If Session.ExitLevel = 5 Then Session.ExitLevel := 7 Else Session.ExitLevel := 6;
+            Assign (SemFile, Config.SemaPath + fn_SemFileNews);
+            If Session.ExitLevel > 5 Then Session.ExitLevel := 7 Else Session.ExitLevel := 5;
           End;
       3 : Begin
-            Assign (SemFile, Config.SemaPath + 'newsmail.now');
-            If Session.ExitLevel > 5 Then Session.ExitLevel := 7 Else Session.ExitLevel := 5;
+            Assign (SemFile, Config.SemaPath + fn_SemFileNet);
+            If Session.ExitLevel = 5 Then Session.ExitLevel := 7 Else Session.ExitLevel := 6;
           End;
     End;
 
@@ -3559,9 +3559,9 @@ Begin
     Msg^.SetOrig(Config.NetAddress[mArea.NetAddr]);
 
     Case mArea.NetType of
-      1 : Assign (SemFile, Config.SemaPath + 'echomail.now');
-      2 : Assign (SemFile, Config.SemaPath + 'netmail.now');
-      3 : Assign (SemFile, Config.SemaPath + 'newsmail.now');
+      1 : Assign (SemFile, Config.SemaPath + fn_SemFileEcho);
+      2 : Assign (SemFile, Config.SemaPath + fn_SemFileNews);
+      3 : Assign (SemFile, Config.SemaPath + fn_SemFileNet);
     End;
 
     ReWrite (SemFile);
