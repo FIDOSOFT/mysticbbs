@@ -4104,3 +4104,5 @@
    transfers of giant files, it seemed like the 4K transfer was pretty
    harsh on disk usage.
 
+ + Mystic now allows base record variable types to be assigned to otherwise
+   base variable types.
