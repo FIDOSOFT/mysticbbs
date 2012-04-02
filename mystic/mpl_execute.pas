@@ -958,6 +958,11 @@ Begin
     iCardinal : Cardinal(GetDataPtr(VarNum, ArrayData, RecInfo)^) := Trunc(EvaluateNumber);
     iReal     : Real(GetDataPtr(VarNum, ArrayData, RecInfo)^)     := EvaluateNumber;
     iBool     : ByteBool(GetDataPtr(VarNum, ArrayData, RecInfo)^) := EvaluateBoolean;
+    iRecord   : Begin
+                  NextWord;
+
+                  Move (VarData[W]^.Data^, GetDataPtr(VarNum, ArrayData, RecInfo)^, VarData[W]^.DataSize);
+                End;
   End;
 End;
 

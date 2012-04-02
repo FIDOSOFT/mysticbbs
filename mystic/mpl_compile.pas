@@ -134,6 +134,7 @@ Type
     Procedure ParseVarFile;
     Procedure ParseVarBoolean;
     Procedure ParseVarChar;
+    Procedure ParseVarRecord;
     Procedure ParseVariable     (VT: TIdentTypes);
     Procedure ParseArray        (VN: Word);
     Function  ParseElement      (VN: Word; TypeCheck: Boolean; VT: TIdentTypes) : TIdentTypes;
@@ -822,11 +823,11 @@ Begin
       Case RecData[VarData[VN]^.RecID]^.Fields[Count].vType of
         iString : OutWord(RecData[VarData[VN]^.RecID]^.Fields[Count].StrLen);
       Else
-        OutWord(GetVarSize(RecData[VarData[VN]^.RecID]^.Fields[Count].vType));
+        OutWord (GetVarSize(RecData[VarData[VN]^.RecID]^.Fields[Count].vType));
       End;
 
-      OutWord   (Offset);
-      OutWord   (RecData[VarData[VN]^.RecID]^.Fields[Count].ArrDem);
+      OutWord (Offset);
+      OutWord (RecData[VarData[VN]^.RecID]^.Fields[Count].ArrDem);
 
       If RecData[VarData[VN]^.RecID]^.Fields[Count].ArrDem > 0 Then Begin
         GetStr(tkw[wOpenArray], True, False);
@@ -1289,6 +1290,22 @@ Begin
   If VarData[VarNum]^.vType <> iFile Then Error (mpsTypeMismatch, '');
 End;
 
+Procedure TParserEngine.ParseVarRecord;
+Var
+  VarNum : Word;
+Begin
+  GetIdent(True);
+
+  If UpdateInfo.ErrorType <> 0 Then Exit;
+
+  VarNum := FindVariable(IdentStr);
+
+  If VarData[VarNum]^.vType <> iRecord Then
+    Error (mpsTypeMismatch, '');
+
+  OutWord (VarNum);
+End;
+
 Procedure TParserEngine.NewBooleanCrap;
 Var
   VarNum : Word;
@@ -1501,36 +1518,37 @@ begin
 
   GetEvalIdent (VarType1);
 
-  if updateinfo.errorType <> 0 then Exit;
+  If UpdateInfo.ErrorType <> 0 Then Exit;
 
-  if GetStr(tkw[wOpEqual],    False, False) then begin OutString(Char(OpEqual));    OpType := topEqual; end else
-  if GetStr(tkw[wOpNotEqual], False, False) then begin OutString(Char(OpNotEqual)); OpType := topNotEqual; end else
-  if GetStr(tkw[wOpEqGreat],  False, False) then begin OutString(Char(OpEqGreat));  OpType := topEqGreat; end else
-  if GetStr(tkw[wOpEqLess],   False, False) then begin OutString(Char(OpEqLess));   OpType := topEqLess; end else
-  if GetStr(tkw[wOpGreater],  False, False) then begin OutString(Char(OpGreater));  OpType := topGreater; end else
-  if GetStr(tkw[wOpLess],     False, False) then begin OutString(Char(OpLess));     OpType := topLess; end else
-  if VarType1 <> iBool then Error(mpsExpOperator, '');
+  If GetStr(tkw[wOpEqual],    False, False) Then Begin OutString(Char(OpEqual));    OpType := topEqual; End Else
+  If GetStr(tkw[wOpNotEqual], False, False) Then Begin OutString(Char(OpNotEqual)); OpType := topNotEqual; End Else
+  If GetStr(tkw[wOpEqGreat],  False, False) Then Begin OutString(Char(OpEqGreat));  OpType := topEqGreat; End Else
+  If GetStr(tkw[wOpEqLess],   False, False) Then Begin OutString(Char(OpEqLess));   OpType := topEqLess; End Else
+  If GetStr(tkw[wOpGreater],  False, False) Then Begin OutString(Char(OpGreater));  OpType := topGreater; End Else
+  If GetStr(tkw[wOpLess],     False, False) Then Begin OutString(Char(OpLess));     OpType := topLess; End Else
+  If VarType1 <> iBool then Error(mpsExpOperator, '');
 
-  if OpType <> tOpNone then begin
+  If OpType <> tOpNone then begin
     GetEvalIdent(VarType2);
 
-    if updateinfo.errorType <> 0 then Exit;
+    If UpdateInfo.ErrorType <> 0 Then Exit;
 
-    if ((VarType1 in vStrings) and (Not (VarType2 in vStrings))) or
-      ((VarType1 = iBool) and (VarType2 <> iBool)) or
-      ((VarType1 = iFile) and (VarType2 <> iFile)) or
-      ((VarType1 in vNums) and (not (VarType2 in vNums))) Then Error(mpsTypeMismatch, '');
-  end;
+    If ((VarType1 in vStrings) and (Not (VarType2 in vStrings))) or
+       ((VarType1 = iBool) and (VarType2 <> iBool)) or
+       ((VarType1 = iFile) and (VarType2 <> iFile)) or
+       ((VarType1 in vNums) and (not (VarType2 in vNums))) Then
+         Error(mpsTypeMismatch, '');
+  End;
 
-  if GetStr(tkw[wAnd], False, False) then begin
+  If GetStr(tkw[wAnd], False, False) Then Begin
     OutString(Char(opAnd));
     ParseVarBoolean;
-  end else
-  if GetStr(tkw[wOr], False, False) then begin
+  End Else
+  If GetStr(tkw[wOr], False, False) Then Begin
     OutString(Char(opOr));
     ParseVarBoolean;
-  end;
-end;
+  End;
+End;
 
 Procedure TParserEngine.ParseVariable (VT: TIdentTypes);
 Begin
@@ -1538,7 +1556,10 @@ Begin
   If VT = iString Then ParseVarString Else
   If VT = iChar   Then ParseVarChar Else
   If VT = iBool   Then ParseVarBoolean Else
+  If VT = iRecord Then ParseVarRecord Else
   If VT = iFile   Then Error(mpsInStatement,'');
+
+  // pointer
 End;
 
 Function TParserEngine.GetDataSize (Info: TParserVarInfoRec) : LongInt;
@@ -2553,13 +2574,12 @@ Begin
     If VarData[VarNum]^.Proc Then Begin
       If Not SetProcResult(VarNum) Then ExecuteProcedure(VarNum, False);
     End Else Begin
-      OutString    (Char(opSetVar));
-      OutWord      (VarData[VarNum]^.VarID);
-      ParseArray   (VarNum);
+      OutString  (Char(opSetVar));
+      OutWord    (VarData[VarNum]^.VarID);
+      ParseArray (VarNum);
 
       VT := ParseElement (VarNum, False, iNone);
 
-      //will need to pull vartype from parse array here
       GetChar;
 
       // prob shoud be iString check here.  also need to
@@ -2741,9 +2761,9 @@ Begin
 
   FillChar (InFile[CurFile], SizeOf(InFile[CurFile]), 0);
 
-  InFile[CurFile].Position  := 1;
-  InFile[CurFile].PosSaved  := -1;
-  InFile[CurFile].Size      := 1;
+  InFile[CurFile].Position := 1;
+  InFile[CurFile].PosSaved := -1;
+  InFile[CurFile].Size     := 1;
 
   If CurFile = 1 Then
     UpdateStatus(StatusStart)
