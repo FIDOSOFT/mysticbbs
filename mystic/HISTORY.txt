@@ -4093,3 +4093,14 @@
  + MPLC and MIDE now calculate the error position in the file (line and
    column) after the error has occured.  This takes a little bit of time
    but it ensures that the column/line error position is accurate.
+
+ + The Node message send menu command (NS) no longer sends the message to
+   the current node when it is doing a broadcast to all nodes.
+
+ + Mystic now allows arrays of records in MPL.
+
+ + Reduced the FTP server directory caching buffer to 4k, but expanded the
+   file send buffer from 4K to 32KB.  After doing some local network FTP
+   transfers of giant files, it seemed like the 4K transfer was pretty
+   harsh on disk usage.
+
