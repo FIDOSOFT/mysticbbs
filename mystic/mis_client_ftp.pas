@@ -76,7 +76,8 @@ Type
 Implementation
 
 Const
-  FileBufSize    = 8 * 1024;
+  FileBufSize    =  4 * 1024;
+  FileXferSize   = 32 * 1024;
 
   re_DataOpen    = '125 Data connection already open';
   re_DataOpening = '150 File status okay; about to open data connection.';
@@ -590,7 +591,7 @@ Var
   Dir      : RecFileList;
   Found    : LongInt;
   F        : File;
-  Buf      : Array[1..4096] of Byte;
+  Buf      : Array[1..FileXferSize] of Byte;
   Tmp      : LongInt;
   Res      : LongInt;
 Begin
