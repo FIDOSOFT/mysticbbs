@@ -462,9 +462,11 @@ Begin
 	While Not Eof(LangFile) Do Begin
 		Read (LangFile, TLang);
 
-    TLang.FileName := 'default';
-		TLang.TextPath := Lang.TextPath;
-		TLang.MenuPath := Lang.MenuPath;
+    TLang.FileName     := 'default';
+		TLang.TextPath     := Lang.TextPath;
+		TLang.MenuPath     := Lang.MenuPath;
+    TLang.TemplatePath := Lang.TextPath;
+    TLang.ScriptPath   := Config.ScriptPath;
 
 		Seek	(LangFile, FilePos(LangFile) - 1);
 		Write (LangFile, TLang);
