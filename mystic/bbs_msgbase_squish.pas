@@ -101,7 +101,7 @@ Const
   SqISize : Word = SizeOf(SqIdxType);
 
 Const
-  SqTxtBufferSize = 16000;        {reduced from 34000 to 16000.  this should }
+  SqTxtBufferSize = 16000;
                                                                                                                 {handle 200 lines x 80 chars EASILY                      }
 Type
   SqInfoType = Record
@@ -138,12 +138,12 @@ Type
 
   PMsgBaseSquish = ^TMsgBaseSquish;
   TMsgBaseSquish = Object(TMsgBaseAbs)
-    SqInfo     : ^SqInfoType;
-     SqIdx     : ^SqIdxArrayType;
-     FreeArray : ^FreeArrayType;
+    SqInfo    : ^SqInfoType;
+    SqIdx     : ^SqIdxArrayType;
+    FreeArray : ^FreeArrayType;
 
-     Procedure EditMsgInit; Virtual;
-     Procedure EditMsgSave; Virtual;
+    Procedure EditMsgInit; Virtual;
+    Procedure EditMsgSave; Virtual;
 
         Constructor Init; {Initialize}
         Destructor Done; Virtual; {Done cleanup and dispose}
@@ -209,7 +209,7 @@ Type
         Procedure DoString(Str: String); Virtual; {Add string to message text}
         Procedure DoChar(Ch: Char); Virtual; {Add character to message text}
         Procedure DoStringLn(Str: String); Virtual; {Add string and newline to msg text}
-        Function        WriteMsg: Word; Virtual; {Write msg to msg base}
+        Function  WriteMsg: Word; Virtual; {Write msg to msg base}
         Procedure ReadIdx; Virtual;
         Procedure WriteIdx; Virtual;
         Procedure SeekFirst(MsgNum: LongInt); Virtual; {Seeks to 1st msg >= MsgNum}
@@ -224,9 +224,9 @@ Type
         Function        IsKillSent: Boolean; Virtual; {Is current msg kill sent}
         Function        IsSent: Boolean; Virtual; {Is current msg sent}
         Function        IsFAttach: Boolean; Virtual; {Is current msg file attach}
-        Function        IsReqRct: Boolean; Virtual; {Is current msg request receipt}
-        Function        IsReqAud: Boolean; Virtual; {Is current msg request audit}
-        Function        IsRetRct: Boolean; Virtual; {Is current msg a return receipt}
+//        Function        IsReqRct: Boolean; Virtual; {Is current msg request receipt}
+//        Function        IsReqAud: Boolean; Virtual; {Is current msg request audit}
+//        Function        IsRetRct: Boolean; Virtual; {Is current msg a return receipt}
         Function        IsFileReq: Boolean; Virtual; {Is current msg a file request}
         Function        IsRcvd: Boolean; Virtual; {Is current msg received}
         Function        IsPriv: Boolean; Virtual; {Is current msg priviledged/private}
@@ -276,52 +276,55 @@ Uses
   m_FileIO;
 
 Const
-        SqMsgPriv        = $00001;
-        SqMsgCrash       = $00002;
-        SqMsgRcvd        = $00004;
-        SqMsgSent        = $00008;
-        SqMsgFile        = $00010;
-        SqMsgFwd                 = $00020;
-        SqMsgOrphan  = $00040;
-        SqMsgKill        = $00080;
-        SqMsgLocal       = $00100;
-        SqMsgHold        = $00200;
-        SqMsgXX2                 = $00400;
-        SqMsgFreq        = $00800;
-        SqMsgRrq                 = $01000;
-        SqMsgCpt                 = $02000;
-        SqMsgArq                 = $04000;
-        SqMsgUrg                 = $08000;
-        SqMsgScanned = $10000;
+  SqMsgPriv    = $00001;
+  SqMsgCrash   = $00002;
+  SqMsgRcvd    = $00004;
+  SqMsgSent    = $00008;
+  SqMsgFile    = $00010;
+  SqMsgFwd     = $00020;
+  SqMsgOrphan  = $00040;
+  SqMsgKill    = $00080;
+  SqMsgLocal   = $00100;
+  SqMsgHold    = $00200;
+  SqMsgXX2     = $00400;
+  SqMsgFreq    = $00800;
+  SqMsgRrq     = $01000;
+  SqMsgCpt     = $02000;
+  SqMsgArq     = $04000;
+  SqMsgUrg     = $08000;
+  SqMsgScanned = $10000;
 
 Constructor TMsgBaseSquish.Init;
 Begin
-        New(SqInfo);
-        New(FreeArray);
-        If ((SqInfo = nil) or (FreeArray = nil)) Then Begin
-                If SqInfo <> Nil Then Dispose(SqInfo);
-                If FreeArray <> Nil Then Dispose(FreeArray);
-                Fail;
-                Exit;
-        End;
-        SqInfo^.SqdOpened  := False;
-        SqInfo^.SqiOpened  := False;
-        SqInfo^.FN                               := '';
-        SqInfo^.Error            := 0;
-        SqInfo^.Locked           := False;
-        SqInfo^.FreeLoaded := False;
-        SqInfo^.SqiAlloc         := 0;
+  New (SqInfo);
+  New (FreeArray);
+
+  If ((SqInfo = nil) or (FreeArray = nil)) Then Begin
+    If SqInfo <> Nil Then Dispose(SqInfo);
+    If FreeArray <> Nil Then Dispose(FreeArray);
+    Fail;
+    Exit;
+  End;
+
+  SqInfo^.SqdOpened  := False;
+  SqInfo^.SqiOpened  := False;
+  SqInfo^.FN         := '';
+  SqInfo^.Error      := 0;
+  SqInfo^.Locked     := False;
+  SqInfo^.FreeLoaded := False;
+  SqInfo^.SqiAlloc   := 0;
 End;
 
 Destructor TMsgBaseSquish.Done;
 Begin
-        If SqInfo^.SqdOpened Then SqdClose;
-        If SqInfo^.SqiOpened Then SqiClose;
-        If SqInfo^.SqIAlloc > 0 Then
-                If SqIdx <> Nil Then
-                        FreeMem(SqIdx, SqInfo^.SqiAlloc * SizeOf(SqIdxType));
-        Dispose(FreeArray);
-        Dispose(SqInfo);
+  If SqInfo^.SqdOpened Then SqdClose;
+  If SqInfo^.SqiOpened Then SqiClose;
+  If SqInfo^.SqIAlloc > 0 Then
+    If SqIdx <> Nil Then
+      FreeMem(SqIdx, SqInfo^.SqiAlloc * SizeOf(SqIdxType));
+
+  Dispose(FreeArray);
+  Dispose(SqInfo);
 End;
 
 Procedure TMsgBaseSquish.SetMsgPath(FN: String);
@@ -1105,7 +1108,7 @@ End;
 
 Function TMsgBaseSquish.EOM: Boolean;
 Begin
-        EOM := (SqInfo^.TxtCtr >= SqInfo^.Frame.MsgLength) or (SqInfo^.MsgChars[SqInfo^.TxtCtr] = #0);
+  EOM := (SqInfo^.TxtCtr >= SqInfo^.Frame.MsgLength) or (SqInfo^.MsgChars[SqInfo^.TxtCtr] = #0);
 End;
 
 (*
@@ -1268,20 +1271,20 @@ Begin
         IsFAttach := ((SqInfo^.MsgHdr.Attr and SqMsgFile) <> 0);
 End;
 
-Function TMsgBaseSquish.IsReqRct: Boolean; {Is current msg request receipt}
-Begin
-        IsReqRct := ((SqInfo^.MsgHdr.Attr and SqMsgRRQ) <> 0);
-End;
+//Function TMsgBaseSquish.IsReqRct: Boolean; {Is current msg request receipt}
+//Begin
+//        IsReqRct := ((SqInfo^.MsgHdr.Attr and SqMsgRRQ) <> 0);
+//End;
 
-Function TMsgBaseSquish.IsReqAud: Boolean; {Is current msg request audit}
-Begin
-        IsReqAud := ((SqInfo^.MsgHdr.Attr and SqMsgArq) <> 0);
-End;
+//Function TMsgBaseSquish.IsReqAud: Boolean; {Is current msg request audit}
+//Begin
+//        IsReqAud := ((SqInfo^.MsgHdr.Attr and SqMsgArq) <> 0);
+//End;
 
-Function TMsgBaseSquish.IsRetRct: Boolean; {Is current msg a return receipt}
-Begin
-        IsRetRct := ((SqInfo^.MsgHdr.Attr and SqMsgCpt) <> 0);
-End;
+//Function TMsgBaseSquish.IsRetRct: Boolean; {Is current msg a return receipt}
+//Begin
+//        IsRetRct := ((SqInfo^.MsgHdr.Attr and SqMsgCpt) <> 0);
+//End;
 
 Function TMsgBaseSquish.IsFileReq: Boolean; {Is current msg a file request}
 Begin

@@ -126,8 +126,8 @@ Type
     TxtPos      : LongInt;
     TxtEnd      : LongInt;
     TxtBufStart : LongInt;
-    TxtRead     : {$IFDEF FPC} Word {$ELSE} LongInt {$ENDIF};
-    IdxRead     : {$IFDEF FPC} Word {$ELSE} LongInt {$ENDIF};
+    TxtRead     : Word;
+    IdxRead     : Word;
     MailType    : MsgMailType;
     BufFile     : File;
     LockCount   : LongInt;
@@ -146,49 +146,49 @@ Type
 
     Procedure   EditMsgInit; Virtual;
     Procedure   EditMsgSave; Virtual;
-    Constructor Init;                      {Initialize}
-    Destructor  Done; Virtual; {Done}
-    Procedure   SetMsgPath(St: String); Virtual; {Set netmail path}
-    Function    GetHighMsgNum: LongInt; Virtual; {Get highest netmail msg number in area}
-    Function    LockMsgBase: Boolean; Virtual; {Lock the message base}
-    Function    UnLockMsgBase: Boolean; Virtual; {Unlock the message base}
-    Procedure   SetDest(Var Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Dest}
-    Procedure   SetOrig(Var Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Orig}
-    Procedure SetFrom(Name: String); Virtual; {Set message from}
-    Procedure SetTo(Name: String); Virtual; {Set message to}
-    Procedure SetSubj(Str: String); Virtual; {Set message subject}
-    Procedure SetCost(SCost: Word); Virtual; {Set message cost}
-    Procedure SetRefer(SRefer: LongInt); Virtual; {Set message reference}
-    Procedure SetSeeAlso(SAlso: LongInt); Virtual; {Set message see also}
-    Function  GetNextSeeAlso: LongInt; Virtual;
-    Procedure SetNextSeeAlso(SAlso: LongInt); Virtual;
-    Procedure SetDate(SDate: String); Virtual; {Set message date}
-    Procedure SetTime(STime: String); Virtual; {Set message time}
-    Procedure SetLocal(LS: Boolean); Virtual; {Set local status}
-    Procedure SetRcvd(RS: Boolean); Virtual; {Set received status}
-    Procedure SetPriv(PS: Boolean); Virtual; {Set priveledge vs public status}
-    Procedure SetHold(SS: Boolean); Virtual; {set hold netmail status}
-    Procedure SetCrash(SS: Boolean); Virtual; {Set crash netmail status}
-    Procedure SetKillSent(SS: Boolean); Virtual; {Set kill/sent netmail status}
-    Procedure SetSent(SS: Boolean); Virtual; {Set sent netmail status}
-    Procedure SetFAttach(SS: Boolean); Virtual; {Set file attach status}
-    Procedure SetReqRct(SS: Boolean); Virtual; {Set request receipt status}
-    Procedure SetReqAud(SS: Boolean); Virtual; {Set request audit status}
-    Procedure SetRetRct(SS: Boolean); Virtual; {Set return receipt status}
-    Procedure SetFileReq(SS: Boolean); Virtual; {Set file request status}
-    Procedure DoString(Str: String); Virtual; {Add string to message text}
-    Procedure DoChar(Ch: Char); Virtual; {Add character to message text}
-    Procedure DoStringLn(Str: String); Virtual; {Add string and newline to msg text}
-    Procedure DoKludgeLn(Str: String); Virtual; {Add ^AKludge line to msg}
-    Function  WriteMsg: Word; Virtual;
-    Function  GetChar: Char; Virtual;
-    Procedure MsgStartUp; Virtual; {set up msg for reading}
-    Function  EOM: Boolean; Virtual; {No more msg text}
-    Function  GetString(MaxLen: Word): String; Virtual; {Get wordwrapped string}
-    Procedure SeekFirst(MsgNum: LongInt); Virtual; {Seek msg number}
-    Procedure SeekNext; Virtual; {Find next matching msg}
-    Procedure SeekPrior; Virtual; {Seek prior matching msg}
-    Function  GetFrom: String; Virtual; {Get from name on current msg}
+    Constructor Init;
+    Destructor  Done; Virtual;
+    Procedure   SetMsgPath     (St: String); Virtual; {Set netmail path}
+    Function    GetHighMsgNum  : LongInt; Virtual; {Get highest netmail msg number in area}
+    Function    LockMsgBase    : Boolean; Virtual; {Lock the message base}
+    Function    UnLockMsgBase  : Boolean; Virtual; {Unlock the message base}
+    Procedure   SetDest        (Var Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Dest}
+    Procedure   SetOrig        (Var Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Orig}
+    Procedure   SetFrom        (Name: String); Virtual; {Set message from}
+    Procedure   SetTo          (Name: String); Virtual; {Set message to}
+    Procedure   SetSubj        (Str: String); Virtual; {Set message subject}
+    Procedure   SetCost        (SCost: Word); Virtual; {Set message cost}
+    Procedure   SetRefer       (SRefer: LongInt); Virtual; {Set message reference}
+    Procedure   SetSeeAlso     (SAlso: LongInt); Virtual; {Set message see also}
+    Function    GetNextSeeAlso : LongInt; Virtual;
+    Procedure   SetNextSeeAlso (SAlso: LongInt); Virtual;
+    Procedure   SetDate        (SDate: String); Virtual; {Set message date}
+    Procedure   SetTime        (STime: String); Virtual; {Set message time}
+    Procedure   SetLocal       (LS: Boolean); Virtual; {Set local status}
+    Procedure   SetRcvd        (RS: Boolean); Virtual; {Set received status}
+    Procedure   SetPriv        (PS: Boolean); Virtual; {Set priveledge vs public status}
+    Procedure   SetHold        (SS: Boolean); Virtual; {set hold netmail status}
+    Procedure   SetCrash       (SS: Boolean); Virtual; {Set crash netmail status}
+    Procedure   SetKillSent    (SS: Boolean); Virtual; {Set kill/sent netmail status}
+    Procedure   SetSent        (SS: Boolean); Virtual; {Set sent netmail status}
+    Procedure   SetFAttach     (SS: Boolean); Virtual; {Set file attach status}
+    Procedure   SetReqRct      (SS: Boolean); Virtual; {Set request receipt status}
+    Procedure   SetReqAud      (SS: Boolean); Virtual; {Set request audit status}
+    Procedure   SetRetRct      (SS: Boolean); Virtual; {Set return receipt status}
+    Procedure   SetFileReq     (SS: Boolean); Virtual; {Set file request status}
+    Procedure   DoString       (Str: String); Virtual; {Add string to message text}
+    Procedure   DoChar         (Ch: Char); Virtual; {Add character to message text}
+    Procedure   DoStringLn     (Str: String); Virtual; {Add string and newline to msg text}
+    Procedure   DoKludgeLn     (Str: String); Virtual; {Add ^AKludge line to msg}
+    Function    WriteMsg       : Word; Virtual;
+    Function    GetChar        : Char; Virtual;
+    Procedure   MsgStartUp;    Virtual; {set up msg for reading}
+    Function    EOM            : Boolean; Virtual; {No more msg text}
+    Function    GetString      (MaxLen: Word): String; Virtual; {Get wordwrapped string}
+    Procedure   SeekFirst      (MsgNum: LongInt); Virtual; {Seek msg number}
+    Procedure   SeekNext;      Virtual; {Find next matching msg}
+    Procedure   SeekPrior;     Virtual; {Seek prior matching msg}
+    Function    GetFrom        : String; Virtual; {Get from name on current msg}
     Function  GetTo: String; Virtual; {Get to name on current msg}
     Function  GetSubj: String; Virtual; {Get subject on current msg}
     Function  GetCost: Word; Virtual; {Get cost of current msg}
@@ -205,9 +205,9 @@ Type
     Function  IsKillSent: Boolean; Virtual; {Is current msg kill sent}
     Function  IsSent: Boolean; Virtual; {Is current msg sent}
     Function  IsFAttach: Boolean; Virtual; {Is current msg file attach}
-    Function  IsReqRct: Boolean; Virtual; {Is current msg request receipt}
-    Function  IsReqAud: Boolean; Virtual; {Is current msg request audit}
-    Function  IsRetRct: Boolean; Virtual; {Is current msg a return receipt}
+//    Function  IsReqRct: Boolean; Virtual; {Is current msg request receipt}
+//    Function  IsReqAud: Boolean; Virtual; {Is current msg request audit}
+//    Function  IsRetRct: Boolean; Virtual; {Is current msg a return receipt}
     Function  IsFileReq: Boolean; Virtual; {Is current msg a file request}
     Function  IsRcvd: Boolean; Virtual; {Is current msg received}
     Function  IsPriv: Boolean; Virtual; {Is current msg priviledged/private}
@@ -264,10 +264,11 @@ Type
 
 Constructor TMsgBaseJAM.Init;
 Begin
-  New(JM);
-  New(JamIdx);
-  New(MsgHdr); { this new here messes everything up }
-  New(TxtBuf);
+  New (JM);
+  New (JamIdx);
+  New (MsgHdr); { this new here messes everything up }
+  New (TxtBuf);
+
   If ((JM = Nil) Or (JamIdx = Nil) or (MsgHdr = Nil) or (TxtBuf = Nil)) Then Begin
     If JM     <> Nil Then Dispose(JM);
     If JamIdx <> Nil Then Dispose(JamIdx);
@@ -277,6 +278,7 @@ Begin
     Exit;
   End Else Begin
     FillChar(JM^, SizeOf(JM^), #0);
+
     JM^.MsgPath  := '';
     JM^.IdxStart := -30;
     JM^.IdxRead  := 0;
@@ -293,34 +295,35 @@ Begin
 End;
 
 Function JamStrCrc(St: String): LongInt;
-  Var
-    i: Word;
-    crc: LongInt;
-
-  Begin
+Var
+  i: Word;
+  crc: LongInt;
+Begin
   Crc := -1;
+
   For i := 1 to Length(St) Do
     Crc := Crc32(Ord(LoCase(St[i])), Crc);
+
   JamStrCrc := Crc;
-  End;
+End;
 
 
 Procedure TMsgBaseJAM.SetMsgPath(St: String);
-  Begin
+Begin
   JM^.MsgPath := Copy(St, 1, 124);
-  End;
+End;
 
 
 Function TMsgBaseJAM.GetHighMsgNum: LongInt;
-  Begin
+Begin
   GetHighMsgNum := JM^.BaseHdr.BaseMsgNum + FileSize(JM^.IdxFile) - 1;
-  End;
+End;
 
 
 Procedure TMsgBaseJAM.SetDest(Var Addr: RecEchoMailAddr);
-  Begin
+Begin
   JM^.Dest := Addr;
-  End;
+End;
 
 
 Procedure TMsgBaseJAM.SetOrig(Var Addr: RecEchoMailAddr);
@@ -709,7 +712,7 @@ Begin
     WriteError := IoResult;
   End;
 
-  If ReReadIdx(IdxLoc) = 0 Then;
+  ReReadIdx(IdxLoc);
 
 (* new shit begin *)
   TmpHdr         := MsgHdr^.JamHdr;
@@ -727,9 +730,9 @@ Begin
   Seek       (JM^.HdrFile, FileSize(JM^.HdrFile));
   BlockWrite (JM^.HdrFile, MsgHdr^, SizeOf(MsgHdr^.JamHdr) + MsgHdr^.JamHdr.SubFieldLen);
 
-  If WriteIdx = 0 Then;
+  WriteIdx;
 
-  If UnLockMsgBase Then;             {unlock msg base}
+  UnLockMsgBase;
 End;
 
 Function  TMsgBaseJAM.WriteMsg: Word;
@@ -741,20 +744,24 @@ Function  TMsgBaseJAM.WriteMsg: Word;
 
 Begin
   WriteError := 0;
+
   If LastSoft Then Begin
     DoChar(#13);
     DoChar(#10);
   End;
+
   If WriteError = 0 Then Begin
     MsgHdr^.JamHdr.Signature[1] := 'J';{Set signature}
     MsgHdr^.JamHdr.Signature[2] := 'A';
     MsgHdr^.JamHdr.Signature[3] := 'M';
     MsgHdr^.JamHdr.Signature[4] := #0;
+
     Case JM^.MailType of
       mmtNormal   : SetAttr1 (Jam_TypeLocal, True);
       mmtEchoMail : SetAttr1 (Jam_TypeEcho,  True);
       mmtNetMail  : SetAttr1 (Jam_TypeNet,   True);
     End;
+
     MsgHdr^.JamHdr.Rev := 1;
     MsgHdr^.JamHdr.DateArrived := ToUnixDate(CurDateDos); {Get date processed}
 
@@ -778,10 +785,12 @@ Begin
     If Not LockMsgBase Then
       WriteError := 5;
   End;
+
   If WriteError = 0 Then Begin             {Handle message text}
     MsgHdr^.JamHdr.TextOfs := FileSize(JM^.TxtFile);
     MsgHdr^.JamHdr.MsgNum := GetHighMsgNum + 1;
     MsgHdr^.Jamhdr.TextLen := JM^.TxtPos;
+
     If JM^.TxtBufStart > 0 Then Begin     {Write text using buffer file}
       i := JM^.TxtPos - JM^.TxtBufStart;
       BlockWrite(JM^.BufFile, TxtBuf^, i); {write buffer to file}
@@ -1274,22 +1283,22 @@ Function TMsgBaseJAM.IsFAttach: Boolean; {Is current msg file attach}
   End;
 
 
-Function TMsgBaseJAM.IsReqRct: Boolean; {Is current msg request receipt}
-  Begin
-  IsReqRct := (MsgHdr^.JamHdr.Attr1 and Jam_RcptReq) <> 0;
-  End;
+//Function TMsgBaseJAM.IsReqRct: Boolean; {Is current msg request receipt}
+//  Begin
+//  IsReqRct := (MsgHdr^.JamHdr.Attr1 and Jam_RcptReq) <> 0;
+//  End;
 
 
-Function TMsgBaseJAM.IsReqAud: Boolean; {Is current msg request audit}
-  Begin
-  IsReqAud := (MsgHdr^.JamHdr.Attr1 and Jam_ConfmReq) <> 0;
-  End;
+//Function TMsgBaseJAM.IsReqAud: Boolean; {Is current msg request audit}
+//  Begin
+//  IsReqAud := (MsgHdr^.JamHdr.Attr1 and Jam_ConfmReq) <> 0;
+//  End;
 
 
-Function TMsgBaseJAM.IsRetRct: Boolean; {Is current msg a return receipt}
-  Begin
-  IsRetRct := False;
-  End;
+//Function TMsgBaseJAM.IsRetRct: Boolean; {Is current msg a return receipt}
+//  Begin
+//  IsRetRct := False;
+//  End;
 
 
 Function TMsgBaseJAM.IsFileReq: Boolean; {Is current msg a file request}

@@ -78,9 +78,9 @@ Type
     Function  IsKillSent: Boolean; Virtual; {Is current msg kill sent}
     Function  IsSent: Boolean; Virtual; {Is current msg sent}
     Function  IsFAttach: Boolean; Virtual; {Is current msg file attach}
-    Function  IsReqRct: Boolean; Virtual; {Is current msg request receipt}
-    Function  IsReqAud: Boolean; Virtual; {Is current msg request audit}
-    Function  IsRetRct: Boolean; Virtual; {Is current msg a return receipt}
+//    Function  IsReqRct: Boolean; Virtual; {Is current msg request receipt}
+//    Function  IsReqAud: Boolean; Virtual; {Is current msg request audit}
+//    Function  IsRetRct: Boolean; Virtual; {Is current msg a return receipt}
     Function  IsFileReq: Boolean; Virtual; {Is current msg a file request}
     Function  IsRcvd: Boolean; Virtual; {Is current msg received}
     Function  IsPriv: Boolean; Virtual; {Is current msg priviledged/private}
@@ -437,17 +437,17 @@ Function TMsgBaseABS.IsFAttach: Boolean;
 Begin
 End;
 
-Function TMsgBaseABS.IsReqRct: Boolean;
-Begin
-End;
+//Function TMsgBaseABS.IsReqRct: Boolean;
+//Begin
+//End;
 
-Function TMsgBaseABS.IsReqAud: Boolean;
-Begin
-End;
+//Function TMsgBaseABS.IsReqAud: Boolean;
+//Begin
+//End;
 
-Function TMsgBaseABS.IsRetRct: Boolean;
-Begin
-End;
+//Function TMsgBaseABS.IsRetRct: Boolean;
+//Begin
+//End;
 
 Function TMsgBaseABS.IsFileReq: Boolean;
 Begin
