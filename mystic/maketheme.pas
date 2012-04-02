@@ -196,6 +196,9 @@ Begin
   End;
 
   BasePath := GetENV('mysticbbs');
+
+  If BasePath <> '' Then BasePath := DirSlash(BasePath);
+
   Action   := strUpper(ParamStr(1));
   InFN     := ParamStr(2);
   OutFN    := ParamStr(3);
