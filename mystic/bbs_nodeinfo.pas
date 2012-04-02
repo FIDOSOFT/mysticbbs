@@ -127,13 +127,13 @@ End;
 
 Procedure Send_Node_Message (MsgType: Byte; Data: String; Room: Byte);
 Var
-  ToNode  : Byte;
-  A, B, C : Byte;
-  Temp    : ChatRec;
-  Str     : String[3];
+  ToNode      : Byte;
+  A, B, C     : Byte;
+  Temp        : ChatRec;
+  Str         : String[3];
   NodeMsgFile : File of NodeMsgRec;
   NodeMsg     : NodeMsgRec;
-
+  SkipCurrent : Boolean = False;
 Begin
   If Data = '' Then Begin
     Repeat
@@ -161,14 +161,20 @@ Begin
     If ToNode = 0 Then Begin
       B := 1;
       C := Config.INetTNNodes;
-      If MsgType = 3 Then MsgType := 2;
+
+      If MsgType = 3 Then Begin
+        MsgType     := 2;
+        SkipCurrent := True;
+      End;
     End Else Begin
       B := ToNode;
       C := ToNode;
     End;
   End;
 
-  For A := B to C Do
+  For A := B to C Do Begin
+    If (A = Session.NodeNum) and SkipCurrent Then Continue;
+
     If GetChatRecord(A, Temp) Then Begin
       If (Not Temp.Active) and (ToNode > 0) Then Begin
         Session.io.OutFullLn (Session.GetPrompt(147));
@@ -211,6 +217,7 @@ Begin
         Close (NodeMsgFile);
       End;
     End;
+  End;
 End;
 
 Function CheckNodeMessages : Boolean;
