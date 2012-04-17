@@ -13,7 +13,7 @@ Uses
 {$I RECORDS.PAS}
 
 Type
-  OldLastOnRec = Record                    { CALLERS.DAT                 }
+  OldLastOnRec = Record                 { CALLERS.DAT                 }
     Handle    : String[30];             { User's Name                 }
     City      : String[25];             { City/State                  }
     Address   : String[30];             { user's address              }
@@ -1315,6 +1315,8 @@ End;
 Var
   ConfigFile : File of RecConfig;
 Begin
+  FileMode := 66;
+
   WarningDisplay;
 
   //COMMENT this out if mystic.dat is being converted:
