@@ -1172,7 +1172,7 @@ Begin
       Halt(0);
     End;
 
-  Session.io.OutFullLn ('|CL' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ') Node |ND (|BD)');
+  Session.io.OutFullLn ('|CL' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ') Node |ND');
   Session.io.OutFullLn (CopyID);
 
   If Config.DefTermMode = 0 Then
