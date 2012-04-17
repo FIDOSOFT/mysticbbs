@@ -227,7 +227,7 @@
 ; post message SUBJ:
 120 |CR|09Subject: |XX
 ; Files still in batch.   &1 = # of files
-121 |CR|BE|14There are |15|&1 |14file(s) in your batch queue.|CR|12Download them now? |11
+121 |CR|14There are |15|&1 |14file(s) in your batch queue.|CR|CR|12Download them now? |11
 122 |09Saved
 123 |CL|01[|10þ|01] |09Searching for new electronic mail...|DE|CR
 124 |CL|01[|10þ|01] |09No new electronic mail waiting...|DE|DE
@@ -629,7 +629,7 @@
 ; &1 = User's Name  &2 = User's node number  &3 = Room number  &4 = Room name
 333  |15|$R31|&1 |08(|07|$R02|&3|08)  |12|&4
 ; Jump to which message prompt.  &1 = Current Message  &2 = Total messages
-334 |IF|00|16
+334 |CR|09Jump to which message? (1-|&2): |XX
 335 |CR|01[|10þ|01] |09Use signature in posted messages? |11
 336 |03You have not defined an auto-signature yet.|CR
 ; One Liners list format.  &1 = Text   &2 = Poster Name   &3 = Initials
