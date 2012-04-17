@@ -22,6 +22,7 @@ BUGS AND POSSIBLE ISSUES
 ! View archive not working if its external view? [Griffin]
 ! Editing current theme will prob not save right [g00r00]
 ! GetThisUser
+! Message header does not ackknowledge user's date format.
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
@@ -107,6 +108,9 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Email pasword resets
 - Email verification
 - MPL trunc/round?
+- Salted SHA-1 or SHA-256 password encryption
+- User editor: Reset password/Force change... cannot view PWs
+- Who's online should show all nodes (including inactive nodes)
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
 ===========================================
