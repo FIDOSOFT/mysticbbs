@@ -226,6 +226,8 @@ Begin
   {$I+}
 
   If IoResult <> 0 Then Begin
+    FileMode := 66;
+
     {$I-}
     Reset (PromptFile);
     Seek  (PromptFile, N);
