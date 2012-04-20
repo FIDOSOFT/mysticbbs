@@ -930,6 +930,7 @@ Var
   RecInfo   : TRecInfo;
   Target    : Byte;
   TempStr   : String;
+  RecID     : Word;
 Begin
   CheckArray (VarNum, ArrayData, RecInfo);
 
@@ -961,7 +962,9 @@ Begin
     iRecord   : Begin
                   NextWord;
 
-                  Move (VarData[W]^.Data^, GetDataPtr(VarNum, ArrayData, RecInfo)^, VarData[W]^.DataSize);
+                  RecID := FindVariable(W);
+
+                  Move (VarData[RecID]^.Data^, GetDataPtr(VarNum, ArrayData, RecInfo)^, VarData[RecID]^.DataSize);
                 End;
   End;
 End;
