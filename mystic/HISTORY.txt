@@ -4106,3 +4106,5 @@
 
  + Mystic now allows base record variable types to be assigned to otherwise
    base variable types.
+
+ + When prompted to save an edited message, Mystic now defaults to YES.
