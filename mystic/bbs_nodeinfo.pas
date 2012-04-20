@@ -95,17 +95,22 @@ Begin
   Session.io.OutFullLn (Session.GetPrompt(138));
 
   For Count := 1 to Config.INetTNNodes Do Begin
+    Session.io.PromptInfo[1] := strI2S(Count);
+
     Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Count) + '.dat');
 
     {$I-} Reset(ChatFile); {$I+}
 
-    If IoResult <> 0 Then Continue;
+    If IoResult <> 0 Then Begin
+      Session.io.OutFullLn (Session.GetPrompt(268));
+
+      Continue;
+    End;
 
     Read  (ChatFile, TChat);
     Close (ChatFile);
 
     If TChat.Active and ((Not TChat.Invisible) or (TChat.Invisible and Session.User.Access(Config.AcsSeeInvis))) Then Begin
-      Session.io.PromptInfo[1] := strI2S(Count);
       Session.io.PromptInfo[2] := TChat.Name;
       Session.io.PromptInfo[3] := TChat.Action;
       Session.io.PromptInfo[4] := TChat.Location;
@@ -115,11 +120,8 @@ Begin
       Session.io.PromptInfo[8] := Session.io.OutYN(TChat.Available);
 
       Session.io.OutFullLn (Session.GetPrompt(139));
-    End Else Begin
-      Session.io.PromptInfo[1] := strI2S(Count);
-
+    End Else
       Session.io.OutFullLn (Session.GetPrompt(268));
-    End;
   End;
 
   Session.io.OutFull (Session.GetPrompt(140));
