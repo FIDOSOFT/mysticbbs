@@ -1303,7 +1303,7 @@ Begin
   If VarData[VarNum]^.vType <> iRecord Then
     Error (mpsTypeMismatch, '');
 
-  OutWord (VarNum);
+  OutWord (VarData[VarNum]^.VarID);
 End;
 
 Procedure TParserEngine.NewBooleanCrap;
