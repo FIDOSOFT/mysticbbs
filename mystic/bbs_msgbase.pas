@@ -1022,7 +1022,7 @@ Begin
                 ReadText;
             End;
       'Q' : Begin
-              If Session.io.GetYN(Session.GetPrompt(300), False) Then Begin
+              If Session.io.GetYN(Session.GetPrompt(300), True) Then Begin
                 MsgBase^.EditMsgInit;
 
                 For A := 1 to Lines Do
