@@ -4108,3 +4108,11 @@
    base variable types.
 
  + When prompted to save an edited message, Mystic now defaults to YES.
+
+ + Added SizeOf function to MPL which returns the size of a variable or
+   record type.
+
+ + Added fWriteRec and fReadRec that can be used to write an entire record
+   or array of records to an opened file in MPL
+
+   Specific elements can be addressed with fWrite/fRead if desired.
