@@ -243,6 +243,8 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'strippipe',      {$ENDIF} 's',      iString);  // 88
           AddProc    ({$IFDEF MPLPARSER} 'sizeof',         {$ENDIF} '*',      iLongInt); // 89
           AddProc    ({$IFDEF MPLPARSER} 'fillchar',       {$ENDIF} '*lc',    iNone);    // 90
+          AddProc    ({$IFDEF MPLPARSER} 'fwriterec',      {$ENDIF} 'fx',     iNone);    // 91
+          AddProc    ({$IFDEF MPLPARSER} 'freadrec',       {$ENDIF} 'fx',     iNone);    // 92
 
           IW := 500; // BEGIN BBS-SPECIFIC STUFF
 

@@ -136,7 +136,7 @@ Type
     Procedure ParseVarChar;
     Procedure ParseVarRecord;
     Procedure ParseVariable     (VT: TIdentTypes);
-    Procedure ParseArray        (VN: Word);
+    Procedure ParseArray        (VN: Word; Forced: Boolean);
     Function  ParseElement      (VN: Word; TypeCheck: Boolean; VT: TIdentTypes) : TIdentTypes;
     Function  ParseElementType  (VN: Word; SkipIdent: Boolean) : TIdentTypes;
 
@@ -708,7 +708,7 @@ Begin
   Seek    (OutFile, SavedPos + mplVerLength);
 End;
 
-Procedure TParserEngine.ParseArray (VN: Word);
+Procedure TParserEngine.ParseArray (VN: Word; Forced: Boolean);
 Var
   X : Word;
 Begin
@@ -978,7 +978,7 @@ begin
             Else Begin
               OutString    (Char(opVariable));
               OutWord      (VarData[VarNum]^.VarID);
-              ParseArray   (VarNum);
+              ParseArray   (VarNum, True);
               ParseElement (VarNum, False, iLongInt);
             End;
           End;
@@ -1093,7 +1093,7 @@ Begin
         Else Begin
           OutString    (Char(opVariable));
           OutWord      (VarData[VarNum]^.VarID);
-          ParseArray   (VarNum);
+          ParseArray   (VarNum, True);
           ParseElement (VarNum, True, iChar);
         End;
       End;
@@ -1224,7 +1224,7 @@ Begin
         Else Begin
           OutString    (Char(opVariable));
           OutWord      (VarData[VarNum]^.VarID);
-          ParseArray   (VarNum);
+          ParseArray   (VarNum, True);
           ParseElement (VarNum, True, iString);
         End;
       End;
@@ -1342,7 +1342,7 @@ Begin
       Else Begin
         OutString    (Char(opVariable));
         OutWord      (VarData[VarNum]^.VarID);
-        ParseArray   (VarNum);
+        ParseArray   (VarNum, True);
         ParseElement (VarNum, True, iBool);
       End;
     End;
@@ -2140,18 +2140,17 @@ Begin
           Error (mpsTypeMismatch, '');
 
         OutWord      (VarData[RV]^.VarID);
-        ParseArray   (RV);
+        ParseArray   (RV, False);
         ParseElement (RV, VarData[VN]^.Params[Count] <> '*', VarData[RV]^.vType);
 
         // if = '*' and type iString then...do the string index
       End Else Begin
-// use setvariable here??  cant cuz ifile isnt processed in setvariable...
-// need irecord?
         If Char2VarType(VarData[VN]^.Params[Count]) in vNums  Then ParseVarNumber(True) Else
-        If Char2VarType(VarData[VN]^.Params[Count]) = iString Then ParseVarString  Else
-        If Char2VarType(VarData[VN]^.Params[Count]) = iChar   Then ParseVarChar    Else
-        If Char2VarType(VarData[VN]^.Params[Count]) = iBool   Then ParseVarBoolean Else
-        If Char2VarType(VarData[VN]^.Params[Count]) = iFile   Then ParseVarFile;
+        If Char2VarType(VarData[VN]^.Params[Count]) = iString Then ParseVarString       Else
+        If Char2VarType(VarData[VN]^.Params[Count]) = iChar   Then ParseVarChar         Else
+        If Char2VarType(VarData[VN]^.Params[Count]) = iBool   Then ParseVarBoolean      Else
+        If Char2VarType(VarData[VN]^.Params[Count]) = iFile   Then ParseVarFile         Else
+        If Char2VarType(VarData[VN]^.Params[Count]) = iRecord Then ParseVarRecord;
       End;
 
       OutString(Char(opParamSep));
@@ -2183,7 +2182,7 @@ Begin
   If UpdateInfo.ErrorType <> 0 Then Exit;
 
   OutWord      (VarData[VC]^.VarID);
-  ParseArray   (VC);
+  ParseArray   (VC, True);
   ParseElement (VC, True, iLongInt);
   GetStr       (tkw[wSetVar], True, False);
 
@@ -2576,7 +2575,7 @@ Begin
     End Else Begin
       OutString  (Char(opSetVar));
       OutWord    (VarData[VarNum]^.VarID);
-      ParseArray (VarNum);
+      ParseArray (VarNum, True);
 
       VT := ParseElement (VarNum, False, iNone);
 

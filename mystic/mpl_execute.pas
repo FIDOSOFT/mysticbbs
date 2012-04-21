@@ -1218,9 +1218,12 @@ Begin
         CheckArray(Param[Count].vID, ArrayData, RecInfo);
 
         Param[Count].vData := GetDataPtr(Param[Count].vID, ArrayData, RecInfo);
+        Param[Count].vSize := VarData[Param[Count].vID]^.VarSize;
 
-        If VarData[Param[Count].vID]^.vType = iString Then
-          Param[Count].vSize := VarData[Param[Count].vID]^.VarSize;
+//        Case VarData[Param[Count].vID]^
+
+//        If VarData[Param[Count].vID]^.vType = iString Then
+//          Param[Count].vSize := VarData[Param[Count].vID]^.VarSize;
       End Else Begin
         // this should getmem dataptr and store it there instead
         // will save some memory but make calling functions below a bit more
@@ -1241,6 +1244,13 @@ Begin
           'l' : Param[Count].L := Trunc(EvaluateNumber);
           'r' : Param[Count].R := EvaluateNumber;
           'o' : Param[Count].O := EvaluateBoolean;
+          'x' : Begin
+                  NextWord; // Var ID;
+
+                  Param[Count].vID   := FindVariable(W);
+                  Param[Count].vSize := VarData[Param[Count].vID]^.DataSize;
+                  Param[Count].vData := VarData[Param[Count].vID]^.Data;
+                End;
         End;
       End;
 
@@ -1681,10 +1691,19 @@ Begin
             TempStr := strStripPipe(Param[1].S);
             Store (TempStr, 256);
           End;
-    89  : Begin // neeed to figure out SIZEOF.. time to redo this PARAM garbage finally
+    89  : Begin
+            TempLong := Param[1].vSize;
+            Store (TempLong, 4);
           End;
     90  : FillChar (Param[1].vData^, Param[2].L, Param[3].C);
-          // should check vDataSize once we get that figured out
+    91  : Begin
+            BlockWrite (File(Pointer(Param[1].vData)^), Param[2].vData^, Param[2].vSize);
+            IoError := IoResult;
+          End;
+    92  : Begin
+            BlockRead (File(Pointer(Param[1].vData)^), VarData[Param[2].vID]^.Data^, VarData[Param[2].vID]^.DataSize);
+            IoError := IoResult;
+          End;
     500 : Begin
             TempStr := Session.io.GetInput(Param[1].B, Param[2].B, Param[3].B, Param[4].S);
             Store (TempStr, 256);
