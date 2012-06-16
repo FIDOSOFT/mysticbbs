@@ -20,15 +20,16 @@ Function CreateNNTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; Cl
 
 Type
   TNNTPServer = Class(TServerClient)
-    Server   : TServerManager;
-    UserName : String[30];
-    LoggedIn : Boolean;
-    Cmd      : String;
-    Data     : String;
-    User     : RecUser;
-    UserPos  : LongInt;
-    MBase    : RecMessageBase;
-    MBasePos : LongInt;
+    Server     : TServerManager;
+    UserName   : String[30];
+    LoggedIn   : Boolean;
+    Cmd        : String;
+    Data       : String;
+    User       : RecUser;
+    UserPos    : LongInt;
+    MBase      : RecMessageBase;
+    MBasePos   : LongInt;
+    EndSession : Boolean;
 
     Constructor Create (Owner: TServerManager; CliSock: TSocketClass);
     Procedure   Execute; Override;
@@ -40,18 +41,23 @@ Type
     Procedure   cmd_AUTHINFO;
     Procedure   cmd_GROUP;
     Procedure   cmd_LIST;
+    Procedure   cmd_POST;
     Procedure   cmd_XOVER;
   End;
 
 Implementation
 
 Uses
+  Classes,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
   bbs_MsgBase_Squish;
 
 Const
   FileReadBuffer   = 2048;
+  HackThreshold    = 10000;
+  fn_SemFileEcho   = 'echomail.now';
+  fn_SemFileNews   = 'newsmail.now';
 
   re_Greeting      = '200 Mystic BBS NNTP server ready';
   re_Goodbye       = '205 Goodbye';
@@ -84,10 +90,11 @@ End;
 
 Procedure TNNTPServer.ResetSession;
 Begin
-  LoggedIn := False;
-  UserName := '';
-  UserPos  := -1;
-  MBasePos := -1;
+  LoggedIn   := False;
+  UserName   := '';
+  UserPos    := -1;
+  MBasePos   := -1;
+  EndSession := False;
 End;
 
 Procedure TNNTPServer.cmd_AUTHINFO;
@@ -251,6 +258,192 @@ Begin
   ClientWriteLine('.');
 End;
 
+Procedure TNNTPServer.cmd_POST;
+Var
+  MsgBase   : PMsgBaseABS;
+  MBaseFile : TBufFile;
+  TempBase  : RecMessageBase;
+  MsgText   : TStringList;
+  Subject   : String;
+  Newsgroup : String;
+  InData    : String;
+  HackCount : LongInt;
+  Count     : LongInt;
+  GotStart  : Boolean;
+  Found     : Boolean;
+  SemFile   : File;
+Begin
+  If Not LoggedIn Then Begin
+    ClientWriteLine(re_AuthReq);
+    Exit;
+  End;
+
+  ClientWriteLine('340 Send article to be posted.  End with <CRLF>.<CRLF>');
+
+  Subject   := '';
+  Newsgroup := '';
+  GotStart  := False;
+  MsgText   := TStringList.Create;
+
+  Repeat
+    Client.ReadLine(InData);
+
+    If InData = '.' Then Break;
+
+    If Not GotStart And (Pos('Newsgroups:', InData) > 0) Then Begin
+      Newsgroup := Copy(InData, 13, 255);
+
+      Continue;
+    End;
+
+    If Not GotStart And (Pos('Subject:', InData) > 0) Then Begin
+      Subject := Copy(InData, 10, 255);
+
+      Continue;
+    End;
+
+    If (InData = '') And Not GotStart Then Begin
+      GotStart := True;
+      Continue;
+    End;
+
+    If MsgText.Count >= mysMaxMsgLines Then Begin
+      HackCount := 0;
+
+      While Not Terminated And (InData <> '.') Do Begin
+        Client.ReadLine(InData);
+
+        Inc (HackCount);
+
+        If HackCount >= HackThreshold Then Begin
+          EndSession := True;   // someone is being a douchebag
+
+          Server.Server.Status('Flood attempt from ' + Client.PeerIP + '. Goodbye');
+
+          MsgText.Free;
+
+          Exit;
+        End;
+      End;
+
+      Break;
+    End;
+
+    If GotStart Then MsgText.Add(InData);
+  Until Terminated;
+
+  If Terminated Then Exit;
+
+  If (Subject = '') Then Begin
+    MsgText.Free;
+
+    ClientWriteLine('441 No subject; message not posted');
+
+    Exit;
+  End;
+
+  Found     := False;
+  MBaseFile := TBufFile.Create(FileReadBuffer);
+
+  If MBaseFile.Open(bbsConfig.DataPath + 'mbases.dat', fmOpen, fmRWDN, SizeOf(RecMessageBase)) Then Begin
+    MBaseFile.Read(TempBase);
+
+    While Not MBaseFile.EOF Do Begin
+      MBaseFile.Read(TempBase);
+
+      If TempBase.NewsName = Newsgroup Then Begin
+        Found := True;
+
+        Break;
+      End;
+    End;
+  End;
+
+  MBaseFile.Free;
+
+  If Not Found or (Newsgroup = '') Then Begin
+    MsgText.Free;
+
+    ClientWriteLine('441 No newsgroup selected');
+
+    Exit;
+  End;
+
+  If Not CheckAccess(User, True, TempBase.PostACS) or (TempBase.NetType = 3) Then Begin
+    MsgText.Free;
+
+    ClientWriteLine('441 No post access');
+
+    Exit;
+  End;
+
+  Case TempBase.BaseType of
+    0 : MsgBase := New(PMsgBaseJAM, Init);
+    1 : MsgBase := New(PMsgBaseSquish, Init);
+  End;
+
+  MsgBase^.SetMsgPath (TempBase.Path + TempBase.FileName);
+
+  If Not MsgBase^.OpenMsgBase Then
+    If Not MsgBase^.CreateMsgBase (TempBase.MaxMsgs, TempBase.MaxAge) Then Begin
+      Dispose(MsgBase, Done);
+      MsgText.Free;
+      Client.WriteLine('441 Cannot save');
+      Exit;
+    End Else
+      If Not MsgBase^.OpenMsgBase Then Begin
+        Dispose(MsgBase, Done);
+        MsgText.Free;
+        Client.WriteLine('411 Cannot save');
+        Exit;
+      End;
+
+  MsgBase^.StartNewMsg;
+
+  MsgBase^.SetLocal (True);
+  MsgBase^.SetDate  (FormatDateTime('mm/dd/yy', Now));
+  MsgBase^.SetTime  (FormatDateTime('hh:nn', Now));
+  MsgBase^.SetTo    ('All');
+  MsgBase^.SetSubj  (Subject);
+
+  If TempBase.Flags And MBRealNames <> 0 Then
+    MsgBase^.SetFrom(User.RealName)
+  Else
+    MsgBase^.SetFrom(User.Handle);
+
+  If TempBase.NetType > 0 Then Begin
+    MsgBase^.SetMailType(mmtEchoMail);
+
+    Case TempBase.NetType of
+      1 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileEcho);
+      2 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileNews);
+    End;
+
+    ReWrite (SemFile);
+    Close   (SemFile);
+  End Else
+    MsgBase^.SetMailType(mmtNormal);
+
+  MsgBase^.SetPriv (TempBase.Flags and MBPrivate <> 0);
+
+  For Count := 1 to MsgText.Count Do Begin
+    InData := MsgText.Strings[Count - 1];
+
+    If Length(InData) > 79 Then InData[0] := #79;
+
+    MsgBase^.DoStringLn(InData);
+  End;
+
+  MsgBase^.WriteMsg;
+  MsgBase^.CloseMsgBase;
+
+  Dispose (MsgBase, Done);
+
+  MsgText.Free;
+
+  ClientWriteLine ('240 Artical posted ok');
+End;
+
 Procedure TNNTPServer.cmd_XOVER;
 Var
   First : LongInt = 0;
@@ -320,10 +513,11 @@ Begin
     If Cmd = 'AUTHINFO' Then cmd_AUTHINFO Else
     If Cmd = 'GROUP'    Then cmd_GROUP Else
     If Cmd = 'LIST'     Then cmd_LIST Else
+    If Cmd = 'POST'     Then cmd_POST Else
     If Cmd = 'QUIT'     Then Break Else
     If Cmd = 'XOVER'    Then cmd_XOVER Else
       ClientWriteLine(re_Unknown);
-  Until Terminated;
+  Until Terminated or EndSession;
 
   If Not Terminated Then ClientWriteLine(re_Goodbye);
 End;
