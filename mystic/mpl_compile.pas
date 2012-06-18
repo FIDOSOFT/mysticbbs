@@ -1287,6 +1287,9 @@ Begin
 
   VarNum := FindVariable(IdentStr);
 
+  // need to create a file type parser in execute
+  // so we can output the record size and support "file of records"
+
   If VarData[VarNum]^.vType <> iFile Then Error (mpsTypeMismatch, '');
 End;
 
@@ -1304,6 +1307,10 @@ Begin
     Error (mpsTypeMismatch, '');
 
   OutWord (VarData[VarNum]^.VarID);
+
+  ParseArray   (VarNum, True);
+  ParseElement (VarNum, False, iLongInt);
+  // added array and element 1.10a14 for onecard := deck[1] problem
 End;
 
 Procedure TParserEngine.NewBooleanCrap;
@@ -2245,9 +2252,10 @@ End;
 
 Procedure TParserEngine.StatementCase;
 Var
-  VarNum   : LongInt;
-  SavedPos : LongInt;
-  Count    : LongInt;
+  VarNum     : LongInt;
+  SavedPos   : LongInt;
+  Count      : LongInt;
+  TargetType : TIdentTypes;
 Begin
   OutString(Char(opCase));
 
@@ -2270,7 +2278,32 @@ Begin
     Exit;
   End;
 
-  OutString(Char(Byte(VarData[VarNum]^.vType)));
+  TargetType := VarData[VarNum]^.vType;
+
+  If TargetType = iRecord Then
+    TargetType := ParseElementType(VarNum, True);
+
+  OutString(Char(Byte(TargetType)));
+  //asf
+  //asdf
+
+  Case TargetType of
+    iString    : ParseVarString;
+    iChar      : ParseVarChar;
+    iBool      : ParseVarBoolean;
+    iByte,
+    iShort,
+    iWord,
+    iInteger,
+    iLongInt,
+    iCardinal,
+    iReal      : ParseVarNumber(True);
+  Else
+    Error (mpsTypeMismatch, '');
+  End;
+
+
+(*
 
   If VarData[VarNum]^.vType = iString Then
     ParseVarString
@@ -2284,7 +2317,11 @@ Begin
   If VarData[VarNum]^.vType in vNums Then
     ParseVarNumber(True)
   Else
+  If VarData[VarNum]^.vType = iRecord Then
+    ParseVarRecord
+  Else
     Error (mpsTypeMismatch, '');
+*)
 
   Case tkwType of
     1 : GetStr (tkw[wCaseOf], True, False);
@@ -2299,7 +2336,7 @@ Begin
     NextChar;
     PrevChar;
 
-    Case VarData[VarNum]^.vType of
+    Case TargetType of
       iChar,
       iString: Repeat
                  ParseVarString;

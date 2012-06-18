@@ -931,6 +931,9 @@ Var
   Target    : Byte;
   TempStr   : String;
   RecID     : Word;
+
+  AD : TArrayInfo;
+  RI : TRecInfo;
 Begin
   CheckArray (VarNum, ArrayData, RecInfo);
 
@@ -964,7 +967,17 @@ Begin
 
                   RecID := FindVariable(W);
 
-                  Move (VarData[RecID]^.Data^, GetDataPtr(VarNum, ArrayData, RecInfo)^, VarData[RecID]^.DataSize);
+                  CheckArray (RecID, AD, RI);
+//asdf DEBUG DEBUG
+// how do we get the real size of the shit here?
+// i added Checkarray here and ParseElement in ParseVarRecord for compiler
+//session.io.outfullln('datasize=' + stri2s(vardata[recid]^.datasize));
+//session.io.outfullln('varsize=' + stri2s(vardata[recid]^.varsize));
+//session.io.outfullln('|PN');
+
+                  Move (GetDataPtr(RecID, AD, RI)^, GetDataPtr(VarNum, ArrayData, RecInfo)^, RecInfo.OneSize {VarData[RecID]^.VarSize});
+
+//                  Move (VarData[RecID]^.Data^, GetDataPtr(VarNum, ArrayData, RecInfo)^, VarData[RecID]^.DataSize);
                 End;
   End;
 End;
@@ -1250,6 +1263,8 @@ Begin
                   Param[Count].vID   := FindVariable(W);
                   Param[Count].vSize := VarData[Param[Count].vID]^.DataSize;
                   Param[Count].vData := VarData[Param[Count].vID]^.Data;
+                  //parsesometrihng
+                  CheckArray (Param[Count].vID, ArrayData, RecInfo);
                 End;
         End;
       End;
