@@ -26,7 +26,8 @@ Function CreateTelnet (Owner: TServerManager; Config: RecConfig; ND: TNodeData; 
 
 Type
   TTelnetServer = Class(TServerClient)
-    ND : TNodeData;
+    ND       : TNodeData;
+    Snooping : Boolean;
     Constructor Create (Owner: TServerManager; ND: TNodeData; CliSock: TSocketClass);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
@@ -43,7 +44,8 @@ Constructor TTelnetServer.Create (Owner: TServerManager; ND: TNodeData; CliSock:
 Begin
   Inherited Create(Owner, CliSock);
 
-  Self.ND := ND;
+  Self.ND  := ND;
+  Snooping := False;
 End;
 
 {$IFDEF WINDOWS}
@@ -133,6 +135,9 @@ Begin
       While Proc.Output.NumBytesAvailable > 0 Do Begin
         bRead := Proc.Output.Read(Buffer, BufferSize);
         Client.WriteBuf (Buffer, bRead);
+
+        If Snooping Then
+          Term.ProcessBuf(Buffer[1], bRead);
       End;
     End Else
     If Client.DataWaiting Then Begin
@@ -140,8 +145,9 @@ Begin
 
       If bWrite < 0 Then Break;
 
-      If bWrite > 0 Then
+      If bWrite > 0 Then Begin
         Proc.Input.Write(Buffer, bWrite);
+      End;
     End Else
       Sleep(10);
   End;

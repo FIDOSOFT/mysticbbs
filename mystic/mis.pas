@@ -58,7 +58,6 @@ Const
   FocusMax    = 4;
 
 Var
-  Console      : TOutput;
   Keyboard     : TInput;
   TelnetServer : TServerManager;
   FTPServer    : TServerManager;
@@ -265,7 +264,6 @@ Procedure LocalLogin;
 Const
   BufferSize = 1024 * 4;
 Var
-  Term   : TTermAnsi;
   Client : TSocketClass;
   Res    : LongInt;
   Buffer : Array[1..BufferSize] of Char;
@@ -338,6 +336,38 @@ Begin
 End;
 
 {$IFDEF UNIX}
+Procedure Snoop;
+Begin
+  If FocusCurrent <> FocusTelnet Then Exit;
+
+  If FocusPtr.ClientList[BarPos - 1] <> NIL Then Begin
+    Term := TTermAnsi.Create(Console);
+
+    Console.TextAttr := 7;
+
+    Console.ClearScreen;
+
+    Console.SetWindow (1, 1, 80, 24, True);
+    Console.WriteXY   (1, 25, 112, strPadC('Snooping : Press [ESC] to Quit', 80, ' '));
+
+    TTelnetServer(FocusPtr.ClientList[BarPos - 1]).Snooping := True;
+
+    Repeat Until Keyboard.ReadKey = #27;
+
+    If TTelnetServer(FocusPtr.ClientList[BarPos - 1]) <> NIL Then
+      TTelnetServer(FocusPtr.ClientList[BarPos - 1]).Snooping := False;
+
+    Term.Free;
+
+    Console.TextAttr := 7;
+    Console.SetWindow (1, 1, 80, 25, True);
+
+    FocusCurrent := FocusMax;
+    DrawStatusScreen;
+    SwitchFocus;
+  End;
+End;
+
 Procedure ExecuteDaemon;
 Var
   PID : TPID;
@@ -468,7 +498,7 @@ Begin
   {$ENDIF}
 
   Repeat
-    If Keyboard.KeyWait(1000) Then
+    If Keyboard.KeyWait(500) Then
       Case Keyboard.ReadKey of
         #00 : Case Keyboard.ReadKey of
                 #72 : If BarPos > TopPage Then Begin
@@ -511,6 +541,7 @@ Begin
                       End;
               End;
         #09 : SwitchFocus;
+        #13 : {$IFDEF UNIX}Snoop{$ENDIF};
         #27 : Break;
       	#32 : LocalLogin;
       End;

@@ -37,6 +37,12 @@ Const
     'u','t','d','o','w','n',' ',#24);
 Begin
   Console.LoadScreenImage(ImageData, ImageData_Length, ImageData_Width, 1, 1);
-  Console.WriteXY (1, 25, 113, strPadC('SPACE/Local TELNET     TAB/Switch     ESC/Shutdown', 79, ' '));
-//  Console.WriteXY (25, 1, 113, strPadC(mysVersionText, 30, ' '));
+
+  //Console.WriteXY (25, 1, 113, strPadC(mysVersionText, 30, ' '));
+  
+  {$IFDEF UNIX}
+    Console.WriteXY (1, 25, 113, strPadC('ENTER/Snoop      SPACE/Local TELNET     TAB/Switch     ESC/Shutdown', 79, ' '));
+  {$ELSE}
+    Console.WriteXY (1, 25, 113, strPadC('SPACE/Local TELNET     TAB/Switch     ESC/Shutdown', 79, ' '));
+  {$ENDIF}
 End;

@@ -4,10 +4,16 @@ Unit MIS_Common;
 
 Interface
 
+Uses
+  m_Output,
+  m_Term_Ansi;
+
 {$I RECORDS.PAS}
 
 Var
   bbsConfig : RecConfig;
+  Console   : TOutput;
+  Term      : TTermAnsi;
 
 Function SearchForUser    (UN: String; Var Rec: RecUser; Var RecPos: LongInt) : Boolean;
 Function CheckAccess      (User: RecUser; IgnoreGroup: Boolean; Str: String) : Boolean;
