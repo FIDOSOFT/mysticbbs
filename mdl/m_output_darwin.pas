@@ -52,6 +52,7 @@ Type
     Procedure   ClearScreen; Virtual;
     Procedure   ScrollWindow; Virtual;
     Procedure   ClearEOL;
+    Procedure   CursorXYRaw (X, Y: Byte);
     Procedure   CursorXY (X, Y: Byte);
     Procedure   SetWindow (X1, Y1, X2, Y2: Byte; Home: Boolean);
     Procedure   SetScreenSize (Mode: Byte);
@@ -214,11 +215,24 @@ Begin
   FTextAttr := Attr;
 End;
 
+Procedure TOutputDarwin.CursorXYRaw (X, Y: Byte);
+Begin
+  If (Y < 1)  Then Y := 1 Else
+  If (Y > ScreenSize) Then Y := ScreenSize;
+  If (X < 1)  Then X := 1 Else
+  If (X > 80) Then X := 80;
+
+  BufAddStr(#27 + '[' + strI2S(Y) + ';' + strI2S(X) + 'H');
+  BufFlush;
+
+  FCursorX := X;
+  FCursorY := Y;
+End;
+
 Procedure TOutputDarwin.CursorXY (X, Y: Byte);
 Begin
   If (Y < 1)  Then Y := 1 Else
-//  If (Y > FWinBot) Then Y := FWinBot; {changed 109a4}
-  If (Y > ScreenSize) Then Y := ScreenSize;
+  If (Y > FWinBot) Then Y := FWinBot; {changed 109a4}
   If (X < 1)  Then X := 1 Else
   If (X > 80) Then X := 80;
 
@@ -452,7 +466,7 @@ Begin
   OldX    := FCursorX;
   OldY    := FCursorY;
 
-  CursorXY (X, Y);
+  CursorXYRaw (X, Y);
   SetTextAttr (A);
 
   For Count := 1 to Length(Text) Do
@@ -466,8 +480,8 @@ Begin
     End Else
       Break;
 
-  SetTextAttr(OldAttr);
-  CursorXY (OldX, OldY);
+  SetTextAttr (OldAttr);
+  CursorXYRaw (OldX, OldY);
 
   BufFlush;
 End;
@@ -498,7 +512,7 @@ Begin
   OldX    := FCursorX;
   OldY    := FCursorY;
 
-  CursorXY (X, Y);
+  CursorXYRaw (X, Y);
   SetTextAttr (Attr);
 
   Count := 1;
@@ -533,8 +547,8 @@ Begin
     Dec(Pad);
   End;
 
-  SetTextAttr(OldAttr);
-  CursorXY (OldX, OldY);
+  SetTextAttr (OldAttr);
+  CursorXYRaw (OldX, OldY);
 
   BufFlush;
 End;
