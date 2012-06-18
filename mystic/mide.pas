@@ -47,9 +47,9 @@ Const
   mideMaxOpenFiles = 10;
   mideMaxLineSize  = 254;
   mideTabSpaces    = 2;
-  mideTopY         = 1;
-  mideBotY         = 24;
-  mideWinSize      = 24;
+  mideTopY         : Byte = 1;
+  mideBotY         : Byte = 24;
+  mideWinSize      : Byte = 24;
 
   colTextString  = 27;  { 27 }
   colTextKeyword = 31;  { 31 }
@@ -281,7 +281,7 @@ Var
   A : Byte;
   S : String;
 Begin
-  For A := 0 to 21 Do Begin
+  For A := 0 to mideWinSize - 3 Do Begin
     If CurWin[CurWinNum]^.TopPage + A <= CurWin[CurWinNum]^.TotalLines Then
       S := CurWin[CurWinNum]^.TextData[CurWin[CurWinNum]^.TopPage + A]^
     Else
@@ -812,7 +812,7 @@ End;
 
 Procedure ScrollDown;
 Begin
-  If CurWin[CurWinNum]^.TopPage + 20 = CurWin[CurWinNum]^.TotalLines Then Exit;
+  If CurWin[CurWinNum]^.TopPage + (mideWinSize - 4) = CurWin[CurWinNum]^.TotalLines Then Exit;
 
   Inc (CurWin[CurWinNum]^.TopPage);
 
@@ -994,7 +994,7 @@ Begin
       If CurLine = TotalLines Then Exit;
       Inc (CurLine);
 
-      If CurY < 22 Then
+      If CurY < (mideWinSize - 2) Then
         Inc (CurY)
       Else
         ScrollDown;
@@ -1082,9 +1082,9 @@ Begin
   If CurWinNum = 0 Then Exit;
 
   With CurWin[CurWinNum]^ Do Begin
-    If CurLine > 20 Then Begin
-      Dec (TopPage, 20);
-      Dec (CurLine, 20);
+    If CurLine > (mideWinSize - 4) Then Begin
+      Dec (TopPage, (mideWinSize - 4));
+      Dec (CurLine, (mideWinSize - 4));
 
       If TopPage < 1 Then Begin
         TopPage := 1;
@@ -1105,9 +1105,9 @@ Begin
   If CurWinNum = 0 Then Exit;
 
   With CurWin[CurWinNum]^ Do Begin
-    If CurLine + 20 <= TotalLines Then Begin
-      Inc (TopPage, 20);
-      Inc (CurLine, 20);
+    If CurLine + (mideWinSize - 4) <= TotalLines Then Begin
+      Inc (TopPage, (mideWinSize - 4));
+      Inc (CurLine, (mideWinSize - 4));
     End Else Begin
       TopPage := TotalLines - CurY + 1;
       CurLine := TotalLines;
@@ -1256,6 +1256,7 @@ Begin
   Form.HelpX     := 16;
   Form.HelpColor := 113;
   Form.HelpSize  := 52;
+  Form.HelpY     := mideBotY + 1;
 
   MenuPtr := 0;
 
@@ -1560,6 +1561,11 @@ Begin
 
   Console.SetWindowTitle('MIDE');
 
+  (* FOR 50 line mode development *)
+  Console.SetScreenSize(50);
+  mideBotY    := 49;
+  mideWinSize := 49;
+
   FillScreen;
 
   TotalWinNum := 0;
@@ -1588,7 +1594,7 @@ Begin
           BarPos := 2
         Else
         If CurLine = TotalLines Then
-          BarPos := 23
+          BarPos := mideBotY - 1
         Else
           BarPos := Round(CurLine / TotalLines * 100) DIV 5 + 3;
 
