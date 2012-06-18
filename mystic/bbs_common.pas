@@ -23,10 +23,6 @@ Uses
 // replace with MDL/FP RTL functions
 
 Const
-  fn_SemFileEcho = 'echomail.now';
-  fn_SemFileNews = 'newsmail.now';
-  fn_SemFileNet  = 'netmail.now';
-
   WinConsoleTitle = 'Mystic Node ';
   CopyID          = 'Copyright (C) ' + mysCopyYear + ' By James Coyle.  All Rights Reserved.';
   DateTypeStr : Array[1..4] of String[8] = ('MM/DD/YY', 'DD/MM/YY', 'YY/DD/MM', 'Ask     ');
