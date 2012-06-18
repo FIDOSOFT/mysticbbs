@@ -119,15 +119,17 @@ Begin
   If Session.ExitLevel <> 0 Then ExitCode := Session.ExitLevel;
   If Session.EventRunAfter  Then ExitCode := Session.NextEvent.ErrLevel;
 
+  FileMode := 66;
+
   DirClean  (Session.TempPath, '');
   FileErase (Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
 
   {$IFNDEF LOGGING}
     {$IFNDEF UNIX}
       Screen.TextAttr := 14;
+
       Screen.SetWindow (1, 1, 80, 25, False);
       Screen.ClearScreen;
-
       Screen.WriteLine ('Exiting with Errorlevel ' + strI2S(ExitCode));
     {$ENDIF}
   {$ENDIF}
@@ -151,9 +153,19 @@ End;
 {$IFDEF UNIX}
 Procedure LinuxEventSignal (Sig : LongInt); cdecl;
 Begin
+  FileMode := 66;
+
   Case Sig of
-    SIGHUP  : Halt;
-    SIGTERM : Halt;
+//    SIGHUP  : Halt;
+//    SIGTERM : Halt;
+    SIGHUP  : Begin
+                FileErase (Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+                Halt;
+              End;
+    SIGTERM : Begin
+                FileErase (Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+                Halt;
+              End;
     SIGUSR1 : Session.CheckTimeOut := False;
     SIGUSR2 : Begin
                 Session.CheckTimeOut := True;
