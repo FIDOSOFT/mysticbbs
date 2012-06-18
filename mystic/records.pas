@@ -49,6 +49,10 @@ Const
   mysMaxMenuCmds     = 75;                                      // Maximum menu commands per menu
   mysMaxThemeText    = 485;                                     // Total prompts in theme file
 
+  fn_SemFileEcho = 'echomail.now';
+  fn_SemFileNews = 'newsmail.now';
+  fn_SemFileNet  = 'netmail.now';
+
 Type
   SmallWord = System.Word;
   Integer   = SmallInt;
