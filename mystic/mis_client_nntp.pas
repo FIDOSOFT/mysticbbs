@@ -29,6 +29,7 @@ Type
     UserPos    : LongInt;
     MBase      : RecMessageBase;
     MBasePos   : LongInt;
+    CurArticle : LongInt;
     EndSession : Boolean;
 
     Constructor Create (Owner: TServerManager; CliSock: TSocketClass);
@@ -38,6 +39,7 @@ Type
     Procedure   ClientWriteLine (Str: String);
     Procedure   ResetSession;
 
+    Procedure   cmd_ARTICLE;
     Procedure   cmd_AUTHINFO;
     Procedure   cmd_GROUP;
     Procedure   cmd_LIST;
@@ -56,8 +58,6 @@ Uses
 Const
   FileReadBuffer   = 2048;
   HackThreshold    = 10000;
-  fn_SemFileEcho   = 'echomail.now';
-  fn_SemFileNews   = 'newsmail.now';
 
   re_Greeting      = '200 Mystic BBS NNTP server ready';
   re_Goodbye       = '205 Goodbye';
@@ -94,6 +94,7 @@ Begin
   UserName   := '';
   UserPos    := -1;
   MBasePos   := -1;
+  CurArticle := 0;
   EndSession := False;
 End;
 
@@ -170,8 +171,9 @@ Begin
 
         Dispose (MsgBase, Done);
 
-        MBase    := TempBase;
-        MBasePos := MBaseFile.FilePos;
+        MBase      := TempBase;
+        MBasePos   := MBaseFile.FilePos;
+        CurArticle := 0;  // does GROUP reset cur article?  find out
 
         ClientWriteLine('211 ' + strI2S(Active) + ' ' + strI2S(Low) + ' ' + strI2S(High) + ' ' + TempBase.NewsName);
 
@@ -441,14 +443,85 @@ Begin
 
   MsgText.Free;
 
-  ClientWriteLine ('240 Artical posted ok');
+  ClientWriteLine ('240 Article posted ok');
+End;
+
+Procedure TNNTPServer.cmd_ARTICLE;
+Var
+  ArticleNum : LongInt = 0;
+  Found      : Boolean = False;
+  MsgBase    : PMsgBaseABS;
+Begin
+  If Not LoggedIn Then Begin
+    ClientWriteLine(re_AuthReq);
+    Exit;
+  End;
+
+  If MBasePos = -1 Then Begin
+    ClientWriteLine('412 No newsgroup selected');
+    Exit;
+  End;
+
+  ArticleNum := strS2I(Data);
+
+  Case MBase.BaseType of
+    0 : MsgBase := New(PMsgBaseJAM, Init);
+    1 : MsgBase := New(PMsgBaseSquish, Init);
+  End;
+
+  MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
+
+  If Not MsgBase^.OpenMsgBase Then Begin
+    ClientWriteLine('423 No such article');
+
+    Dispose (MsgBase, Done);
+
+    Exit;
+  End;
+
+  MsgBase^.SeekFirst(ArticleNum);
+
+  Found := MsgBase^.SeekFound;
+
+  If Found Then Begin
+    MsgBase^.MsgStartUp;
+
+    Found := MsgBase^.GetMsgNum = ArticleNum;
+  End;
+
+  If Not Found Then Begin
+    ClientWriteLine('423 No such article');
+
+    Dispose (MsgBase, Done);
+
+    Exit;
+  End;
+
+  MsgBase^.MsgTxtStartUp;
+
+  Client.WriteLine('220 0 ' + strI2S(ArticleNum));
+
+  Client.WriteLine('From: ' + MsgBase^.GetFrom);
+  Client.WriteLine('Newsgroups: ' + MBase.NewsName);
+  Client.WriteLine('Subject: ' + MsgBase^.GetSubj);
+  Client.WriteLine('Date: ' + MsgBase^.GetDate);
+  Client.WriteLine('');
+
+  While Not MsgBase^.EOM Do
+    Client.WriteLine(MsgBase^.GetString(79));
+
+  Client.WriteLine ('.');
+
+  Dispose (MsgBase, Done);
 End;
 
 Procedure TNNTPServer.cmd_XOVER;
 Var
-  First : LongInt = 0;
-  Last  : LongInt = 0;
-  Found : Boolean = False;
+  First   : LongInt = 0;
+  Last    : LongInt = 0;
+  Found   : Boolean = False;
+  MsgBase : PMsgBaseABS;
+  MsgText : TStringList;
 Begin
   If Not LoggedIn Then Begin
     ClientWriteLine(re_AuthReq);
@@ -468,19 +541,61 @@ Begin
     Last  := First;
   End;
 
-  // if last = 0 and first <> 0 then
-  //   last = all messages
-  // else
-  //   first = current article (what sets this value)
-  //   last  = current article (what sets this value)
+  Case MBase.BaseType of
+    0 : MsgBase := New(PMsgBaseJAM, Init);
+    1 : MsgBase := New(PMsgBaseSquish, Init);
+  End;
 
-  // 224 Overview information
-  // send messages here
-  // set found if a message was found.  format per line then a term line is:
-  // msgnum + tab + subj + tab + from + tab + datetime + tab + #0 + tab + msgbytes + tab + msglines + tab + #0
-  // .
+  MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
 
-  // confusion: if no article send error below or tab tab? ive read both.
+  If Not MsgBase^.OpenMsgBase Then Begin
+    ClientWriteLine('420 No article(s) selected');
+
+    Dispose (MsgBase, Done);
+
+    Exit;
+  End;
+
+  If Last = 0 Then Last := MsgBase^.GetHighMsgNum;
+
+  MsgText := TStringList.Create;
+
+  MsgBase^.SeekFirst(First);
+
+  While MsgBase^.SeekFound Do Begin
+    If Not Found Then Begin
+      Found := True;
+
+      ClientWriteLine('224 Overview information follows');
+    End;
+
+    MsgBase^.MsgStartUp;
+    MsgBase^.MsgTxtStartUp;
+
+    MsgText.Clear;
+
+    While Not MsgBase^.EOM Do
+      MsgText.Add(MsgBase^.GetString(79));
+
+    Client.WriteStr(strI2S(MsgBase^.GetMsgNum) + #9);
+    Client.WriteStr(MsgBase^.GetSubj + #9);
+    Client.WriteStr(MsgBase^.GetFrom + #9);
+    Client.WriteStr(MsgBase^.GetDate + #9);
+    Client.WriteStr(#9); //msgID
+    Client.WriteStr(#9); //refs
+    Client.WriteStr(strI2S(Length(MsgText.Text)) + #9);
+    Client.WriteStr(strI2S(MsgText.Count) + #13#10);
+
+    If MsgBase^.GetMsgNum >= Last Then Break;
+
+    MsgBase^.SeekNext;
+  End;
+
+  Client.WriteLine('.');
+
+  MsgText.Free;
+
+  Dispose (MsgBase, Done);
 
   If Not Found Then
     ClientWriteLine('420 No article(s) selected');
@@ -510,6 +625,7 @@ Begin
     Else
       Data := '';
 
+    If Cmd = 'ARTICLE'  Then cmd_ARTICLE Else
     If Cmd = 'AUTHINFO' Then cmd_AUTHINFO Else
     If Cmd = 'GROUP'    Then cmd_GROUP Else
     If Cmd = 'LIST'     Then cmd_LIST Else
