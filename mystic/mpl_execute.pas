@@ -1610,6 +1610,7 @@ Begin
     67  : Begin
             TempBool := Eof(File(Pointer(Param[1].vData)^));
             IoError  := IoResult;
+
             Store (TempBool, 1);
           End;
     68  : Begin
@@ -1703,6 +1704,7 @@ Begin
     92  : Begin
             BlockRead (File(Pointer(Param[1].vData)^), VarData[Param[2].vID]^.Data^, VarData[Param[2].vID]^.DataSize);
             IoError := IoResult;
+//            session.io.outfullln('pos: ' + stri2s(filepos(file(pointer(param[1].vdata)^))));
           End;
     500 : Begin
             TempStr := Session.io.GetInput(Param[1].B, Param[2].B, Param[3].B, Param[4].S);

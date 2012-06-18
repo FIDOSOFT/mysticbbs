@@ -243,8 +243,8 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'strippipe',      {$ENDIF} 's',      iString);  // 88
           AddProc    ({$IFDEF MPLPARSER} 'sizeof',         {$ENDIF} '*',      iLongInt); // 89
           AddProc    ({$IFDEF MPLPARSER} 'fillchar',       {$ENDIF} '*lc',    iNone);    // 90
-          AddProc    ({$IFDEF MPLPARSER} 'fwriterec',      {$ENDIF} 'fx',     iNone);    // 91
-          AddProc    ({$IFDEF MPLPARSER} 'freadrec',       {$ENDIF} 'fx',     iNone);    // 92
+          AddProc    ({$IFDEF MPLPARSER} 'fwriterec',      {$ENDIF} 'Fx',     iNone);    // 91
+          AddProc    ({$IFDEF MPLPARSER} 'freadrec',       {$ENDIF} 'Fx',     iNone);    // 92
 
           IW := 500; // BEGIN BBS-SPECIFIC STUFF
 
@@ -312,7 +312,7 @@ Begin
     1 : Begin
           {$IFNDEF MPLPARSER} TInterpEngine(S).IdxVarUser := X + 1; {$ENDIF}
 
-          AddVar ({$IFDEF MPLPARSER} 'userpermidx',   {$ENDIF} iLongInt);
+          AddVar ({$IFDEF MPLPARSER} 'userindex',     {$ENDIF} iLongInt);
           AddStr ({$IFDEF MPLPARSER} 'username',      {$ENDIF} iString, 30);
           AddStr ({$IFDEF MPLPARSER} 'useralias',     {$ENDIF} iString, 30);
           AddStr ({$IFDEF MPLPARSER} 'useraddress',   {$ENDIF} iString, 30);
