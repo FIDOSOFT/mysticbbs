@@ -22,7 +22,9 @@ Begin
 	Session.SystemLog ('*EVENT EDITOR*');
 
   Assign (Session.EventFile, Config.DataPath + 'events.dat');
-  Reset (Session.EventFile);
+  {$I-} Reset (Session.EventFile); {$I+}
+  If IoResult <> 0 Then ReWrite(Session.EventFile);
+
 	Repeat
     Session.io.OutFullLn ('|CL|14Event Editor|CR|CR|09###  Name|CR---  ------------------------------  -----|14');
     Reset (Session.EventFile);
