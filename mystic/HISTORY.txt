@@ -4104,8 +4104,8 @@
    transfers of giant files, it seemed like the 4K transfer was pretty
    harsh on disk usage.
 
- + Mystic now allows base record variable types to be assigned to otherwise
-   base variable types.
+ + Mystic now allows base record variable types to be assigned to other
+   base record variable types.
 
  + When prompted to save an edited message, Mystic now defaults to YES.
 
@@ -4116,3 +4116,15 @@
    or array of records to an opened file in MPL
 
    Specific elements can be addressed with fWrite/fRead if desired.
+
+ + Fixed a screen bleed bug under UNIX platforms.
+
+ + Added some more CHATX.DAT checks in UNIX versions, although I am not sure
+   it will make any noticable difference in ghost nodes.
+
+ + MIS in Linux now has the ability to Snoop telnet nodes if you use the
+   MIS console as a telnet server.
+
+ + NNTP server is now somewhat functional but does need quite a bit more
+   work to make it good.  It is now possible to enable it, but it has only
+   been briefly tested with XNEWS and does not follow RFC stadards yet.
