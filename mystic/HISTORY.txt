@@ -3959,7 +3959,7 @@
 
  - MAKELANG has been removed from Mystic BBS distribution.
 
- - MakeTHEME has been added to the Mystic BBS distribution.  This utility
+ + MakeTHEME has been added to the Mystic BBS distribution.  This utility
    works much like MAKELANG did but it has a few new options:
 
       1) The ability to decompile prompt files.  Keep in mind, comments are
@@ -4128,3 +4128,16 @@
  + NNTP server is now somewhat functional but does need quite a bit more
    work to make it good.  It is now possible to enable it, but it has only
    been briefly tested with XNEWS and does not follow RFC stadards yet.
+
+ + New MPL function FillChar similar to Pascal.  IE:
+
+     type
+       myuserrecord = record
+         username  : string[30];
+         somevalue : array[1..5] of byte;
+       end;
+     var
+       u : myuserrecord;
+     begin
+       fillchar(u, sizeof(u), #0);
+     end.
