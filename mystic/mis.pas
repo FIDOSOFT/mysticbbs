@@ -335,6 +335,64 @@ Begin
   SwitchFocus;
 End;
 
+Function ServerStartup : Boolean;
+Begin
+  Result := False;
+
+  ReadConfiguration;
+
+  TelnetServer := NIL;
+  FTPServer    := NIL;
+  POP3Server   := NIL;
+  NNTPServer   := NIL;
+  NodeData     := TNodeData.Create(bbsConfig.INetTNNodes);
+
+  If bbsConfig.InetTNUse Then Begin
+    TelnetServer := TServerManager.Create(bbsConfig, bbsConfig.InetTNPort, bbsConfig.INetTNNodes, NodeData, @CreateTelnet);
+
+    TelnetServer.Server.FTelnetServer := True;
+    TelnetServer.ClientMaxIPs         := bbsConfig.InetTNDupes;
+
+    Result := True;
+  End;
+
+  If bbsConfig.InetSMTPUse Then Begin
+    SMTPServer := TServerManager.Create(bbsConfig, bbsConfig.INetSMTPPort, bbsConfig.inetSMTPMax, NodeData, @CreateSMTP);
+
+    SMTPServer.Server.FTelnetServer := False;
+    SMTPServer.ClientMaxIPs         := bbsConfig.INetSMTPDupes;
+
+    Result := True;
+  End;
+
+  If bbsConfig.InetPOP3Use Then Begin
+    POP3Server := TServerManager.Create(bbsConfig, bbsConfig.INetPOP3Port, bbsConfig.inetPOP3Max, NodeData, @CreatePOP3);
+
+    POP3Server.Server.FTelnetServer := False;
+    POP3Server.ClientMaxIPs         := bbsConfig.inetPOP3Dupes;
+
+    Result := True;
+  End;
+
+  If bbsConfig.InetFTPUse Then Begin
+    FTPServer := TServerManager.Create(bbsConfig, bbsConfig.InetFTPPort, bbsConfig.inetFTPMax, NodeData, @CreateFTP);
+
+    FTPServer.Server.FTelnetServer := False;
+    FTPServer.ClientMaxIPs         := bbsConfig.inetFTPDupes;
+
+    Result := True;
+  End;
+
+  If bbsConfig.InetNNTPUse Then Begin
+    NNTPServer := TServerManager.Create(bbsConfig, bbsConfig.InetNNTPPort, bbsConfig.inetNNTPMax, NodeData, @CreateNNTP);
+
+    NNTPServer.Server.FTelnetServer := False;
+    NNTPServer.ClientMaxIPs         := bbsConfig.inetNNTPDupes;
+
+    Result := True;
+  End;
+End;
+
 {$IFDEF UNIX}
 Procedure Snoop;
 Begin
@@ -360,10 +418,13 @@ Begin
     Term.Free;
 
     Console.TextAttr := 7;
+
     Console.SetWindow (1, 1, 80, 25, True);
 
     FocusCurrent := FocusMax;
+
     DrawStatusScreen;
+
     SwitchFocus;
   End;
 End;
@@ -372,8 +433,9 @@ Procedure ExecuteDaemon;
 Var
   PID : TPID;
   SID : TPID;
-  offset:longint;
 Begin
+  WriteLn('- Executing Mystic Internet Server in daemon mode');
+
   PID := fpFork;
 
   If PID < 0 Then Halt(1);
@@ -385,10 +447,15 @@ Begin
 
   Close (Input);
   Close (Output);
-  //CLOSE STDERR
+  //CLOSE STDERR?
+
+  If Not ServerStartup Then Begin
+    NodeData.Free;
+    Halt(1);
+  End;
 
   Repeat
-    WaitMS(60000);
+    WaitMS(60000);  // Heartbeat
   Until False;
 End;
 {$ENDIF}
@@ -410,73 +477,19 @@ Begin
     SetHeapTraceOutput('mis.mem');
   {$ENDIF}
 
-  ReadConfiguration;
+  {$IFDEF UNIX}
+    If DaemonMode Then ExecuteDaemon;
+  {$ENDIF}
 
-  TelnetServer := NIL;
-  FTPServer    := NIL;
-  POP3Server   := NIL;
-  Started      := False;
+  Console  := TOutput.Create(True);
+  Keyboard := TInput.Create;
 
-  NodeData     := TNodeData.Create(bbsConfig.INetTNNodes);
+  Console.SetWindowTitle(WinTitle);
 
-  If Not DaemonMode Then Begin
-    Console  := TOutput.Create(True);
-    Keyboard := TInput.Create;
-
-    Console.SetWindowTitle(WinTitle);
-  End;
-
-  If bbsConfig.InetTNUse Then Begin
-    TelnetServer := TServerManager.Create(bbsConfig, bbsConfig.InetTNPort, bbsConfig.INetTNNodes, NodeData, @CreateTelnet);
-
-    TelnetServer.Server.FTelnetServer := True;
-    TelnetServer.ClientMaxIPs         := bbsConfig.InetTNDupes;
-
-    Started := True;
-  End;
-
-  If bbsConfig.InetSMTPUse Then Begin
-    SMTPServer := TServerManager.Create(bbsConfig, bbsConfig.INetSMTPPort, bbsConfig.inetSMTPMax, NodeData, @CreateSMTP);
-
-    SMTPServer.Server.FTelnetServer := False;
-    SMTPServer.ClientMaxIPs         := bbsConfig.INetSMTPDupes;
-
-    Started := True;
-  End;
-
-  If bbsConfig.InetPOP3Use Then Begin
-    POP3Server := TServerManager.Create(bbsConfig, bbsConfig.INetPOP3Port, bbsConfig.inetPOP3Max, NodeData, @CreatePOP3);
-
-    POP3Server.Server.FTelnetServer := False;
-    POP3Server.ClientMaxIPs         := bbsConfig.inetPOP3Dupes;
-
-    Started := True;
-  End;
-
-  If bbsConfig.InetFTPUse Then Begin
-    FTPServer := TServerManager.Create(bbsConfig, bbsConfig.InetFTPPort, bbsConfig.inetFTPMax, NodeData, @CreateFTP);
-
-    FTPServer.Server.FTelnetServer := False;
-    FTPServer.ClientMaxIPs         := bbsConfig.inetFTPDupes;
-
-    Started := True;
-  End;
-
-  If bbsConfig.InetNNTPUse Then Begin
-    NNTPServer := TServerManager.Create(bbsConfig, bbsConfig.InetNNTPPort, bbsConfig.inetNNTPMax, NodeData, @CreateNNTP);
-
-    NNTPServer.Server.FTelnetServer := False;
-    NNTPServer.ClientMaxIPs         := bbsConfig.inetNNTPDupes;
-
-    Started := True;
-  End;
-
-  If Not Started Then Begin
-    If Not DaemonMode Then Begin
-      Console.ClearScreen;
-      Console.WriteLine('ERROR: No servers are configured as active.  Run MYSTIC -CFG to configure');
-      Console.WriteLine('Internet server options.');
-    End;
+  If Not ServerStartup Then Begin
+    Console.ClearScreen;
+    Console.WriteLine('ERROR: No servers are configured as active.  Run MYSTIC -CFG to configure');
+    Console.WriteLine('Internet server options.');
 
     NodeData.Free;
     Keyboard.Free;
@@ -487,15 +500,11 @@ Begin
 
   Count := 0;
 
-  If Not DaemonMode Then Begin
-    DrawStatusScreen;
-    FocusCurrent := FocusMax;
-    SwitchFocus;
-  End;
+  DrawStatusScreen;
 
-  {$IFDEF UNIX}
-    If DaemonMode Then ExecuteDaemon;
-  {$ENDIF}
+  FocusCurrent := FocusMax;
+
+  SwitchFocus;
 
   Repeat
     If Keyboard.KeyWait(500) Then
