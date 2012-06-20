@@ -429,12 +429,28 @@ Begin
   End;
 End;
 
+Procedure DaemonEventSignal (Sig : LongInt); cdecl;
+Begin
+  Case Sig of
+    SIGTERM : Begin
+                TelnetServer.Free;
+                SMTPServer.Free;
+                POP3Server.Free;
+                FTPServer.Free;
+                NNTPServer.Free;
+                NodeData.Free;
+                Halt(0);
+              End;
+
+  End;
+End;
+
 Procedure ExecuteDaemon;
 Var
   PID : TPID;
   SID : TPID;
 Begin
-  WriteLn('- Executing Mystic Internet Server in daemon mode');
+  WriteLn('- [MIS] Executing Mystic Internet Server in daemon mode');
 
   PID := fpFork;
 
@@ -453,6 +469,8 @@ Begin
     NodeData.Free;
     Halt(1);
   End;
+
+  fpSignal (SIGTERM, DaemonEventSignal);
 
   Repeat
     WaitMS(60000);  // Heartbeat
