@@ -4141,3 +4141,6 @@
      begin
        fillchar(u, sizeof(u), #0);
      end.
+
+ + Mystic Internet Server (MIS) can now be started in daemon mode by
+   executing MIS with the -d command line option for Unix platforms.
