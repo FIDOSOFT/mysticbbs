@@ -942,3 +942,15 @@
 484 |CL|09|17 ° |15Chat mode end.|$X79 |16|DE|DE
 ; User2User accept chat page request? &1=user &2=Node
 485 |CL|15|&1 is requesting private user chat.  Accept? |11
+; MsgBase quickscan header prompt
+486 |CR|12Starting Quick Scan|CR
+; MsgBase quickscan Scanning prompt
+; &1=basename  &2=current base#  &3=total bases#
+487 Scanning |&1 [|&2 of |&3]...
+; MsgBase quickscan base list prompt
+; &4=msgs in base    &5=new messages  &6=your messages  &7=global total msg
+; &8=global new msgs &9=global your msgs
+488 |03Base: |14|$R40|&1 |03Total: |09|$L04|&4|03 New: |11|$L04|&5 |03Yours: |12|$L03|&6
+; MsgBase quickscan footer prompt
+; &7=global total msg   &8=global new msgs   &9=global your msgs
+489 |CRQuick Scan complete. |CR|CR|PA

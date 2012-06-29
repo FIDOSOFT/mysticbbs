@@ -244,7 +244,7 @@ Begin
             'M' : Session.Msgs.SendMassEmail;
             'N' : Session.Msgs.MessageNewScan (strUpper(Data));
             'P' : Session.Msgs.PostMessage (False, Data);
-//            'Q' : Session.Msgs.Message_QuickScan(UpCase(Data[1]));
+            'Q' : Session.Msgs.MessageQuickScan(strUpper(Data));
             'R' : Begin
                     If Data = '' Then Data := ' ';
 

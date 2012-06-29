@@ -4144,3 +4144,47 @@
 
  + Mystic Internet Server (MIS) can now be started in daemon mode by
    executing MIS with the -d command line option for Unix platforms.
+
+ + Added new Message Base "QuickScan" menu command (MQ).  This command
+   does a scan of message bases and shows you the number of new messages,
+   new messages to you, total messages, etc.  This is modeled after PCBoard
+   scans and only scans bases in the bases flagged for scanning by the
+   user.  For example:
+
+     Starting QuickScan
+
+     Base: General Messages         Total: 1,000  New: 24  Yours: 3
+     Base: Test Message Base        Total: 1,000  New: 24  Yours: 3
+
+     Quick Scan Complete
+
+   By default the QuickScan will do a global scan of all message bases in
+   all groups.  However there are many optional data options:
+
+     /CURRENT = scan only current message base
+     /GROUP   = scan only current group's bases
+     /NOSCAN  = do not show "scanning" prompt
+     /NOFOOT  = do not show "end of scan" prompt
+     /NOHEAD  = do not show "starting quickscan" prompt
+
+   This can be combined with the MN menu command to prompt the user what to
+   do next.  You could even get creative with the & MCI codes and MPL to
+   make logical decisions for the user based on the results of the scan!
+
+   Four new prompts go along with this:
+
+   ; MsgBase quickscan header prompt
+   486 |CR|12Starting Quick Scan|CR
+
+   ; MsgBase quickscan Scanning prompt
+   ; &1=basename  &2=current base#  &3=total bases#
+   487 Scanning |&1 [|&2 of |&3]...
+
+   ; MsgBase quickscan base list prompt
+   ; &4=msgs in base    &5=new messages  &6=your messages  &7=global total msg
+   ; &8=global new msgs &9=global your msgs
+   488 |03Base: |14|$R40|&1 |03Total: |09|$L04|&4|03 New: |11|$L04|&5 |03Yours: |12|$L03|&6
+
+   ; MsgBase quickscan footer prompt
+   ; &7=global total msg   &8=global new msgs   &9=global your msgs
+   489 |CRQuick Scan complete. |CR|CR|PA

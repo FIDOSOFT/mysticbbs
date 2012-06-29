@@ -51,6 +51,7 @@ Type
     Procedure   PostMessage         (Email: Boolean; Data: String);
     Procedure   CheckEMail;
     Procedure   MessageNewScan      (Data: String);
+    Procedure   MessageQuickScan    (Data: String);
     Procedure   GlobalMessageSearch (Mode: Char);
     Procedure   SetMessagePointers;
     Procedure   ViewSentEmail;
@@ -3414,19 +3415,28 @@ Begin
   DirClean (Session.TempPath, '');
 End;
 
-(*
-// not completed or documented.  is this worth bothering with? pcboard style
-Procedure TMsgBase.Message_QuickScan (Mode: Char);
-{ C = Current  G = Group  A = All Areas/Groups }
-{ ADD: /NEW show only if new }
-{ ADD: /YOU show only if new to you }
-{ ADD for prompts: /NOSCAN }{ ADD: /NOFOOT }{ ADD: /NOHEAD }
+Procedure TMsgBase.MessageQuickScan (Data: String);
+// defaults to ALL mode
+//   /CURRENT = scan only current message base
+//   /GROUP   = scan only current group bases
+//   /ALL     = scan all bases in all groups
+// options:
+//   /NOSCAN  = do not show "scanning" prompt
+//   /NOFOOT  = do not show "end of scan" prompt
+//   /NOHEAD  = do not show "starting quickscan" prompt
+// Only scans bases that they have selected in Newscan, of course
 Const
   Global_CurBase    : LongInt = 1;
   Global_TotalBases : LongInt = 1;
   Global_TotalMsgs  : LongInt = 0;
   Global_NewMsgs    : LongInt = 0;
   Global_YourMsgs   : LongInt = 0;
+  ShowIfNew         : Boolean = False;
+  ShowIfYou         : Boolean = False;
+  ShowScanPrompt    : Boolean = True;
+  ShowHeadPrompt    : Boolean = True;
+  ShowFootPrompt    : Boolean = True;
+  Mode              : Char    = 'A';
 
   Procedure ScanBase;
   Var
@@ -3436,15 +3446,16 @@ Const
     TotalMsgs : LongInt;
     MsgTo     : String;
   Begin
-    Session.io.PromptInfo[1] := MBase.Name;
-    Session.io.PromptInfo[2] := strI2S(Global_CurBase);
-    Session.io.PromptInfo[3] := strI2S(Global_TotalBases);
+    Session.io.PromptInfo[1]  := MBase.Name;
+    Session.io.PromptInfo[2]  := strI2S(Global_CurBase);
+    Session.io.PromptInfo[3]  := strI2S(Global_TotalBases);
 
     NewMsgs   := 0;
     YourMsgs  := 0;
     TotalMsgs := 0;
 
-    Session.io.OutFull('Scanning |&1 [|&2 of |&3]...');
+    If ShowScanPrompt Then
+      Session.io.OutFull(Session.GetPrompt(487));
 
     Case MBase.BaseType of
       0 : MsgBase := New(PMsgBaseJAM, Init);
@@ -3485,21 +3496,32 @@ Const
     Session.io.PromptInfo[8] := strI2S(Global_NewMsgs);
     Session.io.PromptInfo[9] := strI2S(Global_YourMsgs);
 
-    Session.io.OutBS(Screen.CursorX, True);
-    Session.io.OutFullLn('|03Base: |14|$R40|&1 |03Total: |09|$L04|&4|03 New: |11|$L04|&5 |03Yours: |12|$L03|&6');
+    If ShowScanPrompt Then
+      Session.io.OutBS(Screen.CursorX, True);
+
+    If (ShowIfNew And (NewMsgs > 0)) or (ShowIfYou And (YourMsgs > 0)) or (Not ShowIfNew And Not ShowIfYou) Then
+      Session.io.OutFullLn(Session.GetPrompt(488));
 
     Dispose (MsgBase, Done);
   End;
 
 Var
-  Old : MBaseRec;
+  Old : RecMessageBase;
 Begin
-  If Not (Mode in ['A', 'C', 'G']) Then Mode := 'G';
+  FillChar(Session.io.PromptInfo, SizeOf(Session.io.PromptInfo), 0);
 
-  Old            := MBase;
-  Session.User.IgnoreGroup    := Mode = 'A';
+  If Pos('/GROUP',   Data) > 0 Then Mode := 'G';
+  If Pos('/CURRENT', Data) > 0 Then Mode := 'C';
 
-  Session.io.OutFullLn ('|CRStarting Quick Scan|CR');
+  ShowScanPrompt := Pos('/NOSCAN', Data) = 0;
+  ShowHeadPrompt := Pos('/NOHEAD', Data) = 0;
+  ShowFootPrompt := Pos('/NOFOOT', Data) = 0;
+
+  Old                      := MBase;
+  Session.User.IgnoreGroup := Mode = 'A';
+
+  If ShowHeadPrompt Then
+    Session.io.OutFullLn (Session.GetPrompt(486));
 
   If Mode = 'C' Then
     ScanBase
@@ -3523,12 +3545,12 @@ Begin
     Close (MBaseFile);
   End;
 
-  Session.io.OutFullLn('|CRQuick Scan complete. |PA');
+  If ShowFootPrompt Then
+    Session.io.OutFullLn(Session.GetPrompt(489));
 
   Session.User.IgnoreGroup := False;
-  MBase       := Old;
+  MBase                    := Old;
 End;
-*)
 
 Function TMsgBase.SaveMessage (mArea: RecMessageBase; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mLines: Integer) : Boolean;
 Var
