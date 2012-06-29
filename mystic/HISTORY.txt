@@ -4188,3 +4188,6 @@
    ; MsgBase quickscan footer prompt
    ; &7=global total msg   &8=global new msgs   &9=global your msgs
    489 |CRQuick Scan complete. |CR|CR|PA
+
+ + The Full screen editor now does a full redraw of the editor screen and
+   text after uploading a .txt file into the editor.

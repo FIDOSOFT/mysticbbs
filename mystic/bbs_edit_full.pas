@@ -753,6 +753,9 @@ Begin
       'U' : Begin
               Session.Msgs.MessageUpload(CurLine);
               TotalLine := CurLine;
+
+              FullReDraw;
+
               Exit;
             End;
     End;
