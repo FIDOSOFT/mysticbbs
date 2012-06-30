@@ -143,7 +143,7 @@ Begin
             Form.Clear;
 
             Form.AddTog  ('D', ' Date Format' , 7,  6, 23,  6, 14,  8,  1,  3, 'MM/DD/YY DD/MM/YY YY/MM/DD', @U.DateType, Topic + 'User''s date format');
-            Form.AddTog  ('E', ' FS Editor'   , 7,  7, 23,  7, 14,  3,  0,  1, 'Line Full', @U.EditType, Topic + 'User''s full screen editor setting');
+            Form.AddTog  ('E', ' FS Editor'   , 7,  7, 23,  7, 14,  4,  0,  1, 'Line Full', @U.EditType, Topic + 'User''s full screen editor setting');
             Form.AddBol  ('Q', ' Quote Window', 7,  8, 23,  8, 14,  3,  @U.UseLBQuote, Topic + 'User''s FS editor quote window status');
             Form.AddTog  ('F', ' File Listing', 7,  9, 23,  9, 14,  8,  0,  1, 'Standard Full', @U.FileList, Topic + 'User''s file listing type');
             Form.AddTog  ('M', ' Msg Reader'  , 7, 10, 23, 10, 14,  8,  0,  1, 'Standard Full', @U.MReadType, Topic + 'Full screen message reader status');
