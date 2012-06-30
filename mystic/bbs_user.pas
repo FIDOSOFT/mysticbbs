@@ -32,6 +32,7 @@ Type
     Constructor Create (Var Owner: Pointer);
     Destructor  Destroy; Override;
 
+    Procedure   InitializeUserData;
     Function    IsThisUser         (Str: String) : Boolean;
     Function    Access             (Str: String) : Boolean;
     Function    SearchUser         (Var Str : String; Real : Boolean) : Boolean;
@@ -76,19 +77,31 @@ Uses
 
 Constructor TBBSUser.Create (Var Owner: Pointer);
 Begin
-  FillChar(ThisUser, SizeOf(ThisUser), #0);
+  InitializeUserData;
+End;
+
+Destructor TBBSUser.Destroy;
+Begin
+  Inherited Destroy;
+End;
+
+Procedure TBBSUser.InitializeUserData;
+Begin
+  FillChar (ThisUser, SizeOf(ThisUser), #0);
+  FillChar (Security, SizeOf(Security), #0);
 
   UserNum             := -1;
   ThisUser.ScreenSize := Config.DefScreenSize;
+  ThisUser.Theme      := Config.DefThemeFile;
   ThisUser.DateType   := 1;
-  ThisUser.Security   := 255;
   ThisUser.HotKeys    := True;
   ThisUser.RealName   := 'Unknown';
-  ThisUser.Handle     := 'Unknown';
+  ThisUser.Handle     := ThisUser.RealName;
   ThisUser.EditType   := 1;
   ThisUser.Birthday   := CurDateJulian;
   ThisUser.Gender     := 'U';
   ThisUser.FirstOn    := CurDateDos;
+  ThisUser.TimeLeft   := Config.LoginTime;
   ThisUser.Archive    := Config.qwkArchive;
   ThisUser.LastFGroup := Config.StartFGroup;
   ThisUser.LastMGroup := Config.StartMGroup;
@@ -97,11 +110,6 @@ Begin
   InChat        := False;
   AcsOkFlag     := False;
   MatrixOK      := False;
-End;
-
-Destructor TBBSUser.Destroy;
-Begin
-  Inherited Destroy;
 End;
 
 Function TBBSUser.IsThisUser (Str: String) : Boolean;
@@ -846,27 +854,26 @@ Begin
 
   Session.SystemLog ('NEW USER');
 
-  { make user intialize data function }
+  InitializeUserData;
 
-  If ExecMPE Then Begin { replace this with apple.mpx once the above is done }
-(*
-    If User.ThisUser.RealName = '' Then User.ThisUser.RealName := User.ThisUser.Handle;
-    If User.ThisUser.Handle   = '' Then User.ThisUser.Handle   := User.ThisUser.RealName;
+  Session.io.OutFile ('newuser1', True, 0);
+
+  If ExecuteMPL (NIL, 'newuserapp') > 0 Then Begin
+    If ThisUser.RealName = '' Then ThisUser.RealName := ThisUser.Handle;
+    If ThisUser.Handle   = '' Then ThisUser.Handle   := ThisUser.RealName;
 
     If { Test validity of user data }
-      IsUser(User.ThisUser.RealName) or
-      IsUser(User.ThisUser.Handle) or
-      (User.ThisUser.Password = '') or
-      (User.ThisUser.RealName = '') or
-      (User.ThisUser.Handle   = '')
+      FindUser(ThisUser.RealName, False) or
+      FindUser(ThisUser.Handle, False) or
+      (ThisUser.Password = '') or
+      (ThisUser.RealName = '') or
+      (ThisUser.Handle   = '')
     Then Begin
-      Sysop_Log('"apply.mpx" does not set minimum data elements');
+      Session.SystemLog('newuserapp.mpx does not set minimum data elements');
+
       Halt(1);
     End;
-*)
   End Else Begin
-    Session.io.OutFile ('newuser1', True, 0);
-
     If strUpper(DefName) = 'NEW' Then DefName := '';
 
     With Config Do Begin
