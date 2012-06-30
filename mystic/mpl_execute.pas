@@ -86,7 +86,10 @@ Type
     Procedure FileWriteLine (Var F: File; Str: String);
 
     Procedure GetUserVars     (Var U: RecUser);
+    Procedure PutUserVars     (Var U: RecUser);
     Function  GetUserRecord   (Num: LongInt) : Boolean;
+    Procedure PutUserRecord   (Num: LongInt);
+
     Procedure GetMBaseVars    (Var M: RecMessageBase);
     Function  GetMBaseRecord  (Num: LongInt) : Boolean;
     Procedure GetMGroupVars   (Var G: RecGroup);
@@ -166,6 +169,22 @@ Begin
   Move (U.Flags,    VarData[IdxVarUser + 11]^.Data^, SizeOf(U.Flags));
 End;
 
+Procedure TInterpEngine.PutUserVars (Var U: RecUser);
+Begin
+  Move (VarData[IdxVarUser     ]^.Data^, U.PermIdx,  SizeOf(U.PermIdx));
+  Move (VarData[IdxVarUser + 1 ]^.Data^, U.RealName, SizeOf(U.RealName));
+  Move (VarData[IdxVarUser + 2 ]^.Data^, U.Handle,   SizeOf(U.Handle));
+  Move (VarData[IdxVarUser + 3 ]^.Data^, U.Address,  SizeOf(U.Address));
+  Move (VarData[IdxVarUser + 4 ]^.Data^, U.Security, SizeOf(U.Security));
+  Move (VarData[IdxVarUser + 5 ]^.Data^, U.Gender,   SizeOf(U.Gender));
+  Move (VarData[IdxVarUser + 6 ]^.Data^, U.FirstOn,  SizeOf(U.FirstOn));
+  Move (VarData[IdxVarUser + 7 ]^.Data^, U.LastOn,   SizeOf(U.LastOn));
+  Move (VarData[IdxVarUser + 8 ]^.Data^, U.DateType, SizeOf(U.DateType));
+  Move (VarData[IdxVarUser + 9 ]^.Data^, U.Calls,    SizeOf(U.Calls));
+  Move (VarData[IdxVarUser + 10]^.Data^, U.Password, SizeOf(U.Password));
+  Move (VarData[IdxVarUser + 11]^.Data^, U.Flags,    SizeOf(U.Flags));
+End;
+
 Function TInterpEngine.GetUserRecord (Num: LongInt) : Boolean;
 Var
   F : File;
@@ -182,6 +201,26 @@ Begin
   End;
 
   Close (F);
+End;
+
+Procedure TInterpEngine.PutUserRecord (Num: LongInt);
+Var
+  F : File;
+  U : RecUser;
+Begin
+  Assign (F, Config.DataPath + 'users.dat');
+
+  If Not ioReset(F, SizeOf(RecUser), fmRWDN) Then Exit;
+
+  PutUserVars(U);
+
+  If Not ioSeek(F, Pred(Num)) Then Begin
+    Close(F);
+    Exit;
+  End;
+
+  IoWrite (F, U);
+  Close   (F);
 End;
 
 Procedure TInterpEngine.GetMBaseVars (Var M: RecMessageBase);
@@ -1842,6 +1881,8 @@ Begin
 
             Store (TempByte, 1);
           End;
+    538 : PutUserVars(Session.User.ThisUser);
+    539 : PutUserRecord(Param[1].L);
   End;
 End;
 
