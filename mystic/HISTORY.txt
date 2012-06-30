@@ -4191,3 +4191,10 @@
 
  + The Full screen editor now does a full redraw of the editor screen and
    text after uploading a .txt file into the editor.
+
+ + New MPL procedure "hangup" does exactly what you think it does to the
+   caller! :)
+
+ + Mystic now allows users to login by the permanent index number as well as
+   their user name.  Private e-mails and other areas of the BBS also allow
+   for usage of the permanent index now as well.

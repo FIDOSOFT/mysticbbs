@@ -308,19 +308,22 @@ Begin
 End;
 
 Function TBBSUser.FindUser (Str: String; Adjust: Boolean) : Boolean;
+Var
+  RecNum : LongInt;
 Begin
   FindUser := False;
 
   If Str = '' Then Exit;
 
-  Str := strUpper(Str);
+  Str    := strUpper(Str);
+  RecNum := strS2I(Str);
 
   Reset (UserFile);
 
   While Not Eof(UserFile) Do Begin
     Read (UserFile, TempUser);
 
-    If ((strUpper(TempUser.RealName) = Str) or (strUpper(TempUser.Handle) = Str)) and (TempUser.Flags And UserDeleted = 0) Then Begin
+    If ((TempUser.PermIdx = RecNum) or (strUpper(TempUser.RealName) = Str) or (strUpper(TempUser.Handle) = Str)) and (TempUser.Flags And UserDeleted = 0) Then Begin
       If Adjust Then UserNum := FilePos(UserFile);
 
       FindUser := True;
