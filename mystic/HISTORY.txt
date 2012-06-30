@@ -4198,3 +4198,10 @@
  + Mystic now allows users to login by the permanent index number as well as
    their user name.  Private e-mails and other areas of the BBS also allow
    for usage of the permanent index now as well.
+
+ + Mystic now allows for the new user application process to be completely
+   replaced by an MPL program.  You must at a very minimum set either the
+   user real name or handle fields, as well as the password value.
+
+   If the newuserapp.mpx exists in the scripts directory, it will be
+   executed instead of the normal application process.
