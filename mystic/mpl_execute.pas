@@ -1883,6 +1883,10 @@ Begin
           End;
     538 : PutUserVars(Session.User.ThisUser);
     539 : PutUserRecord(Param[1].L);
+    540 : Begin
+            TempBool := Session.User.FindUser(Param[1].S, False);
+            Store (TempBool, 1);
+          End;
   End;
 End;
 

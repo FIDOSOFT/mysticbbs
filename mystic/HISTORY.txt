@@ -4205,3 +4205,8 @@
 
    If the newuserapp.mpx exists in the scripts directory, it will be
    executed instead of the normal application process.
+
+ + New MPL function IsUser takes a string value which can contain either
+   a user realname, handle, or user perm index number.  If the user exists,
+   it will return a TRUE result or FALSE if the user does not exist.
+

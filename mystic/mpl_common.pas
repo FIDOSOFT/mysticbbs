@@ -286,8 +286,9 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'strmci',         {$ENDIF} 's',      iString);  // 535
           AddProc    ({$IFDEF MPLPARSER} 'getcharxy',      {$ENDIF} 'bb',     iChar);    // 536
           AddProc    ({$IFDEF MPLPARSER} 'getattrxy',      {$ENDIF} 'bb',     iByte);    // 537
-          AddProc    ({$IFDEF MPLPARSER} 'putthisuser'     {$ENDIF} '',       iNone);    // 538
+          AddProc    ({$IFDEF MPLPARSER} 'putthisuser',    {$ENDIF} '',       iNone);    // 538
           AddProc    ({$IFDEF MPLPARSER} 'putuser',        {$ENDIF} 'l',      iNone);    // 539
+          AddProc    ({$IFDEF MPLPARSER} 'isuser',         {$ENDIF} 's',      iBool);    // 540
 
 { END OF PROCEDURE DEFINITIONS }
 
