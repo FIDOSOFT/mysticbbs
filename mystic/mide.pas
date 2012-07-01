@@ -1562,9 +1562,9 @@ Begin
   Console.SetWindowTitle('MIDE');
 
   (* FOR 50 line mode development *)
-  Console.SetScreenSize(50);
-  mideBotY    := 49;
-  mideWinSize := 49;
+//  Console.SetScreenSize(50);
+//  mideBotY    := 49;
+//  mideWinSize := 49;
 
   FillScreen;
 
