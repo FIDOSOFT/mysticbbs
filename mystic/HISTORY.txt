@@ -4210,3 +4210,24 @@
    a user realname, handle, or user perm index number.  If the user exists,
    it will return a TRUE result or FALSE if the user does not exist.
 
+ + Enhanced standard menus to allow for HOME/END/PAGEUP/PAGEDOWN hotkeys
+   which execute menu commands when those keys are pressed.  So the total
+   list of special hotkeys are:
+
+     ESCAPE
+     ENTER
+     TAB
+     HOME
+     UP
+     PAGEUP
+     LEFT
+     RIGHT
+     END
+     DOWN
+     PAGEDOWN
+
+   In addition these are still functional as auto-exec commands:
+
+     FIRSTCMD - Execute only once when the menu is first loaded
+     EVERY    - Execute each time a menu is display, before it is displayed
+     AFTER    - Execute after the menu is displayed but before the prompt

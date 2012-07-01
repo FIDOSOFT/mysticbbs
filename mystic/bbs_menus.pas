@@ -708,10 +708,14 @@ Var
         If ((Temp = #27) and (MenuList[A].HotKey = 'ESCAPE')) or
            ((Temp = #13) and (MenuList[A].HotKey = 'ENTER')) or
            ((Temp = #9)  and (MenuList[A].HotKey = 'TAB')) or
+           (Session.io.IsArrow and (Temp = #71) and (MenuList[A].HotKey = 'HOME')) or
            (Session.io.IsArrow and (Temp = #72) and (MenuList[A].HotKey = 'UP')) or
+           (Session.io.IsArrow and (Temp = #73) and (MenuList[A].HotKey = 'PAGEUP')) or
            (Session.io.IsArrow and (Temp = #75) and (MenuList[A].HotKey = 'LEFT')) or
            (Session.io.IsArrow and (Temp = #77) and (MenuList[A].HotKey = 'RIGHT')) or
+           (Session.io.IsArrow and (Temp = #79) and (MenuList[A].HotKey = 'END')) or
            (Session.io.IsArrow and (Temp = #80) and (MenuList[A].HotKey = 'DOWN')) or
+           (Session.io.IsArrow and (Temp = #81) and (MenuList[A].HotKey = 'PAGEDOWN')) or
            (Not Session.io.IsArrow and (Temp = MenuList[A].HotKey)) Then
 
               If Session.User.Access(MenuList[A].ACS) Then
@@ -811,8 +815,14 @@ Begin
         If MenuList[A].HotKey = 'ESCAPE' Then
           Keys := Keys + #27
         Else
+        If MenuList[A].HotKey = 'HOME' Then
+          ExtKeys := ExtKeys + #71
+        Else
         If MenuList[A].HotKey = 'UP' Then
           ExtKeys := ExtKeys + #72
+        Else
+        If MenuList[A].HotKey = 'PAGEUP' Then
+          ExtKeys := ExtKeys + #73
         Else
         If MenuList[A].HotKey = 'LEFT' Then
           ExtKeys := ExtKeys + #75
@@ -820,8 +830,14 @@ Begin
         If MenuList[A].HotKey = 'RIGHT' Then
           ExtKeys := ExtKeys + #77
         Else
+        If MenuList[A].HotKey = 'END' Then
+          ExtKeys := ExtKeys + #79
+        Else
         If MenuList[A].HotKey = 'DOWN' Then
           ExtKeys := ExtKeys + #80
+        Else
+        If MenuList[A].HotKey = 'PAGEDOWN' Then
+          ExtKeys := ExtKeys + #81
         Else
           Keys := Keys + MenuList[A].HotKey[1];
 
