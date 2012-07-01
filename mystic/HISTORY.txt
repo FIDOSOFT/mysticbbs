@@ -4231,3 +4231,23 @@
      FIRSTCMD - Execute only once when the menu is first loaded
      EVERY    - Execute each time a menu is display, before it is displayed
      AFTER    - Execute after the menu is displayed but before the prompt
+
+ + Added new prompt #490 to the themes.  This prompt defines the message
+   base header flags which were previously hard coded.  Each flag is one
+   word separated by a space:
+
+      ; Msg header flags text one word each separated by a space
+      ; 1=Local 2=Echo 3=Private 4=Sent 5=Delete
+      490 Local Echo Private Sent Deleted
+
+ + Mystic will now abbreviate GIGABYTE size files in the file listings.  In
+   the past it would only do megabytes and kilobytes.  Still, the record
+   limitation is 4 gigs for the max filesize in the filebases.  This needs to
+   be changed at some point, but it requires data format change.
+
+ + Added new prompt #491 to the themes.  This prompt defines the file size
+   and flags within the file listings.
+
+      ; File base filesize flags one word separated by a space
+      ; 1=offline  2=failed  3=unvalidated  4=GB  5=MB  6=KB  7=B
+      491 OFFLINE FAILED UNVALID GB MB KB B
