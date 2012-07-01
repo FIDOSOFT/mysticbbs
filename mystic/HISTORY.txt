@@ -4232,6 +4232,9 @@
      EVERY    - Execute each time a menu is display, before it is displayed
      AFTER    - Execute after the menu is displayed but before the prompt
 
+   And hopefully soon I can get in the TIMER auto-exec from Mystic 2 which
+   is by far the most badass of all of them! :)
+
  + Added new prompt #490 to the themes.  This prompt defines the message
    base header flags which were previously hard coded.  Each flag is one
    word separated by a space:

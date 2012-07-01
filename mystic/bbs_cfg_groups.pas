@@ -108,7 +108,7 @@ Begin
 
     Case List.ExitCode of
       '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
-              'I' : If List.Picked > 1 Then Begin
+              'I' : If List.Picked > 0 Then Begin
                       GroupFile.RecordInsert (List.Picked);
 
                       Group.Name   := 'New Group';
