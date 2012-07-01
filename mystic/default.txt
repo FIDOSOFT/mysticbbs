@@ -954,3 +954,9 @@
 ; MsgBase quickscan footer prompt
 ; &7=global total msg   &8=global new msgs   &9=global your msgs
 489 |CRQuick Scan complete. |CR|CR|PA
+; Msg header flags text one word each separated by a space
+; 1=Local 2=Echo 3=Private 4=Sent 5=Delete
+490 Local Echo Private Sent Deleted
+; File base filesize flags one word separated by a space
+; 1=offline  2=failed  3=unvalidated  4=GB  5=MB  6=KB  7=B
+491 OFFLINE FAILED UNVALID GB MB KB B
