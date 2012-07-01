@@ -1642,7 +1642,7 @@ Var
       Screen.TextAttr := 255;
 
       Insert (
-        Session.io.Attr2Ansi(Session.Lang.FileDescLo),
+        Session.io.Attr2Ansi(Session.Theme.FileDescLo),
         Temp,
         Pos(Data, strUpper(Temp)) + Length(Data)
       );
@@ -1650,7 +1650,7 @@ Var
       Screen.TextAttr := 255;
 
       Insert (
-        Session.io.Attr2Ansi(Session.Lang.FileDescHi),
+        Session.io.Attr2Ansi(Session.Theme.FileDescHi),
         Temp,
         Pos(Data, strUpper(Temp)));
 
@@ -1855,7 +1855,7 @@ Var
         For A := 1 to BatchNum Do
           If Batch[A].FileName = FDir.FileName Then Begin
             List[ListSize + 1].Batch := True;
-            Session.io.PromptInfo[3] := Session.Lang.TagChar;
+            Session.io.PromptInfo[3] := Session.Theme.TagChar;
 
             Break;
           End;
@@ -1920,7 +1920,7 @@ Var
     BotPage   := FilePos(FDirFile) - 1;
     LastPage  := Eof(FDirFile) And (BotDesc = 0) And Not IsNotLast;
     IsNotLast := False;
-    Str       := Session.io.DrawPercent(Session.Lang.FileBar, BotPage, FileSize(FDirFile), A);
+    Str       := Session.io.DrawPercent(Session.Theme.FileBar, BotPage, FileSize(FDirFile), A);
 
     If Found Then Begin
       If (ListType = 1) and (Session.io.ScreenInfo[5].Y <> 0) Then Begin
@@ -1944,7 +1944,7 @@ Var
     Session.io.PromptInfo[2] := List[CurPos].FileName;
 
     If List[CurPos].Batch Then
-      Session.io.PromptInfo[3] := Session.Lang.TagChar
+      Session.io.PromptInfo[3] := Session.Theme.TagChar
     Else
       Session.io.PromptInfo[3] := ' ';
 
@@ -1979,7 +1979,7 @@ Var
           Session.io.PromptInfo[2] := List[CurPos].FileName;
 
           If List[CurPos].Batch Then
-            Session.io.PromptInfo[3] := Session.Lang.TagChar
+            Session.io.PromptInfo[3] := Session.Theme.TagChar
           Else
             Session.io.PromptInfo[3] := ' ';
 

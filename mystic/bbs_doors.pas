@@ -121,7 +121,7 @@ Begin
   Write (tFile, Session.io.Graphics, Ending);
   Write (tFile, Ord(Not Session.LocalMode), Ending);
   Write (tFile, (Session.TimeLeft * 60), Ending);
-  Write (tFile, Session.Lang.TextPath + Ending);
+  Write (tFile, Session.Theme.TextPath + Ending);
   Write (tFile, Config.DataPath + Ending);
   Write (tFile, 'SYSOP.', Session.NodeNum, Ending);
   If Session.LocalMode Then

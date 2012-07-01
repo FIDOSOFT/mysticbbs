@@ -29,13 +29,15 @@ Type
     IO            : TBBSIO;
     Client        : TSocketClass;
     EventFile     : File of EventRec;
-    LangFile      : File of RecTheme;
+    ThemeFile     : File of RecTheme;
+    VoteFile      : File of VoteRec;
+    Vote          : VoteRec;
     CommHandle    : LongInt;
     ShutDown      : Boolean;
     TempPath      : String;
     Event         : EventRec;
     NextEvent     : EventRec;
-    Lang          : RecTheme;
+    Theme         : RecTheme;
     LocalMode     : Boolean;
     Baud          : LongInt;
     ExitLevel     : Byte;
@@ -336,23 +338,23 @@ Function TBBSCore.LoadThemeData (Str: String) : Boolean;
 Begin
   Result := False;
 
-  Reset (LangFile);
+  Reset (ThemeFile);
 
-  While Not Eof(LangFile) Do Begin
-    Read (LangFile, Lang);
+  While Not Eof(ThemeFile) Do Begin
+    Read (ThemeFile, Theme);
 
     {$IFDEF FS_SENSITIVE}
     If Lang.FileName = Str Then Begin
     {$ELSE}
-    If strUpper(Lang.FileName) = strUpper(Str) Then Begin
+    If strUpper(Theme.FileName) = strUpper(Str) Then Begin
     {$ENDIF}
-      If Not FileExist(Config.DataPath + Lang.FileName + '.thm') Then Break;
+      If Not FileExist(Config.DataPath + Theme.FileName + '.thm') Then Break;
 
       {$I-} Close (PromptFile); {$I+}
 
       If IoResult <> 0 Then;
 
-      Assign (PromptFile, Config.DataPath + Lang.FileName + '.thm');
+      Assign (PromptFile, Config.DataPath + Theme.FileName + '.thm');
 
       Result := ioReset(PromptFile, SizeOf(RecPrompt), fmRWDN);
 
@@ -360,7 +362,7 @@ Begin
     End;
   End;
 
-  Close (LangFile);
+  Close (ThemeFile);
 End;
 
 End.

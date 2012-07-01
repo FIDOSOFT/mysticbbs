@@ -192,7 +192,7 @@ Begin
 	Until false;
 
   Session.io.OutFullLn ('|14Saving...');
-	assign (menufile, Session.lang.menupath + Session.Menu.menuname + '.mnu');
+	assign (menufile, Session.Theme.menupath + Session.Menu.menuname + '.mnu');
 	rewrite (menufile);
   writeln (menufile, Session.Menu.Menu.header);
   writeln (menufile, Session.Menu.Menu.prompt);
@@ -231,21 +231,21 @@ Var
 	DirInfo: SearchRec;
 	A : Byte; {format dir output}
 Begin
-  If session.lang.filename = '' then exit;
+  If session.Theme.filename = '' then exit;
 
 	Old 		:= Session.Menu.MenuName;
-	OldLang := Session.Lang;
+	OldLang := Session.Theme;
 	Session.SystemLog ('*MENU EDITOR*');
 
   Session.io.OutFull ('|CL');
 	Session.User.GetLanguage;
 
 	Repeat
-    Session.io.OutFullLn ('|CL|14Menu Editor (Language: ' + Session.Lang.Desc + ')|CR');
-    Session.io.OutFullLn ('|08Directory of ' + Session.lang.MenuPath + '*.MNU|CR|03');
+    Session.io.OutFullLn ('|CL|14Menu Editor (Language: ' + Session.Theme.Desc + ')|CR');
+    Session.io.OutFullLn ('|08Directory of ' + Session.Theme.MenuPath + '*.MNU|CR|03');
 
 		a := 0;
-		FindFirst (Session.lang.MenuPath + '*.mnu', Archive, DirInfo);
+		FindFirst (Session.Theme.MenuPath + '*.mnu', Archive, DirInfo);
 		While DosError = 0 Do Begin
 			inc (a);
       Session.io.OutRaw (strPadR(DirInfo.Name, 25, ' '));
@@ -264,7 +264,7 @@ Begin
               Session.io.OutRaw ('Menu Name: ');
               Session.menu.MenuName := Session.io.GetInput(mysMaxMenuNameLen, mysMaxMenuNameLen, 11, '');
 							If Session.Menu.MenuName <> '' Then Begin
-								Assign (MenuFile, Session.Lang.MenuPath + Session.Menu.MenuName + '.mnu');
+								Assign (MenuFile, Session.Theme.MenuPath + Session.Menu.MenuName + '.mnu');
 								{$I-} Reset(MenuFile); {$I+}
 								If IoResult = 0 Then
                   Session.io.OutRawLn ('Menu already exists')
@@ -289,15 +289,15 @@ Begin
 			'D' : Begin
               Session.io.OutRaw ('Menu to delete: ');
               Session.Menu.MenuName := Session.io.GetInput(mysMaxMenuNameLen, mysMaxMenuNameLen, 11, '');
-							FileErase(Session.Lang.MenuPath + Session.Menu.MenuName + '.mnu');
+							FileErase(Session.Theme.MenuPath + Session.Menu.MenuName + '.mnu');
 						End;
 			'Q' : Break;
 		End;
 	Until False;
 	Session.Menu.MenuName := Old;
-	Session.Lang := OldLang;
+	Session.Theme := OldLang;
 	Close (Session.PromptFile);
-	Assign (Session.PromptFile, Config.DataPath + Session.Lang.FileName + '.thm');
+	Assign (Session.PromptFile, Config.DataPath + Session.Theme.FileName + '.thm');
 	Reset (Session.PromptFile);
 End;
 

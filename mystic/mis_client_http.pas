@@ -1,13 +1,12 @@
-{$I M_OPS.PAS}
-
 Unit MIS_Client_HTTP;
 
-// placeholder for HTTP server if Mystic needs one?
-// based off off initial POP3 server footprint
+{$I M_OPS.PAS}
 
 Interface
 
 Uses
+  MD5,
+  Classes,
   SysUtils,
   m_Strings,
   m_FileIO,
@@ -15,111 +14,65 @@ Uses
   m_DateTime,
   MIS_Server,
   MIS_NodeData,
-  MIS_Common;
+  MIS_Common,
+  BBS_MsgBase_ABS,
+  BBS_MsgBase_JAM,
+  BBS_MsgBase_Squish;
 
-Function CreatePOP3 (Owner: TServerManager; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateHTTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
 
 Type
-  TPOP3Server = Class(TServerClient)
-    Server     : TServerManager;
-    UserName   : String[40];
-    Password   : String[20];
-    LoggedIn   : Boolean;
-    Cmd        : String;
-    Data       : String;
-    User       : UserRec;
-    UserPos    : LongInt;
+  THTTPServer = Class(TServerClient)
+    Server   : TServerManager;
+    UserName : String[30];
+    LoggedIn : Boolean;
+    GotQuit  : Boolean;
+    Cmd      : String;
+    Data     : String;
 
     Constructor Create (Owner: TServerManager; CliSock: TSocketClass);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
 
     Procedure   ResetSession;
-
-    Procedure   cmdUSER;
-    Procedure   cmdPASS;
   End;
 
 Implementation
 
-Const
-  POP3TimeOut    = 120;
-  FileBufSize    = 8 * 1024;
-
-  re_OK    = '+OK ';
-  re_Error = '-ERR ';
-
-  re_UnknownCommand = re_Error + 'Unknown command';
-  re_UnknownUser    = re_Error + 'Unknown user';
-  re_BadLogin       = re_Error + 'Bad credentials';
-
-  re_Greeting       = 'Mystic POP3 Server';
-  re_Goodbye        = re_OK + 'Goodbye';
-  re_SendUserPass   = re_OK + 'Send user password';
-  re_LoggedIn       = re_OK + 'Welcome';
-
-Function CreatePOP3 (Owner: TServerManager; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateHTTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
 Begin
-  Result := TPOP3Server.Create(Owner, CliSock);
+  Result := THTTPServer.Create(Owner, CliSock);
 End;
 
-Constructor TPOP3Server.Create (Owner: TServerManager; CliSock: TSocketClass);
+Constructor THTTPServer.Create (Owner: TServerManager; CliSock: TSocketClass);
 Begin
   Inherited Create(Owner, CliSock);
 
   Server := Owner;
 End;
 
-Procedure TPOP3Server.ResetSession;
+Procedure THTTPServer.ResetSession;
+Var
+  Count : LongInt;
 Begin
-  LoggedIn   := False;
-  UserName   := '';
-  Password   := '';
-  UserPos    := -1;
+  LoggedIn := False;
+  GotQuit  := False;
 End;
 
-Procedure TPOP3Server.cmdUSER;
-Begin
-  ResetSession;
-
-  If SearchForUser(Data, User, UserPos) Then Begin
-    Client.WriteLine(re_SendUserPass);
-    UserName := Data;
-  End Else
-    Client.WriteLine(re_UnknownUser);
-End;
-
-Procedure TPOP3Server.cmdPASS;
-Begin
-  If (UserName = '') or (UserPos = -1) Then Begin
-    Client.WriteLine(re_UnknownUser);
-    Exit;
-  End;
-
-  If strUpper(Data) = User.Password Then Begin
-    LoggedIn := True;
-
-    Client.WriteLine(re_LoggedIn);
-  End Else
-    Client.WriteLine(re_BadLogin);
-End;
-
-Procedure TPOP3Server.Execute;
+Procedure THTTPServer.Execute;
 Var
   Str : String;
 Begin
   ResetSession;
 
-  Client.WriteLine(re_Greeting);
+//  Client.WriteLine(re_Greeting);
 
   Repeat
-    If Client.WaitForData(POP3TimeOut * 1000) = 0 Then Break;
+    If Client.WaitForData(60 * 1000) = 0 Then Break;
 
     If Terminated Then Exit;
 
     If Client.ReadLine(Str) = -1 Then Exit;
-
-server.server.status(str);
 
     Cmd := strUpper(strWordGet(1, Str, ' '));
 
@@ -128,17 +81,24 @@ server.server.status(str);
     Else
       Data := '';
 
-    If Cmd = 'PASS' Then cmdPASS Else
-    If Cmd = 'QUIT' Then Break Else
-    If Cmd = 'USER' Then cmdUSER Else
+    If Cmd = 'QUIT' Then Begin
+      GotQuit := True;
+      Break;
+    End Else
       Client.WriteLine(re_UnknownCommand);
   Until Terminated;
 
-  If Not Terminated Then Client.WriteLine(re_Goodbye);
+  If GotQuit Then Begin
+    Client.WriteLine(re_Goodbye);
+
+    Server.Server.Status (User.Handle + ' logged out');
+  End;
 End;
 
-Destructor TPOP3Server.Destroy;
+Destructor THTTPServer.Destroy;
 Begin
+  ResetSession;
+
   Inherited Destroy;
 End;
 

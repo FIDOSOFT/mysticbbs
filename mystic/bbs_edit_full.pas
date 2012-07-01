@@ -514,7 +514,7 @@ Var
   Begin
     Session.io.AnsiGotoXY (1, QuoteCurLine + Session.io.ScreenInfo[2].Y);
     If On Then
-      Session.io.AnsiColor (Session.Lang.QuoteColor)
+      Session.io.AnsiColor (Session.Theme.QuoteColor)
     Else
       Session.io.AnsiColor (Session.io.ScreenInfo[2].A);
 

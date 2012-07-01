@@ -413,7 +413,7 @@ Procedure TBBSUser.DetectGraphics;
 Var
   Loop : Byte;
 Begin
-  If Session.Lang.Flags AND ThmAllowANSI = 0 Then Begin
+  If Session.Theme.Flags AND ThmAllowANSI = 0 Then Begin
     Session.io.Graphics := 0;
     Exit;
   End;
@@ -803,20 +803,20 @@ Var
   A   : Byte;
 Begin
   T   := 0;
-  Old := Session.Lang;
+  Old := Session.Theme;
 
   Session.io.OutFullLn (Session.GetPrompt(182));
 
-  Reset (Session.LangFile);
+  Reset (Session.ThemeFile);
   Repeat
-    Read (Session.LangFile, Session.Lang);
-    If ((Session.Lang.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0)) or
-       ((Session.Lang.Flags AND ThmAllowANSI  = 0) and (Session.io.Graphics = 1)) Then Continue;
+    Read (Session.ThemeFile, Session.Theme);
+    If ((Session.Theme.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0)) or
+       ((Session.Theme.Flags AND ThmAllowANSI  = 0) and (Session.io.Graphics = 1)) Then Continue;
     Inc (T);
     Session.io.PromptInfo[1] := strI2S(T);
-    Session.io.PromptInfo[2] := Session.Lang.Desc;
+    Session.io.PromptInfo[2] := Session.Theme.Desc;
     Session.io.OutFullLn (Session.GetPrompt(183));
-  Until Eof(Session.LangFile);
+  Until Eof(Session.ThemeFile);
 
   { Lang := Old; }
 
@@ -827,25 +827,23 @@ Begin
   If (A < 1) or (A > T) Then A := 1;
 
   T := 0;
-  Reset (Session.LangFile);
+  Reset (Session.ThemeFile);
   Repeat
-    Read (Session.LangFile, Session.Lang);
-    If ((Session.Lang.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0)) or
-       ((Session.Lang.Flags AND ThmAllowANSI  = 0) and (Session.io.Graphics = 1)) Then Continue;
+    Read (Session.ThemeFile, Session.Theme);
+    If ((Session.Theme.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0)) or
+       ((Session.Theme.Flags AND ThmAllowANSI  = 0) and (Session.io.Graphics = 1)) Then Continue;
     Inc (T);
   Until T = A;
 { Close (Session.LangFile);}
 
-  If Not Session.LoadThemeData(Session.Lang.FileName) Then Begin
+  If Not Session.LoadThemeData(Session.Theme.FileName) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(185));
-    Session.Lang := Old;
+    Session.Theme := Old;
   End Else
-    ThisUser.Theme := Session.Lang.FileName;
+    ThisUser.Theme := Session.Theme.FileName;
 End;
 
 Procedure TBBSUser.CreateNewUser (DefName: String);
-Const
-  ExecMPE : Boolean = False; {placeholder for apply.mpx dev}
 Begin
   If Not Config.AllowNewUsers Then Begin
     Session.io.OutFile ('nonewusr', True, 0);
@@ -1045,18 +1043,18 @@ Begin
 
   { Check for forced voting questions }
 
-  Reset (VoteFile);
-  While Not Eof(VoteFile) Do Begin
-    Read (VoteFile, Vote);
-    If Access(Vote.ACS) and Access(Vote.ForceACS) and (ThisUser.Vote[FilePos(VoteFile)] = 0) Then Begin
-      Count := FilePos(VoteFile);
-      Close (VoteFile);
+  Reset (Session.VoteFile);
+  While Not Eof(Session.VoteFile) Do Begin
+    Read (Session.VoteFile, Session.Vote);
+    If Access(Session.Vote.ACS) and Access(Session.Vote.ForceACS) and (ThisUser.Vote[FilePos(Session.VoteFile)] = 0) Then Begin
+      Count := FilePos(Session.VoteFile);
+      Close (Session.VoteFile);
       Voting_Booth (True, Count);
-      Reset (VoteFile);
-      Seek (VoteFile, Count);
+      Reset (Session.VoteFile);
+      Seek (Session.VoteFile, Count);
     End;
   End;
-  Close (VoteFile);
+  Close (Session.VoteFile);
 
   { END forced voting check }
 End;
@@ -1201,12 +1199,12 @@ Begin
   If FileExist(Config.ScriptPath + 'startup.mpx') Then
     ExecuteMPL(NIL, 'startup');
 
-  If (Session.Lang.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0) Then Begin
+  If (Session.Theme.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(321));
     Session.SystemLog ('ASCII login disabled');
     Halt(0);
   End Else
-  If (Session.Lang.Flags AND ThmAllowANSI = 0) and (Session.io.Graphics = 1) Then Begin
+  If (Session.Theme.Flags AND ThmAllowANSI = 0) and (Session.io.Graphics = 1) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(322));
     Session.SystemLog ('ANSI login disabled');
     Halt(0);
@@ -1305,7 +1303,7 @@ Begin
     8   : GetDateFormat(True);
     9   : Repeat
             GetGraphics;
-            If ((Session.Lang.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0)) or ((Session.Lang.Flags AND ThmAllowANSI = 0) and (Session.io.Graphics = 1)) Then
+            If ((Session.Theme.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0)) or ((Session.Theme.Flags AND ThmAllowANSI = 0) and (Session.io.Graphics = 1)) Then
               Session.io.OutFullLn (Session.GetPrompt(325))
             Else
               Break;

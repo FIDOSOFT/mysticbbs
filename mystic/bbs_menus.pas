@@ -232,7 +232,7 @@ Begin
             '?' : Begin
                     // online ANSI help system (BBSHTML) prototype
                     Help := TAnsiMenuHelp.Create;
-                    Help.OpenHelp (Session.Lang.TextPath + Data + ';ansihelp;INDEX');
+                    Help.OpenHelp (Session.Theme.TextPath + Data + ';ansihelp;INDEX');
                     Help.Free;
                   End;
           End;
@@ -345,7 +345,7 @@ Begin
 
   {$IFDEF LOGGING} Session.SystemLog('Load menu: ' + MenuName); {$ENDIF}
 
-  Assign (MenuFile, Session.Lang.MenuPath + MenuName + '.mnu');
+  Assign (MenuFile, Session.Theme.MenuPath + MenuName + '.mnu');
   {$I-} Reset (MenuFile); {$I+}
 
   If IoResult <> 0 Then Begin
@@ -648,7 +648,7 @@ Var
 
     Session.io.PurgeInputBuffer;
 
-    Listed     := 0;
+    Listed                := 0;
     Session.io.AllowArrow := True;
 
     If HotKeys Then Begin
@@ -663,6 +663,7 @@ Var
               Session.io.BufAddChar (Temp[1]);
               Repeat
                 Ch := UpCase(Session.io.GetKey);
+
                 Case Ch of
                   #08 : If Length(Temp) > 0 Then Begin
                           Dec (Temp[0]);

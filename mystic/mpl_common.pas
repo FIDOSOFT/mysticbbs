@@ -335,8 +335,8 @@ Begin
           AddPointer ({$IFDEF MPLPARSER} 'cfgmsgspath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.MsgsPath       {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'cfgattpath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.AttachPath     {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'cfgqwkpath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.QwkPath        {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'cfgmenupath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Session.Lang.MenuPath {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'cfgtextpath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Session.Lang.TextPath {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgmenupath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Session.Theme.MenuPath {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgtextpath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Session.Theme.TextPath {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'cfgmpepath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.ScriptPath     {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'cfgtemppath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Session.TempPath      {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'cfgtimeout',     {$ENDIF} iWord,   4,              {$IFNDEF MPLPARSER} @Config.Inactivity     {$ELSE} NIL {$ENDIF});

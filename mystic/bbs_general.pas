@@ -597,17 +597,18 @@ Var
 Begin
   If Not Session.io.GetYN (Session.GetPrompt(275), True) Then Exit;
 
-  Reset (VoteFile);
-  If FileSize (VoteFile) = mysMaxVoteQuestion Then Begin
-    Close (VoteFile);
+  Reset (Session.VoteFile);
+  If FileSize (Session.VoteFile) = mysMaxVoteQuestion Then Begin
+    Close (Session.VoteFile);
     Session.io.OutFull (Session.GetPrompt(276));
     Exit;
   End;
-  Close (VoteFile);
+  Close (Session.VoteFile);
 
   Session.io.OutFull (Session.GetPrompt(277));
-  Vote.Question := Session.io.GetInput(78, 78, 11, '');
-  If Vote.Question = '' Then Exit;
+  Session.Vote.Question := Session.io.GetInput(78, 78, 11, '');
+
+  If Session.Vote.Question = '' Then Exit;
 
   Session.io.OutFullLn (Session.GetPrompt(278));
 
@@ -616,30 +617,30 @@ Begin
   While A <= 15 Do Begin
     Session.io.PromptInfo[1] := strI2S(A);
     Session.io.OutFull (Session.GetPrompt(279));
-    Vote.Answer[A].Text := Session.io.GetInput(40, 40, 11, '');
-    If Vote.Answer[A].Text = '' Then Begin
+    Session.Vote.Answer[A].Text := Session.io.GetInput(40, 40, 11, '');
+    If Session.Vote.Answer[A].Text = '' Then Begin
       Dec (A);
       Break;
     End;
-    Vote.Answer[A].Votes := 0;
+    Session.Vote.Answer[A].Votes := 0;
     Inc(A);
   End;
 
   If A = 0 Then Exit;
 
-  Vote.AnsNum   := A;
-  Vote.Votes    := 0;
-  Vote.ACS      := '';
-  Vote.AddACS   := 's999';
-  Vote.ForceACS := 's999';
+  Session.Vote.AnsNum   := A;
+  Session.Vote.Votes    := 0;
+  Session.Vote.ACS      := '';
+  Session.Vote.AddACS   := 's999';
+  Session.Vote.ForceACS := 's999';
 
-  If Session.io.GetYN(Session.GetPrompt(280), True) Then Vote.AddACS := '';
+  If Session.io.GetYN(Session.GetPrompt(280), True) Then Session.Vote.AddACS := '';
 
   If Session.io.GetYN(Session.GetPrompt(281), True) Then Begin
-    Reset (VoteFile);
-    Seek  (VoteFile, FileSize(VoteFile));
-    Write (VoteFile, Vote);
-    Close (VoteFile);
+    Reset (Session.VoteFile);
+    Seek  (Session.VoteFile, FileSize(Session.VoteFile));
+    Write (Session.VoteFile, Session.Vote);
+    Close (Session.VoteFile);
   End;
 End;
 
@@ -649,25 +650,26 @@ Function Voting_List : Byte;
 Var
   Total : Byte;
 Begin
-  Reset (VoteFile);
+  Reset (Session.VoteFile);
 
   Session.io.OutFullLn (Session.GetPrompt(241));
 
   Total := 0;
-  While Not Eof(VoteFile) Do Begin
-    Read (VoteFile, Vote);
-    If Session.User.Access(Vote.ACS) Then Begin
+
+  While Not Eof(Session.VoteFile) Do Begin
+    Read (Session.VoteFile, Session.Vote);
+    If Session.User.Access(Session.Vote.ACS) Then Begin
       Inc (Total);
       Session.io.PromptInfo[1] := strI2S(Total);
-      Session.io.PromptInfo[2] := Vote.Question;
-      If Session.User.ThisUser.Vote[FilePos(VoteFile)] = 0 Then
+      Session.io.PromptInfo[2] := Session.Vote.Question;
+      If Session.User.ThisUser.Vote[FilePos(Session.VoteFile)] = 0 Then
         Session.io.PromptInfo[3] := '*'  //++lang
       Else
         Session.io.PromptInfo[3] := ' ';
       Session.io.OutFullLn (Session.GetPrompt(242));
     End;
   End;
-  Close (VoteFile);
+  Close (Session.VoteFile);
 
   If Total = 0 Then Session.io.OutFullLn (Session.GetPrompt(243));
   Voting_List := Total;
@@ -678,12 +680,12 @@ Var
   A : SmallInt;
   P : SmallInt;
 Begin
-  Reset (VoteFile);
+  Reset (Session.VoteFile);
 
-  If (Data > 0) and (Data <= FileSize(VoteFile)) Then Begin
-    Seek  (VoteFile, Data - 1);
-    Read  (VoteFile, Vote);
-    Close (VoteFile);
+  If (Data > 0) and (Data <= FileSize(Session.VoteFile)) Then Begin
+    Seek  (Session.VoteFile, Data - 1);
+    Read  (Session.VoteFile, Session.Vote);
+    Close (Session.VoteFile);
   End Else Begin
     A := Voting_List;
     If A = 0 Then Exit;
@@ -696,27 +698,27 @@ Begin
       If P <= A Then Break;
     Until False;
 
-    Reset (VoteFile);
+    Reset (Session.VoteFile);
     A := 0;
     Repeat
-      Read (VoteFile, Vote);
-      If Session.User.Access(Vote.ACS) Then Inc(A);
+      Read (Session.VoteFile, Session.Vote);
+      If Session.User.Access(Session.Vote.ACS) Then Inc(A);
     Until A = P;
-    Close (VoteFile);
+    Close (Session.VoteFile);
   End;
 
-  Session.io.PromptInfo[1] := Vote.Question;
-  Session.io.PromptInfo[2] := strI2S(Vote.Votes);
+  Session.io.PromptInfo[1] := Session.Vote.Question;
+  Session.io.PromptInfo[2] := strI2S(Session.Vote.Votes);
   Session.io.OutFullLn (Session.GetPrompt(249));
-  For A := 1 to Vote.AnsNum Do Begin
+  For A := 1 to Session.Vote.AnsNum Do Begin
     Session.io.PromptInfo[1] := strI2S(A);
-    Session.io.PromptInfo[2] := Vote.Answer[A].Text;
-    Session.io.PromptInfo[3] := strI2S(Vote.Answer[A].Votes);
-    If Vote.Votes = 0 Then Begin
+    Session.io.PromptInfo[2] := Session.Vote.Answer[A].Text;
+    Session.io.PromptInfo[3] := strI2S(Session.Vote.Answer[A].Votes);
+    If Session.Vote.Votes = 0 Then Begin
       Session.io.PromptInfo[4] := '0';
       Session.io.PromptInfo[5] := '';
     End Else Begin
-      Session.io.PromptInfo[5] := Session.io.DrawPercent(Session.Lang.VotingBar, Vote.Answer[A].Votes, Vote.Votes, P);
+      Session.io.PromptInfo[5] := Session.io.DrawPercent(Session.Theme.VotingBar, Session.Vote.Answer[A].Votes, Session.Vote.Votes, P);
       Session.io.PromptInfo[4] := strI2S(P);
     End;
     Session.io.OutFullLn (Session.GetPrompt(250));
@@ -729,15 +731,15 @@ Var
   NewQues : Array[1..mysMaxVoteQuestion] of Boolean;
   Pos     : Byte;
 Begin
-  Reset (VoteFile);
-  While Not Eof(VoteFile) Do Begin
-    Read (VoteFile, Vote);
-    If Session.User.Access(Vote.ACS) Then
-      NewQues[FilePos(VoteFile)] := (Session.User.ThisUser.Vote[FilePos(VoteFile)] = 0)
+  Reset (Session.VoteFile);
+  While Not Eof(Session.VoteFile) Do Begin
+    Read (Session.VoteFile, Session.Vote);
+    If Session.User.Access(Session.Vote.ACS) Then
+      NewQues[FilePos(Session.VoteFile)] := (Session.User.ThisUser.Vote[FilePos(Session.VoteFile)] = 0)
     Else
-      NewQues[FilePos(VoteFile)] := False;
+      NewQues[FilePos(Session.VoteFile)] := False;
   End;
-  Close (VoteFile);
+  Close (Session.VoteFile);
 
   For Pos := 1 to mysMaxVoteQuestion Do
     If NewQues[Pos] Then Voting_Booth (False, Pos);
@@ -764,29 +766,29 @@ Begin
     Until False;
 
     Total := 0;
-    Reset (VoteFile);
+    Reset (Session.VoteFile);
     Repeat
-      Read (VoteFile, Vote);
-      If Session.User.Access(Vote.ACS) Then Inc(Total);
+      Read (Session.VoteFile, Session.Vote);
+      If Session.User.Access(Session.Vote.ACS) Then Inc(Total);
     Until Total = Temp;
   End Else Begin
-    Reset (VoteFile);
-    If Num > FileSize(VoteFile) Then Begin
-      Close (VoteFile);
+    Reset (Session.VoteFile);
+    If Num > FileSize(Session.VoteFile) Then Begin
+      Close (Session.VoteFile);
       Exit;
     End;
-    Seek (VoteFile, Num - 1);
-    Read (VoteFile, Vote);
+    Seek (Session.VoteFile, Num - 1);
+    Read (Session.VoteFile, Session.Vote);
   End;
 
-  VPos := FilePos(VoteFile);
+  VPos := FilePos(Session.VoteFile);
 
   Repeat
-    Session.io.PromptInfo[1] := Vote.Question;
+    Session.io.PromptInfo[1] := Session.Vote.Question;
     Session.io.OutFullLn (Session.GetPrompt(245));
-    For Temp := 1 to Vote.AnsNum Do Begin
+    For Temp := 1 to Session.Vote.AnsNum Do Begin
       Session.io.PromptInfo[1] := strI2S(Temp);
-      Session.io.PromptInfo[2] := Vote.Answer[Temp].Text;
+      Session.io.PromptInfo[2] := Session.Vote.Answer[Temp].Text;
       If Session.User.ThisUser.Vote[VPos] = Temp Then
         Session.io.PromptInfo[3] := '*' //++lang
       Else
@@ -794,8 +796,8 @@ Begin
       Session.io.OutFullLn (Session.GetPrompt(246));
     End;
 
-    If Session.User.Access(Vote.AddACS) and (Vote.AnsNum < 15) Then Begin
-      Session.io.PromptInfo[1] := strI2S(Vote.AnsNum + 1);
+    If Session.User.Access(Session.Vote.AddACS) and (Session.Vote.AnsNum < 15) Then Begin
+      Session.io.PromptInfo[1] := strI2S(Session.Vote.AnsNum + 1);
       Session.io.PromptInfo[2] := Session.GetPrompt(252);
       Session.io.PromptInfo[3] := ' ';
       Session.io.OutFullLn (Session.GetPrompt(246));
@@ -804,33 +806,33 @@ Begin
     Session.io.OutFull (Session.GetPrompt(247));
     Temp := strS2I(Session.io.GetInput(2, 2, 12, ''));
 
-    If (Vote.AnsNum < 15) and Session.User.Access(Vote.AddACS) and (Temp = Succ(Vote.AnsNum)) Then Begin
+    If (Session.Vote.AnsNum < 15) and Session.User.Access(Session.Vote.AddACS) and (Temp = Succ(Session.Vote.AnsNum)) Then Begin
       Session.io.OutFull (Session.GetPrompt(253));
       Str := Session.io.GetInput (40, 40, 11, '');
       If Str <> '' Then Begin
-        Inc (Vote.AnsNum);
-        Vote.Answer[Vote.AnsNum].Text  := Str;
-        Vote.Answer[Vote.AnsNum].Votes := 0;
+        Inc (Session.Vote.AnsNum);
+        Session.Vote.Answer[Session.Vote.AnsNum].Text  := Str;
+        Session.Vote.Answer[Session.Vote.AnsNum].Votes := 0;
       End;
     End;
 
-    If (Temp > 0) and (Temp <= Vote.AnsNum) Then Begin
+    If (Temp > 0) and (Temp <= Session.Vote.AnsNum) Then Begin
       If Session.User.ThisUser.Vote[VPos] <> 0 Then Begin
-        Dec (Vote.Answer[Session.User.ThisUser.Vote[VPos]].Votes);
-        Dec (Vote.Votes);
+        Dec (Session.Vote.Answer[Session.User.ThisUser.Vote[VPos]].Votes);
+        Dec (Session.Vote.Votes);
       End;
-      Inc(Vote.Answer[Temp].Votes);
-      Inc(Vote.Votes);
+      Inc(Session.Vote.Answer[Temp].Votes);
+      Inc(Session.Vote.Votes);
       Session.User.ThisUser.Vote[VPos] := Temp;
 
-      Seek  (VoteFile, VPos - 1);
-      Write (VoteFile, Vote);
+      Seek  (Session.VoteFile, VPos - 1);
+      Write (Session.VoteFile, Session.Vote);
       Break;
     End Else
       If Forced Then Session.io.OutFull (Session.GetPrompt(254)) Else Break;
   Until False;
 
-  Close (VoteFile);
+  Close (Session.VoteFile);
   If Session.io.GetYN (Session.GetPrompt(248), True) Then Voting_Result(VPos);
 End;
 
@@ -1099,7 +1101,7 @@ Var
 
     If CurPos > CurBot Then CurPos := CurBot;
 
-    Session.io.PromptInfo[1] := Session.io.DrawPercent(Session.Lang.GalleryBar, CurBot, DirCount, Count);
+    Session.io.PromptInfo[1] := Session.io.DrawPercent(Session.Theme.GalleryBar, CurBot, DirCount, Count);
     Session.io.PromptInfo[2] := strI2S(Count);
 
     Session.io.OutFull(Session.GetPrompt(472));

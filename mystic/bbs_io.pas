@@ -21,36 +21,39 @@ Const
   MaxPromptInfo    = 15;
 
 Type
+  TGetKeyCallBack = Function (Forced: Boolean) : Boolean Is Nested;
+
   TBBSIO = Class
-    Core         : Pointer;
-    Term         : TTermAnsi;
-    ScreenInfo   : Array[0..9] of Record X, Y, A : Byte; End;
-    PromptInfo   : Array[1..MaxPromptInfo] of String[89];
-    FmtString    : Boolean;
-    FmtLen       : Byte;
-    FmtType      : Byte;
-    InMacro      : Boolean;
-    InMacroPos   : Byte;
-    InMacroStr   : String;
-    BaudEmulator : Byte;
-    AllowPause   : Boolean;
-    AllowMCI     : Boolean;
-    LocalInput   : Boolean;
-    AllowArrow   : Boolean;
-    IsArrow      : Boolean;
-    UseInField   : Boolean;
-    UseInLimit   : Boolean;
-    UseInSize    : Boolean;
-    InLimit      : Byte;
-    InSize       : Byte;
-    AllowAbort   : Boolean;
-    Aborted      : Boolean;
-    NoFile       : Boolean;
-    Graphics     : Byte;
-    PausePtr     : Byte;
-    InputData    : Array[1..mysMaxInputHistory] of String[255];
-    LastMCIValue : String;
-    InputPos     : Byte;
+    Core           : Pointer;
+    Term           : TTermAnsi;
+    ScreenInfo     : Array[0..9] of Record X, Y, A : Byte; End;
+    PromptInfo     : Array[1..MaxPromptInfo] of String[89];
+    FmtString      : Boolean;
+    FmtLen         : Byte;
+    FmtType        : Byte;
+    InMacro        : Boolean;
+    InMacroPos     : Byte;
+    InMacroStr     : String;
+    BaudEmulator   : Byte;
+    AllowPause     : Boolean;
+    AllowMCI       : Boolean;
+    LocalInput     : Boolean;
+    AllowArrow     : Boolean;
+    IsArrow        : Boolean;
+    UseInField     : Boolean;
+    UseInLimit     : Boolean;
+    UseInSize      : Boolean;
+    InLimit        : Byte;
+    InSize         : Byte;
+    AllowAbort     : Boolean;
+    Aborted        : Boolean;
+    NoFile         : Boolean;
+    Graphics       : Byte;
+    PausePtr       : Byte;
+    InputData      : Array[1..mysMaxInputHistory] of String[255];
+    LastMCIValue   : String;
+    InputPos       : Byte;
+    GetKeyCallBack : TGetKeyCallBack;
 
     {$IFDEF WINDOWS}
     OutBuffer    : Array[0..TBBSIOBufferSize] of Char;
@@ -585,7 +588,7 @@ Begin
           End;
     'T' : Case Code[2] of
             '0'..
-            '9' : LastMCIValue := Attr2Ansi(Session.Lang.Colors[strS2I(Code[2])]);
+            '9' : LastMCIValue := Attr2Ansi(Session.Theme.Colors[strS2I(Code[2])]);
             'B' : LastMCIValue := strI2S(TBBSCore(Core).User.ThisUser.TimeBank);
             'C' : LastMCIValue := strI2S(Config.SystemCalls);
             'E' : If Graphics = 1 Then LastMCIValue := 'Ansi' Else LastMCIValue := 'Ascii'; //++lang
@@ -622,7 +625,7 @@ Begin
                     1 : LastMCIValue := 'Lightbar'; {++lang}
                   End;
             'K' : LastMCIValue := TBBSCore(Core).User.ThisUser.Email;
-            'L' : LastMCIValue := TBBSCore(Core).Lang.Desc;
+            'L' : LastMCIValue := TBBSCore(Core).Theme.Desc;
             'M' : LastMCIValue := OutON(TBBSCore(Core).User.ThisUser.UseLBMIdx);
             'N' : LastMCIValue := TBBSCore(Core).User.ThisUser.RealName;
             'P' : LastMCIValue := TBBSCore(Core).User.ThisUser.HomePhone;
@@ -716,7 +719,7 @@ Begin
             Inc (B);
 
           FSplit  (strStripLOW(Copy(Str, A + 1, B - A - 1)), D, N, E);
-          OutFile (TBBSCore(Core).Lang.TextPath + N + E, True, 0);
+          OutFile (TBBSCore(Core).Theme.TextPath + N + E, True, 0);
 
           A := B;
 
@@ -947,7 +950,7 @@ Var
 
 Begin
   If Pos(PathChar, FName) = 0 Then
-    FName := TBBSCore(Core).Lang.TextPath + FName;
+    FName := TBBSCore(Core).Theme.TextPath + FName;
 
   If Pos('.', FName) > 0 Then
     Ext := ''
@@ -1027,7 +1030,7 @@ Begin
                     Str := Str + GetChar;
                   End;
 
-                  OutFile (TBBSCore(Core).Lang.TextPath + strStripLOW(Str), True, 0);
+                  OutFile (TBBSCore(Core).Theme.TextPath + strStripLOW(Str), True, 0);
 
                   Continue;
                 End;
@@ -1249,10 +1252,11 @@ Begin
   Repeat
     If LastSec <> TimerSeconds Then Begin
 
-      If GetKeyFunc(False) Then Begin
-        Result := #02;
-        Exit;
-      End;
+      If Assigned(GetKeyCallBack) Then
+        If GetKeyCallBack(False) Then Begin
+          Result := #02;
+          Exit;
+        End;
 
       LastSec := TimerSeconds;
 
@@ -1377,7 +1381,7 @@ End;
 
 Function TBBSIO.GetYN (Str: String; Yes: Boolean) : Boolean;
 Begin
-  If (TBBSCore(Core).Lang.Flags AND ThmLightbarYN <> 0) and (Graphics = 1) Then Begin
+  If (TBBSCore(Core).Theme.Flags AND ThmLightbarYN <> 0) and (Graphics = 1) Then Begin
     GetYN := GetYNL(Str, Yes);
     Exit;
   End;
@@ -1407,7 +1411,9 @@ Begin
 
   Repeat
     OutFull (Str);
+
     Temp := GetInput(15, 15, 16, '');
+
     If Temp = PW Then
       Exit
     Else Begin
@@ -1467,7 +1473,7 @@ Var
   Procedure pWrite (Str : String);
   Begin
     If (Mode = 6) and (Str <> '') Then
-      BufAddStr (strRep(TBBSCore(Core).Lang.EchoChar, Length(Str)))
+      BufAddStr (strRep(TBBSCore(Core).Theme.EchoChar, Length(Str)))
     Else
       BufAddStr (Str);
   End;
@@ -1477,9 +1483,9 @@ Var
     AnsiMoveX (xPos);
 
     pWrite (Copy(Str, Junk, Field));
-    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor2);
+    If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor2);
     pWrite (strRep(FieldCh, Field - Length(Copy(Str, Junk, Field))));
-    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor1);
+    If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor1);
 
     AnsiMoveX (xPos + CurPos - 1);
   End;
@@ -1487,9 +1493,9 @@ Var
   Procedure ReDrawPart;
   Begin
     pWrite (Copy(Str, StrPos, Field - CurPos + 1));
-    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor2);
+    If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor2);
     pWrite (strRep(FieldCh, (Field - CurPos + 1) - Length(Copy(Str, StrPos, Field - CurPos + 1))));
-    If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor1);
+    If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor1);
 
     AnsiMoveX (xPos + CurPos - 1);
   End;
@@ -1546,11 +1552,11 @@ Begin
     Dec (Mode, 10);
 
     If UseInField and (Graphics = 1) Then Begin
-      FieldCh := TBBSCore(Core).Lang.FieldChar;
+      FieldCh := TBBSCore(Core).Theme.FieldChar;
 
-      AnsiColor (TBBSCore(Core).Lang.FieldColor2);
+      AnsiColor (TBBSCore(Core).Theme.FieldColor2);
       BufAddStr (strRep(FieldCh, Field));
-      AnsiColor (TBBSCore(Core).Lang.FieldColor1);
+      AnsiColor (TBBSCore(Core).Theme.FieldColor1);
       AnsiMoveX (xPos);
     End Else
       UseInField := False;
@@ -1654,9 +1660,9 @@ Begin
                   ScrollLeft
                 Else
                 If StrPos = Length(Str) + 1 Then Begin
-                  If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor2);
+                  If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor2);
                   BufAddStr (#8 + FieldCh + #8);
-                  If UseInField Then AnsiColor(TBBSCore(Core).Lang.FieldColor1);
+                  If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor1);
                   Dec (CurPos);
                 End Else Begin
                   BufAddChar (#8);

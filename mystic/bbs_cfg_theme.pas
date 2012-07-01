@@ -415,9 +415,9 @@ Begin
   Session.io.AnsiColor(7);
   Session.io.AnsiClear;
 
-  SavedTheme := Session.Lang;
+  SavedTheme := Session.Theme;
 
-  Move (Theme.Colors, Session.Lang.Colors, SizeOf(Theme.Colors));
+  Move (Theme.Colors, Session.Theme.Colors, SizeOf(Theme.Colors));
 
   Box   := TAnsiMenuBox.Create;
   Input := TAnsiMenuInput.Create;
@@ -553,7 +553,7 @@ Begin
 
   Session.io.RemoteRestore(Image);
 
-  Session.Lang := SavedTheme;
+  Session.Theme := SavedTheme;
 End;
 
 Procedure EditBars (Var Theme: RecTheme);

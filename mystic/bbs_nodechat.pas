@@ -390,7 +390,7 @@ Begin
 
   Session.AllowMessages := False;
 
-  GetKeyFunc := GetKeyNodeChatFunc;
+  Session.io.GetKeyCallBack := GetKeyNodeChatFunc;
 
   Repeat
     Session.io.PromptInfo[1] := Session.User.ThisUser.Handle;
@@ -405,7 +405,7 @@ Begin
       Str := Session.io.GetInput (79 - Screen.CursorX + 1, 250, 11, '');
 
     If Str[1] = '/' Then Begin
-      GetKeyFunc := NoGetKeyFunc;
+      Session.io.GetKeyCallBack := NIL;
 
       Str2 := strUpper(strWordGet(1, Str, ' '));
 
@@ -465,7 +465,7 @@ Begin
         Send_Node_Message (7, '0;Topic changed to "' + Room.Name + '"', CurRoom); // ++lang
       End;
 
-      GetKeyFunc := GetKeyNodeChatFunc;
+      Session.io.GetKeyCallBack := GetKeyNodeChatFunc;
     End Else
     If Str <> '' Then Begin
       Send_Node_Message (1, '0;' + Str, CurRoom);
@@ -474,7 +474,8 @@ Begin
     End;
   Until False;
 
-  GetKeyFunc     := NoGetKeyFunc;
+  Session.io.GetKeyCallBack := NIL;
+
   Chat.InChat    := False;
   Chat.Available := Avail;
 

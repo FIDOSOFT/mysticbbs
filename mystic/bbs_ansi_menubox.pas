@@ -124,7 +124,7 @@ Begin
           'T' : Begin
                   Inc (Count, 2);
 
-                  Session.io.BufAddStr(Session.io.Attr2Ansi(Session.Lang.Colors[strS2I(Code[2])]));
+                  Session.io.BufAddStr(Session.io.Attr2Ansi(Session.Theme.Colors[strS2I(Code[2])]));
                 End;
         Else
           Session.io.BufAddChar(S[Count]);

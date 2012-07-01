@@ -81,13 +81,13 @@ Var
 
         InRemote := 1;
 
-        Session.io.AnsiColor (Session.Lang.LineChat1);
+        Session.io.AnsiColor (Session.Theme.LineChat1);
       End Else Begin
         Ch := Session.io.InKey(200);
 
         If Ch = #255 Then Continue;
 
-        Session.io.AnsiColor (Session.Lang.LineChat2);
+        Session.io.AnsiColor (Session.Theme.LineChat2);
 
         BlockWrite (fOut, Ch, 1);
 

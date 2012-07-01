@@ -284,7 +284,7 @@ Begin
   Template := strWordGet(2, Str, ';');
   Keyword  := strWordGet(3, Str, ';');
 
-  If Pos(PathChar, FN) = 0 Then FN := Session.Lang.TextPath + FN;
+  If Pos(PathChar, FN) = 0 Then FN := Session.Theme.TextPath + FN;
 
   Assign (HelpFile, FN + '.hlp');
   {$I-} Reset (HelpFile); {$I+}

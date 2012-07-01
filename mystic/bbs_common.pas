@@ -26,7 +26,6 @@ Const
   WinConsoleTitle = 'Mystic Node ';
   CopyID          = 'Copyright (C) ' + mysCopyYear + ' By James Coyle.  All Rights Reserved.';
   DateTypeStr : Array[1..4] of String[8] = ('MM/DD/YY', 'DD/MM/YY', 'YY/DD/MM', 'Ask     ');
-  GetKeyFunc  : Function (Forced : Boolean) : Boolean = NIL;
 
 Var
   Screen      : TOutput;
@@ -35,8 +34,6 @@ Var
   ConfigFile  : File of RecConfig;
   ChatFile    : File of ChatRec;
   RoomFile    : File of RoomRec;
-  VoteFile    : File of VoteRec;
-  Vote        : VoteRec;
   Chat        : ChatRec;
   Room        : RoomRec;
   LastOnFile  : File of RecLastOn;
@@ -44,9 +41,6 @@ Var
   Config      : RecConfig;
   StatusPtr   : Byte = 1;
 
-Procedure EditAccessFlags (Var Flags : AccessFlagType);
-Function  DrawAccessFlags (Var Flags : AccessFlagType) : String;
-Function  NoGetKeyFunc    (Forced : Boolean) : Boolean;
 Procedure KillRecord      (Var dFile; RecNum: LongInt; RecSize: Word);
 Procedure AddRecord       (var dFile; RecNum: LongInt; RecSize: Word);
 Function  Bool_Search     (Mask: String; Str: String) : Boolean;
@@ -70,37 +64,6 @@ Uses
   bbs_cfg_UserEdit,
   bbs_General,
   MPL_Execute;
-
-Function DrawAccessFlags (Var Flags : AccessFlagType) : String;
-Var
-  S  : String;
-  Ch : Char;
-Begin
-  S := '';
-
-  For Ch := 'A' to 'Z' Do
-    If Ord(Ch) - 64 in Flags Then S := S + Ch Else S := S + '-';
-
-  DrawAccessFlags := S;
-End;
-
-Procedure EditAccessFlags (Var Flags : AccessFlagType);
-Var
-  Ch : Char;
-Begin
-  Repeat
-    Session.io.OutFull ('Toggle: [' + DrawAccessFlags(Flags) + '] (Enter/Done): ');
-
-    Ch := Session.io.OneKey('ABCDEFGHIJKLMNOPQRSTUVWXYZ'#13, True);
-
-    If Ch = #13 Then Break;
-
-    If Ord(Ch) - 64 in Flags Then
-      Flags := Flags - [Ord(Ch) - 64]
-    Else
-      Flags := Flags + [Ord(Ch) - 64];
-  Until False;
-End;
 
 Procedure AddRecord (var dFile; RecNum: LongInt; RecSize: Word);
 Var
@@ -155,7 +118,9 @@ Function Bool_Search (Mask: String; Str: String) : Boolean;
 { to search }
 Begin
   Bool_Search := True;
+
   If Mask = '' Then Exit;
+
   Bool_Search := Pos(strUpper(Mask), strUpper(Str)) > 0;
 End;
 
@@ -203,19 +168,14 @@ Begin
   Result := Temp;
 End;
 
-Function NoGetKeyFunc (Forced : Boolean): Boolean;
-Begin
-  Result := False;
-End;
-
 Function ShellDOS (ExecPath: String; Command: String) : LongInt;
-  {$IFNDEF UNIX}
-  Var
-    Image : TConsoleImageRec;
-  {$ENDIF}
+{$IFNDEF UNIX}
+Var
+  Image : TConsoleImageRec;
+{$ENDIF}
 Begin
   {$IFDEF WINDOWS}
-  ExecInheritsHandles := True;
+    ExecInheritsHandles := True;
   {$ENDIF}
 
   If Session.User.UserNum <> -1 Then Begin
@@ -226,10 +186,10 @@ Begin
   End;
 
   {$IFNDEF UNIX}
-  Screen.GetScreenImage(1, 1, 80, 25, Image);
-  Screen.SetWindow (1, 1, 80, 25, False);
-  Screen.TextAttr := 7;
-  Screen.ClearScreen;
+    Screen.GetScreenImage(1, 1, 80, 25, Image);
+    Screen.SetWindow (1, 1, 80, 25, False);
+    Screen.TextAttr := 7;
+    Screen.ClearScreen;
   {$ENDIF}
 
   {$IFDEF UNIX}
@@ -268,15 +228,29 @@ Begin
   Reset (Session.PromptFile);
 
   {$IFNDEF UNIX}
-  Screen.PutScreenImage(Image);
-  UpdateStatusLine(StatusPtr, '');
+    Screen.PutScreenImage(Image);
+    UpdateStatusLine(StatusPtr, '');
   {$ENDIF}
 
-  Session.TimeOut  := TimerSeconds;
+  Session.TimeOut := TimerSeconds;
 End;
 
 {$IFNDEF UNIX}
 Procedure UpdateStatusLine (Mode: Byte; Str: String);
+
+  Function DrawAccessFlags (Var Flags : AccessFlagType) : String;
+  Var
+    S  : String;
+    Ch : Char;
+  Begin
+    S := '';
+
+    For Ch := 'A' to 'Z' Do
+      If Ord(Ch) - 64 in Flags Then S := S + Ch Else S := S + '-';
+
+    Result := S;
+  End;
+
 Begin
   If Not Config.UseStatusBar Then Exit;
 
@@ -377,6 +351,4 @@ Begin
 End;
 {$ENDIF}
 
-Begin
-  GetKeyFunc := NoGetKeyFunc;
 End.

@@ -244,19 +244,19 @@ Begin
   End;
   Close (Session.User.UserFile);
 
-  Assign (VoteFile, Config.DataPath + 'votes.dat');
-  {$I-} Reset (VoteFile); {$I+}
-  If IoResult <> 0 Then ReWrite (VoteFile);
-  Close (VoteFile);
+  Assign (Session.VoteFile, Config.DataPath + 'votes.dat');
+  {$I-} Reset (Session.VoteFile); {$I+}
+  If IoResult <> 0 Then ReWrite (Session.VoteFile);
+  Close (Session.VoteFile);
 
-  Assign (Session.LangFile, Config.DataPath + 'theme.dat');
-  {$I-} Reset (Session.LangFile); {$I+}
+  Assign (Session.ThemeFile, Config.DataPath + 'theme.dat');
+  {$I-} Reset (Session.ThemeFile); {$I+}
   If IoResult <> 0 Then Begin
     Screen.WriteLine ('ERROR: No theme configuration.');
     DisposeClasses;
     Halt(1);
   End;
-  Close (Session.LangFile);
+  Close (Session.ThemeFile);
 
   If Not Session.LoadThemeData(Config.DefThemeFile) Then Begin
     If Not Session.ConfigMode Then Begin

@@ -158,8 +158,8 @@ Var
   Count : Integer;
   Temp  : MScanRec;
 Begin
-  Temp.NewScan  := MBase.DefNScan;
-  Temp.QwkScan  := MBase.DefQScan;
+  Temp.NewScan := MBase.DefNScan;
+  Temp.QwkScan := MBase.DefQScan;
 
   Assign (MScanFile, MBase.Path + MBase.FileName + '.scn');
   {$I-} Reset (MScanFile); {$I+}
@@ -1083,7 +1083,7 @@ Begin
 
   If Not Session.LocalMode Then FileErase(FN);
 
-  DirClean(Session.TempPath, 'msgtmp');
+  DirClean (Session.TempPath, 'msgtmp');
 
   Session.io.PromptInfo[1] := T1;
   Session.io.PromptInfo[2] := T2;
@@ -1408,7 +1408,7 @@ Var
           Session.io.OutRawLn ('');
         End;
 
-      Temp := Session.io.DrawPercent(Session.Lang.MsgBar, PageEnd - 1, Lines, A);
+      Temp := Session.io.DrawPercent(Session.Theme.MsgBar, PageEnd - 1, Lines, A);
 
       If Session.io.ScreenInfo[4].Y <> 0 Then Begin
         Session.io.AnsiGotoXY (Session.io.ScreenInfo[4].X, Session.io.ScreenInfo[4].Y);
@@ -1716,7 +1716,7 @@ Var
             Session.io.PromptInfo[4] := MsgTo;
 
             If NewMsgs Then
-              Session.io.PromptInfo[5] := Session.Lang.NewMsgChar
+              Session.io.PromptInfo[5] := Session.Theme.NewMsgChar
             Else
               Session.io.PromptInfo[5] := ' ';
           End;
@@ -1824,7 +1824,7 @@ Var
       Session.io.PromptInfo[4] := MsgInfo[PagePos].MsgTo;
 
       If MsgInfo[PagePos].NewMsgs Then
-        Session.io.PromptInfo[5] := Session.Lang.NewMsgChar
+        Session.io.PromptInfo[5] := Session.Theme.NewMsgChar
       Else
         Session.io.PromptInfo[5] := ' ';
 
@@ -2689,7 +2689,7 @@ Begin
   End;
 
   Session.User.IgnoreGroup := Pos('/G', Data) > 0;
-  WereMsgs         := False;
+  WereMsgs                 := False;
 
   Session.io.OutRawLn ('');
 
@@ -2768,12 +2768,12 @@ Begin
       End;
     End;
 
-    Session.io.OutFull  (Session.GetPrompt(311));
+    Session.io.OutFull (Session.GetPrompt(311));
     Close (MBaseFile);
   End;
 
   Session.User.IgnoreGroup := False;
-  MBase       := OLD;
+  MBase                    := OLD;
 End;
 
 Procedure TMsgBase.SendMassEmail;
@@ -3416,10 +3416,9 @@ Begin
 End;
 
 Procedure TMsgBase.MessageQuickScan (Data: String);
-// defaults to ALL mode
+// defaults to ALL groups/bases
 //   /CURRENT = scan only current message base
 //   /GROUP   = scan only current group bases
-//   /ALL     = scan all bases in all groups
 // options:
 //   /NOSCAN  = do not show "scanning" prompt
 //   /NOFOOT  = do not show "end of scan" prompt
@@ -3538,6 +3537,7 @@ Begin
 
       If Session.User.Access(MBase.ReadACS) Then Begin
         GetMessageScan;
+
         If MScan.NewScan > 0 Then ScanBase;
       End;
     End;
