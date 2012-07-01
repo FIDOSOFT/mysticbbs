@@ -408,13 +408,13 @@ Begin
   CheckPathsAndDataFiles;
 
   {$IFNDEF UNIX}
-  Session.LocalMode := Session.CommHandle = -1;
+    Session.LocalMode := Session.CommHandle = -1;
 
-  If Not Session.LocalMode Then Begin
-    Session.Client.FSocketHandle := Session.CommHandle;
+    If Not Session.LocalMode Then Begin
+      Session.Client.FSocketHandle := Session.CommHandle;
 
-    Session.io.LocalScreenDisable;
-  End;
+      Session.io.LocalScreenDisable;
+    End;
   {$ENDIF}
 
   ExitSave := ExitProc;
@@ -440,12 +440,12 @@ Begin
   If Session.Baud = -1 Then Session.Baud := 0;
 
   {$IFNDEF UNIX}
-  Screen.TextAttr := 7;
-  Screen.ClearScreen;
+    Screen.TextAttr := 7;
+    Screen.ClearScreen;
   {$ENDIF}
 
   {$IFNDEF UNIX}
-  UpdateStatusLine(0, '');
+    UpdateStatusLine(0, '');
   {$ENDIF}
 
   Set_Node_Action (Session.GetPrompt(345));
