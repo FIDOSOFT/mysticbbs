@@ -1342,9 +1342,9 @@ Var
     TempStr := Session.GetPrompt(490);
 
     If MsgBase^.IsLocal   Then Session.io.PromptInfo[9] := strWordGet(1, TempStr, ' ') Else Session.io.PromptInfo[9] := strWordGet(2, TempStr, ' ');
-    If MsgBase^.IsPriv    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + strWordGet(3, TempStr, ' ');
-    If MsgBase^.IsSent    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + strWordGet(4, TempStr, ' ');
-    If MsgBase^.IsDeleted Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + strWordGet(5, TempStr, ' ');
+    If MsgBase^.IsPriv    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(3, TempStr, ' ');
+    If MsgBase^.IsSent    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(4, TempStr, ' ');
+    If MsgBase^.IsDeleted Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(5, TempStr, ' ');
   End;
 
   Procedure Send_Msg_Text (Str : String);
