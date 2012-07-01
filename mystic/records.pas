@@ -47,7 +47,7 @@ Const
   mysMaxVoteQuestion = 20;                                      // Max number of voting questions
   mysMaxMenuNameLen  = 20;                                      // menu name size
   mysMaxMenuCmds     = 75;                                      // Maximum menu commands per menu
-  mysMaxThemeText    = 489;                                     // Total prompts in theme file
+  mysMaxThemeText    = 491;                                     // Total prompts in theme file
 
   fn_SemFileEcho = 'echomail.now';
   fn_SemFileNews = 'newsmail.now';
@@ -488,7 +488,7 @@ Const
 Type
   RecFileList = Record
     FileName  : String[70];
-    Size      : LongInt;
+    Size      : Cardinal;
     DateTime  : LongInt;
     Uploader  : String[30];
     Flags     : Byte;
