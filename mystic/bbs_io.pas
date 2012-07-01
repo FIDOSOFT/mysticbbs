@@ -144,6 +144,7 @@ Begin
 
   {$IFDEF WINDOWS}
     FillChar(OutBuffer, SizeOf(OutBuffer), 0);
+
     OutBufPos := 0;
 
     If Not TBBSCore(Core).LocalMode Then
