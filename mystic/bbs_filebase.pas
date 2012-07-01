@@ -1768,27 +1768,32 @@ Var
     UpdateBatch;
   End;
 
-  Function GetFileListSize : String;
+  Function GetFileListSize (SizeInfo: String) : String;
   Var
-    A : LongInt;
+    A : Cardinal;
+    S : String;
   Begin
     If FDir.Flags And FDirOffline <> 0 Then
-      GetFileListSize := 'OFFLINE' //++lang
+      GetFileListSize := strWordGet(1, SizeInfo, ' ')
     Else
     If FDir.Flags And FDirFailed <> 0 Then
-      GetFileListSize := 'FAILED' //++lang
+      GetFileListSize := strWordGet(2, SizeInfo, ' ')
     Else
     If FDir.Flags And FDirInvalid <> 0 Then
-      GetFileListSize := 'UNVALID' //++lang
+      GetFileListSize := strWordGet(3, SizeInfo, ' ')
     Else
+    If FDir.Size >= 10240000 Then Begin
+      A := (FDir.Size DIV 1024) DIV 1024;
+      GetFileListSize := strI2S(A DIV 1000) + '.' + Copy(strI2S(A MOD 1000), 1, 2) + strWordGet(4, SizeInfo, ' ')
+    End Else
     If FDir.Size >= 1024000 Then Begin
       A := FDir.Size DIV 1024;
-      GetFileListSize := strI2S(A DIV 1000) + '.' + Copy(strI2S(A MOD 1000), 1, 2) + 'MB'; //++lang
+      GetFileListSize := strI2S(A DIV 1000) + '.' + Copy(strI2S(A MOD 1000), 1, 2) + strWordGet(5, SizeInfo, ' ')
     End Else
     If FDir.Size >= 1024 Then
-      GetFileListSize := strI2S(FDir.Size DIV 1024) + 'KB' //++lang
+      GetFileListSize := strI2S(FDir.Size DIV 1024) + strWordGet(6, SizeInfo, ' ')
     Else
-      GetFileListSize := strI2S(FDir.Size) + 'B'; //++lang
+      GetFileListSize := strI2S(FDir.Size) + strWordGet(7, SizeInfo, ' ');
   End;
 
   Procedure HeaderCheck;
@@ -1820,12 +1825,14 @@ Var
 
   Procedure DrawPage;
   Var
-    OK    : Boolean;
-    Str   : String;
-    A     : SmallInt;
+    OK      : Boolean;
+    Str     : String;
+    A       : SmallInt;
+    SizeStr : String;
   Begin
     ListSize := 0;
     Lines    := 0;
+    SizeStr  := Session.GetPrompt(491);
 
     Seek (FDirFile, TopPage);
     If TopDesc <> 0 Then Read (FDirFile, FDir);
@@ -1846,7 +1853,7 @@ Var
         Session.io.PromptInfo[1] := strZero(ListSize + 1);
         Session.io.PromptInfo[2] := FDir.FileName;
         Session.io.PromptInfo[3] := ' ';
-        Session.io.PromptInfo[4] := GetFileListSize;
+        Session.io.PromptInfo[4] := GetFileListSize(SizeStr);
         Session.io.PromptInfo[5] := DateDos2Str(FDir.DateTime, Session.User.ThisUser.DateType);
         Session.io.PromptInfo[6] := strI2S(FDir.Downloads);
 
@@ -1888,7 +1895,7 @@ Var
           If Mode = 3 Then SearchHighlight(Str);
 
           If A = 1 Then Begin
-            Session.io.PromptInfo[1] := GetFileListSize;
+            Session.io.PromptInfo[1] := GetFileListSize(SizeStr);
             Session.io.PromptInfo[2] := DateDos2Str(FDir.DateTime, Session.User.ThisUser.DateType);
             Session.io.PromptInfo[3] := strI2S(FDir.Downloads);
             Session.io.PromptInfo[4] := Str;
