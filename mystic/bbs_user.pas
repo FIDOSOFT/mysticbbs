@@ -385,7 +385,7 @@ Procedure TBBSUser.DetectGraphics;
 Var
   Loop : Byte;
 Begin
-  If Session.Lang.Flags AND ThmAllowANSI = 0 Then Begin
+  If Session.Theme.Flags AND ThmAllowANSI = 0 Then Begin
     Session.io.Graphics := 0;
     Exit;
   End;

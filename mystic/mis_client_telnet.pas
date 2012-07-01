@@ -112,6 +112,8 @@ Var
   bRead  : LongInt;
   bWrite : LongInt;
 Begin
+  Client.FTelnetServer := True;
+
   Proc := TProcess.Create(Nil);
   Num  := ND.GetFreeNode;
 
@@ -153,6 +155,8 @@ Begin
   End;
 
   Proc.Free;
+
+  FileMode := 66;
 
   FileErase (bbsConfig.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
 

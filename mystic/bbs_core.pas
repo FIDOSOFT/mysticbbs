@@ -344,7 +344,7 @@ Begin
     Read (ThemeFile, Theme);
 
     {$IFDEF FS_SENSITIVE}
-    If Lang.FileName = Str Then Begin
+    If Theme.FileName = Str Then Begin
     {$ELSE}
     If strUpper(Theme.FileName) = strUpper(Str) Then Begin
     {$ENDIF}
