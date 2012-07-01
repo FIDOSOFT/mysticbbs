@@ -1098,6 +1098,7 @@ Var
   LastRead  : LongInt;
   ListMode  : Byte;
   ReplyID   : String[31];
+  TempStr   : String;
 
   Procedure Set_Message_Security;
   Begin
@@ -1338,10 +1339,12 @@ Var
     Session.io.PromptInfo[7]  := strI2S(MsgBase^.GetRefer);
     Session.io.PromptInfo[8]  := strI2S(MsgBase^.GetSeeAlso);
 
-    If MsgBase^.IsLocal   Then Session.io.PromptInfo[9] := 'Local' Else Session.io.PromptInfo[9] := 'Echo'; //++lang
-    If MsgBase^.IsPriv    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' Private'; //++lang
-    If MsgBase^.IsSent    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' Sent'; //++lang
-    If MsgBase^.IsDeleted Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' Deleted'; //++lang
+    TempStr := Session.GetPrompt(490);
+
+    If MsgBase^.IsLocal   Then Session.io.PromptInfo[9] := strWordGet(1, TempStr, ' ') Else Session.io.PromptInfo[9] := strWordGet(2, TempStr, ' ');
+    If MsgBase^.IsPriv    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + strWordGet(3, TempStr, ' ');
+    If MsgBase^.IsSent    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + strWordGet(4, TempStr, ' ');
+    If MsgBase^.IsDeleted Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + strWordGet(5, TempStr, ' ');
   End;
 
   Procedure Send_Msg_Text (Str : String);
