@@ -1771,7 +1771,6 @@ Var
   Function GetFileListSize (SizeInfo: String) : String;
   Var
     A : Cardinal;
-    S : String;
   Begin
     If FDir.Flags And FDirOffline <> 0 Then
       GetFileListSize := strWordGet(1, SizeInfo, ' ')
