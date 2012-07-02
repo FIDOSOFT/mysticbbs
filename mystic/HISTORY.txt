@@ -4254,3 +4254,7 @@
       ; File base filesize flags one word separated by a space
       ; 1=offline  2=failed  3=unvalidated  4=GB  5=MB  6=KB  7=B
       491 OFFLINE FAILED UNVALID GB MB KB B
+
+ + Menu access ACS and each menu command ACS has been expanded to 30
+   characters.
+
