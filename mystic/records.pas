@@ -522,10 +522,10 @@ Type
     Header    : String[255];
     Prompt    : String[255];
     DispCols  : Byte;
-    ACS       : String[20];
+    ACS       : String[30];
     Password  : String[15];
-    TextFile  : String[8];
-    FallBack  : String[8];
+    TextFile  : String[20];
+    FallBack  : String[20];
     MenuType  : Byte; { 0 = standard, 1 = lightbar, 2 = lightbar grid }
     InputType : Byte; { 0 = user setting, 1 = longkey, 2 = hotkey }
     DoneX     : Byte;
@@ -537,7 +537,7 @@ Type
     Text    : String[79];
     HotKey  : String[8];
     LongKey : String[8];
-    ACS     : string[20];
+    ACS     : string[30];
     Command : String[2];
     Data    : String[79];
     X       : Byte;
