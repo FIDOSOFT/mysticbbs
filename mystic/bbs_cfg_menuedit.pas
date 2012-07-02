@@ -108,7 +108,7 @@ Begin
                           If Session.Menu.Menu.DispCols < 1 Then Session.Menu.Menu.DispCols := 1;
                           If Session.Menu.Menu.DispCols > 3 Then Session.Menu.Menu.DispCols := 3;
 												End;
-                  'D' : Session.Menu.Menu.ACS      := Session.io.InXY(20, 6, 20, 20, 11, Session.Menu.Menu.ACS);
+                  'D' : Session.Menu.Menu.ACS      := Session.io.InXY(20, 6, 30, 30, 11, Session.Menu.Menu.ACS);
                   'E' : Session.Menu.Menu.Password := Session.io.InXY(20, 7, 15, 15, 12, Session.Menu.Menu.Password);
                   'F' : Session.Menu.Menu.TextFile := Session.io.InXY(20, 8, 20, 20, 11, Session.Menu.Menu.TextFile);
                   'G' : Session.Menu.Menu.Fallback := Session.io.InXY(20, 9, mysMaxMenuNameLen, mysMaxMenuNameLen, 11, Session.Menu.Menu.Fallback);
@@ -152,7 +152,7 @@ Begin
                     'A' : Session.Menu.MenuList[A].Text    := Session.io.InXY(14, 3, 60, 79, 11, Session.Menu.MenuList[A].Text);
                     'B' : Session.Menu.MenuList[A].HotKey  := Session.io.InXY(14, 4,  8,  8, 12, Session.Menu.MenuList[A].HotKey);
                     'C' : Session.Menu.MenuList[A].LongKey := Session.io.InXY(14, 5,  8,  8, 12, Session.Menu.MenuList[A].LongKey);
-                    'D' : Session.Menu.MenuList[A].ACS     := Session.io.InXY(14, 6, 20, 20, 11, Session.Menu.MenuList[A].ACS);
+                    'D' : Session.Menu.MenuList[A].ACS     := Session.io.InXY(14, 6, 30, 30, 11, Session.Menu.MenuList[A].ACS);
 										'E' : Repeat
                             Session.io.OutFull ('|09Menu Command (?/List): ');
                             Session.Menu.MenuList[A].command := Session.io.GetInput(2, 2, 12, '');
