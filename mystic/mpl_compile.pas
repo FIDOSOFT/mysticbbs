@@ -2,6 +2,8 @@ Unit MPL_Compile;
 
 {$I M_OPS.PAS}
 
+{$MODESWITCH NESTEDPROCVARS-}
+
 Interface
 
 Uses
@@ -2007,7 +2009,6 @@ Begin
 
   If UpdateInfo.ErrorType <> 0 Then Exit;
 
-// create proc var
   Inc (CurVarNum);
   New (VarData[CurVarNum]);
 
@@ -2284,8 +2285,6 @@ Begin
     TargetType := ParseElementType(VarNum, True);
 
   OutString(Char(Byte(TargetType)));
-  //asf
-  //asdf
 
   Case TargetType of
     iString    : ParseVarString;
