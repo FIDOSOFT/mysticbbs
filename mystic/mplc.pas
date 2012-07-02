@@ -22,6 +22,7 @@
 Program MPLC;
 
 {$I M_OPS.PAS}
+{$MODESWITCH NESTEDPROCVARS-}
 
 Uses
   DOS,
