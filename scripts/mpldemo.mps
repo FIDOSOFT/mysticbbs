@@ -13,15 +13,22 @@ Procedure FadeWrite (X, Y: Byte; S: String);
 Begin
   GotoXY (X, Y);
   Write  ('|08' + S);
+  BufFlush;
   Delay  (250);
+  
   GotoXY (X, Y);
   Write  ('|07' + S);
+  BufFlush;
   Delay  (250);
+  
   GotoXY (X, Y);
   Write  ('|15' + S);
+  BufFlush;
   Delay  (250);
+  
   GotoXY (X, Y);
   Write  ('|07' + S);
+  BufFlush;
 End;
 
 Procedure Draw_M (X: Byte);
@@ -32,6 +39,8 @@ Begin
   Write  (' |17|09Б|16|01ллл   л');
   GotoXY (X - 1, 11);
   Write  (' |01лллл   л');
+
+  BufFlush;
 End;
 
 Procedure Draw_P (Y: Byte)
@@ -44,6 +53,8 @@ Begin
   Write  ('|09|17Б|01|16лллмл');
   GotoXY (39, Y + 2);
   Write  ('лллл');
+
+  BufFlush;
 End;
 
 Procedure Draw_L (X : Byte)
@@ -54,6 +65,8 @@ Begin
   Write  ('|09|17Б|01|16ллл ');
   GotoXY (X, 11);
   Write  ('ллллмл ');
+
+  BufFlush;
 End;
 
 Procedure Draw_Animated_Intro;
