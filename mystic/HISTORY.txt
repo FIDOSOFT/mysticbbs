@@ -4258,3 +4258,5 @@
  + Menu access ACS and each menu command ACS has been expanded to 30
    characters.
 
+ + Fixed a bug in the Unix ANSI detection routines which caused an unwanted
+   extra pause in detection (thanks to Kevin Lamonte)

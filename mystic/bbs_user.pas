@@ -391,22 +391,27 @@ Begin
   End;
 
   Session.io.OutFull (Session.GetPrompt(258));
-  Session.io.OutRaw  (#27 + '[6n');
   Session.io.BufFlush;
 
-  For Loop := 1 to 12 Do Begin
-    WaitMS(500);
+  Screen.BufAddStr(#27 + '[6n');
+  Screen.BufFlush;
 
+  For Loop := 1 to 24 Do Begin
     While Input.KeyPressed Do
       If Input.ReadKey in [#27, '[', '0'..'9', ';', 'R'] Then Begin
         Session.io.Graphics := 1;
         Break;
       End;
+
+    If Session.io.Graphics = 1 Then Break;
+
+    WaitMS(250);
   End;
 
   While Input.KeyPressed Do Loop := Byte(Input.ReadKey);
 
   Session.io.OutFullLn (Session.GetPrompt(259));
+  Session.io.BufFlush;
 End;
 {$ELSE}
 Procedure TBBSUser.DetectGraphics;
