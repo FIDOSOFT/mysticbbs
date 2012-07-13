@@ -231,9 +231,10 @@ Begin
     FileMode := 66;
 
     {$I-}
-    Reset (PromptFile);
-    Seek  (PromptFile, N);
-    Read  (PromptFile, Prompt);
+    Assign (PromptFile, Config.DataPath + Theme.FileName + '.thm');
+    Reset  (PromptFile);
+    Seek   (PromptFile, N);
+    Read   (PromptFile, Prompt);
     {$I+}
 
     If IoResult <> 0 Then Begin
