@@ -616,6 +616,81 @@ End;
 
 Procedure TOutputWindows.LoadScreenImage (Var DataPtr; Len, Width, X, Y: Integer);
 Var
+  Image  : TConsoleImageRec;
+  Data   : Array[1..8000] of Byte Absolute DataPtr;
+  PosX   : Word;
+  PosY   : Byte;
+  Attrib : Byte;
+  Count  : Word;
+  A      : Byte;
+  B      : Byte;
+  C      : Byte;
+Begin
+  PosX   := 1;
+  PosY   := 1;
+  Attrib := 7;
+  Count  := 1;
+
+  FillChar(Image.Data, SizeOf(Image.Data), #0);
+
+  While (Count <= Len) Do Begin
+    Case Data[Count] of
+      00..
+      15  : Attrib := Data[Count] + ((Attrib SHR 4) and 7) * 16;
+      16..
+      23  : Attrib := (Attrib And $F) + (Data[Count] - 16) * 16;
+      24  : Begin
+              Inc (PosY);
+              PosX := 1;
+            End;
+      25  : Begin
+              Inc (Count);
+              For A := 0 to Data[Count] Do Begin
+                Image.Data[PosY][PosX].UnicodeChar := ' ';
+                Image.Data[PosY][PosX].Attributes  := Attrib;
+
+                Inc (PosX);
+              End;
+            End;
+      26  : Begin
+              A := Data[Count + 1];
+              B := Data[Count + 2];
+
+              Inc (Count, 2);
+
+              For C := 0 to A Do Begin
+                Image.Data[PosY][PosX].UnicodeChar := Char(B);
+                Image.data[PosY][PosX].Attributes  := Attrib;
+
+                Inc (PosX);
+              End;
+            End;
+      27..
+      31  : ;
+    Else
+      Image.Data[PosY][PosX].UnicodeChar := Char(Data[Count]);
+      Image.Data[PosY][PosX].Attributes  := Attrib;
+
+      Inc (PosX);
+    End;
+
+    Inc (Count);
+  End;
+
+  Image.X1      := X;
+  Image.X2      := Width;
+  Image.Y1      := Y;
+  Image.Y2      := PosY;
+  Image.CursorX := PosX;
+  Image.CursorY := PosY;
+  Image.CursorA := Attrib;
+
+  PutScreenImage(Image);
+End;
+
+(*
+Procedure TOutputWindows.LoadScreenImage (Var DataPtr; Len, Width, X, Y: Integer);
+Var
   Screen   : TConsoleScreenRec;
   Data     : Array[1..8000] of Byte Absolute DataPtr;
   PosX     : Word;
@@ -680,23 +755,20 @@ Begin
     Inc (Count);
   End;
 
-  //If PosY > ScreenSize Then PosY := ScreenSize;
+  BufSize.Y     := PosY - (Y - 1);
+  BufSize.X     := Width;
+  BufCoord.X    := 0;
+  BufCoord.Y    := 0;
+  Region.Left   := X - 1;
+  Region.Top    := Y - 1;
+  Region.Right  := Width - 1;
+  Region.Bottom := PosY - 1;
 
-//  If Active Then Begin
-    BufSize.Y     := PosY - (Y - 1);
-    BufSize.X     := Width;
-    BufCoord.X    := 0;
-    BufCoord.Y    := 0;
-    Region.Left   := X - 1;
-    Region.Top    := Y - 1;
-    Region.Right  := Width - 1;
-    Region.Bottom := PosY - 1;
+  WriteConsoleOutput (ConOut, @Screen[1][1], BufSize, BufCoord, Region);
 
-    WriteConsoleOutput (ConOut, @Screen[1][1], BufSize, BufCoord, Region);
-
-    CursorXY(PosX, PosY);
-//  End;
+  CursorXY(PosX, PosY);
 End;
+*)
 
 Function TOutputWindows.ReadCharXY (X, Y: Byte) : Char;
 Begin
