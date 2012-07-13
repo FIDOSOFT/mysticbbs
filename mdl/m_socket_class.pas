@@ -162,6 +162,12 @@ End;
 Function TSocketClass.WriteBuf (Var Buf; Len: LongInt) : LongInt;
 Begin
   Result := fpSend(FSocketHandle, @Buf, Len, FPSENDOPT);
+
+//  While (Result = -1) and ((SocketError = SYS_EWOULDBLOCK) or (SocketError = SYS_ENOBUFS)) Do Begin
+//    WaitMS(10);
+
+//    Result := fpSend(FSocketHandle, @Buf, Len, FPSENDOPT);
+//  End;
 End;
 
 Procedure TSocketClass.BufFlush;
@@ -176,6 +182,7 @@ End;
 Procedure TSocketClass.BufWriteChar (Ch: Char);
 Begin
   FOutBuf[FOutBufPos] := Ch;
+
   Inc(FOutBufPos);
 
   If FOutBufPos > TSocketBufferSize Then Begin
@@ -363,11 +370,8 @@ Begin
 End;
 
 Function TSocketClass.ReadChar : Char;
-Var
-  Ch : Char;
 Begin
-  ReadBuf(Ch, 1);
-  Result := Ch;
+  ReadBuf(Result, 1);
 End;
 
 Function TSocketClass.ReadBuf (Var Buf; Len: LongInt) : LongInt;
@@ -375,6 +379,7 @@ Begin
   If FInBufPos = FInBufEnd Then Begin
     FInBufEnd := fpRecv(FSocketHandle, @FInBuf, TSocketBufferSize, FPRECVOPT);
     FInBufPos := 0;
+
     If FInBufEnd <= 0 Then Begin
       FInBufEnd := 0;
       Result    := -1;
@@ -404,7 +409,9 @@ Begin
     If FInBufPos = FInBufEnd Then Res := ReadBuf(Ch, 0);
 
     Ch := FInBuf[FInBufPos];
+
     Inc (FInBufPos);
+
     If (Ch <> #10) And (Ch <> #13) And (FInBufEnd > 0) Then Str := Str + Ch;
   Until (Ch = #10) Or (Res < 0) Or (FInBufEnd = 0);
 
