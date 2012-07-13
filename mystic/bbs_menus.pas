@@ -13,8 +13,8 @@ Type
   TMenuSystem = Class
     LBMenuPos : Byte;
     CmdNum    : Byte;
-    Menu      : MenuRec;
-    MenuList  : Array[1..mysMaxMenuCmds] of MenuCmdRec;
+    Menu      : RecMenuFlags;
+    MenuList  : Array[1..mysMaxMenuCmds] of RecMenuCommand;
     MenuOld   : String[mysMaxMenuNameLen];
     MenuName  : String[mysMaxMenuNameLen];
     MenuStack : Array[1..8] of String[mysMaxMenuNameLen];
@@ -395,9 +395,9 @@ Begin
   ReadLn (MenuFile, Menu.Header);
   ReadLn (MenuFile, Menu.Prompt);
   ReadLn (MenuFile, Menu.DispCols);
-  ReadLn (MenuFile, Menu.ACS);
+  ReadLn (MenuFile, Menu.Access);
   ReadLn (MenuFile, Menu.Password);
-  ReadLn (MenuFile, Menu.TextFile);
+  ReadLn (MenuFile, Menu.DispFile);
   ReadLn (MenuFile, Menu.FallBack);
   ReadLn (MenuFile, Menu.MenuType);
   ReadLn (MenuFile, Menu.InputType);
@@ -413,7 +413,7 @@ Begin
     ReadLn (MenuFile, MenuList[CmdNum].Text);
     ReadLn (MenuFile, MenuList[CmdNum].HotKey);
     ReadLn (MenuFile, MenuList[CmdNum].LongKey);
-    ReadLn (MenuFile, MenuList[CmdNum].ACS);
+    ReadLn (MenuFile, MenuList[CmdNum].Access);
     ReadLn (MenuFile, MenuList[CmdNum].Command);
     ReadLn (MenuFile, MenuList[CmdNum].Data);
     ReadLn (MenuFile, MenuList[CmdNum].X);
@@ -422,11 +422,11 @@ Begin
     ReadLn (MenuFile, MenuList[CmdNum].cDOWN);
     ReadLn (MenuFile, MenuList[CmdNum].cLEFT);
     ReadLn (MenuFile, MenuList[CmdNum].cRIGHT);
-    ReadLn (MenuFile, MenuList[CmdNum].LText);
-    ReadLn (MenuFile, MenuList[CmdNum].LHText);
+    ReadLn (MenuFile, MenuList[CmdNum].TextLo);
+    ReadLn (MenuFile, MenuList[CmdNum].TextHi);
 
     If (RunCmd) and (MenuList[CmdNum].HotKey = 'FIRSTCMD') Then Begin
-      If Session.User.Access(MenuList[CmdNum].ACS) Then
+      If Session.User.Access(MenuList[CmdNum].Access) Then
         If ExecuteCommand (MenuList[CmdNum].Command, MenuList[CmdNum].Data) Then Begin
           Result := 2;
           Close (MenuFile);
@@ -457,7 +457,7 @@ Var
     ExecuteAfterCommands := False;
 
     For A := 1 to CmdNum Do
-      If (MenuList[A].HotKey = 'AFTER') And Session.User.Access(MenuList[A].ACS) Then
+      If (MenuList[A].HotKey = 'AFTER') And Session.User.Access(MenuList[A].Access) Then
         If ExecuteCommand(MenuList[A].Command, MenuList[A].Data) Then Begin
           ExecuteAfterCommands := True;
           Done                 := True;
@@ -473,8 +473,8 @@ Var
 
     ValidLightBar := (MenuList[Pos].HotKey <> 'EVERY') and
                      (MenuList[Pos].HotKey <> 'AFTER') and
-                     (MenuList[Pos].LText <> '') and
-                     (MenuList[Pos].LHText <> '');
+                     (MenuList[Pos].TextLo <> '') and
+                     (MenuList[Pos].TextHi <> '');
 { we need to add LINEFEED?! }
   End;
 
@@ -490,16 +490,16 @@ Var
       LBMenuPos := 0;
     End;
 
-    Session.io.OutFile (ReplaceSecurity(Menu.TextFile), True, 0);
+    Session.io.OutFile (ReplaceSecurity(Menu.DispFile), True, 0);
 
-    If Session.io.NoFile and (Pos('@S', Menu.TextFile) > 0) Then
-      Session.io.OutFile (StripSecurity(Menu.TextFile), True, 0);
+    If Session.io.NoFile and (Pos('@S', Menu.DispFile) > 0) Then
+      Session.io.OutFile (StripSecurity(Menu.DispFile), True, 0);
 
     For A := 1 to CmdNum Do
       If ValidLightBar(A) Then Begin
         If LBMenuPos = 0 Then LBMenuPos := A;
         Session.io.AnsiGotoXY (MenuList[A].X, MenuList[A].Y);
-        Session.io.OutFull (MenuList[A].LText);
+        Session.io.OutFull (MenuList[A].TextLo);
       End;
 
     Session.io.AllowArrow := True;
@@ -510,7 +510,7 @@ Var
 
     Repeat
       Session.io.AnsiGotoXY (MenuList[LBMenuPos].X, MenuList[LBMenuPos].Y);
-      Session.io.OutFull (MenuList[LBMenuPos].LHText);
+      Session.io.OutFull (MenuList[LBMenuPos].TextHi);
 
       Ch := Session.io.GetKey;
 
@@ -520,7 +520,7 @@ Var
 
                 For A := 1 To CmdNum Do
                   If MenuList[A].HotKey = TempStr Then
-                    If Session.User.Access(MenuList[A].ACS) Then Begin
+                    If Session.User.Access(MenuList[A].Access) Then Begin
                       Session.io.AnsiGotoXY (Menu.DoneX, Menu.DoneY);
                       If View Then Exit;
                       If ExecuteCommand(MenuList[A].Command, MenuList[A].Data) Then
@@ -531,7 +531,7 @@ Var
         #72,
         #75 : Begin {Up, Left}
                 Session.io.AnsiGotoXY (MenuList[LBMenuPos].X, MenuList[LBMenuPos].Y);
-                Session.io.OutFull (MenuList[LBMenuPos].LText);
+                Session.io.OutFull (MenuList[LBMenuPos].TextLo);
 
                 If Menu.MenuType = 1 Then Begin
                   TempPos := LBMenuPos;
@@ -553,7 +553,7 @@ Var
         #80,
         #77 : Begin {Down, Right}
                 Session.io.AnsiGotoXY (MenuList[LBMenuPos].X, MenuList[LBMenuPos].Y);
-                Session.io.OutFull (MenuList[LBMenuPos].LText);
+                Session.io.OutFull (MenuList[LBMenuPos].TextLo);
 
                 If Menu.MenuType = 1 Then Begin
                   If LBMenuPos < CmdNum Then Begin
@@ -581,7 +581,7 @@ Var
             If ((Ch = #27) and (MenuList[A].HotKey = 'ESCAPE')) or
                ((Ch = #9)  and (MenuList[A].HotKey = 'TAB')) or
                (UpCase(Ch) = MenuList[A].HotKey) Then
-              If Session.User.Access(MenuList[A].ACS) Then Begin
+              If Session.User.Access(MenuList[A].Access) Then Begin
                 Session.io.AnsiGotoXY (Menu.DoneX, Menu.DoneY);
                 If View Then Exit;
                 If ExecuteCommand(MenuList[A].Command, MenuList[A].Data) Then
@@ -603,10 +603,10 @@ Var
     Ch     : Char;
     Found  : Boolean;
   Begin
-    Session.io.OutFile (ReplaceSecurity(Menu.TextFile), True, 0);
+    Session.io.OutFile (ReplaceSecurity(Menu.DispFile), True, 0);
 
-    If Session.io.NoFile and (Pos('@S', Menu.TextFile) > 0) Then
-      Session.io.OutFile (StripSecurity(Menu.TextFile), True, 0);
+    If Session.io.NoFile and (Pos('@S', Menu.DispFile) > 0) Then
+      Session.io.OutFile (StripSecurity(Menu.DispFile), True, 0);
 
     If Session.io.NoFile Then Begin
       Case Menu.DispCols of
@@ -622,7 +622,7 @@ Var
       For A := 1 to CmdNum Do Begin
         If MenuList[A].Text <> '' Then
           If (MenuList[A].HotKey <> 'EVERY') and (MenuList[A].HotKey <> 'AFTER') Then
-            If Session.User.Access(MenuList[A].ACS) Then Begin
+            If Session.User.Access(MenuList[A].Access) Then Begin
               If MenuList[A].HotKey = 'LINEFEED' Then Begin
                 If Listed MOD Menu.DispCols <> 0 Then Session.io.OutRawLn('');
                 Session.io.OutFull(MenuList[A].Text);
@@ -684,7 +684,7 @@ Var
                                 Session.io.BufAddChar (Ch);
                               End;
                               If Temp = MenuList[A].HotKey Then
-                                If Session.User.Access(MenuList[A].ACS) Then Begin
+                                If Session.User.Access(MenuList[A].Access) Then Begin
                                   If View Then Exit;
                                   If Listed = 0 Then Session.io.OutRawLn('');
                                   Listed := A;
@@ -718,7 +718,7 @@ Var
            (Session.io.IsArrow and (Temp = #81) and (MenuList[A].HotKey = 'PAGEDOWN')) or
            (Not Session.io.IsArrow and (Temp = MenuList[A].HotKey)) Then
 
-              If Session.User.Access(MenuList[A].ACS) Then
+              If Session.User.Access(MenuList[A].Access) Then
                 If ExecuteCommand (MenuList[A].Command, MenuList[A].Data) Then Begin
                   Done := True;
                   Exit;
@@ -731,7 +731,7 @@ Var
 
       For A := 1 to CmdNum Do
         If Temp = MenuList[A].LongKey Then
-          If Session.User.Access(MenuList[A].ACS) Then Begin
+          If Session.User.Access(MenuList[A].Access) Then Begin
             If View Then Exit;
             If ExecuteCommand (MenuList[A].Command, MenuList[A].Data) Then Begin
               Done := True;
@@ -743,7 +743,7 @@ Var
 
 Var
   A  : Byte;
-  MR : MenuRec;
+  MR : RecMenuFlags;
 Begin
   If View Then Begin
     Keys := #13;
@@ -805,7 +805,7 @@ Begin
     ExtKeys := '';
 
     For A := 1 to CmdNum Do
-      If Session.User.Access(MenuList[A].ACS) Then
+      If Session.User.Access(MenuList[A].Access) Then
         If MenuList[A].HotKey = 'EVERY' Then Begin
           If ExecuteCommand (MenuList[A].Command, MenuList[A].Data) Then Exit;
         End Else
