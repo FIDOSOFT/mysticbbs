@@ -518,13 +518,13 @@ Type
 (* following records do not need to be used, but provide one way of       *)
 (* reading a menu into a record.                                          *)
 
-  MenuRec = Record
+  RecMenuFlags = Record
     Header    : String[255];
     Prompt    : String[255];
     DispCols  : Byte;
-    ACS       : String[30];
+    Access    : String[30];
     Password  : String[15];
-    TextFile  : String[20];
+    DispFile  : String[20];
     FallBack  : String[20];
     MenuType  : Byte; { 0 = standard, 1 = lightbar, 2 = lightbar grid }
     InputType : Byte; { 0 = user setting, 1 = longkey, 2 = hotkey }
@@ -533,11 +533,14 @@ Type
     Global    : Byte; { 0 = no, 1 = yes }
   End;
 
-  MenuCmdRec = Record
+  PtrMenuCommand = ^RecMenuCommand;
+  RecMenuCommand = Record
     Text    : String[79];
+    TextLo  : String[79];
+    TextHi  : String[79];
     HotKey  : String[8];
     LongKey : String[8];
-    ACS     : string[30];
+    Access  : string[30];
     Command : String[2];
     Data    : String[79];
     X       : Byte;
@@ -546,8 +549,6 @@ Type
     cDown   : Byte;
     cLeft   : Byte;
     cRight  : Byte;
-    LText   : String[79];
-    LHText  : String[79];
   End;
 
   RecPercent = Record
