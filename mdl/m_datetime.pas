@@ -7,6 +7,8 @@ Interface
 Procedure WaitMS            (MS: Word);
 Function  TimerMinutes      : LongInt;
 Function  TimerSeconds      : LongInt;
+Function  TimerSet          (Secs: LongInt) : LongInt;
+Function  TimerUp           (Secs: LongInt) : Boolean;
 Function  CurDateDos        : LongInt;
 Function  CurDateJulian     : LongInt;
 Function  DateDos2Str       (Date: LongInt; Format: Byte) : String;
@@ -296,6 +298,32 @@ End;
 Function DaysAgo (Date: LongInt) : LongInt;
 Begin
   Result := DateStr2Julian(DateDos2Str(CurDateDos, 1)) - Date;
+End;
+
+Function TimerSet (Secs: LongInt) : LongInt;
+Var
+  DT     : DateTime;
+  Sec100 : Word;
+Begin
+  GetTime (DT.Hour, DT.Min, DT.Sec, Sec100);
+
+  Result := ((DT.Min MOD 60) * 6000 + (DT.Sec MOD 60) * 100 + Sec100) + Secs;
+End;
+
+Function TimerUp (Secs: LongInt) : Boolean;
+Var
+  DT     : DateTime;
+  Sec100 : Word;
+  Temp   : LongInt;
+Begin
+  GetTime (DT.Hour, DT.Min, DT.Sec, Sec100);
+
+  Temp := (DT.Min MOD 60) * 6000 + (DT.Sec MOD 60) * 100 + Sec100;
+
+  If Temp < (Secs - 65536) Then
+    Temp := Temp + 360000;
+
+  Result := (Temp - Secs) >= 0;
 End;
 
 End.
