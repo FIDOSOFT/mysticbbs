@@ -58,7 +58,7 @@ Type
     Procedure   DownloadQWK         (Data: String);
     Procedure   UploadREP;
     Procedure   WriteCONTROLDAT;
-    Function    WriteMSGDAT : LongInt;
+    Function    WriteMSGDAT         : LongInt;
     Function    ResolveOrigin       (var mArea: RecMessageBase) : String;
   End;
 
@@ -391,6 +391,7 @@ Begin
 
     If (Count > 0) and (Count <= Total) Then Begin
       Reset (MBaseFile);
+
       If Not Compress Then Begin
         Seek (MBaseFile, Count - 1);
         Read (MBaseFile, MBase);
@@ -637,7 +638,9 @@ Begin
 
     If Session.User.Access(Group.ACS) Then Begin
       Session.User.ThisUser.LastMGroup := FilePos(GroupFile);
-      If Intro Then Session.io.OutFile ('group' + strI2S(Data), True, 0);
+
+      If Intro Then
+        Session.io.OutFile ('group' + strI2S(Data), True, 0);
     End Else
       Group := tGroup;
 
@@ -673,6 +676,7 @@ Begin
 
         While Not Eof(MBaseFile) Do Begin
           Read (MBaseFile, tMBase);
+
           If Session.User.Access(tMBase.ListACS) Then Inc(Areas);
         End;
 
@@ -711,7 +715,9 @@ Begin
 
       Repeat
         Read (GroupFile, Group);
+
         If Not Group.Hidden And Session.User.Access(Group.ACS) Then Inc(Total);
+
         If A = Total Then Break;
       Until False;
 
@@ -843,6 +849,7 @@ Begin
 
   Assign (tFile, Session.TempPath + 'msgtmp');
   {$I-} ReWrite (tFile); {$I+}
+
   If IoResult = 0 Then Begin
     Temp3 := MsgBase^.GetFrom;
     Temp2 := Temp3[1];
@@ -884,17 +891,7 @@ Begin
 
     Session.io.OutFull (Session.GetPrompt(107));
 
-    Case MBase.BaseType of
-      0 : MsgNew := New(PMsgBaseJAM, Init);
-      1 : MsgNew := New(PMsgBaseSquish, Init);
-    End;
-
-    MsgNew^.SetMsgPath (MBase.Path + MBase.FileName);
-
-    If Not MsgNew^.OpenMsgBase Then Begin
-      Dispose (MsgNew, Done);
-      Exit;
-    End;
+    If Not OpenCreateBase(MsgNew, MBase) Then Exit;
 
     AssignMessageData(MsgNew);
 
@@ -946,7 +943,7 @@ Begin
   End Else
     Session.io.OutFullLn (Session.GetPrompt(109));
 
-  FileErase(Session.TempPath + 'msgtmp');
+  DirClean (Session.TempPath, '');
 End;
 
 Procedure TMsgBase.EditMessage;
