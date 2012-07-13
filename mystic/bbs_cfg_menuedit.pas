@@ -63,12 +63,12 @@ Begin
 									Session.Menu.MenuList[A].Text		 := '[XXX] New Command';
 									Session.Menu.MenuList[A].HotKey	 := 'XXX';
 								  Session.Menu.MenuList[A].LongKey  := 'XXX';
-								  Session.Menu.MenuList[A].ACS 		 := '';
+								  Session.Menu.MenuList[A].Access		 := '';
 								  Session.Menu.MenuList[A].Command  := '';
 								  Session.Menu.MenuList[A].X 			 := 0;
 								  Session.Menu.MenuList[A].Y 			 := 0;
-								  Session.Menu.MenuList[A].lText 	 := '';
-								  Session.Menu.MenuList[A].lhText	 := '';
+								  Session.Menu.MenuList[A].Textlo	 := '';
+								  Session.Menu.MenuList[A].Texthi := '';
 								End;
 						End;
 			'F' : Begin
@@ -77,9 +77,9 @@ Begin
                 Session.io.OutRawLn ('A. Menu Header   : ' + strPadR(Session.Menu.Menu.header, 59, ' '));
                 Session.io.OutRawLn ('B. Menu Prompt   : ' + strPadR(Session.Menu.menu.prompt, 59, ' '));
                 Session.io.OutRawLn ('C. Display Cols  : ' + strI2S(Session.Menu.Menu.DispCols));
-                Session.io.OutRawLn ('D. ACS           : ' + Session.Menu.menu.acs);
+                Session.io.OutRawLn ('D. ACS           : ' + Session.Menu.menu.access);
                 Session.io.OutRawLn ('E. Password      : ' + Session.Menu.menu.password);
-                Session.io.OutRawLn ('F. Display File  : ' + Session.Menu.Menu.TextFile);
+                Session.io.OutRawLn ('F. Display File  : ' + Session.Menu.Menu.dispFile);
                 Session.io.OutRawLn ('G. Fallback Menu : ' + Session.Menu.Menu.Fallback);
                 Session.io.OutRaw   ('H. Menu Type     : ');
 
@@ -108,9 +108,9 @@ Begin
                           If Session.Menu.Menu.DispCols < 1 Then Session.Menu.Menu.DispCols := 1;
                           If Session.Menu.Menu.DispCols > 3 Then Session.Menu.Menu.DispCols := 3;
 												End;
-                  'D' : Session.Menu.Menu.ACS      := Session.io.InXY(20, 6, 30, 30, 11, Session.Menu.Menu.ACS);
+                  'D' : Session.Menu.Menu.AcCeSs      := Session.io.InXY(20, 6, 30, 30, 11, Session.Menu.Menu.AcCeSs);
                   'E' : Session.Menu.Menu.Password := Session.io.InXY(20, 7, 15, 15, 12, Session.Menu.Menu.Password);
-                  'F' : Session.Menu.Menu.TextFile := Session.io.InXY(20, 8, 20, 20, 11, Session.Menu.Menu.TextFile);
+                  'F' : Session.Menu.Menu.dispFile := Session.io.InXY(20, 8, 20, 20, 11, Session.Menu.Menu.dispFile);
                   'G' : Session.Menu.Menu.Fallback := Session.io.InXY(20, 9, mysMaxMenuNameLen, mysMaxMenuNameLen, 11, Session.Menu.Menu.Fallback);
                   'H' : If Session.Menu.Menu.MenuType = 2 Then Session.Menu.Menu.MenuType := 0 Else Inc(Session.Menu.Menu.MenuType);
 									'I' : Begin
@@ -133,12 +133,12 @@ Begin
                   Session.io.OutRawln ('A. Text    : ' + Session.Menu.MenuList[A].text);
                   Session.io.OutRawln ('B. Hot Key : ' + Session.Menu.MenuList[A].HotKey);
                   Session.io.OutRawLn ('C. Long Key: ' + Session.Menu.MenuList[A].LongKey);
-                  Session.io.OutRawln ('D. ACS     : ' + Session.Menu.MenuList[A].acs);
+                  Session.io.OutRawln ('D. ACS     : ' + Session.Menu.MenuList[A].access);
                   Session.io.OutRawln ('E. Command : ' + Session.Menu.MenuList[A].command);
                   Session.io.OutRawln ('F. Data    : ' + Session.Menu.MenuList[A].data);
                   Session.io.OutFullLn ('|CRG. Lightbar X/Y  : ' + strPadR(strI2S(Session.Menu.MenuList[a].x), 3, ' ') + strI2S(Session.Menu.MenuList[a].y));
-                  Session.io.OutRawln ('H. Lightbar Text : ' + Session.Menu.MenuList[a].ltext);
-                  Session.io.OutRawln ('I. Lightbar High : ' + Session.Menu.MenuList[a].lhtext);
+                  Session.io.OutRawln ('H. Lightbar Text : ' + Session.Menu.MenuList[a].textlo);
+                  Session.io.OutRawln ('I. Lightbar High : ' + Session.Menu.MenuList[a].texthi);
                   Session.io.OutRawln ('');
                   Session.io.OutRawln ('J. Lightbar Up   : ' + strI2S(Session.Menu.MenuList[a].cUP));
                   Session.io.OutRawln ('K. Lightbar Down : ' + strI2S(Session.Menu.MenuList[a].cDOWN));
@@ -152,7 +152,7 @@ Begin
                     'A' : Session.Menu.MenuList[A].Text    := Session.io.InXY(14, 3, 60, 79, 11, Session.Menu.MenuList[A].Text);
                     'B' : Session.Menu.MenuList[A].HotKey  := Session.io.InXY(14, 4,  8,  8, 12, Session.Menu.MenuList[A].HotKey);
                     'C' : Session.Menu.MenuList[A].LongKey := Session.io.InXY(14, 5,  8,  8, 12, Session.Menu.MenuList[A].LongKey);
-                    'D' : Session.Menu.MenuList[A].ACS     := Session.io.InXY(14, 6, 30, 30, 11, Session.Menu.MenuList[A].ACS);
+                    'D' : Session.Menu.MenuList[A].Access    := Session.io.InXY(14, 6, 30, 30, 11, Session.Menu.MenuList[A].Access);
 										'E' : Repeat
                             Session.io.OutFull ('|09Menu Command (?/List): ');
                             Session.Menu.MenuList[A].command := Session.io.GetInput(2, 2, 12, '');
@@ -166,8 +166,8 @@ Begin
                             Session.Menu.MenuList[A].X := strS2I(Session.io.InXY(20, 10, 2, 2, 12, strI2S(Session.Menu.MenuList[A].X)));
                             Session.Menu.MenuList[A].Y := strS2I(Session.io.InXY(23, 10, 2, 2, 12, strI2S(Session.Menu.MenuList[A].Y)));
 													End;
-                    'H' : Session.Menu.MenuList[A].LText  := Session.io.InXY(20, 11, 59, 79, 11, Session.Menu.MenuList[A].LText);
-                    'I' : Session.Menu.MenuList[A].LHText := Session.io.InXY(20, 12, 59, 79, 11, Session.Menu.MenuList[A].LHText);
+                    'H' : Session.Menu.MenuList[A].Textlo  := Session.io.InXY(20, 11, 59, 79, 11, Session.Menu.MenuList[A].Textlo);
+                    'I' : Session.Menu.MenuList[A].Texthi := Session.io.InXY(20, 12, 59, 79, 11, Session.Menu.MenuList[A].Texthi);
                     'J' : Session.Menu.MenuList[A].cUP    := strS2I(Session.io.InXY(20, 14,  2,  2, 12, strI2S(Session.Menu.MenuList[A].cUP)));
                     'K' : Session.Menu.MenuList[A].cDOWN  := strS2I(Session.io.InXY(20, 15,  2,  2, 12, strI2S(Session.Menu.MenuList[A].cDOWN)));
                     'L' : Session.Menu.MenuList[A].cLEFT  := strS2I(Session.io.InXY(20, 16,  2,  2, 12, strI2S(Session.Menu.MenuList[A].cLEFT)));
@@ -197,9 +197,9 @@ Begin
   writeln (menufile, Session.Menu.Menu.header);
   writeln (menufile, Session.Menu.Menu.prompt);
   writeln (menufile, Session.Menu.Menu.dispcols);
-  writeln (menufile, Session.Menu.Menu.acs);
+  writeln (menufile, Session.Menu.Menu.access);
   writeln (menufile, Session.Menu.Menu.password);
-  writeln (menufile, Session.Menu.Menu.textfile);
+  writeln (menufile, Session.Menu.Menu.dispfile);
   WriteLn (MenuFile, Session.Menu.Menu.Fallback);
   writeln (menufile, Session.Menu.Menu.MenuType);
   WriteLn (MenuFile, Session.Menu.Menu.InputType);
@@ -210,7 +210,7 @@ Begin
     writeln (menufile, Session.Menu.MenuList[a].text);
     writeln (menufile, Session.Menu.MenuList[a].HotKey);
     WriteLn (MenuFile, Session.Menu.MenuList[A].LongKey);
-    writeln (menufile, Session.Menu.MenuList[a].acs);
+    writeln (menufile, Session.Menu.MenuList[a].access);
     writeln (menufile, Session.Menu.MenuList[a].command);
     writeln (menufile, Session.Menu.MenuList[a].data);
     writeln (menufile, Session.Menu.MenuList[a].x);
@@ -219,8 +219,8 @@ Begin
     WriteLn (MenuFile, Session.Menu.MenuList[A].cDOWN);
     WriteLn (MenuFile, Session.Menu.MenuList[A].cLEFT);
     WriteLn (MenuFile, Session.Menu.MenuList[A].cRIGHT);
-    writeln (menufile, Session.Menu.MenuList[a].ltext);
-    writeln (menufile, Session.Menu.MenuList[a].lhtext);
+    writeln (menufile, Session.Menu.MenuList[a].textlo);
+    writeln (menufile, Session.Menu.MenuList[a].texthi);
 	end;
 	close (menufile);
 End;
