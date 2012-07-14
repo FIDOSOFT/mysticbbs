@@ -61,7 +61,8 @@ Type
     Function    WriteLine       (Str: String) : LongInt;
     Function    WriteStr        (Str: String) : LongInt;
     Function    WriteFile       (Str: String) : Boolean;
-    Procedure   ProcessBuf      (Var Buf: TSocketBuffer; Var Len: LongInt);
+    Procedure   TelnetInBuffer  (Var Buf: TSocketBuffer; Var Len: LongInt);
+    Procedure   TelnetOutBuffer (Var Buf: TSocketBuffer; Var Len: LongInt);
     Function    ReadBuf         (Var Buf; Len: LongInt) : LongInt;
     Function    ReadLine        (Var Str: String) : LongInt;
     Function    SetBlocking     (Block: Boolean): LongInt;
@@ -87,6 +88,8 @@ Implementation
 { TELNET NEGOTIATION CONSTANTS }
 
 Const
+  MaxStatusText = 20;
+
   Telnet_IAC    = #255;
   Telnet_DONT   = #254;
   Telnet_DO     = #253;
@@ -163,16 +166,22 @@ Function TSocketClass.WriteBuf (Var Buf; Len: LongInt) : LongInt;
 Begin
   Result := fpSend(FSocketHandle, @Buf, Len, FPSENDOPT);
 
-//  While (Result = -1) and ((SocketError = SYS_EWOULDBLOCK) or (SocketError = SYS_ENOBUFS)) Do Begin
-//    WaitMS(10);
+  While (Result = -1) and (SocketError = ESOCKEWOULDBLOCK) Do Begin
+    WaitMS(10);
 
-//    Result := fpSend(FSocketHandle, @Buf, Len, FPSENDOPT);
-//  End;
+    Result := fpSend(FSocketHandle, @Buf, Len, FPSENDOPT);
+  End;
 End;
 
 Procedure TSocketClass.BufFlush;
+Var
+  Count : LongInt;
+  Start : LongInt;
 Begin
   If FOutBufPos > 0 Then Begin
+    If FTelnetClient or FTelnetServer Then
+      TelnetOutBuffer(FOutBuf, FOutBufPos);
+
     WriteBuf (FOutBuf, FOutBufPos);
 
     FOutBufPos := 0;
@@ -244,7 +253,30 @@ Begin
   Result := True;
 End;
 
-Procedure TSocketClass.ProcessBuf (Var Buf: TSocketBuffer; Var Len: LongInt);
+Procedure TSocketClass.TelnetOutBuffer (Var Buf: TSocketBuffer; Var Len: LongInt);
+Var
+  Temp    : TSocketBuffer;
+  TempPos : LongInt;
+  Count   : LongInt;
+Begin
+  TempPos := 0;
+
+  For Count := 0 to Len Do
+    If Buf[Count] = TELNET_IAC Then Begin
+      Temp[TempPos] := TELNET_IAC;
+      Inc (TempPos);
+      Temp[TempPos] := TELNET_IAC;
+      Inc (TempPos);
+    End Else Begin
+      Temp[TempPos] := Buf[Count];
+      Inc (TempPos);
+    End;
+
+  Buf := Temp;
+  Len := TempPos - 1;
+End;
+
+Procedure TSocketClass.TelnetInBuffer (Var Buf: TSocketBuffer; Var Len: LongInt);
 
   Procedure SendCommand (YesNo, CmdType: Char);
   Var
@@ -386,7 +418,7 @@ Begin
       Exit;
     End;
 
-    If FTelnetClient or FTelnetServer Then ProcessBuf(FInBuf, FInBufEnd);
+    If FTelnetClient or FTelnetServer Then TelnetInBuffer(FInBuf, FInBufEnd);
   End;
 
   If Len > FInBufEnd - FInBufPos Then Len := FInBufEnd - FInBufPos;
@@ -467,7 +499,6 @@ Begin
     Result := PInAddr(HostEnt^.h_addr_list^)^.S_addr
   Else
     Result := LongInt(StrToNetAddr(Host));
-//    Result := NetAddrToStr(@Host[1]);
 End;
 
 Function TSocketClass.Connect (Address: String; Port: Word) : Boolean;
@@ -487,8 +518,8 @@ Begin
   Sin.sin_Port        := htons(Port);
   Sin.sin_Addr.S_Addr := ResolveAddress(Address);
 
-  FPeerIP   := NetAddrToStr(Sin.Sin_Addr);
-  Result    := fpConnect(FSocketHandle, @Sin, SizeOf(Sin)) = 0;
+  FPeerIP := NetAddrToStr(Sin.Sin_Addr);
+  Result  := fpConnect(FSocketHandle, @Sin, SizeOf(Sin)) = 0;
 End;
 
 Procedure TSocketClass.WaitInit (Port: Word);
@@ -530,8 +561,8 @@ Begin
   If Sock = -1 Then Exit;
 
   FPeerIP := NetAddrToStr(SIN.sin_addr);
+  PHE     := GetHostByAddr(@SIN.sin_addr, 4, PF_INET);
 
-  PHE := GetHostByAddr(@SIN.sin_addr, 4, PF_INET);
   If Not Assigned(PHE) Then
     FPeerName := 'Unknown'
   Else
@@ -565,7 +596,7 @@ Begin
   If SocketStatus = NIL Then Exit;
 
   Try
-    If SocketStatus.Count > 20 Then
+    If SocketStatus.Count > MaxStatusText Then
       SocketStatus.Delete(0);
 
     Res := '(' + Copy(DateDos2Str(CurDateDos, 1), 1, 5) + ' ' + TimeDos2Str(CurDateDos, False) + ') ' + Str;
@@ -573,7 +604,7 @@ Begin
     If Length(Res) > 74 Then Begin
       SocketStatus.Add(Copy(Res, 1, 74));
 
-      If SocketStatus.Count > 20 Then
+      If SocketStatus.Count > MaxStatusText Then
         SocketStatus.Delete(0);
 
       SocketStatus.Add(strRep(' ', 14) + Copy(Res, 75, 255));
