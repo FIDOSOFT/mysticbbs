@@ -666,7 +666,7 @@ Begin
   Form.AddPath ('M', ' Menu Path'      , 12, 10, 25, 10, 11, 30, 80, @Theme.MenuPath, Topic + 'Menu path');
   Form.AddPath ('S', ' Script Path'    , 10, 11, 25, 11, 13, 30, 80, @Theme.ScriptPath, Topic + 'Script path');
   Form.AddPath ('T', ' Template Path'  ,  8, 12, 25, 12, 15, 30, 80, @Theme.TemplatePath, Topic + 'Template path');
-  Form.AddBits ('F', ' Allow Fallback' ,  7, 13, 25, 13, 16, ThmFallback, @Theme.Flags, Topic + 'Allow fallback to default paths?');
+  Form.AddBits ('F', ' Allow Fallback' ,  7, 13, 25, 13, 16, ThmFallback, @Theme.Flags, Topic + 'Allow fallback to default theme paths?');
   Form.AddBits ('C', ' Allow ASCII'    , 10, 14, 25, 14, 13, ThmAllowASCII, @Theme.Flags, Topic + 'Allow ASCII users to use this theme?');
   Form.AddBits ('N', ' Allow ANSI'     , 11, 15, 25, 15, 12, ThmAllowANSI, @Theme.Flags, Topic + 'Allow ANSI users to use this theme?');
 
