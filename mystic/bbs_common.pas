@@ -169,10 +169,6 @@ Begin
 End;
 
 Function ShellDOS (ExecPath: String; Command: String) : LongInt;
-{$IFNDEF UNIX}
-Var
-  Image : TConsoleImageRec;
-{$ENDIF}
 Begin
   {$IFDEF WINDOWS}
     ExecInheritsHandles := True;
@@ -186,7 +182,6 @@ Begin
   End;
 
   {$IFNDEF UNIX}
-    Screen.GetScreenImage(1, 1, 80, 25, Image);
     Screen.SetWindow (1, 1, 80, 25, False);
     Screen.TextAttr := 7;
     Screen.ClearScreen;
@@ -228,8 +223,10 @@ Begin
   Reset (Session.PromptFile);
 
   {$IFNDEF UNIX}
-    Screen.PutScreenImage(Image);
-    UpdateStatusLine(StatusPtr, '');
+    If Screen.Active Then
+      Session.io.LocalScreenEnable
+    Else
+      Session.io.LocalScreenDisable;
   {$ENDIF}
 
   Session.TimeOut := TimerSeconds;
