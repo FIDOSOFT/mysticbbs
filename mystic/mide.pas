@@ -20,6 +20,7 @@
 // ====================================================================
 
 {$I M_OPS.PAS}
+{$MODESWITCH NESTEDPROCVARS-}
 
 Program MIDE;
 
