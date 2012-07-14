@@ -195,10 +195,11 @@ Begin
     If Not TBBSCore(Core).LocalMode Then Begin
       Res := TBBSCore(Core).Client.WriteBuf(OutBuffer, OutBufPos);
 
+      (* Moved to m_sockets_class 1.10a14
       While (Res = -1) and (WSAGetLastError = EWOULDBLOCK) Do Begin
         WaitMS(10);
         Res := TBBSCore(Core).Client.WriteBuf(OutBuffer, OutBufPos);
-      End;
+      End;*)
     End;
 
     OutBufPos := 0;
