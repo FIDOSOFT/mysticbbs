@@ -482,8 +482,7 @@ Const
   WinTitle = 'Mystic Internet Server';
 
 Var
-  Count   : Integer;
-  Started : Boolean;
+  Count : Integer;
 Begin
   {$IFDEF UNIX}
     DaemonMode := Pos('-D', strUpper(ParamStr(1))) > 0;
