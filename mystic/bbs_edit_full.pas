@@ -176,6 +176,8 @@ Begin
 
       Exit;
     End Else Begin
+      Session.io.BufFlush;
+
       A := strWrap (OldStr, NewStr, WrapPos);
 
       If (A > 0) And (Not Moved) And (CurX > Length(OldStr) + 1) Then Begin
