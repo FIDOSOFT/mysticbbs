@@ -4263,3 +4263,21 @@
 
  ! Fixed a bug which could cause Mystic to sometimes crash when saving a
    message reply if the message content was large (100+ lines or so)
+
+ + While reading messages, it is now possible to Forward the message to a
+   different messsage base by using the F hotkey.  This only works if you
+   are a SysOp or message owner.  A new prompt goes along with this:
+
+      ; Forward msg: which base
+      492 |CR|09Forward message to which base (?/List): |XX
+
+ + The Sysop Password prompt has been added to the theme prompt files.  A new
+   prompt goes with this:
+
+      ; Sysop password prompt
+      493 |CR|09Sysop Password: |XX
+
+ + MIDE now has a -50 command line option which forces the editor into 50
+   line text mode.
+
+ + MPL identifiers now have a maximum size of 30 characters, up from 20.
