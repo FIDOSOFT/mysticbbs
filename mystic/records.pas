@@ -47,7 +47,7 @@ Const
   mysMaxVoteQuestion = 20;                                      // Max number of voting questions
   mysMaxMenuNameLen  = 20;                                      // menu name size
   mysMaxMenuCmds     = 75;                                      // Maximum menu commands per menu
-  mysMaxThemeText    = 491;                                     // Total prompts in theme file
+  mysMaxThemeText    = 493;                                     // Total prompts in theme file
 
   fn_SemFileEcho = 'echomail.now';
   fn_SemFileNews = 'newsmail.now';
