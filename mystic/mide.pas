@@ -1164,7 +1164,7 @@ Begin
       CurX  := 77;
     End;
 
-    If CurY < 21 Then Begin
+    If CurY < mideWinSize - 3 Then Begin
       Inc (CurY);
       DrawPage;
     End Else
@@ -1548,10 +1548,11 @@ Begin
 End;
 
 Var
-  Ch  : Char;
-  A   : Byte;
-  Str : String;
-  FN  : String;
+  Ch     : Char;
+  A      : Byte;
+  Str    : String;
+  FN     : String;
+  Mode50 : Boolean = False;
 Begin
   GetDir (0, StartDir);
 
@@ -1562,26 +1563,34 @@ Begin
 
   Console.SetWindowTitle('MIDE');
 
-  (* FOR 50 line mode development *)
-//  Console.SetScreenSize(50);
-//  mideBotY    := 49;
-//  mideWinSize := 49;
+  For A := 1 to ParamCount Do Begin
+    If Pos('-50', ParamStr(A)) > 0 Then
+      Mode50 := True
+    Else
+      Str := ParamStr(A);
+  End;
+
+  If Mode50 Then Begin
+    Console.SetScreenSize(50);
+
+    mideBotY    := 49;
+    mideWinSize := 49;
+  End;
 
   FillScreen;
 
   TotalWinNum := 0;
   CurWinNum   := 0;
 
-  If ParamCount = 1 Then Begin
-    If Pos(PathSep, ParamStr(1)) = 0 Then
-      Str := StartDir + ParamStr(1)
-    Else
-      Str := ParamStr(1);
+  If Str <> '' Then Begin
+    If Pos(PathSep, Str) = 0 Then
+      Str := StartDir + Str;
 
     If Pos('.', Str) = 0 Then
       Str := Str + '.mps';
 
     LoadAndOpen(Str);
+
     ReDrawScreen;
   End;
 
@@ -1597,7 +1606,7 @@ Begin
         If CurLine = TotalLines Then
           BarPos := mideBotY - 1
         Else
-          BarPos := Round(CurLine / TotalLines * 100) DIV 5 + 3;
+          BarPos := Round(CurLine / TotalLines * (mideWinSize - 4)) + 3;
 
         Console.WriteXY (80, BarPos, colEditPosBar, 'Û');
 
