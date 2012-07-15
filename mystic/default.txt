@@ -960,3 +960,7 @@
 ; File base filesize flags one word separated by a space
 ; 1=offline  2=failed  3=unvalidated  4=GB  5=MB  6=KB  7=B
 491 OFFLINE FAILED UNVALID GB MB KB B
+; Forward msg: which base
+492 |CR|09Forward message to which base (?/List): |XX
+; Sysop password prompt
+493 |CR|09Sysop Password: |XX
