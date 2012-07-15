@@ -1781,7 +1781,7 @@ Var
     If FDir.Flags And FDirInvalid <> 0 Then
       GetFileListSize := strWordGet(3, SizeInfo, ' ')
     Else
-    If FDir.Size >= 10240000 Then Begin
+    If FDir.Size >= 1024000000 Then Begin
       A := (FDir.Size DIV 1024) DIV 1024;
       GetFileListSize := strI2S(A DIV 1000) + '.' + Copy(strI2S(A MOD 1000), 1, 2) + strWordGet(4, SizeInfo, ' ')
     End Else
