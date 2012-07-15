@@ -310,7 +310,7 @@ Begin
                     PageForSysopChat (Pos('/F', strUpper(Data)) > 0) {$ENDIF};
           End;
     '*' : Begin
-            If Not Session.io.GetPW ('|CR|09Sysop Password: ', Session.GetPrompt(417), Config.SysopPW) Then Exit; {++lang}
+            If Not Session.io.GetPW (Session.GetPrompt(493), Session.GetPrompt(417), Config.SysopPW) Then Exit;
 
             Case Cmd[2] of
               '#' : Begin
@@ -499,7 +499,7 @@ Var
       If ValidLightBar(A) Then Begin
         If LBMenuPos = 0 Then LBMenuPos := A;
         Session.io.AnsiGotoXY (MenuList[A].X, MenuList[A].Y);
-        Session.io.OutFull (MenuList[A].TextLo);
+        Session.io.OutFull    (MenuList[A].TextLo);
       End;
 
     Session.io.AllowArrow := True;
@@ -531,7 +531,7 @@ Var
         #72,
         #75 : Begin {Up, Left}
                 Session.io.AnsiGotoXY (MenuList[LBMenuPos].X, MenuList[LBMenuPos].Y);
-                Session.io.OutFull (MenuList[LBMenuPos].TextLo);
+                Session.io.OutFull    (MenuList[LBMenuPos].TextLo);
 
                 If Menu.MenuType = 1 Then Begin
                   TempPos := LBMenuPos;
@@ -553,7 +553,7 @@ Var
         #80,
         #77 : Begin {Down, Right}
                 Session.io.AnsiGotoXY (MenuList[LBMenuPos].X, MenuList[LBMenuPos].Y);
-                Session.io.OutFull (MenuList[LBMenuPos].TextLo);
+                Session.io.OutFull    (MenuList[LBMenuPos].TextLo);
 
                 If Menu.MenuType = 1 Then Begin
                   If LBMenuPos < CmdNum Then Begin
@@ -747,6 +747,7 @@ Var
 Begin
   If View Then Begin
     Keys := #13;
+
     If (Menu.MenuType > 0) and (Session.io.Graphics = 1) Then Begin
       Do_LightBar_Menu;
       Session.io.AnsiGotoXY (Menu.DoneX, Menu.DoneY);
