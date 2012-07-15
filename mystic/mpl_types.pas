@@ -84,7 +84,7 @@ Const
   mplExtExecute    = '.mpx';
   mplMaxInclude    = 10;
   mplMaxFiles      = 20;
-  mplMaxIdentLen   = 20;
+  mplMaxIdentLen   = 30;
   mplMaxVars       = 2500;
   mplMaxGotos      = 100;
   mplMaxCaseNums   = 20;
