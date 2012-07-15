@@ -1104,7 +1104,7 @@ Var
       HelpFile  := 'emailhlp';
     End Else
     If Session.User.Access(MBase.SysopACS) or Session.User.IsThisUser(MsgBase^.GetFrom) Then Begin
-      ValidKeys := 'ADEGHIJLMNPQRTX[]?'#13;
+      ValidKeys := 'ADEFGHIJLMNPQRTX[]?'#13;
       HelpFile  := 'readshlp';
     End Else Begin
       ValidKeys := 'AGHIJLNPQRTX[]?'#13;
@@ -1112,7 +1112,7 @@ Var
     End;
   End;
 
-  Function Move_Message : Boolean;
+  Function MoveMessage (IsCopy: Boolean) : Boolean;
   Var
     MsgNew   : PMsgBaseABS;
     Str      : String;
@@ -1124,7 +1124,10 @@ Var
     Session.User.IgnoreGroup  := True;
 
     Repeat
-      Session.io.OutFull (Session.GetPrompt(282));
+      If IsCopy Then
+        Session.io.OutFull (Session.GetPrompt(492))
+      Else
+        Session.io.OutFull (Session.GetPrompt(282));
 
       Str := Session.io.GetInput(4, 4, 12, '');
 
@@ -1181,13 +1184,17 @@ Var
 
           MsgNew^.CloseMsgBase;
 
-          Session.SystemLog('Moved msg to ' + strStripMCI(TempBase.Name));
-
           Dispose (MsgNew, Done);
 
-          MsgBase^.DeleteMsg;
+          If IsCopy Then
+            Session.SystemLog('Forward msg to ' + strStripMCI(TempBase.Name))
+          Else Begin
+            Session.SystemLog('Moved msg to ' + strStripMCI(TempBase.Name));
+            MsgBase^.DeleteMsg;
+          End;
 
-          Move_Message := True;
+          Result := True;
+
           Break;
         End Else Begin
           Close (MBaseFile);
@@ -1543,6 +1550,10 @@ Var
                     EditMessage;
                     Break;
                   End;
+            'F' : Begin
+                    MoveMessage(True);
+                    Break;
+                  End;
             'G' : Begin
                     Ansi_View_Message := True;
                     Exit;
@@ -1574,7 +1585,7 @@ Var
                   End;
             'L' : Exit;
             'M' : Begin
-                    If Move_Message Then
+                    If MoveMessage(False) Then
                       If Not SeekNextMsg(False, False) Then Begin
                         Ansi_View_Message := True;
                         Exit;
@@ -2084,6 +2095,10 @@ Var
                   EditMessage;
                   Break;
                 End;
+          'F' : Begin
+                  MoveMessage(True);
+                  Break;
+                End;
           'G' : Exit;
           'H' : LastRead := MsgBase^.GetMsgNum - 1;
           'I' : Begin
@@ -2133,7 +2148,7 @@ Var
                   MsgBase^.MsgStartup;
                 End;
           'M' : Begin
-                  If Move_Message Then
+                  If MoveMessage(False) Then
                     If Not SeekNextMsg(False, False) Then Exit;
 
                   Break;
