@@ -14,7 +14,7 @@
 Const
   mysSoftwareID  = 'Mystic';                                    // no idea
   mysCopyYear    = '1997-2012';                                 // its been a long time!
-  mysVersion     = '1.10 A14';                                  // current version
+  mysVersion     = '1.10 A15';                                  // current version
   mysDataChanged = '1.10 A11';                                  // version of last records change
 
   {$IFDEF WIN32}
@@ -264,9 +264,9 @@ Const
   UserNoRatio    = $00000002;
   UserDeleted    = $00000004;
   UserNoKill     = $00000008;
-  UserNoCaller   = $00000010;
+  UserNoLastCall = $00000010;
   UserNoPWChange = $00000020;
-  UserMakeChange = $00000040;
+  UserNoHistory  = $00000040;
 
 Type
   RecUser = Record                                              // USERS.DAT
