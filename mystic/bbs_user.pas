@@ -1000,7 +1000,7 @@ Begin
 
 { update last caller information }
 
-  If Not Session.LocalMode And Not Chat.Invisible And (ThisUser.Flags AND UserNoCaller = 0) Then Begin
+  If Not Session.LocalMode And Not Chat.Invisible And (ThisUser.Flags AND UserNoLastCall = 0) Then Begin
     Reset (LastOnFile);
 
     If FileSize(LastOnFile) >= 10 Then
@@ -1080,7 +1080,7 @@ Begin
     ThisUser.TimeLeft   := Security.Time
   End;
 
-  If Not Session.LocalMode And (ThisUser.Flags AND UserNoCaller = 0) Then Begin
+  If Not Session.LocalMode And (ThisUser.Flags AND UserNoLastCall = 0) Then Begin
     Reset (ConfigFile);
     Read  (ConfigFile, Config);
     Inc   (Config.SystemCalls);
