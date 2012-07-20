@@ -1230,7 +1230,7 @@ Var
 
     If FN = '' Then Exit;
 
-    Session.io.PromptInfo[1] := JustFileName(FN);
+    Session.io.PromptInfo[1] := JustFile(FN);
 
     Assign  (TF, FN);
     {$I-} ReWrite (TF); {$I+}
