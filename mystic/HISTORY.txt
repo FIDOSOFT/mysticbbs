@@ -4281,3 +4281,21 @@
    line text mode.
 
  + MPL identifiers now have a maximum size of 30 characters, up from 20.
+
+ ! Mystic was not properly stripping the path of exported text files when
+   doing an export.  Functionally it worked fine, but it was printing the
+   directory of the node's temp directory to the user.
+
+ + New "user flag" in the user editor: No CallStats.  If this is set to YES
+   the user's calls will not be added to the last caller information, and
+   they will also not have their call counted in the BBS history database.
+
+ + New "user flag" in the user editor: No PWChange.  If this is set to YES
+   the user will be exempt from the forced password change after the
+   configured time interval (if its enabled).
+
+ + New "user flag" in the user editor: No History.  If this is set to YES
+   the user will be exempt from BBS history tracking.  This includes Emails,
+   Message posts, download stats, upload stats, new user counts, and call
+   counts.  NoCallStats simply ignores the lastcaller display, and the system
+   caller count numbers.  This flag ignores ALL history of the user.
