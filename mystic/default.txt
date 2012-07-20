@@ -145,7 +145,7 @@
 ; Protocol list prompt &1=Hotkey &2=Description
 061 |14[|15|&1|14] |&2
 ; Protocol select prompt
-062 |CR|14Select Protocol [|15Q/Quit|14]
+062 |CR|14Select Protocol [|15Q/Quit|14]: |XX
 063 |CR|12Cannot download files in local mode!|DE|DE|DE
 064 |01[|10þ|01] |09Search all file groups? |11
 065 |CR|12Start your transfer now.
