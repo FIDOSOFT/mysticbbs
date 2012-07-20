@@ -195,24 +195,29 @@ Begin
     Halt (1);
   End;
 
-  BasePath := GetENV('mysticbbs');
-
-  If BasePath <> '' Then BasePath := DirSlash(BasePath);
-
   Action   := strUpper(ParamStr(1));
   InFN     := ParamStr(2);
   OutFN    := ParamStr(3);
   FileMode := 2;
 
-  Assign (ConfigFile, BasePath + 'mystic.dat');
+  Assign (ConfigFile, 'mystic.dat');
   Reset  (ConfigFile);
 
   If IoResult <> 0 Then Begin
-    WriteLn ('ERROR: Unable to read MYSTIC.DAT');
-    WriteLn;
-    WriteLn ('MYSTIC.DAT must exist in the same directory as MakeTheme, or in the');
-    WriteLn ('path defined by the MYSTICBBS environment variable.');
-    Halt    (1);
+    BasePath := GetENV('mysticbbs');
+
+    If BasePath <> '' Then BasePath := DirSlash(BasePath);
+
+    Assign (ConfigFile, BasePath + 'mystic.dat');
+    Reset  (ConfigFile);
+
+    If IoResult <> 0 Then Begin
+      WriteLn ('ERROR: Unable to read MYSTIC.DAT');
+      WriteLn;
+      WriteLn ('MYSTIC.DAT must exist in the same directory as MakeTheme, or in the');
+      WriteLn ('path defined by the MYSTICBBS environment variable.');
+      Halt    (1);
+    End;
   End;
 
   Read  (ConfigFile, bbsConfig);
