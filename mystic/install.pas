@@ -22,6 +22,7 @@
 Program Install;
 
 {$I M_OPS.PAS}
+{$MODESWITCH NESTEDPROCVARS-}
 
 Uses
   m_Strings,
