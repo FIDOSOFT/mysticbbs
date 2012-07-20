@@ -155,8 +155,10 @@ Procedure TBBSCore.UpdateHistory;
 Var
   History : RecHistory;
 Begin
+  If User.ThisUser.Flags AND UserNoHistory = 0 Then Exit;
+
   Assign  (HistoryFile, Config.DataPath + 'history.dat');
-  ioReset (HistoryFile, SizeOf(RecHistory), fmRWDW);
+  ioReset (HistoryFile, SizeOf(RecHistory), fmRWDN);
 
   If IoResult <> 0 Then ioReWrite(HistoryFile, SizeOf(RecHistory), fmRWDW);
 
@@ -164,6 +166,7 @@ Begin
 
   While Not Eof(HistoryFile) Do Begin
     ioRead (HistoryFile, History);
+
     If DateDos2Str(History.Date, 1) = DateDos2Str(CurDateDos, 1) Then Begin
       ioSeek (HistoryFile, FilePos(HistoryFile) - 1);
       Break;
@@ -182,7 +185,9 @@ Begin
   Inc (History.DownloadKB, HistoryDLKB);
   Inc (History.UploadKB,   HistoryULKB);
 
-  If Not LocalMode   Then Inc (History.Calls, 1);
+  If Not LocalMode And (User.ThisUser.Flags AND UserNoLastCall = 0) Then
+    Inc (History.Calls, 1);
+
   If User.ThisUser.Calls = 1 Then Inc (History.NewUsers, 1);
 
   ioWrite (HistoryFile, History);
