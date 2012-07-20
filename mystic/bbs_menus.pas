@@ -324,6 +324,7 @@ Begin
               'L' : Configuration_ExecuteEditor('L');
               'M' : Configuration_ExecuteEditor('B');
               'P' : Configuration_ExecuteEditor('P');
+              'R' : Configuration_ExecuteEditor('R');
               'S' : Configuration_MainMenu;
               'U' : Configuration_UserEditor;
               'V' : Vote_Editor;
