@@ -4299,3 +4299,6 @@
    Message posts, download stats, upload stats, new user counts, and call
    counts.  NoCallStats simply ignores the lastcaller display, and the system
    caller count numbers.  This flag ignores ALL history of the user.
+
+ + MakeTheme now only looks at the "mysticbbs" environment variable if
+   mystic.dat is not found in the same directory.
