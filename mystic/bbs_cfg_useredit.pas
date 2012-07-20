@@ -181,9 +181,12 @@ Begin
       6 : Begin
             Form.Clear;
 
-            Form.AddBits ('D', ' Deleted'     , 7, 6, 23, 6, 14, UserDeleted,    @U.Flags, Topic + 'Is this account marked as deleted?');
-            Form.AddBits ('L', ' Locked Out'  , 7, 7, 23, 7, 14, UserLockedOut,  @U.Flags, Topic + 'Is this account locked out of the system?');
-            Form.AddBits ('N', ' No Ratios'   , 7, 8, 23, 8, 14, UserNoRatio,    @U.Flags, Topic + 'Ignore file ratios?');
+            Form.AddBits ('D', ' Deleted'     , 7,  6, 23,  6, 14, UserDeleted,    @U.Flags, Topic + 'Is this account marked as deleted?');
+            Form.AddBits ('L', ' Locked Out'  , 7,  7, 23,  7, 14, UserLockedOut,  @U.Flags, Topic + 'Is this account locked out of the system?');
+            Form.AddBits ('N', ' No Ratios'   , 7,  8, 23,  8, 14, UserNoRatio,    @U.Flags, Topic + 'Ignore file ratios?');
+            Form.AddBits ('C', ' No CallStats', 7,  9, 23,  9, 14, UserNoLastCall, @U.Flags, Topic + 'Exclude from caller stats?');
+            Form.AddBits ('P', ' No PW Change', 7, 10, 23, 10, 14, UserNoPWChange, @U.Flags, Topic + 'Exclude from forced password change');
+            Form.AddBits ('H', ' No History'  , 7, 11, 23, 11, 14, UserNoHistory,  @U.Flags, Topic + 'Exclude for BBS history stats');
           End;
     End;
 
@@ -329,6 +332,10 @@ Begin
 
   Session.InUserEdit := False;
   Session.LocalMode  := SavedLocal;
+
+  {$IFNDEF UNIX}
+    UpdateStatusLine(StatusPtr, '');
+  {$ENDIF}
 End;
 
 End.
