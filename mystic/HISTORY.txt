@@ -4422,3 +4422,11 @@
    in the optional data field.  The menu timer is an internal incrementing
    counter used to fire off TIMER commands.  It represents the number of
    seconds that have passed since the menu was loaded.
+
+ + When using hotkey-style menu input, extended hotkeys are no longer
+   required to have a / first.  You can make a hotkey command named QUIT
+   for example, and it will execute immediately when QUIT is entered.
+
+ + Similar to the display file and menu systems, the MPL scripts directory
+   will now also fallback from the theme scripts path to the default
+   scripts directory if the feature is enabled in the selected theme.
