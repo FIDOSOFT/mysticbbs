@@ -30,7 +30,7 @@ Type
   End;
 
 Const
-  Num_Cmds = 96;
+  Num_Cmds = 97;
   MenuCmds : Array[1..Num_Cmds] of CmdRec = (
     // AUTOSIG MENU COMMANDS
     (  Name: 'AE';   Desc: 'Autosig editor'               ),
@@ -136,6 +136,7 @@ Const
     // OTHER MENU COMMANDS
     (  Name: '-D';   Desc: 'Set access flags (set 2)'     ),
     (  Name: '-F';   Desc: 'Set access flags (set 1)'     ),
+    (  Name: '-I';   Desc: 'Set menu timer to <data>'     ),
     (  Name: '-K';   Desc: 'Add keys to input buffer'     ),
     (  Name: '-N';   Desc: 'Ask Yes/No (default No)'      ),
     (  Name: '-P';   Desc: 'Prompt for a password'        ),

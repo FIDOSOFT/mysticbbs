@@ -106,7 +106,7 @@ Type
     FeedbackTo      : String[30];
     Inactivity      : Word;                                     // Inactivity seconds (0=disabled)
     DefStartMenu    : String[20];                               // Default start menu
-    DefFallMenu     : String[20];
+    UNUSED          : String[20];
     DefThemeFile    : String[20];
     DefTermMode     : Byte;                                     // 0=ask 1=detect 2=detect/ask 3=ansi
     DefScreenSize   : Byte;
@@ -339,6 +339,12 @@ Type
     Protocol     : Char;
     Reserved     : Array[1..389] of Byte;
   End;
+
+  // day of week
+  // sema file
+  // event type [bbs exit/bbs exec/mis event]
+  // execcmd
+  // remove offhook
 
   EventRec = Record                   { EVENTS.DAT                        }
     Active   : Boolean;               { Is event active?                  }

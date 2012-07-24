@@ -136,6 +136,7 @@ Begin
     '-' : Case Cmd[2] of
             'D' : ToggleAccessFlags(CmdData, Session.User.ThisUser.AF2);
             'F' : ToggleAccessFlags(CmdData, Session.User.ThisUser.AF1);
+            'I' : TimerCount := strS2I(CmdData);
             'N' : Session.User.AcsOkFlag := Session.io.GetYN(CmdData, False);
             'P' : Session.User.AcsOkFlag := Session.io.GetPW(Copy(CmdData, 1, Pos(';', CmdData) - 1), Session.GetPrompt(417),
                                                 strUpper(Copy(CmdData, Pos(';', CmdData) + 1, Length(CmdData))));
@@ -416,7 +417,7 @@ Begin
       4 : Format := 19;
     End;
 
-    If Data.Info.Header <> '' Then
+//    If Data.Info.Header <> '' Then
       TBBSCore(Owner).io.OutFullLn (Data.Info.Header);
 
     Listed := 0;
@@ -443,6 +444,9 @@ Begin
           TBBSCore(Owner).io.OutFull(Data.Item[Count]^.Text)
         Else
           TBBSCore(Owner).io.OutFull(strPadR(Data.Item[Count]^.Text, Format + Length(Data.Item[Count]^.Text) - strMCILen(Data.Item[Count]^.Text), ' '));
+
+        While Screen.CursorX < Format Do
+          Session.io.BufAddChar(' ');
 
         If Listed MOD Data.Info.DispCols = 0 Then
           TBBSCore(Owner).io.OutFullLn ('');
@@ -553,6 +557,7 @@ Begin
 
                   Repeat
                     Inc (Count);
+
                     Found := Data.Item[Count]^.HotKey = Temp + UpCase(Ch);
                   Until Found or (Count >= Data.NumItems);
 
@@ -638,10 +643,9 @@ Var
     Else
       Offset := Length(TempStr);
 
-    TBBSCore(Owner).io.BufFlush;
-    TBBSCore(Owner).io.BufAddStr(#27 + '[s');
-    TBBSCore(Owner).io.AnsiGotoXY(PromptX + Offset, PromptY);
-    TBBSCore(Owner).io.AnsiColor(PromptA);
+    TBBSCore(Owner).io.BufAddStr  (#27 + '[s');
+    TBBSCore(Owner).io.AnsiGotoXY (PromptX + Offset, PromptY);
+    TBBSCore(Owner).io.AnsiColor  (PromptA);
 
     If Ch = #08 Then
       Str := Str + #8#32#8
@@ -684,7 +688,7 @@ Begin
     If ReDraw Then Begin
       ShowMenu;
 
-      If Data.Info.Header <> '' Then
+//      If Data.Info.Header <> '' Then
         TBBSCore(Owner).io.OutFullLn(Data.Info.Header);
 
       If Data.Info.Footer <> '' Then
@@ -918,7 +922,7 @@ Procedure TMenuEngine.ExecuteMenu (Load, Forced, View, Action: Boolean);
           End;
     End;
 
-    If TimerCount = 100000 Then TimerCount := 0;
+    If TimerCount = 1000000000 Then TimerCount := 0;
   End;
 
 Var

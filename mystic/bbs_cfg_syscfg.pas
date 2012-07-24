@@ -77,9 +77,9 @@ Begin
   Box  := TAnsiMenuBox.Create;
   Form := TAnsiMenuForm.Create;
 
-  Box.Open (5, 5, 75, 18);
+  Box.Open (5, 5, 75, 17);
 
-  VerticalLine (24, 7, 16);
+  VerticalLine (24, 7, 15);
   VerticalLine (67, 7, 12);
 
   Form.AddStr  ('B', ' BBS Name',         14,  7, 26,  7, 10, 25, 30, @Config.BBSName, Topic);
@@ -89,9 +89,8 @@ Begin
   Form.AddStr  ('O', ' Sysop ACS',        13, 11, 26, 11, 11, 25, 30, @Config.ACSSysop, Topic);
   Form.AddStr  ('F', ' Feedback To',      11, 12, 26, 12, 13, 25, 30, @Config.FeedbackTo, Topic);
   Form.AddStr  ('A', ' Start Menu',       12, 13, 26, 13, 12, 20, 20, @Config.DefStartMenu, Topic);
-  Form.AddStr  ('C', ' Fallback Menu',     9, 14, 26, 14, 15, 20, 20, @Config.DefFallMenu, Topic);
-  Form.AddStr  ('H', ' Theme',            17, 15, 26, 15,  7, 20, 20, @Config.DefThemeFile, Topic);
-  Form.AddTog  ('E', ' Terminal',         14, 16, 26, 16, 10, 10, 0, 3, 'Ask Detect Detect/Ask ANSI', @Config.DefTermMode, Topic);
+  Form.AddStr  ('H', ' Theme',            17, 14, 26, 14,  7, 20, 20, @Config.DefThemeFile, Topic);
+  Form.AddTog  ('E', ' Terminal',         14, 15, 26, 15, 10, 10, 0, 3, 'Ask Detect Detect/Ask ANSI', @Config.DefTermMode, Topic);
 
   Form.AddBol  ('L', ' Chat Logging',     53,  7, 69,  7, 14,  3, @Config.ChatLogging, Topic);
   Form.AddByte ('R', ' Hours Start',      54,  8, 69,  8, 13,  2, 0, 24, @Config.ChatStart, Topic);

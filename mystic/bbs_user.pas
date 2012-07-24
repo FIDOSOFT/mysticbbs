@@ -950,8 +950,7 @@ Begin
   {If either handles or realnames are toggled off, fill the gaps}
 
   Session.Menu.MenuName := 'newinfo';
-
-  Session.Menu.ExecuteMenu (False, False, False, True);
+  Session.Menu.ExecuteMenu (True, False, False, True);
 
   Session.io.OutFullLn (Session.GetPrompt(21));
 

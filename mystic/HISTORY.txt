@@ -4415,3 +4415,10 @@
    of TIMER will automatically execute every X amount of seconds, which is
    defined per menu command.  This combined with all of the other new
    features makes for an amazingly powerful new menu system!
+
+ + Increased the menu reading buffer to 4k, up from 2k
+
+ + Added new menu command -I which sets the menu timer counter to the value
+   in the optional data field.  The menu timer is an internal incrementing
+   counter used to fire off TIMER commands.  It represents the number of
+   seconds that have passed since the menu was loaded.
