@@ -1271,13 +1271,13 @@ Begin
   Repeat
     If LastSecond <> TimerSeconds Then Begin
 
+      LastSecond := TimerSeconds;
+
       If Assigned(GetKeyCallBack) Then
         If GetKeyCallBack(False) Then Begin
           Result := #02;
           Exit;
         End;
-
-      LastSecond := TimerSeconds;
 
       If InMacro Then
         If InMacroPos <= Length(InMacroStr) Then Begin

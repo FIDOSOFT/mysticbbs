@@ -276,7 +276,7 @@ Begin
 
   Form.AddNone ('C', ' Command ', 15, 11,  9, Topic + 'Menu command function');
   Form.AddStr  ('A', ' Access ' , 16, 12, 26, 12,  8, 30, 30, @Menu.Item[Num]^.CmdData[CmdNum]^.Access, Topic + 'Access level to run this command');
-  Form.AddStr  ('D', ' Data '   , 18, 13, 26, 13,  6, 40, 80, @Menu.Item[Num]^.CmdData[CmdNum]^.Data, Topic + 'Menu command optional data');
+  Form.AddStr  ('D', ' Data '   , 18, 13, 26, 13,  6, 40, 160, @Menu.Item[Num]^.CmdData[CmdNum]^.Data, Topic + 'Menu command optional data');
   Form.AddTog  ('G', ' Execute ', 15, 14, 26, 14,  9,  6,  0, 10, 'Selected Up Down Left Right Tab Escape PgUp PgDn Home End', @Menu.Item[Num]^.CmdData[CmdNum]^.JumpID, Topic + '(Grid) Execute command on what Grid event?');
 
   Repeat
@@ -346,6 +346,7 @@ Begin
 
   VerticalLine (18,  6, 14);
   VerticalLine (60, 10, 14);
+  VerticalLine (41, 14, 14);
   VerticalLine (73, 10, 14);
 
   WriteXY (4, 15, 112, 'Command ' + strRep(#196, 18) + ' Access ' + strRep(#196, 5) + ' Data ' + strRep(#196, 29));
@@ -365,7 +366,9 @@ Begin
   Form.AddByte ('X', 'X'              , 14, 12, 20, 12,  1,  2,  0, 80, @Menu.Item[Num]^.X,   Topic + 'X coordinate of lightbar');
   Form.AddByte ('Y', 'Y'              , 16, 12, 23, 12,  1,  2,  0, 50, @Menu.Item[Num]^.Y,   Topic + 'Y coordinate of lightbar');
   Form.AddWord ('M', ' Timer '        , 11, 13, 20, 13,  7,  5,  0, 65535, @Menu.Item[Num]^.Timer, Topic + 'Timer interval (seconds)');
-  Form.AddBol  ('W', ' Redraw '       , 10, 14, 20, 14,  8,  3,  @Menu.Item[Num]^.ReDraw, Topic + 'Redraw menu after running this command?');
+  Form.AddTog  ('X', ' Exec Type'     ,  7, 14, 20, 14, 11,  9,  0, 2, 'Interval OnlyOnce PerRedraw', @Menu.Item[Num]^.TimerType, Topic + 'TIMER event execution type');
+
+  Form.AddBol  ('W', ' Redraw '       , 33, 14, 43, 14,  8,  3,  @Menu.Item[Num]^.ReDraw, Topic + 'Redraw menu after running this command?');
 
   Form.AddByte ('U', ' Up '           , 56, 10, 62, 10,  4,  3,  0, 255, @Menu.Item[Num]^.JumpUp, Topic + '(Grid) Item # to jump to when UP is pressed');
   Form.AddByte ('D', ' Down '         , 54, 11, 62, 11,  6,  3,  0, 255, @Menu.Item[Num]^.JumpDown, Topic + '(Grid) Item # to jump to when DOWN is pressed');
@@ -379,12 +382,12 @@ Begin
   Form.AddByte ('G', ' PageDn '       , 65, 13, 75, 13,  8,  3,  0, 255, @Menu.Item[Num]^.JumpPgDn, Topic + '(Grid) Item # to jump to when PGDN is pressed');
   Form.AddByte ('N', ' End '          , 68, 14, 75, 14,  5,  3,  0, 255, @Menu.Item[Num]^.JumpEnd, Topic + '(Grid) Item # to jump to when END is pressed');
 
-  WriteXY (25, 21, 113, Status1);
+  WriteXY (26, 21, 120, Status1);
 
   Repeat
     Case Form.Execute of
       #09 : Begin
-              WriteXY (25, 21, 113, Status2);
+              WriteXY (26, 21, 120, Status2);
 
               Repeat
                 MakeList;
@@ -394,8 +397,8 @@ Begin
                 List.Open (2, 15, 79, 21);
 
                 Case List.ExitCode of
-                  '/' : Case GetCommandOption(10, 'A-Add|D-Delete|') of
-                          'A' : Begin
+                  '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|') of
+                          'I' : Begin
                                   Menu.InsertCommand(Num, List.Picked);
                                   Changed := True;
                                 End;
@@ -414,7 +417,7 @@ Begin
                 End;
               Until False;
 
-              WriteXY (25, 21, 113, Status1);
+              WriteXY (26, 21, 120, Status1);
 
               If List.ExitCode = #27 Then Break;
             End;
@@ -521,8 +524,8 @@ Begin
     List.Open (9, 7, 72, 19);
 
     Case List.ExitCode of
-      '/' : Case GetCommandOption(10, 'F-Flags|A-Add|D-Delete|C-Copy|P-Paste|V-View|') of
-              'A' : Begin
+      '/' : Case GetCommandOption(10, 'F-Flags|I-Insert|D-Delete|C-Copy|P-Paste|V-View|') of
+              'I' : Begin
                       Menu.InsertItem(List.Picked);
                       Changed := True;
                     End;

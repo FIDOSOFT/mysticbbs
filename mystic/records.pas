@@ -47,7 +47,7 @@ Const
   mysMaxVoteQuestion = 20;                                      // Max number of voting questions
   mysMaxMenuNameLen  = 20;                                      // menu name size
   mysMaxMenuItems    = 75;                                      // Maximum menu items per menu
-  mysMaxMenuCmds     = 20;                                      // Max menu commands per item
+  mysMaxMenuCmds     = 25;                                      // Max menu commands per item
   mysMaxMenuInput    = 12;
   mysMaxMenuStack    = 8;
   mysMaxThemeText    = 493;                                     // Total prompts in theme file
@@ -525,7 +525,7 @@ Type
   RecMenuCmd = Packed Record
     MenuCmd : String[2];
     Access  : String[mysMaxAcsSize];
-    Data    : String[80];
+    Data    : String[160];
     JumpID  : Byte;
   End;
 
@@ -553,6 +553,8 @@ Type
     X          : Byte;
     Y          : Byte;
     Timer      : Word;
+    TimerType  : Byte;
+    TimerShow  : Boolean;
   End;
 
   RecMenuInfo = Packed Record
