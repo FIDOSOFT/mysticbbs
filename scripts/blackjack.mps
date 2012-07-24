@@ -11,10 +11,15 @@
 //   - When the player busts, the dealers hidden card is now shown.  This is
 //     just for people curious if they would have won by standing.
 //   - Fixed a few display bugs
+//   - Now saves your money between sessions
+//   - Added Top 10 list
 // ==========================================================================
 
+Uses
+  User;
+
 Const
-  Version     = '1.2';
+  Version     = '1.3';
   CashStart   = 1000;
   CardJack    = 11;
   CardQueen   = 12;
@@ -25,11 +30,32 @@ Const
   SuitHeart   = 3;
   SuitDiamond = 4;
 
+Type
+  PlayerRec = Record
+    UserID : LongInt;
+    Name   : String[30];
+    Cash   : LongInt;
+    LastOn : LongInt;
+  End;
+
+Type
+  TopTenRec = Record
+    User : String[35];
+    Cash : LongInt;
+    Date : LongInt;
+  End;
+
+Type
+  CardRec = Record
+    Suit : Byte;
+    Card : Byte;
+  End;
+
 Var
   DataPath      : String;
-  Suit          : Array[1..52] of Byte;
-  Card          : Array[1..52] of Byte;
-  Cash          : LongInt;
+  Deck          : Array[1..52] of CardRec;
+  Player        : PlayerRec;
+  PlayerNumber  : LongInt = -1;
   Wager         : LongInt;
   Player_Score  : Byte;
   Player_Cards  : Byte;
@@ -37,6 +63,126 @@ Var
   Dealer_Hidden : Byte;
   Dealer_Cards  : Byte;
   Dealer_Aces   : Byte;
+
+Procedure LoadPlayer;
+Var
+  F : File;
+  T : PlayerRec;
+Begin
+  GetThisUser;
+
+  PlayerNumber  := -1;
+
+  Player.UserID := UserIndex;
+  Player.Cash   := CashStart;
+
+  fAssign (F, DataPath + 'blackjack.ply', 66);
+  fReset  (F);
+
+  If IoResult <> 0 Then fReWrite(F);
+
+  While Not fEof(F) Do Begin
+    fReadRec (F, T);
+
+    If T.UserID = UserIndex Then Begin
+      Player       := T;
+      PlayerNumber := fPos(F) / SizeOf(Player);
+      Break;
+    End;
+
+    Break;
+  End;
+
+  fClose (F);
+
+  Player.LastOn := DateTime;
+  Player.Name   := UserAlias;
+End;
+
+Procedure SavePlayer;
+Var
+  F : File;
+Begin
+  fAssign (F, DataPath + 'blackjack.ply', 66);
+  fReset  (F);
+
+  If PlayerNumber <> -1 Then
+    fSeek (F, SizeOf(Player) * (PlayerNumber - 1));
+  Else
+    fSeek (F, fSize(F));
+
+  fWriteRec (F, Player);
+  fClose    (F);
+End;
+
+Procedure ExecuteTopTen;
+Var
+  TopList   : Array[1..10] of TopTenRec;
+  Count1    : Byte;
+  Count2    : Byte;
+  Count3    : Byte;
+  F         : File;
+  OnePerson : PlayerRec;
+Begin
+  Write ('|16|CL|10Sorting top scores...');
+
+  For Count1 := 1 to 10 Do Begin
+    TopList[Count1].User := 'None';
+    TopList[Count1].Cash := 0;
+    TopList[Count1].Date := 0;
+  End;
+
+  fAssign (F, DataPath + 'blackjack.ply', 66);
+  fReset  (F);
+
+  If IoResult = 0 Then
+    While Not fEof(F) Do Begin
+      fReadRec (F, OnePerson);
+
+      For Count2 := 1 to 10 Do
+        If TopList[Count2].Cash < OnePerson.Cash Then Begin
+          For Count3 := 10 DownTo Count2 + 1 Do
+            TopList[Count3] := TopList[Count3 - 1]
+
+          TopList[Count2].Cash := OnePerson.Cash;
+          TopList[Count2].User := OnePerson.Name;
+          TopList[Count2].Date := OnePerson.LastOn;
+
+          Break;
+        End;
+    End;
+
+  ClrScr;
+
+  GotoXY (24, 3);
+  Write  ('|07Mystic BlackJack - Top 10 Players');
+
+  GotoXY (5, 6);
+  Write  ('##  User                              Date                      Cash');
+
+  GotoXY (5, 7);
+  Write  ('|02' + strRep(#196, 68) + '|10');
+
+  For Count1 := 1 to 10 Do Begin
+    GotoXY (5, 7 + Count1);
+    Write  (PadLT(Int2Str(Count1), 2, ' '));
+
+    GotoXY (9, 7 + Count1);
+    Write  (TopList[Count1].User);
+
+    GotoXY (42, 7 + Count1);
+    Write  (DateStr(TopList[Count1].Date, 1));
+
+    GotoXY (53, 7 + Count1);
+    Write  (PadLT(strComma(TopList[Count1].Cash), 20, ' '));
+  End;
+
+  GotoXY (5, 18);
+  Write  ('|02' + strRep(#196, 68));
+
+  GotoXY (26, 20);
+  Write  ('|02Press |08[|15ENTER|08] |02to continue|PN');
+End;
 
 Procedure DeckCreate;
 Var
@@ -48,30 +194,25 @@ Begin
 
   For Suits := 1 to 4 Do
     For Numbers := 2 to CardAce Do Begin
-      Suit[Index] := Suits;
-      Card[Index] := Numbers;
-      Index       := Index + 1;
+      Deck[Index].Suit := Suits;
+      Deck[Index].Card := Numbers;
+      Index            := Index + 1;
     End;
 End;
 
 Procedure DeckShuffle;
 Var
-  TempSuit,
-  TempCard,
+  OneCard   : CardRec;
   Shuffle,
   CardNum1,
   CardNum2  : Byte;
 Begin
   For Shuffle := 1 to 200 Do Begin
-    CardNum1 := Random(51) + 1;
-    CardNum2 := Random(51) + 1;
-    TempSuit := Suit[CardNum1];
-    TempCard := Card[CardNum1];
-
-    Card[CardNum1] := Card[CardNum2];
-    Suit[CardNum1] := Suit[CardNum2];
-    Card[CardNum2] := TempCard;
-    Suit[CardNum2] := TempSuit;
+    CardNum1       := Random(51) + 1;
+    CardNum2       := Random(51) + 1;
+    OneCard        := Deck[CardNum1];
+    Deck[CardNum1] := Deck[CardNum2];
+    Deck[CardNum2] := OneCard;
   End;
 End;
 
@@ -80,15 +221,15 @@ Var
   Res,
   Color : String[3];
 Begin
-  Case Card[Num] of
-    1..10     : Res := PadLT(Int2Str(Card[Num]), 2, ' ');
+  Case Deck[Num].Card of
+    1..10     : Res := PadLT(Int2Str(Deck[Num].Card), 2, ' ');
     CardJack  : Res := ' J';
     CardQueen : Res := ' Q';
     CardKing  : Res := ' K';
     CardAce   : Res := ' A';
   End;
 
-  Case Suit[Num] of
+  Case Deck[Num].Suit of
     SuitClub    : GetCardNumber := '|08' + Res + #05;
     SuitSpade   : GetCardNumber := '|08' + Res + #06;
     SuitHeart   : GetCardNumber := '|04' + Res + #03;
@@ -160,7 +301,7 @@ Begin
     DrawCard (Dealer_Cards, 2, 1, Dealer_Cards + 5);
 
     For Count := 1 to Dealer_Cards Do Begin
-      Value := Card[Count + 5];
+      Value := Deck[Count + 5].Card;
       If Value = CardAce Then Begin
         Value       := 11;
         Dealer_Aces := Dealer_Aces + 1;
@@ -177,7 +318,7 @@ Begin
         Dealer_Aces  := Dealer_Aces - 1;
       Until Dealer_Score < 22 or Dealer_Aces = 0;
 
-      If Card[6] = CardAce And Dealer_Aces = 0 Then
+      If Deck[6].Card = CardAce And Dealer_Aces = 0 Then
         Dealer_Hidden := 1;
     End;
 
@@ -189,7 +330,7 @@ Begin
     DrawCard (Player_Cards, 1, 1, Player_Cards);
 
     For Count := 1 to Player_Cards Do Begin
-      Value := Card[Count];
+      Value := Deck[Count].Card;
       If Value = CardAce Then Begin
         Value := 11;
         Aces  := Aces + 1;
@@ -211,7 +352,7 @@ End;
 Procedure DrawCash
 Begin
   GotoXY (64, 19);
-  Write  ('|15|17' + PadRT(strComma(Cash), 10, ' ') + '|16');
+  Write  ('|15|17' + PadRT(strComma(Player.Cash), 10, ' ') + '|16');
 End;
 
 Procedure UpdateScores;
@@ -235,9 +376,9 @@ Var
   X,
   Y : Byte;
 Begin
-  If Cash = 0 Then Begin
+  If Player.Cash = 0 Then Begin
     Print ('|15No cash|07? |10House loans ya', '|07$|15' + strComma(CashStart) + '|07. |12Press a key');
-    Cash := CashStart;
+    Player.Cash := CashStart;
     ReadKey;
   End;
 
@@ -256,7 +397,7 @@ Begin
 
   DrawCash;
 
-  Print  ('  |15|16Enter your wager:', '  |02(|14$|15' + Int2Str(Cash) + ' |14max|02)|14|17');
+  Print  ('  |15|16Enter your wager:', '  |02(|14$|15' + Int2Str(Player.Cash) + ' |14max|02)|14|17');
 
   EraseInput;
 
@@ -264,7 +405,7 @@ Begin
 
   Wager := Str2Int(Input(10, 10, 1, ''));
 
-  If Wager > Cash Then Wager := 0;
+  If Wager > Player.Cash Then Wager := 0;
 
   If Wager = 0 Then Begin
     EraseInput;
@@ -273,7 +414,7 @@ Begin
 
   Dealer_Cards  := 1;
   Player_Cards  := 0;
-  Dealer_hidden := Card[6];
+  Dealer_Hidden := Deck[6].Card;
 
   If Dealer_Hidden = CardAce Then
     Dealer_Hidden := 11
@@ -294,12 +435,12 @@ Procedure AdjustScore (Mode: Byte);
 Begin
   Case Mode of
     0 : Begin
-          Cash := Cash - Wager;
-          If Cash < 0 Then Cash := 0;
+          Player.Cash := Player.Cash - Wager;
+          If Player.Cash < 0 Then Player.Cash := 0;
         End;
     1 : Begin
-          Cash := Cash + Wager;
-          If Cash > 99999999 Then Cash := 99999999;
+          Player.Cash := Player.Cash + Wager;
+          If Player.Cash > 99999999 Then Player.Cash := 99999999;
         End;
   End;
 
@@ -318,11 +459,13 @@ Begin
   End;
 
   DataPath := JustPath(ProgName);
-  Cash     := CashStart;
-  Wager    := 0;
+
+  // RESET to reset scores
+  // TOPLIST to show only scores and exit
 
   Randomize;
   DeckCreate;
+  LoadPlayer;
 
   DispFile (DataPath + 'blackjack')
 
@@ -336,8 +479,8 @@ Begin
     If Wager = 0 Then Continue;
 
     If Dealer_Score = 21 Then
-      If Card[6] = CardJack or Card[7] = CardJack Then
-        If Suit[6] = SuitClub or Suit[7] = SuitClub or Suit[6] = SuitSpade or Suit[7] = SuitSpade Then Begin
+      If Deck[6].Card = CardJack or Deck[7].Card = CardJack Then
+        If Deck[6].Suit = SuitClub or Deck[7].Suit = SuitClub or Deck[6].Suit = SuitSpade or Deck[7].Suit = SuitSpade Then Begin
           DrawCard (1, 2, 1, 6);
           Dealer_Hidden := 0;
           AdjustScore(0);
@@ -348,8 +491,8 @@ Begin
         End
 
     If Player_Score = 21 Then
-      If Card[1] = CardJack or Card[2] = CardJack Then
-        If Suit[1] = SuitClub or Suit[2] = SuitClub or Suit[1] = SuitSpade or Suit[2] = SuitSpade Then Begin
+      If Deck[1].Card = CardJack or Deck[2].Card = CardJack Then
+        If Deck[1].Suit = SuitClub or Deck[2].Suit = SuitClub or Deck[1].Suit = SuitSpade or Deck[2].Suit = SuitSpade Then Begin
           Print (' |12Player has Black Jack', ' Press any key.');
           AdjustScore(1);
           ReadKey;
@@ -462,9 +605,8 @@ Begin
     Until False;
   Until False;
 
-  ClrScr;
-  WriteLn ('|07|16Mystic BlackJack Version ' + Version);
-  WriteLn ('|CRWritten using the Mystic Programming Language (MPL)|CR');
-  WriteLn ('Code: g00r00, Artwork: Grymmjack|CR|CR|PA');
+  SavePlayer;
+
+  ExecuteTopTen;
 End.
 
