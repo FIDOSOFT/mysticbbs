@@ -11,20 +11,21 @@ Uses
 
 Type
   TMenuEngine = Class
-    Owner      : Pointer;
-    Data       : TMenuData;
-    Stack      : Array[1..mysMaxMenuStack] of String[mysMaxMenuNameLen];
-    StackPos   : Byte;
-    MenuName   : String[20];
-    MenuOld    : String[20];
-    ExtKeys    : String;
-    UseHotKeys : Boolean;
-    ReDraw     : Boolean;
-    SetAction  : Boolean;
-    UseLongKey : Boolean;
-    UseTimer   : Boolean;
-    TimerCount : LongInt;
-    ViewOnly   : Boolean;
+    Owner       : Pointer;
+    Data        : TMenuData;
+    Stack       : Array[1..mysMaxMenuStack] of String[mysMaxMenuNameLen];
+    StackPos    : Byte;
+    MenuName    : String[20];
+    MenuOld     : String[20];
+    ExtKeys     : String;
+    UseHotKeys  : Boolean;
+    ReDraw      : Boolean;
+    SetAction   : Boolean;
+    UseLongKey  : Boolean;
+    UseTimer    : Boolean;
+    TimerCount  : LongInt;
+    TimerReload : Boolean;
+    ViewOnly    : Boolean;
 
     Constructor Create (O: Pointer);
     Destructor  Destroy; Override;
@@ -34,7 +35,7 @@ Type
     Function    LoadMenu           (Forced: Boolean) : Boolean;
     Procedure   ExecuteMenu        (Load, Forced, View, Action: Boolean);
     Function    ExecuteCommandList (Num, JumpID: LongInt) : Byte;
-    Function    ExecuteByHotkey    (Key: String; Interval: LongInt) : Boolean;
+    Function    ExecuteByHotkey    (Key: String; Interval: LongInt) : Byte;
     Function    ExecuteCommand     (Cmd, CmdData: String) : Boolean;
     Function    ShowMenu : Boolean;
     Procedure   GenerateMenu;
@@ -367,26 +368,27 @@ Begin
   End;
 End;
 
-Function TMenuEngine.ExecuteByHotkey (Key: String; Interval: LongInt) : Boolean;
+Function TMenuEngine.ExecuteByHotkey (Key: String; Interval: LongInt) : Byte;
+// 0 = no commands ran, 1 = commands ran, 2 = load new menu
 Var
   Count : LongInt;
 Begin
-  Result := False;
+  Result := 0;
   Key    := strUpper(Key);
 
   For Count := 1 to Data.NumItems Do Begin
 
     If Data.Item[Count] = Nil Then Begin
-      Result := True;
+      Result := 2;
       Exit;
     End;
 
     If Data.Item[Count]^.HotKey = Key Then
-      If (Key <> 'TIMER') or ((Key = 'TIMER') And (Interval MOD Data.Item[Count]^.Timer = 0)) Then
-        If ExecuteCommandList(Count, -1) = 2 Then Begin
-          Result := True;
-          Exit;
-        End;
+      If (Key <> 'TIMER') or ((Key = 'TIMER') And (Interval MOD Data.Item[Count]^.Timer = 0)) Then Begin
+        Result := ExecuteCommandList(Count, -1);
+
+        If Result = 2 Then Exit;
+      End;
   End;
 End;
 
@@ -453,7 +455,7 @@ Begin
     TBBSCore(Owner).io.BufFlush;
   End;
 
-  If ExecuteByHotKey('AFTER', 0) Then Exit;
+  If ExecuteByHotKey('AFTER', 0) = 2 Then Exit;
 
   If Data.Info.Footer <> '' Then
     TBBSCore(Owner).io.OutFull(Data.Info.Footer);
@@ -498,7 +500,7 @@ Var
 Begin
   While Not TBBSCore(Owner).ShutDown Do Begin
     If Not ViewOnly Then
-      If ExecuteByHotKey('EVERY', 0) Then Exit;
+      If ExecuteByHotKey('EVERY', 0) = 2 Then Exit;
 
     If ReDraw Then GenerateMenu;
 
@@ -516,6 +518,11 @@ Begin
       Ch := Session.io.GetKey;
 
       If TBBSCore(Owner).ShutDown Then Exit;
+
+      If UseTimer And (Ch = #02) Then Begin
+        If TimerReload Then Exit;
+        If ReDraw Then Break;
+      End;
 
       Case Ch of
         #08 : If Length(Temp) > 0 Then Begin
@@ -568,7 +575,7 @@ Begin
     If ViewOnly Then Exit;
 
     If Not TBBSCore(Owner).ShutDown Then
-      If ExecuteByHotKey(Temp, 0) Then
+      If ExecuteByHotKey(Temp, 0) = 2 Then
         Exit;
   End;
 End;
@@ -707,6 +714,11 @@ Begin
 
     While Not TBBSCore(Owner).ShutDown Do Begin
       Ch := Session.io.GetKey;
+
+      If UseTimer And (Ch = #02) Then Begin
+        If TimerReload Then Exit;
+        If ReDraw Then Break;
+      End;
 
       If TBBSCore(Owner).ShutDown Then Exit;
 
@@ -895,11 +907,16 @@ Procedure TMenuEngine.ExecuteMenu (Load, Forced, View, Action: Boolean);
 
   Function TimerController (Forced: Boolean) : Boolean;
   Begin
-    Result := False;
-
     Inc (TimerCount);
 
-    ExecuteByHotkey('TIMER', TimerCount);
+    Case ExecuteByHotkey('TIMER', TimerCount) of
+      0 : Result := False;
+      1 : Result := True;
+      2 : Begin
+            TimerReload := True;
+            Result      := True;
+          End;
+    End;
 
     If TimerCount = 100000 Then TimerCount := 0;
   End;
@@ -945,11 +962,12 @@ Begin
 
   // Run FIRSTCMD commands and setup valid extended keys
 
-  ExtKeys    := '';
-  UseTimer   := False;
-  ReDraw     := True;
-  UseLongKey := False;
-  TimerCount := 0;
+  ExtKeys     := '';
+  UseTimer    := False;
+  ReDraw      := True;
+  UseLongKey  := False;
+  TimerCount  := 0;
+  TimerReload := False;
 
   For Count := 1 to Data.NumItems Do Begin
     If (Data.Item[Count]^.HotKey = 'EVERY') or
