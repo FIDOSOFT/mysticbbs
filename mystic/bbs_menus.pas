@@ -20,7 +20,6 @@ Type
     ExtKeys    : String;
     UseHotKeys : Boolean;
     ReDraw     : Boolean;
-    NextReDraw : Boolean;
     SetAction  : Boolean;
     UseLongKey : Boolean;
     UseTimer   : Boolean;
@@ -69,7 +68,6 @@ Begin
   Owner      := O;
   Data       := TMenuData.Create;
   Redraw     := True;
-  NextRedraw := True;
 End;
 
 Destructor TMenuEngine.Destroy;
@@ -633,9 +631,10 @@ Var
     Else
       Offset := Length(TempStr);
 
+    TBBSCore(Owner).io.BufFlush;
     TBBSCore(Owner).io.BufAddStr(#27 + '[s');
     TBBSCore(Owner).io.AnsiGotoXY(PromptX + Offset, PromptY);
-    TBBSCore(Owner).io.Attr2Ansi(PromptA);
+    TBBSCore(Owner).io.AnsiColor(PromptA);
 
     If Ch = #08 Then
       Str := Str + #8#32#8
@@ -650,7 +649,7 @@ Var
     End;
 
     TBBSCore(Owner).io.BufAddStr(Str);
-    TBBSCore(Owner).io.Attr2Ansi(SavedAttr);
+    TBBSCore(Owner).io.AnsiColor(SavedAttr);
     TBBSCore(Owner).io.BufAddStr(#27 + '[u');
     TBBSCore(Owner).io.BufFlush;
   End;
@@ -684,11 +683,11 @@ Begin
       If Data.Info.Footer <> '' Then
         TBBSCore(Owner).io.OutFull(Data.Info.Footer);
 
+      TBBSCore(Owner).io.BufFlush;
+
       PromptX := Screen.CursorX; //tbbscore
       PromptY := Screen.CursorY; //tbbscore
       PromptA := Screen.TextAttr; //tbbscore
-
-      TBBSCore(Owner).io.BufFlush;
     End;
 
     For Count := 1 to Data.NumItems Do
@@ -948,8 +947,7 @@ Begin
 
   ExtKeys    := '';
   UseTimer   := False;
-  ReDraw     := NextReDraw;
-  NextReDraw := True;
+  ReDraw     := True;
   UseLongKey := False;
   TimerCount := 0;
 
