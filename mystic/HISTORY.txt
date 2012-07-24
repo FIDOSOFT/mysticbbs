@@ -4313,7 +4313,8 @@
 
  + Added new ANSI menu editor to replace the old outdated crap.  The new
    editor has references to all of the menu commands as well as the special
-   functional hotkeys.
+   functional hotkeys.  It still maintains the ability to "simulate" menus
+   as well.
 
  + Revamped the entire menu system.  Menu files must be converted if you are
    any version pre 1.10 alpha 15 using the CvtMenus program.  Simply copy
@@ -4336,7 +4337,9 @@
    approach this way, and it allows for more options!
 
  + Each menu command now has the option to redraw the menu or not after its
-   command list executes.
+   command list executes.  This defaults to on to mimic previous menu system
+   however for some advanced stuff, like TIMER, you may will to turn them
+   off.
 
  + Menus can now be internally generated from 1 to 4 columns (up from 3)
 
@@ -4423,9 +4426,20 @@
    counter used to fire off TIMER commands.  It represents the number of
    seconds that have passed since the menu was loaded.
 
+ + TIMER commands also have 3 types, configurable per each menu option:
+
+      Interval  - Always execute at the configured timed interval
+      OnlyOnce  - Execute at interval ONLY ONCE per menu being loaded
+      PerRedraw - Execute after each menu redraw as per timer interval
+
  + When using hotkey-style menu input, extended hotkeys are no longer
    required to have a / first.  You can make a hotkey command named QUIT
    for example, and it will execute immediately when QUIT is entered.
+
+   Keep in mind it is still a hot-key styled input.  So you cannot have
+   one hotkey named QUIT and one named QUITNOW.  The QUIT command will
+   always get the hotkey.  If you need functionality like that, hotkeys
+   can be disabled on the menu.
 
  + Similar to the display file and menu systems, the MPL scripts directory
    will now also fallback from the theme scripts path to the default

@@ -307,6 +307,7 @@ Procedure EditItem (Num: Word);
 Const
   Status1 = ' (TAB) to edit menu commands ';
   Status2 = ' (TAB) Switch   (/) Commands ';
+  Grid    = '(Grid) Item # to jump to on keypress ';
 Var
   Box   : TAnsiMenuBox;
   List  : TAnsiMenuList;
@@ -357,30 +358,30 @@ Begin
   List.Picked := 0;
   List.Update;
 
-  Form.AddPipe ('D', ' Display Text ' ,  4,  6, 20,  6, 14, 58, 160, @Menu.Item[Num]^.Text,    Topic + 'Text displayed on generated menus');
-  Form.AddPipe ('O', ' LightBar Low ' ,  4,  7, 20,  7, 14, 58, 160, @Menu.Item[Num]^.TextLo,  Topic + 'Normal text in lightbar menu');
-  Form.AddPipe ('I', ' LightBar High ',  3,  8, 20,  8, 15, 58, 160, @Menu.Item[Num]^.TextHi,  Topic + 'Highlighted text in lightbar menu');
-  Form.AddCaps ('H', ' Hot Key '      ,  9,  9, 20,  9,  9, 12, mysMaxMenuInput, @Menu.Item[Num]^.HotKey,  Topic + 'Key to run this command (CTRL-L/Extended Key List)');
-  Form.AddStr  ('A', ' Access '       , 10, 10, 20, 10,  8, 30, 30, @Menu.Item[Num]^.Access, Topic + 'ACS level required to access this command');
-  Form.AddTog  ('S', ' Display Type ' ,  4, 11, 20, 11, 14,  6,  0, 2, 'Access Always Never', @Menu.Item[Num]^.ShowType, Topic + 'How should this command be displayed?');
+  Form.AddPipe ('D', ' Display Text'  ,  4,  6, 20,  6, 14, 58, 160, @Menu.Item[Num]^.Text,    Topic + 'Text displayed on generated menus');
+  Form.AddPipe ('O', ' LightBar Low'  ,  4,  7, 20,  7, 14, 58, 160, @Menu.Item[Num]^.TextLo,  Topic + 'Normal text in lightbar menu');
+  Form.AddPipe ('I', ' LightBar High' ,  3,  8, 20,  8, 15, 58, 160, @Menu.Item[Num]^.TextHi,  Topic + 'Highlighted text in lightbar menu');
+  Form.AddCaps ('H', ' Hot Key'       ,  9,  9, 20,  9,  9, 12, mysMaxMenuInput, @Menu.Item[Num]^.HotKey,  Topic + 'Key to run this command (CTRL-L/Extended Key List)');
+  Form.AddStr  ('A', ' Access'        , 10, 10, 20, 10,  8, 30, 30, @Menu.Item[Num]^.Access, Topic + 'ACS level required to access this command');
+  Form.AddTog  ('S', ' Display Type'  ,  4, 11, 20, 11, 14,  6,  0, 2, 'Access Always Never', @Menu.Item[Num]^.ShowType, Topic + 'How should this command be displayed?');
   Form.AddByte ('X', 'X'              , 14, 12, 20, 12,  1,  2,  0, 80, @Menu.Item[Num]^.X,   Topic + 'X coordinate of lightbar');
   Form.AddByte ('Y', 'Y'              , 16, 12, 23, 12,  1,  2,  0, 50, @Menu.Item[Num]^.Y,   Topic + 'Y coordinate of lightbar');
-  Form.AddWord ('M', ' Timer '        , 11, 13, 20, 13,  7,  5,  0, 65535, @Menu.Item[Num]^.Timer, Topic + 'Timer interval (seconds)');
-  Form.AddTog  ('X', ' Exec Type'     ,  7, 14, 20, 14, 11,  9,  0, 2, 'Interval OnlyOnce PerRedraw', @Menu.Item[Num]^.TimerType, Topic + 'TIMER event execution type');
+  Form.AddWord ('M', ' Timer'         , 11, 13, 20, 13,  7,  5,  0, 65535, @Menu.Item[Num]^.Timer, Topic + 'Timer interval (seconds)');
+  Form.AddTog  ('X', ' Timer Type'    ,  6, 14, 20, 14, 12,  9,  0, 2, 'Interval OnlyOnce PerRedraw', @Menu.Item[Num]^.TimerType, Topic + 'TIMER event execution type');
 
-  Form.AddBol  ('W', ' Redraw '       , 33, 14, 43, 14,  8,  3,  @Menu.Item[Num]^.ReDraw, Topic + 'Redraw menu after running this command?');
+  Form.AddBol  ('W', ' Redraw'        , 33, 14, 43, 14,  8,  3,  @Menu.Item[Num]^.ReDraw, Topic + 'Redraw menu after running this command?');
 
-  Form.AddByte ('U', ' Up '           , 56, 10, 62, 10,  4,  3,  0, 255, @Menu.Item[Num]^.JumpUp, Topic + '(Grid) Item # to jump to when UP is pressed');
-  Form.AddByte ('D', ' Down '         , 54, 11, 62, 11,  6,  3,  0, 255, @Menu.Item[Num]^.JumpDown, Topic + '(Grid) Item # to jump to when DOWN is pressed');
-  Form.AddByte ('L', ' Left '         , 54, 12, 62, 12,  6,  3,  0, 255, @Menu.Item[Num]^.JumpLeft, Topic + '(Grid) Item # to jump to when LEFT is pressed');
-  Form.AddByte ('R', ' Right '        , 53, 13, 62, 13,  7,  3,  0, 255, @Menu.Item[Num]^.JumpRight, Topic + '(Grid) Item # to jump to when RIGHT is pressed');
-  Form.AddByte ('E', ' Home '         , 54, 14, 62, 14,  6,  3,  0, 255, @Menu.Item[Num]^.JumpHome, Topic + '(Grid) Item # to jump to when HOME is pressed');
+  Form.AddByte ('U', ' Up'            , 56, 10, 62, 10,  4,  3,  0, 255, @Menu.Item[Num]^.JumpUp, Topic + Grid + 'UP');
+  Form.AddByte ('D', ' Down'          , 54, 11, 62, 11,  6,  3,  0, 255, @Menu.Item[Num]^.JumpDown, Topic + Grid + 'DOWN');
+  Form.AddByte ('L', ' Left'          , 54, 12, 62, 12,  6,  3,  0, 255, @Menu.Item[Num]^.JumpLeft, Topic + Grid + 'LEFT');
+  Form.AddByte ('R', ' Right'         , 53, 13, 62, 13,  7,  3,  0, 255, @Menu.Item[Num]^.JumpRight, Topic + Grid + 'RIGHT');
+  Form.AddByte ('E', ' Home'          , 54, 14, 62, 14,  6,  3,  0, 255, @Menu.Item[Num]^.JumpHome, Topic + Grid + 'HOME');
 
-  Form.AddByte ('C', ' Escape '       , 65, 10, 75, 10,  8,  3,  0, 255, @Menu.Item[Num]^.JumpEscape, Topic + '(Grid) Item # to jump to when ESCAPE is pressed');
-  Form.AddByte ('T', ' Tab '          , 68, 11, 75, 11,  5,  3,  0, 255, @Menu.Item[Num]^.JumpTab, Topic + '(Grid) Item # to jump to when TAB is pressed');
-  Form.AddByte ('P', ' PageUp '       , 65, 12, 75, 12,  8,  3,  0, 255, @Menu.Item[Num]^.JumpPgUp, Topic + '(Grid) Item # to jump to when PGUP is pressed');
-  Form.AddByte ('G', ' PageDn '       , 65, 13, 75, 13,  8,  3,  0, 255, @Menu.Item[Num]^.JumpPgDn, Topic + '(Grid) Item # to jump to when PGDN is pressed');
-  Form.AddByte ('N', ' End '          , 68, 14, 75, 14,  5,  3,  0, 255, @Menu.Item[Num]^.JumpEnd, Topic + '(Grid) Item # to jump to when END is pressed');
+  Form.AddByte ('C', ' Escape'        , 65, 10, 75, 10,  8,  3,  0, 255, @Menu.Item[Num]^.JumpEscape, Topic + Grid + 'ESCAPE');
+  Form.AddByte ('T', ' Tab'           , 68, 11, 75, 11,  5,  3,  0, 255, @Menu.Item[Num]^.JumpTab, Topic + Grid + 'TAB');
+  Form.AddByte ('P', ' PageUp'        , 65, 12, 75, 12,  8,  3,  0, 255, @Menu.Item[Num]^.JumpPgUp, Topic + Grid + 'PGUP');
+  Form.AddByte ('G', ' PageDn'        , 65, 13, 75, 13,  8,  3,  0, 255, @Menu.Item[Num]^.JumpPgDn, Topic + Grid + 'PGDN');
+  Form.AddByte ('N', ' End'           , 68, 14, 75, 14,  5,  3,  0, 255, @Menu.Item[Num]^.JumpEnd, Topic + Grid + 'END');
 
   WriteXY (26, 21, 120, Status1);
 
@@ -453,19 +454,19 @@ Begin
 
   VerticalLine (22, 7, 19);
 
-  Form.AddStr  ('D', ' Description ' ,   9,  7, 24,  7, 13, 30, 30, @Menu.Info.Description, Topic + 'Description of menu');
-  Form.AddStr  ('A', ' Access '      ,  14,  8, 24,  8,  8, 30, 30, @Menu.Info.Access, Topic + 'Security requirements to access this menu');
-  Form.AddTog  ('T', ' Menu Type '   ,  11,  9, 24,  9, 11, 13,  0, 2, 'Standard Lightbar Lightbar/Grid', @Menu.Info.MenuType, Topic + 'Type of menu');
-  Form.AddTog  ('I', ' Input Type '  ,  10, 10, 24, 10, 12, 12,  0, 2, 'User_Defined HotKey LongKey', @Menu.Info.InputType, Topic + 'Input type for this menu');
-  Form.AddTog  ('C', ' Input Chars ' ,   9, 11, 24, 11, 13,  9,  0, 2, 'Uppercase Lowercase Hidden', @Menu.Info.CharType, Topic + 'Input format display');
-  Form.AddBol  ('G', ' Use Global '  ,  10, 12, 24, 12, 12,  3, @Menu.Info.Global, Topic + 'Include global menu options in this menu?');
-  Form.AddStr  ('N', ' Node Status ' ,   9, 13, 24, 13, 13, 30, 30, @Menu.Info.NodeStatus, Topic + 'Node/User status set when this menu is loaded');
-  Form.AddStr  ('F', ' Display File ',   8, 14, 24, 14, 14, 20, 20, @Menu.Info.DispFile, Topic + 'Display file shown instead of generated menu');
-  Form.AddTog  ('L', ' Display Cols ',   8, 15, 24, 15, 14,  1,  1,  4, '1 2 3 4', @Menu.Info.DispCols, Topic + 'Number of columns in generated menu');
-  Form.AddPipe ('H', ' Menu Header ' ,   9, 16, 24, 16, 13, 50, 160, @Menu.Info.Header, Topic + 'Menu header displayed in generated menu');
-  Form.AddPipe ('P', ' Menu Prompt ' ,   9, 17, 24, 17, 13, 50, 160, @Menu.Info.Footer, Topic + 'Menu prompt displayed in generated menu');
-  Form.AddByte ('X', ' X '           ,  19, 18, 24, 18,  3,  2,  0,  80, @Menu.Info.DoneX, Topic + 'Locate to X coordinate after lightbar menu');
-  Form.AddByte ('Y', ' Y '           ,  19, 19, 24, 19,  3,  2,  0,  50, @Menu.Info.DoneY, Topic + 'Locate to Y coordinate after lightbar menu');
+  Form.AddStr  ('D', ' Description' ,   9,  7, 24,  7, 13, 30, 30, @Menu.Info.Description, Topic + 'Description of menu');
+  Form.AddStr  ('A', ' Access'      ,  14,  8, 24,  8,  8, 30, 30, @Menu.Info.Access, Topic + 'Security requirements to access this menu');
+  Form.AddTog  ('T', ' Menu Type'   ,  11,  9, 24,  9, 11, 13,  0, 2, 'Standard Lightbar Lightbar/Grid', @Menu.Info.MenuType, Topic + 'Type of menu');
+  Form.AddTog  ('I', ' Input Type'  ,  10, 10, 24, 10, 12, 12,  0, 2, 'User_Defined HotKey LongKey', @Menu.Info.InputType, Topic + 'Input type for this menu');
+  Form.AddTog  ('C', ' Input Chars' ,   9, 11, 24, 11, 13,  9,  0, 2, 'Uppercase Lowercase Hidden', @Menu.Info.CharType, Topic + 'Input format display');
+  Form.AddBol  ('G', ' Use Global'  ,  10, 12, 24, 12, 12,  3, @Menu.Info.Global, Topic + 'Include global menu options in this menu?');
+  Form.AddStr  ('N', ' Node Status' ,   9, 13, 24, 13, 13, 30, 30, @Menu.Info.NodeStatus, Topic + 'Node/User status set when this menu is loaded');
+  Form.AddStr  ('F', ' Display File',   8, 14, 24, 14, 14, 20, 20, @Menu.Info.DispFile, Topic + 'Display file shown instead of generated menu');
+  Form.AddTog  ('L', ' Display Cols',   8, 15, 24, 15, 14,  1,  1,  4, '1 2 3 4', @Menu.Info.DispCols, Topic + 'Number of columns in generated menu');
+  Form.AddPipe ('H', ' Menu Header' ,   9, 16, 24, 16, 13, 50, 160, @Menu.Info.Header, Topic + 'Menu header displayed in generated menu');
+  Form.AddPipe ('P', ' Menu Prompt' ,   9, 17, 24, 17, 13, 50, 160, @Menu.Info.Footer, Topic + 'Menu prompt displayed in generated menu');
+  Form.AddByte ('X', ' X'           ,  19, 18, 24, 18,  3,  2,  0,  80, @Menu.Info.DoneX, Topic + 'Locate to X coordinate after lightbar menu');
+  Form.AddByte ('Y', ' Y'           ,  19, 19, 24, 19,  3,  2,  0,  50, @Menu.Info.DoneY, Topic + 'Locate to Y coordinate after lightbar menu');
 
   Form.Execute;
 

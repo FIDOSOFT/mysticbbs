@@ -237,7 +237,10 @@ Begin
                     MenuName            := CmdData;
                     Result              := True;
                   End;
-            'T' : Session.io.OutFull (CmdData);
+            'T' : Begin
+                    Session.io.OutFull (CmdData);
+                    Session.io.BufFlush;
+                  End;
             'U' : ShowUserList (strUpper(CmdData));
             'X' : Result := ExecuteMPL(NIL, CmdData) = 2;
             '?' : Begin
@@ -625,9 +628,10 @@ End;
 
 Function TMenuEngine.MenuGetKey : Char;
 Var
-  Current : LongInt;
   LastSec : LongInt;
 Begin
+  Session.io.BufFlush;
+
   LastSec := TimerSeconds;
 
   While Not TBBSCore(Owner).ShutDown Do Begin
@@ -635,24 +639,28 @@ Begin
 
     If TBBSCore(Owner).ShutDown Then Exit;
 
-    If UseTimer And (TimerSeconds <> LastSec) Then Begin
+    If TimerSeconds <> LastSec Then Begin
       LastSec := TimerSeconds;
 
-      Inc (TimerCount);
+      If Session.io.DoInputEvents(Result) Then Exit;
 
-      Case ExecuteByHotkey('TIMER', TimerCount) of
-        1 : If ReDraw Then Begin
-              Result := #02;
-              Exit;
-            End;
-        2 : Begin
-              TimerReload := True;
-              Result      := #02;
-              Exit;
-            End;
+      If UseTimer Then Begin
+        Inc (TimerCount);
+
+        Case ExecuteByHotkey('TIMER', TimerCount) of
+          1 : If ReDraw Then Begin
+                Result := #02;
+                Exit;
+              End;
+          2 : Begin
+                TimerReload := True;
+                Result      := #02;
+                Exit;
+              End;
+        End;
+
+        If TimerCount = 1000000000 Then TimerCount := 0;
       End;
-
-      If TimerCount = 1000000000 Then TimerCount := 0;
     End;
 
     If Result <> #255 Then Break;

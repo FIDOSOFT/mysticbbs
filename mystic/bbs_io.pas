@@ -95,6 +95,7 @@ Type
     Function    InXY             (X, Y, Field, Max, Mode: Byte; Default: String) : String;
     Function    InKey            (Wait: LongInt) : Char;
     Function    GetYNL           (Str: String; Yes: Boolean) : Boolean;
+    Function    DoInputEvents    (Var Ch: Char) : Boolean;
     Function    GetKey           : Char;
     Function    GetYN            (Str: String; Yes: Boolean) : Boolean;
     Function    GetPW            (Str : String; BadStr : String; PW : String) : Boolean;
@@ -1258,9 +1259,76 @@ Begin
 End;
 {$ENDIF}
 
-Function TBBSIO.GetKey : Char;
+Function TBBSIO.DoInputEvents (Var Ch: Char) : Boolean;
 Var
   TimeCount : LongInt;
+Begin
+  Result := False;
+
+  If InMacro Then
+    If InMacroPos <= Length(InMacroStr) Then Begin
+      Ch     := InMacroStr[InMacroPos];
+      Result := True;
+
+      Inc (InMacroPos);
+      Exit;
+    End Else
+      InMacro := False;
+
+  If TBBSCore(Core).CheckTimeOut Then
+    If TimerSeconds - TBBSCore(Core).TimeOut >= Config.Inactivity Then Begin
+      TBBSCore(Core).SystemLog('Inactivity timeout');
+      OutFullLn (TBBSCore(Core).GetPrompt(136));
+      Halt(0);
+    End;
+
+  If Session.AllowMessages And Not Session.InMessage Then Begin
+    Dec (Session.MessageCheck);
+
+    If Session.MessageCheck = 0 Then Begin
+      CheckNodeMessages;
+
+      Session.MessageCheck := mysMessageThreshold;
+    End;
+  End;
+
+  TimeCount := TBBSCore(Core).TimeLeft;
+
+  If TimeCount <> Session.LastTimeLeft Then Begin
+    Session.LastTimeLeft := TimeCount;
+
+    {$IFNDEF UNIX}
+      UpdateStatusLine(StatusPtr, '');
+    {$ENDIF}
+
+    If TBBSCore(Core).TimerOn Then Begin
+      If TimeCount = 5 Then Begin
+        If Not TBBSCore(Core).TimeChecked Then Begin
+          TBBSCore(Core).TimeChecked := True;
+          OutFullLn (TBBSCore(Core).GetPrompt(134));
+        End;
+      End Else
+      If TimeCount < 1 Then Begin
+        If Not TBBSCore(Core).TimeChecked Then Begin
+          TBBSCore(Core).TimeChecked := True;
+          OutFullLn (TBBSCore(Core).GetPrompt(135));
+          TBBSCore(Core).SystemLog ('User ran out of time');
+          Halt(0);
+        End;
+      End Else
+        TBBSCore(Core).TimeChecked := False;
+    End;
+
+    If TBBSCore(Core).NextEvent.Active Then
+      If (TBBSCore(Core).MinutesUntilEvent(TBBSCore(Core).NextEvent.ExecTime) = TBBSCore(Core).NextEvent.Warning) And
+         (Not TBBSCore(Core).EventWarn) And (TBBSCore(Core).NextEvent.Forced) Then Begin
+           TBBSCore(Core).EventWarn := True;
+           OutFullLn (TBBSCore(Core).GetPrompt(133));
+      End;
+  End;
+End;
+
+Function TBBSIO.GetKey : Char;
 Begin
   Result  := #255;
 
@@ -1270,7 +1338,6 @@ Begin
 
   Repeat
     If LastSecond <> TimerSeconds Then Begin
-
       LastSecond := TimerSeconds;
 
       If Assigned(GetKeyCallBack) Then
@@ -1279,65 +1346,7 @@ Begin
           Exit;
         End;
 
-      If InMacro Then
-        If InMacroPos <= Length(InMacroStr) Then Begin
-          Result := InMacroStr[InMacroPos];
-          Inc (InMacroPos);
-          Exit;
-        End Else
-          InMacro := False;
-
-      If TBBSCore(Core).CheckTimeOut Then
-        If TimerSeconds - TBBSCore(Core).TimeOut >= Config.Inactivity Then Begin
-          TBBSCore(Core).SystemLog('Inactivity timeout');
-          OutFullLn (TBBSCore(Core).GetPrompt(136));
-          Halt(0);
-        End;
-
-      If Session.AllowMessages And Not Session.InMessage Then Begin
-        Dec (Session.MessageCheck);
-
-        If Session.MessageCheck = 0 Then Begin
-          CheckNodeMessages;
-
-          Session.MessageCheck := mysMessageThreshold;
-        End;
-      End;
-
-      TimeCount := TBBSCore(Core).TimeLeft;
-
-      If TimeCount <> Session.LastTimeLeft Then Begin
-        Session.LastTimeLeft := TimeCount;
-
-        {$IFNDEF UNIX}
-        UpdateStatusLine(StatusPtr, '');
-        {$ENDIF}
-
-        If TBBSCore(Core).TimerOn Then Begin
-          If TimeCount = 5 Then Begin
-            If Not TBBSCore(Core).TimeChecked Then Begin
-              TBBSCore(Core).TimeChecked := True;
-              OutFullLn (TBBSCore(Core).GetPrompt(134));
-            End;
-          End Else
-          If TimeCount < 1 Then Begin
-            If Not TBBSCore(Core).TimeChecked Then Begin
-              TBBSCore(Core).TimeChecked := True;
-              OutFullLn (TBBSCore(Core).GetPrompt(135));
-              TBBSCore(Core).SystemLog ('User ran out of time');
-              Halt(0);
-            End;
-          End Else
-            TBBSCore(Core).TimeChecked := False;
-        End;
-
-        If TBBSCore(Core).NextEvent.Active Then
-          If (TBBSCore(Core).MinutesUntilEvent(TBBSCore(Core).NextEvent.ExecTime) = TBBSCore(Core).NextEvent.Warning) And
-             (Not TBBSCore(Core).EventWarn) And (TBBSCore(Core).NextEvent.Forced) Then Begin
-               TBBSCore(Core).EventWarn := True;
-               OutFullLn (TBBSCore(Core).GetPrompt(133));
-          End;
-      End;
+      If DoInputEvents(Result) Then Exit;
     End;
 
     Result := InKey(1000);
