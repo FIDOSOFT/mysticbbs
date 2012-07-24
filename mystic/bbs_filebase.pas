@@ -1,6 +1,7 @@
 Unit bbs_FileBase;
 
 {$I M_OPS.PAS}
+{$MODESWITCH NESTEDPROCVARS-}
 
 Interface
 
@@ -1548,7 +1549,7 @@ Begin
   End;
 End;
 
-Function TFileBase.ListFiles (Mode : Byte; Data : String) : Byte;
+Function TFileBase.ListFiles (Mode: Byte; Data : String) : Byte;
 Var
   ListType  : Byte;    { 0 = ascii, 1 = ansi }
   DataFile  : File;
@@ -1745,9 +1746,9 @@ Var
   Begin
     If Session.io.ScreenInfo[4].X = 0 Then Exit;
 
-    Session.io.AnsiGotoXY   (Session.io.ScreenInfo[4].X, Session.io.ScreenInfo[4].Y);
-    Session.io.AnsiColor (Session.io.ScreenInfo[4].A);
-    Session.io.OutRaw        (strZero(BatchNum));
+    Session.io.AnsiGotoXY (Session.io.ScreenInfo[4].X, Session.io.ScreenInfo[4].Y);
+    Session.io.AnsiColor  (Session.io.ScreenInfo[4].A);
+    Session.io.OutRaw     (strZero(BatchNum));
   End;
 
   Procedure FullReDraw;
