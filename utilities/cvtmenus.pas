@@ -43,21 +43,28 @@ Type
     cRight  : Byte;
   End;
 
-Function DeleteFile (FN : String) : Boolean;
+Procedure PurgeWildcard (WC: String);
 Var
-  F : File;
+  D : SearchRec;
 Begin
-  Assign (F, FN);
-{  SetFAttr (F, Archive);}
-  {$I-} Erase (F); {$I+}
-  DeleteFile := (IoResult = 0);
+  FindFirst (WC, AnyFile, D);
+
+  While DosError = 0 Do Begin
+    If D.Attr AND Directory <> 0 Then Continue;
+
+    FileErase (D.Name);
+
+    FindNext(D);
+  End;
+
+  FindClose(D);
 End;
 
 Function RenameFile (Old, New: String) : Boolean;
 Var
   OldF : File;
 Begin
-  DeleteFile(New);
+  FileErase(New);
 
   Assign (OldF, Old);
   {$I-} ReName (OldF, New); {$I+}
@@ -120,12 +127,12 @@ Begin
 
     WriteLn ('Converting: ' + Dir.Name);
 
-    If Not ReNameFile(Path + Dir.Name, Path + JustFileName(Dir.Name) + '.old') Then Begin
+    If Not ReNameFile(Path + Dir.Name, Path + JustFileName(Dir.Name) + '.oldmnu') Then Begin
       WriteLn('Unable to rename menu file: ' + Dir.Name);
       Halt;
     End;
 
-    Assign (OldF, Path + JustFileName(Dir.Name) + '.old');
+    Assign (OldF, Path + JustFileName(Dir.Name) + '.oldmnu');
     Reset  (OldF);
 
     Assign  (NewF, Path + Dir.Name);
@@ -234,15 +241,21 @@ Begin
     WriteLn (NewF, '');
 
     For Count := 1 to NewItems Do Begin
-      NewItem[Count].ReDraw := 1;
+      NewItem[Count].ReDraw    := 1;
+      NewItem[Count].TimerType := 0;
+
+      FlagStr := strPadR(
+        strI2S(NewItem[Count].ReDraw) +
+        strI2S(NewItem[Count].TimerType) +
+        strI2S(NewItem[Count].ShowType)
+      , 20, '0');
 
       WriteLn (NewF, NewItem[Count].Text);
       WriteLn (NewF, NewItem[Count].TextLo);
       WriteLn (NewF, NewItem[Count].TextHi);
       WriteLn (NewF, NewItem[Count].HotKey);
       WriteLn (NewF, NewItem[Count].Access);
-      WriteLn (NewF, NewItem[Count].ReDraw);
-      WriteLn (NewF, NewItem[Count].ShowType);
+      WriteLn (NewF, FlagStr);
       WriteLn (NewF, NewItem[Count].Timer);
       WriteLn (NewF, NewItem[Count].X);
       WriteLn (NewF, NewItem[Count].Y);
@@ -279,11 +292,13 @@ Begin
   End;
 
   FindClose(Dir);
+
+  PurgeWildcard('*.oldmnu');
 End;
 
 Begin
   WriteLn;
-  WriteLn ('Mystic BBS Menu File Converter for Mystic BBS v1.10');
+  WriteLn ('Mystic BBS Menu File Converter for Mystic BBS v1.10 A15');
   WriteLn;
   WriteLn ('THIS SHOULD ONLY BE EXECUTED ONCE IN YOUR MENUS DIRECTORY!');
   WriteLn;
