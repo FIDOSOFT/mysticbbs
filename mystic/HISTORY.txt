@@ -4326,6 +4326,10 @@
    there may be issues - particularly in lightbar grid menus I would guess
    since they can be quite complex.
 
+   For those of you alpha testing, if you do find a menu that does not
+   convert correctly, please send the .mnu file to me so that I can see if
+   I can improve the conversion process before 1.10 official release.
+
  + Each menu option on a menu now as its own "execution list" of menu
    commands.  This basically replaces the old "kludge" stacking of commands
    to execute back to back with a single hotkey.  It is a much more clean
@@ -4378,6 +4382,8 @@
       Page Down
       Escape
       Tab
+      Home
+      End
 
  + In a lightbar grid menu, each menu command now has the ability to execute
    on a grid-specific event.  The following are available options:
@@ -4391,14 +4397,21 @@
      Escape
      PgUp
      PgDn
+     Home
+     End
 
  + All displayed menu items now have an option for display type.  If it set
    to Access it will only be displayed if the user has access.  If it is set
-   to Always, it will always been displayed, and if it is set to Never, it
-   will never be displayed.
+   to Always, it will always been displayed.  If its set to Never, it will
+   never be displayed.
 
  + Lightbar and Lightbar/Grid menus now display menu header and prompts if
    they are not set to a blank value.  They were ignored in the past, but
    this provides some better flexibility.  If you have lightbar menus you
    may need to validate that the header/footers in your menu flags are blank
    if you do not want this feature.
+
+ + New auto-exec hotkey for menu commands: TIMER.  An item with the hotkey
+   of TIMER will automatically execute every X amount of seconds, which is
+   defined per menu command.  This combined with all of the other new
+   features makes for an amazingly powerful new menu system!

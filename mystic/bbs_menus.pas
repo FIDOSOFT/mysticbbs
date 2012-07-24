@@ -24,6 +24,7 @@ Type
     SetAction  : Boolean;
     UseLongKey : Boolean;
     UseTimer   : Boolean;
+    TimerCount : LongInt;
     ViewOnly   : Boolean;
 
     Constructor Create (O: Pointer);
@@ -34,7 +35,7 @@ Type
     Function    LoadMenu           (Forced: Boolean) : Boolean;
     Procedure   ExecuteMenu        (Load, Forced, View, Action: Boolean);
     Function    ExecuteCommandList (Num, JumpID: LongInt) : Byte;
-    Function    ExecuteByHotkey    (Key: String) : Boolean;
+    Function    ExecuteByHotkey    (Key: String; Interval: LongInt) : Boolean;
     Function    ExecuteCommand     (Cmd, CmdData: String) : Boolean;
     Function    ShowMenu : Boolean;
     Procedure   GenerateMenu;
@@ -359,6 +360,7 @@ Begin
 
     If TBBSCore(Owner).User.Access(Data.Item[Num]^.CmdData[Count]^.Access) Then Begin
       Result := 1;
+
       If ExecuteCommand(Data.Item[Num]^.CmdData[Count]^.MenuCmd, Data.Item[Num]^.CmdData[Count]^.Data) Then Begin
         Result := 2;
         Exit;
@@ -367,7 +369,7 @@ Begin
   End;
 End;
 
-Function TMenuEngine.ExecuteByHotkey (Key: String) : Boolean;
+Function TMenuEngine.ExecuteByHotkey (Key: String; Interval: LongInt) : Boolean;
 Var
   Count : LongInt;
 Begin
@@ -382,10 +384,11 @@ Begin
     End;
 
     If Data.Item[Count]^.HotKey = Key Then
-      If ExecuteCommandList(Count, -1) = 2 Then Begin
-        Result := True;
-        Exit;
-      End;
+      If (Key <> 'TIMER') or ((Key = 'TIMER') And (Interval MOD Data.Item[Count]^.Timer = 0)) Then
+        If ExecuteCommandList(Count, -1) = 2 Then Begin
+          Result := True;
+          Exit;
+        End;
   End;
 End;
 
@@ -452,7 +455,7 @@ Begin
     TBBSCore(Owner).io.BufFlush;
   End;
 
-  If ExecuteByHotKey('AFTER') Then Exit;
+  If ExecuteByHotKey('AFTER', 0) Then Exit;
 
   If Data.Info.Footer <> '' Then
     TBBSCore(Owner).io.OutFull(Data.Info.Footer);
@@ -497,7 +500,7 @@ Var
 Begin
   While Not TBBSCore(Owner).ShutDown Do Begin
     If Not ViewOnly Then
-      If ExecuteByHotKey('EVERY') Then Exit;
+      If ExecuteByHotKey('EVERY', 0) Then Exit;
 
     If ReDraw Then GenerateMenu;
 
@@ -567,7 +570,7 @@ Begin
     If ViewOnly Then Exit;
 
     If Not TBBSCore(Owner).ShutDown Then
-      If ExecuteByHotKey(Temp) Then
+      If ExecuteByHotKey(Temp, 0) Then
         Exit;
   End;
 End;
@@ -664,7 +667,7 @@ Begin
 
   While Not TBBSCore(Owner).ShutDown Do Begin
     If Not ViewOnly Then
-      ExecuteByHotKey('EVERY');
+      ExecuteByHotKey('EVERY', 0);
 
     If SetAction Then
       If Data.Info.NodeStatus <> '' Then
@@ -697,7 +700,7 @@ Begin
     TBBSCore(Owner).io.AllowArrow := True;
 
     If Not ViewOnly Then
-      ExecuteByHotKey('AFTER');
+      ExecuteByHotKey('AFTER', 0);
 
     DrawBar (CursorPos, True);
 
@@ -770,8 +773,20 @@ Begin
                               End;
                       End;
                 End;
+          #71 : If Data.Info.MenuType = 2 Then
+                  Case ExecuteCommandList(CursorPos, 9) of
+                    0 : ;
+                    1 : Break;
+                    2 : Exit;
+                  End;
           #73 : If Data.Info.MenuType = 2 Then
                   Case ExecuteCommandList(CursorPos, 7) of
+                    0 : ;
+                    1 : Break;
+                    2 : Exit;
+                  End;
+          #79 : If Data.Info.MenuType = 2 Then
+                  Case ExecuteCommandList(CursorPos, 10) of
                     0 : ;
                     1 : Break;
                     2 : Exit;
@@ -878,11 +893,23 @@ Begin
 End;
 
 Procedure TMenuEngine.ExecuteMenu (Load, Forced, View, Action: Boolean);
+
+  Function TimerController (Forced: Boolean) : Boolean;
+  Begin
+    Result := False;
+
+    Inc (TimerCount);
+
+    ExecuteByHotkey('TIMER', TimerCount);
+
+    If TimerCount = 100000 Then TimerCount := 0;
+  End;
+
 Var
   Count : LongInt;
 Begin
-  SetAction := Action;
-  ViewOnly  := View;
+  SetAction  := Action;
+  ViewOnly   := View;
 
   If ViewOnly Then Begin
     Case Data.Info.MenuType of
@@ -924,6 +951,7 @@ Begin
   ReDraw     := NextReDraw;
   NextReDraw := True;
   UseLongKey := False;
+  TimerCount := 0;
 
   For Count := 1 to Data.NumItems Do Begin
     If (Data.Item[Count]^.HotKey = 'EVERY') or
@@ -947,6 +975,9 @@ Begin
     If Byte(Data.Item[Count]^.HotKey[0]) > 1 Then UseLongKey := True;
   End;
 
+  If UseTimer Then
+    Session.io.GetKeyCallBack := TimerController;
+
   Case Data.Info.MenuType of
     0 : DoStandardMenu;
     1,
@@ -955,6 +986,8 @@ Begin
         Else
           DoStandardMenu;
   End;
+
+  Session.io.GetKeyCallback := NIL;
 End;
 
 End.

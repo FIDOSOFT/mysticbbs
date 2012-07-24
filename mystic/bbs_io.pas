@@ -54,6 +54,7 @@ Type
     LastMCIValue   : String;
     InputPos       : Byte;
     GetKeyCallBack : TGetKeyCallBack;
+    LastSecond     : LongInt;
 
     {$IFDEF WINDOWS}
     OutBuffer    : Array[0..TBBSIOBufferSize] of Char;
@@ -1260,16 +1261,15 @@ End;
 Function TBBSIO.GetKey : Char;
 Var
   TimeCount : LongInt;
-  LastSec   : LongInt = 0;
 Begin
-  Result := #255;
+  Result  := #255;
 
   TBBSCore(Core).TimeOut := TimerSeconds;
 
   BufFlush;
 
   Repeat
-    If LastSec <> TimerSeconds Then Begin
+    If LastSecond <> TimerSeconds Then Begin
 
       If Assigned(GetKeyCallBack) Then
         If GetKeyCallBack(False) Then Begin
@@ -1277,7 +1277,7 @@ Begin
           Exit;
         End;
 
-      LastSec := TimerSeconds;
+      LastSecond := TimerSeconds;
 
       If InMacro Then
         If InMacroPos <= Length(InMacroStr) Then Begin
