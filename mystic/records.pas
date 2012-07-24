@@ -46,7 +46,10 @@ Const
   mysMaxBatchQueue   = 50;                                      // max files per queue
   mysMaxVoteQuestion = 20;                                      // Max number of voting questions
   mysMaxMenuNameLen  = 20;                                      // menu name size
-  mysMaxMenuCmds     = 75;                                      // Maximum menu commands per menu
+  mysMaxMenuItems    = 75;                                      // Maximum menu items per menu
+  mysMaxMenuCmds     = 20;                                      // Max menu commands per item
+  mysMaxMenuInput    = 12;
+  mysMaxMenuStack    = 8;
   mysMaxThemeText    = 493;                                     // Total prompts in theme file
 
   fn_SemFileEcho = 'echomail.now';
@@ -512,43 +515,55 @@ Type
     Hidden : Boolean;
   End;
 
-(* Mystic BBS stores it's menu files as text files.  They                 *)
-(* have been stored this way to make it possible to edit them with a text *)
-(* editor (which is sometimes easier then using the menu editor).  The    *)
-(* following records do not need to be used, but provide one way of       *)
-(* reading a menu into a record.                                          *)
-
-  RecMenuFlags = Record
-    Header    : String[255];
-    Prompt    : String[255];
-    DispCols  : Byte;
-    Access    : String[30];
-    Password  : String[15];
-    DispFile  : String[20];
-    FallBack  : String[20];
-    MenuType  : Byte; { 0 = standard, 1 = lightbar, 2 = lightbar grid }
-    InputType : Byte; { 0 = user setting, 1 = longkey, 2 = hotkey }
-    DoneX     : Byte;
-    DoneY     : Byte;
-    Global    : Byte; { 0 = no, 1 = yes }
+  PtrMenuCmd = ^RecMenuCmd;
+  RecMenuCmd = Packed Record
+    MenuCmd : String[2];
+    Access  : String[mysMaxAcsSize];
+    Data    : String[80];
+    JumpID  : Byte;
   End;
 
-  PtrMenuCommand = ^RecMenuCommand;
-  RecMenuCommand = Record
-    Text    : String[79];
-    TextLo  : String[79];
-    TextHi  : String[79];
-    HotKey  : String[8];
-    LongKey : String[8];
-    Access  : string[30];
-    Command : String[2];
-    Data    : String[79];
-    X       : Byte;
-    Y       : Byte;
-    cUp     : Byte;
-    cDown   : Byte;
-    cLeft   : Byte;
-    cRight  : Byte;
+  PtrMenuItem = ^RecMenuItem;
+  RecMenuItem = Packed Record
+    Text       : String[160];
+    TextLo     : String[160];
+    TextHi     : String[160];
+    HotKey     : String[mysMaxMenuInput];
+    Access     : String[mysMaxAcsSize];
+    ShowType   : Byte;
+    ReDraw     : Byte;
+    JumpUp     : Byte;
+    JumpDown   : Byte;
+    JumpLeft   : Byte;
+    JumpRight  : Byte;
+    JumpEscape : Byte;
+    JumpTab    : Byte;
+    JumpPgUp   : Byte;
+    JumpPgDn   : Byte;
+    JumpHome   : Byte;
+    JumpEnd    : Byte;
+    CmdData    : Array[1..mysMaxMenuCmds] of PtrMenuCmd;
+    Commands   : Byte;
+    X          : Byte;
+    Y          : Byte;
+    Timer      : Word;
+  End;
+
+  RecMenuInfo = Packed Record
+    Description : String[30];
+    Access      : String[mysMaxAcsSize];
+    DispFile    : String[20];
+    Password    : String[20];
+    NodeStatus  : String[30];
+    Header      : String[160];
+    Footer      : String[160];
+    DoneX       : Byte;
+    DoneY       : Byte;
+    MenuType    : Byte;
+    InputType   : Byte;
+    CharType    : Byte;
+    DispCols    : Byte;
+    Global      : Boolean;
   End;
 
   RecPercent = Record

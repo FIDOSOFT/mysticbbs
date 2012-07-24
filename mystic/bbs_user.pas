@@ -951,7 +951,7 @@ Begin
 
   Session.Menu.MenuName := 'newinfo';
 
-  Session.Menu.ExecuteMenu (False, False, False);
+  Session.Menu.ExecuteMenu (False, False, False, True);
 
   Session.io.OutFullLn (Session.GetPrompt(21));
 
@@ -1227,7 +1227,7 @@ Begin
     If Config.UseMatrix Then Begin
       Repeat
         Session.Menu.MenuName := Config.MatrixMenu;
-        Session.Menu.ExecuteMenu (True, False, False);
+        Session.Menu.ExecuteMenu (True, False, False, True);
       Until MatrixOK or Session.ShutDown;
     End;
 

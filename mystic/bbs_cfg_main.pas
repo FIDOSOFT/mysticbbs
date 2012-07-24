@@ -44,6 +44,7 @@ Begin
     'F' : Configuration_FileBaseEditor;
     'G' : Configuration_GroupEditor(True);
     'L' : Configuration_SecurityEditor(True);
+    'M' : Configuration_MenuEditor;
     'P' : Configuration_ProtocolEditor;
     'R' : Configuration_GroupEditor(False);
     'U' : Configuration_UserEditor;
@@ -122,7 +123,6 @@ Var
     Session.io.AnsiClear;
 
     Case Mode of
-      'M' : Menu_Editor;
       'E' : Event_Editor;
       'V' : Vote_Editor;
     End;
@@ -288,12 +288,12 @@ Begin
                 'B' : Configuration_MessageBaseEditor;
                 'F' : Configuration_FileBaseEditor;
                 'G' : Configuration_GroupEditor(True);
+                'M' : Configuration_MenuEditor;
                 'P' : Configuration_ProtocolEditor;
                 'R' : Configuration_GroupEditor(False);
                 'S' : Configuration_SecurityEditor(True);
                 'T' : Configuration_ThemeEditor(False);
                 'U' : Configuration_UserEditor;
-                'M',
                 'E',
                 'V' : ExecuteOldConfiguration(Res);
                 'X' : Break;

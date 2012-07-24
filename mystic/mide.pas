@@ -619,10 +619,7 @@ Var
   Box   : TMenuBox;
   InKey : TMenuInput;
   Str   : String;
-  Save  : Boolean;
 Begin
-  Save := True;
-
   Box   := TMenuBox.Create(Console);
   InKey := TMenuInput.Create(Console);
 

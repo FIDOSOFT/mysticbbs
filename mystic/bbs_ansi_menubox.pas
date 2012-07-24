@@ -10,6 +10,7 @@ Uses
 Procedure WriteXY          (X, Y, A: Byte; S: String);
 Procedure WriteXYPipe      (X, Y, A, SZ : Byte; S: String);
 Function  InXY             (X, Y, Field, Max, Mode: Byte; Default: String) : String;
+Function  InBox            (Header, Text, Def: String; Len, MaxLen: Byte) : String;
 Procedure VerticalLine     (X, Y1, Y2 : Byte);
 Function  ShowMsgBox       (BoxType : Byte; Str : String) : Boolean;
 
@@ -90,7 +91,8 @@ Uses
   m_Strings,
   BBS_Core,
   BBS_IO,
-  BBS_Common;
+  BBS_Common,
+  BBS_Ansi_MenuInput;
 
 Procedure WriteXY (X, Y, A: Byte; S: String);
 Begin
@@ -150,6 +152,46 @@ Begin
   End;
 
   Session.io.BufFlush;
+End;
+
+Function InBox (Header, Text, Def: String; Len, MaxLen: Byte) : String;
+Var
+  Box     : TAnsiMenuBox;
+  Input   : TAnsiMenuInput;
+  Offset  : Byte;
+  Str     : String;
+  WinSize : Byte;
+Begin
+  If Len > Length(Text) Then
+    Offset := Len
+  Else
+    Offset := Length(Text);
+
+  WinSize := (80 - Offset + 2) DIV 2;
+
+  Box   := TAnsiMenuBox.Create;
+  Input := TAnsiMenuInput.Create;
+
+  Box.Header    := ' ' + Header + ' ';
+
+//Input.Attr     := 15 + 4 * 16;
+//Input.FillAttr :=  7 + 4 * 16;
+  Input.LoChars  := #13#27;
+
+  Box.Open (WinSize, 10, WinSize + Offset + 3, 15);
+
+  WriteXY (WinSize + 2, 12, 112, Text);
+
+  Str := Input.GetStr(WinSize + 2, 13, Len, MaxLen, 1, Def);
+
+  Box.Close;
+
+  If Input.ExitCode = #27 Then Str := '';
+
+  Input.Free;
+  Box.Free;
+
+  Result := Str;
 End;
 
 Function InXY (X, Y, Field, Max, Mode: Byte; Default: String) : String;
@@ -251,7 +293,7 @@ Begin
   BoxAttr2   := 8  + 7 * 16;
   BoxAttr3   := 15 + 7 * 16;
   BoxAttr4   := 8  + 7 * 16;
-  HeadAttr   := 0  + 7 * 16;
+  HeadAttr   := 15  + 1 * 16;
   HeadType   := 0;
   HideImage  := NIL;
   WasOpened  := False;

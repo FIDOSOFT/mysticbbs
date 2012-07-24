@@ -411,6 +411,8 @@ Begin
 
   Session.io.OutRawLn ('');
 
+  Session.io.PromptInfo[1] := JustFile(Data);
+
   If dszSearch(JustFile(Data)) Then Begin
     Result := True;
     Session.io.OutFullLn (Session.GetPrompt(385));
@@ -2862,7 +2864,8 @@ Begin
 
   Session.io.OutRawLn ('');
   For A := 1 to BatchNum Do Begin
-    Session.io.PromptInfo[1] := Batch[A].FileName;
+    Session.io.PromptInfo[1] := JustFile(Batch[A].FileName);
+
     If dszSearch (Batch[A].FileName) Then Begin
       Session.SystemLog ('Download: ' + Batch[A].FileName);
 

@@ -461,6 +461,6 @@ Begin
     Session.Menu.MenuName := Config.DefStartMenu;
 
   Repeat
-    Session.Menu.ExecuteMenu (True, True, False);
+    Session.Menu.ExecuteMenu (True, True, False, True);
   Until False;
 End.

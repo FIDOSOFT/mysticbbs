@@ -1,79 +1,91 @@
-Unit bbs_Menus;
+Unit BBS_Menus;
 
 {$I M_OPS.PAS}
 
 Interface
 
 Uses
-  m_Strings,
-  bbs_Common,
-  bbs_Doors;
+  BBS_Common,
+  BBS_MenuData,
+  MPL_Execute;
 
 Type
-  TMenuSystem = Class
-    LBMenuPos : Byte;
-    CmdNum    : Byte;
-    Menu      : RecMenuFlags;
-    MenuList  : Array[1..mysMaxMenuCmds] of RecMenuCommand;
-    MenuOld   : String[mysMaxMenuNameLen];
-    MenuName  : String[mysMaxMenuNameLen];
-    MenuStack : Array[1..8] of String[mysMaxMenuNameLen];
-    StackNum  : Byte;
+  TMenuEngine = Class
+    Owner      : Pointer;
+    Data       : TMenuData;
+    Stack      : Array[1..mysMaxMenuStack] of String[mysMaxMenuNameLen];
+    StackPos   : Byte;
+    MenuName   : String[20];
+    MenuOld    : String[20];
+    ExtKeys    : String;
+    UseHotKeys : Boolean;
+    ReDraw     : Boolean;
+    NextReDraw : Boolean;
+    SetAction  : Boolean;
+    UseLongKey : Boolean;
+    UseTimer   : Boolean;
+    ViewOnly   : Boolean;
 
-    Constructor Create (Var Owner: Pointer);
+    Constructor Create (O: Pointer);
     Destructor  Destroy; Override;
-
-    Function    StripSecurity     (Str : String) : String;
-    Function    ReplaceSecurity   (Str : String) : String;
-    Procedure   ToggleAccessFlags (Data: String; Var Flags: AccessFlagType);
-    Function    LoadMenu          (CheckSec: Boolean; RunCmd: Boolean; Global: Boolean) : Byte;
-    Procedure   ExecuteMenu       (FallBack, Global, View: Boolean);
-    Function    ExecuteCommand    (Cmd: String; Data: String) : Boolean; {True if menu is to be reloaded}
+    Function    StripSecurity      (Str: String) : String;
+    Function    ReplaceSecurity    (Str: String; SecLevel: Byte) : String;
+    Procedure   ToggleAccessFlags  (Cmd: String; Var Flags: AccessFlagType);
+    Function    LoadMenu           (Forced: Boolean) : Boolean;
+    Procedure   ExecuteMenu        (Load, Forced, View, Action: Boolean);
+    Function    ExecuteCommandList (Num, JumpID: LongInt) : Byte;
+    Function    ExecuteByHotkey    (Key: String) : Boolean;
+    Function    ExecuteCommand     (Cmd, CmdData: String) : Boolean;
+    Function    ShowMenu : Boolean;
+    Procedure   GenerateMenu;
+    Procedure   DoStandardMenu;
+    Procedure   DoLightBarMenu;
   End;
 
 Implementation
 
 Uses
-  bbs_Core,
-  bbs_MsgBase,
-  bbs_FileBase,
-  bbs_General,
-  bbs_User,
-  bbs_NodeChat,
-  bbs_NodeInfo,
-  bbs_UserChat,
-  bbs_ansi_Help,
-  MPL_Execute,
-  bbs_cfg_MenuEdit,
-  bbs_cfg_FileBase,
-  bbs_cfg_UserEdit,
-  bbs_cfg_MsgBase,
-  bbs_cfg_SecLevel,
-  bbs_cfg_Groups,
-  bbs_cfg_Events,
-  bbs_cfg_Vote,
-  bbs_Cfg_Main;
+  m_Strings,
+  BBS_Core,
+  BBS_NodeInfo,
+  BBS_General,
+  BBS_Doors,
+  BBS_NodeChat,
+  BBS_UserChat,
+  BBS_Ansi_Help,
+  BBS_Cfg_Main,
+  BBS_Cfg_Events,
+  BBS_Cfg_UserEdit,
+  BBS_Cfg_Vote;
 
-Constructor TMenuSystem.Create (Var Owner: Pointer);
+Constructor TMenuEngine.Create (O: Pointer);
 Begin
   Inherited Create;
 
-  StackNum := 0;
+  StackPos   := 0;
+  MenuName   := '';
+  MenuOld    := '';
+  Owner      := O;
+  Data       := TMenuData.Create;
+  Redraw     := True;
+  NextRedraw := True;
 End;
 
-Destructor TMenuSystem.Destroy;
+Destructor TMenuEngine.Destroy;
 Begin
+  Data.Free;
+
   Inherited Destroy;
 End;
 
-Function TMenuSystem.StripSecurity (Str : String) : String;
+Function TMenuEngine.StripSecurity (Str : String) : String;
 Begin
   Delete (Str, Pos('@S', Str), 2);
 
   Result := Str;
 End;
 
-Function TMenuSystem.ReplaceSecurity (Str : String) : String;
+Function TMenuEngine.ReplaceSecurity (Str: String; SecLevel: Byte) : String;
 Var
   A : Byte;
 Begin
@@ -81,59 +93,54 @@ Begin
 
   If A > 0 Then Begin
     Delete (Str, A, 2);
-    Insert (strI2S(Session.User.ThisUser.Security), Str, A);
+    Insert (strI2S(SecLevel), Str, A);
   End;
 
   Result := Str;
 End;
 
-Procedure TMenuSystem.ToggleAccessFlags (Data: String; Var Flags: AccessFlagType);
+Procedure TMenuEngine.ToggleAccessFlags (Cmd: String; Var Flags: AccessFlagType);
 Var
-  A : Byte;
+  Count : Byte;
 Begin
-  A := 1;
+  Count := 1;
 
-  While A <= Length(Data) Do Begin
-    If (Data[A] in ['+','-','!']) and (Data[A+1] in ['A'..'Z']) Then Begin
-      Case Data[A] of
-        '+' : Flags := Flags + [Ord(Data[A+1]) - 64];
-        '-' : Flags := Flags - [Ord(Data[A+1]) - 64];
-        '!' : If Ord(Data[2]) - 64 in Flags Then
-                Flags := Flags - [Ord(Data[A+1]) - 64]
+  While Count <= Length(Cmd) Do Begin
+    If (Cmd[Count] in ['+','-','!']) and (Cmd[Count + 1] in ['A'..'Z']) Then Begin
+      Case Cmd[Count] of
+        '+' : Flags := Flags + [Ord(Cmd[Count + 1]) - 64];
+        '-' : Flags := Flags - [Ord(Cmd[Count + 1]) - 64];
+        '!' : If Ord(Cmd[2]) - 64 in Flags Then
+                Flags := Flags - [Ord(Cmd[Count + 1]) - 64]
               Else
-                Flags := Flags + [Ord(Data[A+1]) - 64];
+                Flags := Flags + [Ord(Cmd[Count + 1]) - 64];
 
       End;
-      Inc (A);
+      Inc (Count);
     End;
-    Inc(A);
-  End;
 
-  {$IFNDEF UNIX}
-     UpdateStatusLine(StatusPTR, '');
-  {$ENDIF}
+    Inc (Count);
+  End;
 End;
 
-Function TMenuSystem.ExecuteCommand (Cmd: String; Data: String) : Boolean;
+Function TMenuEngine.ExecuteCommand (Cmd, CmdData: String) : Boolean;
 Var
-  A : Integer;
-  Help : TAnsiMenuHelp;
+  Loop1 : LongInt;
+  Help  : TAnsiMenuHelp;
 Begin
   Result := False;
 
-  {$IFDEF LOGGING} Session.SystemLog('Exec MenuCmd: ' + Cmd + ' ' + Data); {$ENDIF}
-
-  If Length(Cmd) <> 2 Then Exit;
+  If Cmd[0] <> #2 Then Exit;
 
   Case Cmd[1] of
     '-' : Case Cmd[2] of
-            'D' : ToggleAccessFlags(Data, Session.User.ThisUser.AF2);
-            'F' : ToggleAccessFlags(Data, Session.User.ThisUser.AF1);
-            'N' : Session.User.AcsOkFlag := Session.io.GetYN(Data, False);
-            'P' : Session.User.AcsOkFlag := Session.io.GetPW(Copy(Data, 1, Pos(';', Data) - 1), Session.GetPrompt(417),
-                                                strUpper(Copy(Data, Pos(';', Data) + 1, Length(Data))));
-            'S' : Session.SystemLog(Data);
-            'Y' : Session.User.AcsOkFlag := Session.io.GetYN(Data, True);
+            'D' : ToggleAccessFlags(CmdData, Session.User.ThisUser.AF2);
+            'F' : ToggleAccessFlags(CmdData, Session.User.ThisUser.AF1);
+            'N' : Session.User.AcsOkFlag := Session.io.GetYN(CmdData, False);
+            'P' : Session.User.AcsOkFlag := Session.io.GetPW(Copy(CmdData, 1, Pos(';', CmdData) - 1), Session.GetPrompt(417),
+                                                strUpper(Copy(CmdData, Pos(';', CmdData) + 1, Length(CmdData))));
+            'S' : Session.SystemLog(CmdData);
+            'Y' : Session.User.AcsOkFlag := Session.io.GetYN(CmdData, True);
           End;
     'A' : Case Cmd[2] of
             'E' : AutoSig_Edit;
@@ -141,14 +148,14 @@ Begin
             'V' : AutoSig_View;
           End;
     'D' : Case Cmd[2] of
-            '-' : ExecuteDoor (0, Data);
-            'C' : ExecuteDoor (3, Data);
-            'D' : ExecuteDoor (1, Data);
-            'G' : ExecuteDoor (2, Data);
-            '3' : ExecuteDoor (4, Data);
+            '-' : ExecuteDoor (0, CmdData);
+            'C' : ExecuteDoor (3, CmdData);
+            'D' : ExecuteDoor (1, CmdData);
+            'G' : ExecuteDoor (2, CmdData);
+            '3' : ExecuteDoor (4, CmdData);
           End;
     'F' : Case Cmd[2] of
-            'A' : Session.FileBase.ChangeFileArea(Data);
+            'A' : Session.FileBase.ChangeFileArea(CmdData);
             'D' : Begin
                     Session.io.OutFile ('download', True, 0);
 
@@ -157,10 +164,10 @@ Begin
                     Else
                       Session.FileBase.DownloadFile;
                   End;
-            'F' : Session.FileBase.DownloadFileList (strUpper(Data));
-            'G' : Session.FileBase.FileGroupChange (Data, True, True);
-            'L' : Session.FileBase.ListFiles (1, strUpper(Data));
-            'N' : Session.FileBase.NewFileScan(UpCase(Data[1]));
+            'F' : Session.FileBase.DownloadFileList (strUpper(CmdData));
+            'G' : Session.FileBase.FileGroupChange (CmdData, True, True);
+            'L' : Session.FileBase.ListFiles (1, strUpper(CmdData));
+            'N' : Session.FileBase.NewFileScan(UpCase(CmdData[1]));
             'P' : Session.FileBase.SetFileScanDate;
             'S' : Session.FileBase.FileSearch;
             'U' : Session.FileBase.UploadFile;
@@ -168,18 +175,18 @@ Begin
             'Z' : Session.FileBase.ToggleFileNewScan;
             '1' : Session.FileBase.MassUpload;
             '2' : Session.FileBase.DirectoryEditor(False, '');
-            '3' : Session.FileBase.SendFile (Data);
+            '3' : Session.FileBase.SendFile (CmdData);
           End;
     'B' : Case Cmd[2] of
-            'A' : Add_BBS_List  (Data);
-            'L' : View_BBS_List (True, Data);
-            'S' : View_BBS_List (False, Data);
+            'A' : Add_BBS_List  (CmdData);
+            'L' : View_BBS_List (True, CmdData);
+            'S' : View_BBS_List (False, CmdData);
           End;
     'G' : Case Cmd[2] of
-            '1' : ShowBBSHistory(strS2I(Data));
-            'A' : View_Directory(Data, 0);
-            'D' : Session.io.OutFile (Data, True, 0);
-            'E' : Session.User.Edit_User_Settings(strS2I(Data));
+            '1' : ShowBBSHistory(strS2I(CmdData));
+            'A' : View_Directory(CmdData, 0);
+            'D' : Session.io.OutFile (CmdData, True, 0);
+            'E' : Session.User.Edit_User_Settings(strS2I(CmdData));
             'H',
             'I' : Begin
                     If Cmd[2] = 'H' Then Begin
@@ -196,76 +203,76 @@ Begin
             'L' : ShowLastCallers;
             'O' : Begin
                     MenuOld  := MenuName;
-                    MenuName := Data;
+                    MenuName := CmdData;
                     Result   := True;
                   End;
-            'N' : ShowOneLiners (Data);
-            'P' : {$IFNDEF UNIX} PageForSysopChat (Pos('/F', strUpper(Data)) > 0) {$ENDIF};
+            'N' : ShowOneLiners (CmdData);
+            'P' : {$IFNDEF UNIX} PageForSysopChat (Pos('/F', strUpper(CmdData)) > 0) {$ENDIF};
             'R' : Begin
-                    If StackNum > 0 Then Begin
+                    If StackPos > 0 Then Begin
                       MenuOld  := MenuName;
-                      MenuName := MenuStack[StackNum];
+                      MenuName := Stack[StackPos];
                       Result   := True;
 
-                      Dec (StackNum);
+                      Dec (StackPos);
                     End;
                   End;
             'S' : Begin
                     MenuOld := MenuName;
 
-                    If StackNum = 8 Then Begin
-                      For A := 1 to 7 Do
-                        MenuStack[A + 1] := MenuStack[A];
+                    If StackPos = 8 Then Begin
+                      For Loop1 := 1 to 7 Do
+                        Stack[Loop1 + 1] := Stack[Loop1];
 
-                      Dec (StackNum);
+                      Dec (StackPos);
                     End;
 
-                    Inc (StackNum);
+                    Inc (StackPos);
 
-                    MenuStack[StackNum] := MenuName;
-                    MenuName            := Data;
+                    Stack[StackPos] := MenuName;
+                    MenuName            := CmdData;
                     Result              := True;
                   End;
-            'T' : Session.io.OutFull (Data);
-            'U' : ShowUserList (strUpper(Data));
-            'X' : Result := ExecuteMPL(NIL, Data) = 2;
+            'T' : Session.io.OutFull (CmdData);
+            'U' : ShowUserList (strUpper(CmdData));
+            'X' : Result := ExecuteMPL(NIL, CmdData) = 2;
             '?' : Begin
                     // online ANSI help system (BBSHTML) prototype
                     Help := TAnsiMenuHelp.Create;
-                    Help.OpenHelp (Session.Theme.TextPath + Data + ';ansihelp;INDEX');
+                    Help.OpenHelp (Session.Theme.TextPath + CmdData + ';ansihelp;INDEX');
                     Help.Free;
                   End;
           End;
     'M' : Case Cmd[2] of
-            'A' : Session.Msgs.ChangeArea(Data);
+            'A' : Session.Msgs.ChangeArea(CmdData);
             'C' : Session.Msgs.CheckEMail;
             'D' : Session.Msgs.SetMessagePointers;
-            'G' : Session.Msgs.MessageGroupChange (Data, True, True);
+            'G' : Session.Msgs.MessageGroupChange (CmdData, True, True);
             'M' : Session.Msgs.SendMassEmail;
-            'N' : Session.Msgs.MessageNewScan (strUpper(Data));
-            'P' : Session.Msgs.PostMessage (False, Data);
-            'Q' : Session.Msgs.MessageQuickScan(strUpper(Data));
+            'N' : Session.Msgs.MessageNewScan (strUpper(CmdData));
+            'P' : Session.Msgs.PostMessage (False, CmdData);
+            'Q' : Session.Msgs.MessageQuickScan(strUpper(CmdData));
             'R' : Begin
-                    If Data = '' Then Data := ' ';
+                    If CmdData = '' Then CmdData := ' ';
 
-                    Session.Msgs.ReadMessages(UpCase(Data[1]), '');
+                    Session.Msgs.ReadMessages(UpCase(CmdData[1]), '');
                   End;
-            'S' : Session.Msgs.GlobalMessageSearch(UpCase(Data[1]));
+            'S' : Session.Msgs.GlobalMessageSearch(UpCase(CmdData[1]));
             'V' : Session.Msgs.ViewSentEmail;
-            'W' : Session.Msgs.PostMessage (True, Data);
-            'X' : Session.Msgs.PostTextFile(Data, False);
+            'W' : Session.Msgs.PostMessage (True, CmdData);
+            'X' : Session.Msgs.PostTextFile(CmdData, False);
             'Z' : Session.Msgs.ToggleNewScan(False);
           End;
     'N' : Case Cmd[2] of
-            'A' : Set_Node_Action (Data);
+            'A' : Set_Node_Action (CmdData);
             'C' : Node_Chat;
             'P' : PageUserForChat;
-            'S' : Send_Node_Message (3, Data, 0);
+            'S' : Send_Node_Message (3, CmdData, 0);
             'W' : Show_Whos_Online;
           End;
     'O' : Case Cmd[2] of
             'S' : Session.Msgs.ToggleNewScan(True);
-            'D' : Session.Msgs.DownloadQWK(Data);
+            'D' : Session.Msgs.DownloadQWK(CmdData);
             'U' : Session.Msgs.UploadREP;
           End;
     'Q' : Case Cmd[2] of
@@ -281,8 +288,8 @@ Begin
     'V' : Case Cmd[2] of
             'A' : Add_Booth;
             'N' : Voting_Booth_New;
-            'R' : Voting_Result (strS2I(Data));
-            'V' : Voting_Booth (False, strS2I(Data));
+            'R' : Voting_Result (strS2I(CmdData));
+            'V' : Voting_Booth (False, strS2I(CmdData));
           End;
     'X' : Case Cmd[2] of
             'A' : Begin
@@ -307,14 +314,14 @@ Begin
                     Result                := True;
                   End;
             'P' : {$IFNDEF UNIX} If Session.User.GetMatrixUser Then
-                    PageForSysopChat (Pos('/F', strUpper(Data)) > 0) {$ENDIF};
+                    PageForSysopChat (Pos('/F', strUpper(CmdData)) > 0) {$ENDIF};
           End;
     '*' : Begin
             If Not Session.io.GetPW (Session.GetPrompt(493), Session.GetPrompt(417), Config.SysopPW) Then Exit;
 
             Case Cmd[2] of
               '#' : Begin
-                      Menu_Editor;
+                      Configuration_ExecuteEditor('M');
                       Result := True;
                     End;
               'A' : Configuration_ExecuteEditor('A');
@@ -333,521 +340,621 @@ Begin
   End;
 End;
 
-Function TMenuSystem.LoadMenu (CheckSec: Boolean; RunCmd: Boolean; Global: Boolean) : Byte;
-{ 0 = Menu not found: Load fallback menu
-  1 = Menu loaded.
-  2 = Re-load menu: ie GO in FIRSTCMD }
+Function TMenuEngine.ExecuteCommandList (Num, JumpID: LongInt) : Byte;
+// 0 = no commands ran, 1 = commands ran, 2 = load new menu
 Var
-  MenuFile : Text;
-  Buffer   : Array[1..2048] of Char;
-  Temp     : String;
+  Count : LongInt;
 Begin
   Result := 0;
 
-  {$IFDEF LOGGING} Session.SystemLog('Load menu: ' + MenuName); {$ENDIF}
+  If ViewOnly Then Exit;
 
-  Assign (MenuFile, Session.Theme.MenuPath + MenuName + '.mnu');
-  {$I-} Reset (MenuFile); {$I+}
+  If Not TBBSCore(Owner).User.Access(Data.Item[Num]^.Access) Then Exit;
 
-  If IoResult <> 0 Then Begin
-    If Not Global Then Begin
-      Session.io.OutFullLn ('|CR|14Menu not found, loading fallback.');
-      Session.SystemLog    ('Menu: ' + MenuName + ' not found');
+  Redraw := Boolean(Data.Item[Num]^.Redraw);
+
+  For Count := 1 to Data.Item[Num]^.Commands Do Begin
+    If JumpID <> -1 Then
+      If JumpID <> Data.Item[Num]^.CmdData[Count]^.JumpID Then Continue;
+
+    If TBBSCore(Owner).User.Access(Data.Item[Num]^.CmdData[Count]^.Access) Then Begin
+      Result := 1;
+      If ExecuteCommand(Data.Item[Num]^.CmdData[Count]^.MenuCmd, Data.Item[Num]^.CmdData[Count]^.Data) Then Begin
+        Result := 2;
+        Exit;
+      End;
     End;
-
-    Exit;
   End;
+End;
 
-  SetTextBuf (MenuFile, Buffer, SizeOf(Buffer));
+Function TMenuEngine.ExecuteByHotkey (Key: String) : Boolean;
+Var
+  Count : LongInt;
+Begin
+  Result := False;
+  Key    := strUpper(Key);
 
-  If CheckSec Then Begin
-    ReadLn (MenuFile, Temp);  {Header}
-    ReadLn (MenuFile, Temp);  {Prompt}
-    ReadLn (MenuFile, Temp);  {Display columns}
-    ReadLn (MenuFile, Temp);  {ACS}
+  For Count := 1 to Data.NumItems Do Begin
 
-    If Not Session.User.Access(Temp) Then Begin
-      Close (MenuFile);
-
-      MenuName := MenuOld;
-      Result   := 2;
-
-      If Not Global Then
-        Session.io.OutFullLn (Session.GetPrompt(149));
-
+    If Data.Item[Count] = Nil Then Begin
+      Result := True;
       Exit;
     End;
 
-    ReadLn (MenuFile, Temp);
-
-    If Temp <> '' Then
-      If Not Session.io.GetPW(Session.GetPrompt(150), Session.GetPrompt(417), Temp) Then Begin
-        Close (MenuFile);
-
-        Result   := 2;
-        MenuName := MenuOld;
-
+    If Data.Item[Count]^.HotKey = Key Then
+      If ExecuteCommandList(Count, -1) = 2 Then Begin
+        Result := True;
         Exit;
       End;
   End;
-
-  Reset  (MenuFile);
-
-  ReadLn (MenuFile, Menu.Header);
-  ReadLn (MenuFile, Menu.Prompt);
-  ReadLn (MenuFile, Menu.DispCols);
-  ReadLn (MenuFile, Menu.Access);
-  ReadLn (MenuFile, Menu.Password);
-  ReadLn (MenuFile, Menu.DispFile);
-  ReadLn (MenuFile, Menu.FallBack);
-  ReadLn (MenuFile, Menu.MenuType);
-  ReadLn (MenuFile, Menu.InputType);
-  ReadLn (MenuFile, Menu.DoneX);
-  ReadLn (MenuFile, Menu.DoneY);
-  ReadLn (MenuFile, Menu.Global);
-
-  If Not Global Then CmdNum := 0;
-
-  While (CmdNum < mysMaxMenuCmds) And (Not Eof(MenuFile)) Do Begin
-    Inc (CmdNum);
-
-    ReadLn (MenuFile, MenuList[CmdNum].Text);
-    ReadLn (MenuFile, MenuList[CmdNum].HotKey);
-    ReadLn (MenuFile, MenuList[CmdNum].LongKey);
-    ReadLn (MenuFile, MenuList[CmdNum].Access);
-    ReadLn (MenuFile, MenuList[CmdNum].Command);
-    ReadLn (MenuFile, MenuList[CmdNum].Data);
-    ReadLn (MenuFile, MenuList[CmdNum].X);
-    ReadLn (MenuFile, MenuList[CmdNum].Y);
-    ReadLn (MenuFile, MenuList[CmdNum].cUP);
-    ReadLn (MenuFile, MenuList[CmdNum].cDOWN);
-    ReadLn (MenuFile, MenuList[CmdNum].cLEFT);
-    ReadLn (MenuFile, MenuList[CmdNum].cRIGHT);
-    ReadLn (MenuFile, MenuList[CmdNum].TextLo);
-    ReadLn (MenuFile, MenuList[CmdNum].TextHi);
-
-    If (RunCmd) and (MenuList[CmdNum].HotKey = 'FIRSTCMD') Then Begin
-      If Session.User.Access(MenuList[CmdNum].Access) Then
-        If ExecuteCommand (MenuList[CmdNum].Command, MenuList[CmdNum].Data) Then Begin
-          Result := 2;
-          Close (MenuFile);
-          Exit;
-        End;
-      Dec (CmdNum);
-    End;
-  End;
-  Close (MenuFile);
-
-  LBMenuPos := 0;
-  Result    := 1;
 End;
 
-Procedure TMenuSystem.ExecuteMenu (FallBack, Global, View: Boolean);
-{If fallback is false, Run_Menu will not try to load any fallback menus.
-if the MenuName variable doesn't exist}
+Function TMenuEngine.ShowMenu : Boolean;
+Begin
+  With TBBSCore(Owner) Do Begin
+    Result := Not io.OutFile (ReplaceSecurity(Data.Info.DispFile, User.ThisUser.Security), False, 0);
+
+    If Result And (Pos('@S', Data.Info.DispFile) > 0) Then
+      Result := Not io.OutFile(StripSecurity(Data.Info.DispFile), False, 0);
+  End;
+End;
+
+Procedure TMenuEngine.GenerateMenu;
 Var
-  Keys    : String[mysMaxMenuCmds];
-  ExtKeys : String[mysMaxMenuCmds];
-  HotKeys : Boolean;
-  Done    : Boolean;
-
-  Function ExecuteAfterCommands : Boolean;
-  Var
-    A : Byte;
-  Begin
-    ExecuteAfterCommands := False;
-
-    For A := 1 to CmdNum Do
-      If (MenuList[A].HotKey = 'AFTER') And Session.User.Access(MenuList[A].Access) Then
-        If ExecuteCommand(MenuList[A].Command, MenuList[A].Data) Then Begin
-          ExecuteAfterCommands := True;
-          Done                 := True;
-          Exit;
-        End;
-  End;
-
-  Function ValidLightBar (Pos : Byte) : Boolean;
-  Begin
-    ValidLightBar := False;
-
-    If Pos = 0 Then Exit;
-
-    ValidLightBar := (MenuList[Pos].HotKey <> 'EVERY') and
-                     (MenuList[Pos].HotKey <> 'AFTER') and
-                     (MenuList[Pos].TextLo <> '') and
-                     (MenuList[Pos].TextHi <> '');
-{ we need to add LINEFEED?! }
-  End;
-
-  Procedure Do_LightBar_Menu;
-  Var
-    A       : Byte;
-    Ch      : Char;
-    TempPos : Byte;
-    TempStr : String;
-  Begin
-    If View Then Begin
-      Done      := False;
-      LBMenuPos := 0;
+  Format : Byte;
+  Listed : Word;
+  Count  : LongInt;
+Begin
+  If ShowMenu Then Begin
+    Case Data.Info.DispCols of
+      1 : Format := 79;
+      2 : Format := 39;
+      3 : Format := 26;
+      4 : Format := 19;
     End;
 
-    Session.io.OutFile (ReplaceSecurity(Menu.DispFile), True, 0);
+    If Data.Info.Header <> '' Then
+      TBBSCore(Owner).io.OutFullLn (Data.Info.Header);
 
-    If Session.io.NoFile and (Pos('@S', Menu.DispFile) > 0) Then
-      Session.io.OutFile (StripSecurity(Menu.DispFile), True, 0);
+    Listed := 0;
 
-    For A := 1 to CmdNum Do
-      If ValidLightBar(A) Then Begin
-        If LBMenuPos = 0 Then LBMenuPos := A;
-        Session.io.AnsiGotoXY (MenuList[A].X, MenuList[A].Y);
-        Session.io.OutFull    (MenuList[A].TextLo);
+    For Count := 1 to Data.NumItems Do Begin
+      If (Data.Item[Count]^.ShowType = 2) or
+         (Data.Item[Count]^.Text = '') or
+         (Data.Item[Count]^.HotKey = 'EVERY') or
+         (Data.Item[Count]^.HotKey = 'AFTER') or
+         (Data.Item[Count]^.HotKey = 'FIRSTCMD') or
+         ((Data.Item[Count]^.ShowType = 0) And (Not TBBSCore(Owner).User.Access(Data.Item[Count]^.Access)))
+      Then Continue;
+
+      If Data.Item[Count]^.HotKey = 'LINEFEED' Then Begin
+        If Listed MOD Data.Info.DispCols <> 0 Then Session.io.OutRawLn('');
+
+        Session.io.OutFull(Data.Item[Count]^.Text);
+
+        While Listed Mod Data.Info.DispCols <> 0 Do Inc(Listed);
+      End Else Begin
+        Inc (Listed);
+
+        If Format = 79 Then
+          TBBSCore(Owner).io.OutFull(Data.Item[Count]^.Text)
+        Else
+          TBBSCore(Owner).io.OutFull(strPadR(Data.Item[Count]^.Text, Format + Length(Data.Item[Count]^.Text) - strMCILen(Data.Item[Count]^.Text), ' '));
+
+        If Listed MOD Data.Info.DispCols = 0 Then
+          TBBSCore(Owner).io.OutFullLn ('');
       End;
+    End;
 
-    Session.io.AllowArrow := True;
+    If Listed MOD Data.Info.DispCols <> 0 Then
+      TBBSCore(Owner).io.OutFullLn ('');
 
-    If ExecuteAfterCommands Then Exit;
+    TBBSCore(Owner).io.BufFlush;
+  End;
 
-    Session.io.PurgeInputBuffer;
+  If ExecuteByHotKey('AFTER') Then Exit;
 
-    Repeat
-      Session.io.AnsiGotoXY (MenuList[LBMenuPos].X, MenuList[LBMenuPos].Y);
-      Session.io.OutFull (MenuList[LBMenuPos].TextHi);
+  If Data.Info.Footer <> '' Then
+    TBBSCore(Owner).io.OutFull(Data.Info.Footer);
 
+  TBBSCore(Owner).io.BufFlush;
+End;
+
+Procedure TMenuEngine.DoStandardMenu;
+Var
+  Ch     : Char;
+  Temp   : String[mysMaxMenuInput];
+  Count  : LongInt;
+  Found  : Boolean;
+
+  Procedure Translate;
+  Begin
+    Case Ch of
+      #09 : Temp := 'TAB';
+      #27 : Temp := 'ESCAPE';
+      #71 : Temp := 'HOME';
+      #72 : Temp := 'UP';
+      #73 : Temp := 'PAGEUP';
+      #75 : Temp := 'LEFT';
+      #77 : Temp := 'RIGHT';
+      #79 : Temp := 'END';
+      #80 : Temp := 'DOWN';
+      #81 : Temp := 'PAGEDOWN'
+    End;
+  End;
+
+  Procedure AddChar;
+  Begin
+    Temp := Temp + UpCase(Ch);
+
+    Case Data.Info.CharType of
+      0 : TBBSCore(Owner).io.OutRaw(UpCase(Ch));
+      1 : TBBSCore(Owner).io.OutRaw(LoCase(Ch));
+      2 : {hidden};
+    End;
+  End;
+
+Begin
+  While Not TBBSCore(Owner).ShutDown Do Begin
+    If Not ViewOnly Then
+      If ExecuteByHotKey('EVERY') Then Exit;
+
+    If ReDraw Then GenerateMenu;
+
+    TBBSCore(Owner).io.AllowArrow := True;
+
+    If SetAction Then
+      If Data.Info.NodeStatus <> '' Then
+        Set_Node_Action(Data.Info.NodeStatus)
+      Else
+        Set_Node_Action(TBBSCore(Owner).GetPrompt(346));
+
+    Temp := '';
+
+    While Not TBBSCore(Owner).ShutDown Do Begin
       Ch := Session.io.GetKey;
 
+      If TBBSCore(Owner).ShutDown Then Exit;
+
       Case Ch of
+        #08 : If Length(Temp) > 0 Then Begin
+                Dec (Temp[0]);
+
+                TBBSCore(Owner).io.OutBS(1, True);
+              End;
+        #09,
+        #27 : If Pos(Ch, ExtKeys) > 0 Then Begin
+                Translate;
+
+                Break;
+              End;
         #13 : Begin
-                TempStr := MenuList[LBMenuPos].HotKey;
+                If Temp = '' Then Temp := 'ENTER';
 
-                For A := 1 To CmdNum Do
-                  If MenuList[A].HotKey = TempStr Then
-                    If Session.User.Access(MenuList[A].Access) Then Begin
-                      Session.io.AnsiGotoXY (Menu.DoneX, Menu.DoneY);
-                      If View Then Exit;
-                      If ExecuteCommand(MenuList[A].Command, MenuList[A].Data) Then
-                        Done := True;
-                    End;
-                Exit;
+                Break;
               End;
-        #72,
-        #75 : Begin {Up, Left}
-                Session.io.AnsiGotoXY (MenuList[LBMenuPos].X, MenuList[LBMenuPos].Y);
-                Session.io.OutFull    (MenuList[LBMenuPos].TextLo);
-
-                If Menu.MenuType = 1 Then Begin
-                  TempPos := LBMenuPos;
-                  Repeat
-                    Dec (TempPos);
-                    If ValidLightBar(TempPos) Then Begin
-                      LBMenuPos := TempPos;
-                      Break;
-                    End;
-                  Until TempPos <= 1;
-                End Else
-                  Case Ch of
-                    #72 : If ValidLightBar(MenuList[LBMenuPos].cUP) Then
-                            LBMenuPos := MenuList[LBMenuPos].cUP;
-                    #75 : If ValidLightBar(MenuList[LBMenuPos].cLEFT) Then
-                            LBMenuPos := MenuList[LBMenuPos].cLEFT;
-                  End;
-              End;
-        #80,
-        #77 : Begin {Down, Right}
-                Session.io.AnsiGotoXY (MenuList[LBMenuPos].X, MenuList[LBMenuPos].Y);
-                Session.io.OutFull    (MenuList[LBMenuPos].TextLo);
-
-                If Menu.MenuType = 1 Then Begin
-                  If LBMenuPos < CmdNum Then Begin
-                    TempPos := LBMenuPos;
-                    Repeat
-                      Inc (TempPos);
-                      If ValidLightBar(TempPos) Then Begin
-                        LBMenuPos := TempPos;
-                        Break;
-                      End;
-                    Until TempPos >= CmdNum;
-                  End;
-                End Else Begin
-                  Case Ch of
-                    #77 : If ValidLightBar(MenuList[LBMenuPos].cRIGHT) Then
-                            LBMenuPos := MenuList[LBMenuPos].cRIGHT;
-                    #80 : If ValidLightBar(MenuList[LBMenuPos].cDOWN) Then
-                            LBMenuPos := MenuList[LBMenuPos].cDOWN;
-                  End;
+        #32..
+        #126: If Length(Temp) < mysMaxMenuInput Then Begin
+                If TBBSCore(Owner).io.IsArrow And (Pos(Ch, ExtKeys) > 0) Then Begin
+                  Translate;
+                  Break;
                 End;
+
+                If UseHotKeys Then Begin
+                  Count := 0;
+
+                  Repeat
+                    Inc (Count);
+                    Found := Data.Item[Count]^.HotKey = Temp + UpCase(Ch);
+                  Until Found or (Count >= Data.NumItems);
+
+                  If Found And (TBBSCore(Owner).User.Access(Data.Item[Count]^.Access)) Then Begin
+                    AddChar;
+                    Break;
+                  End Else
+                    If UseLongKey Then
+                      If ((Temp[1] = '/') And (Temp[0] > #0)) or ((Temp[0] = #0) And (Ch = '/')) Then
+                        AddChar;
+                End Else
+                  AddChar;
               End;
-      Else
-        If Pos(UpCase(Ch), Keys) > 0 Then begin
-          For A := 1 to CmdNum Do Begin
-            If ((Ch = #27) and (MenuList[A].HotKey = 'ESCAPE')) or
-               ((Ch = #9)  and (MenuList[A].HotKey = 'TAB')) or
-               (UpCase(Ch) = MenuList[A].HotKey) Then
-              If Session.User.Access(MenuList[A].Access) Then Begin
-                Session.io.AnsiGotoXY (Menu.DoneX, Menu.DoneY);
-                If View Then Exit;
-                If ExecuteCommand(MenuList[A].Command, MenuList[A].Data) Then
-                  Done := True;
-              End;
-          End;
-          Exit;
-        End;
       End;
-    Until Done;
+    End;
+
+    If Data.Info.CharType <> 2 Then
+      TBBSCore(Owner).io.OutRawLn('');
+
+    If ViewOnly Then Exit;
+
+    If Not TBBSCore(Owner).ShutDown Then
+      If ExecuteByHotKey(Temp) Then
+        Exit;
+  End;
+End;
+
+Procedure TMenuEngine.DoLightBarMenu;
+Var
+  TempStr : String;
+  PromptX : Byte;
+  PromptY : Byte;
+  PromptA : Byte;
+
+  Function ValidLightBar (BarPos: Word) : Boolean;
+  Begin
+    Result := False;
+
+    If BarPos = 0 Then Exit;
+
+    Result := (Data.Item[BarPos]^.HotKey <> 'EVERY') And
+              (Data.Item[BarPos]^.HotKey <> 'AFTER') And
+              (Data.Item[BarPos]^.HotKey <> 'FIRSTCMD') And
+              (Data.Item[BarPos]^.TextLo <> '') And
+              (Data.Item[BarPos]^.TextHi <> '') And
+              (Data.Item[BarPos]^.ShowType <> 2) And
+              ( (((Data.Item[BarPos]^.ShowType = 0) And (TBBSCore(Owner).User.Access(Data.Item[BarPos]^.Access)) Or (Data.Item[BarPos]^.ShowType = 1)))
+              );
   End;
 
-  Procedure Do_Internal_Menu;
+  Procedure DrawBar (Num: Word; High: Boolean);
   Var
-    Format : Byte;
-    A      : Byte;
-    Listed : Byte;
-    Temp   : String[8];
-    Ch     : Char;
-    Found  : Boolean;
+    Str : String;
   Begin
-    Session.io.OutFile (ReplaceSecurity(Menu.DispFile), True, 0);
+    If Num = 0 Then Exit;
 
-    If Session.io.NoFile and (Pos('@S', Menu.DispFile) > 0) Then
-      Session.io.OutFile (StripSecurity(Menu.DispFile), True, 0);
+    If High Then
+      Str := Data.Item[Num]^.TextHi
+    Else
+      Str := Data.Item[Num]^.TextLo;
 
-    If Session.io.NoFile Then Begin
-      Case Menu.DispCols of
-        1 : Format := 79;
-        2 : Format := 39;
-        3 : Format := 26;
-      End;
+    If Str = '' Then Exit;
 
-      Session.io.OutFullLn (Menu.Header);
+    TBBSCore(Owner).io.AnsiGotoXY(Data.Item[Num]^.X, Data.Item[Num]^.Y);
+    TBBSCore(Owner).io.OutFull(Str);
+  End;
 
-      Listed := 0;
-
-      For A := 1 to CmdNum Do Begin
-        If MenuList[A].Text <> '' Then
-          If (MenuList[A].HotKey <> 'EVERY') and (MenuList[A].HotKey <> 'AFTER') Then
-            If Session.User.Access(MenuList[A].Access) Then Begin
-              If MenuList[A].HotKey = 'LINEFEED' Then Begin
-                If Listed MOD Menu.DispCols <> 0 Then Session.io.OutRawLn('');
-                Session.io.OutFull(MenuList[A].Text);
-                While Listed Mod Menu.DispCols <> 0 Do Inc(Listed);
-              End Else Begin
-                Inc (Listed);
-                If Format <> 79 Then
-                  Session.io.OutFull (strPadR(MenuList[A].Text, Format + (Length(MenuList[A].Text) - strMCILen(MenuList[A].Text)), ' '))
-                Else
-                  Session.io.OutFull (MenuList[A].Text);
-                While Screen.CursorX < Format Do Session.io.BufAddChar(' ');
-                If Listed Mod Menu.DispCols = 0 Then Session.io.OutRawLn ('');
-              End;
-            End;
-      End;
-
-      If Listed Mod Menu.DispCols <> 0 Then Session.io.OutRawLn ('');
+  Procedure AddChar (Ch: Char);
+  Var
+    SavedAttr : Byte;
+    Str       : String = '';
+    Offset    : Byte;
+  Begin
+    If Data.Info.CharType = 2 Then Begin  // hidden
+      TempStr := TempStr + UpCase(Ch);
+      Exit;
     End;
 
-    If ExecuteAfterCommands Then Exit;
+    SavedAttr := Screen.TextAttr; // tbbscore
 
-    If Menu.Prompt <> '' Then Session.io.OutFull (Menu.Prompt);
+    If Ch = #08 Then
+      Offset := Length(TempStr) + 1
+    Else
+      Offset := Length(TempStr);
 
-    Session.io.PurgeInputBuffer;
+    TBBSCore(Owner).io.BufAddStr(#27 + '[s');
+    TBBSCore(Owner).io.AnsiGotoXY(PromptX + Offset, PromptY);
+    TBBSCore(Owner).io.Attr2Ansi(PromptA);
 
-    Listed                := 0;
-    Session.io.AllowArrow := True;
+    If Ch = #08 Then
+      Str := Str + #8#32#8
+    Else Begin
+      Case Data.Info.CharType of
+        0 : Ch := UpCase(Ch);
+        1 : Ch := LoCase(Ch);
+      End;
 
-    If HotKeys Then Begin
-      Repeat
-        Temp := UpCase(Session.io.GetKey);
-
-        If Session.io.IsArrow Then Begin
-          If Pos(Temp, ExtKeys) > 0 Then Break;
-        End Else
-          If Pos(Temp, Keys) > 0 Then
-            If Temp = '/' Then Begin
-              Session.io.BufAddChar (Temp[1]);
-              Repeat
-                Ch := UpCase(Session.io.GetKey);
-
-                Case Ch of
-                  #08 : If Length(Temp) > 0 Then Begin
-                          Dec (Temp[0]);
-                          Session.io.OutBS(1, True);
-                        End;
-                  #13 : Begin
-                          Session.io.OutRawLn(Ch);
-                          Exit;
-                        End;
-                  #32..
-                  #126: Begin
-                          Found := False;
-                          For A := 1 to CmdNum Do
-                            If Pos (Temp + Ch, MenuList[A].HotKey) > 0 Then Begin
-                              If Not Found Then Begin
-                                Temp  := Temp + Ch;
-                                Found := True;
-                                Session.io.BufAddChar (Ch);
-                              End;
-                              If Temp = MenuList[A].HotKey Then
-                                If Session.User.Access(MenuList[A].Access) Then Begin
-                                  If View Then Exit;
-                                  If Listed = 0 Then Session.io.OutRawLn('');
-                                  Listed := A;
-                                  ExecuteCommand (MenuList[A].Command, MenuList[A].Data);
-                                  Done := True;
-                                End;
-                            End;
-                          If Done Then Exit;
-                        End;
-                End;
-              Until Temp = '';
-            End Else
-              Break;
-      Until False;
-
-      If Ord(Temp[1]) > 32 Then Session.io.OutRawLn(Temp) Else Session.io.OutRawLn('');
-
-{ needs to ignore LINEFEED? }
-
-      For A := 1 to CmdNum Do
-        If ((Temp = #27) and (MenuList[A].HotKey = 'ESCAPE')) or
-           ((Temp = #13) and (MenuList[A].HotKey = 'ENTER')) or
-           ((Temp = #9)  and (MenuList[A].HotKey = 'TAB')) or
-           (Session.io.IsArrow and (Temp = #71) and (MenuList[A].HotKey = 'HOME')) or
-           (Session.io.IsArrow and (Temp = #72) and (MenuList[A].HotKey = 'UP')) or
-           (Session.io.IsArrow and (Temp = #73) and (MenuList[A].HotKey = 'PAGEUP')) or
-           (Session.io.IsArrow and (Temp = #75) and (MenuList[A].HotKey = 'LEFT')) or
-           (Session.io.IsArrow and (Temp = #77) and (MenuList[A].HotKey = 'RIGHT')) or
-           (Session.io.IsArrow and (Temp = #79) and (MenuList[A].HotKey = 'END')) or
-           (Session.io.IsArrow and (Temp = #80) and (MenuList[A].HotKey = 'DOWN')) or
-           (Session.io.IsArrow and (Temp = #81) and (MenuList[A].HotKey = 'PAGEDOWN')) or
-           (Not Session.io.IsArrow and (Temp = MenuList[A].HotKey)) Then
-
-              If Session.User.Access(MenuList[A].Access) Then
-                If ExecuteCommand (MenuList[A].Command, MenuList[A].Data) Then Begin
-                  Done := True;
-                  Exit;
-                End;
-    End Else Begin { non hotkey input }
-      Temp := Session.io.GetInput (8, 8, 2, '');
-
-      If Temp = '' Then Temp := 'ENTER';
-      { temporary support for ENTER in non hotkey mode }
-
-      For A := 1 to CmdNum Do
-        If Temp = MenuList[A].LongKey Then
-          If Session.User.Access(MenuList[A].Access) Then Begin
-            If View Then Exit;
-            If ExecuteCommand (MenuList[A].Command, MenuList[A].Data) Then Begin
-              Done := True;
-              Exit;
-            End;
-          End;
+      Str     := Str + Ch;
+      TempStr := TempStr + UpCase(Ch);
     End;
+
+    TBBSCore(Owner).io.BufAddStr(Str);
+    TBBSCore(Owner).io.Attr2Ansi(SavedAttr);
+    TBBSCore(Owner).io.BufAddStr(#27 + '[u');
+    TBBSCore(Owner).io.BufFlush;
   End;
 
 Var
-  A  : Byte;
-  MR : RecMenuFlags;
+  Count     : Word;
+  CursorPos : Word;
+  TempPos   : Word;
+  Ch        : Char;
+  Found     : Boolean;
+  ValidKey  : Boolean;
 Begin
-  If View Then Begin
-    Keys := #13;
+  CursorPos := 0;
 
-    If (Menu.MenuType > 0) and (Session.io.Graphics = 1) Then Begin
-      Do_LightBar_Menu;
-      Session.io.AnsiGotoXY (Menu.DoneX, Menu.DoneY);
-    End Else
-      Do_Internal_Menu;
+  While Not TBBSCore(Owner).ShutDown Do Begin
+    If Not ViewOnly Then
+      ExecuteByHotKey('EVERY');
+
+    If SetAction Then
+      If Data.Info.NodeStatus <> '' Then
+        Set_Node_Action(Data.Info.NodeStatus)
+      Else
+        Set_Node_Action(TBBSCore(Owner).GetPrompt(346));
+
+    If ReDraw Then Begin
+      ShowMenu;
+
+      If Data.Info.Header <> '' Then
+        TBBSCore(Owner).io.OutFullLn(Data.Info.Header);
+
+      If Data.Info.Footer <> '' Then
+        TBBSCore(Owner).io.OutFull(Data.Info.Footer);
+
+      PromptX := Screen.CursorX; //tbbscore
+      PromptY := Screen.CursorY; //tbbscore
+      PromptA := Screen.TextAttr; //tbbscore
+
+      TBBSCore(Owner).io.BufFlush;
+    End;
+
+    For Count := 1 to Data.NumItems Do
+      If ValidLightBar(Count) Then Begin
+        If CursorPos = 0 Then CursorPos := Count;
+        DrawBar (Count, False);
+      End;
+
+    TBBSCore(Owner).io.AllowArrow := True;
+
+    If Not ViewOnly Then
+      ExecuteByHotKey('AFTER');
+
+    DrawBar (CursorPos, True);
+
+    TempStr := '';
+
+    While Not TBBSCore(Owner).ShutDown Do Begin
+      Ch := Session.io.GetKey;
+
+      If TBBSCore(Owner).ShutDown Then Exit;
+
+      If TBBSCore(Owner).io.IsArrow Then Begin
+        Case Ch of
+          #72,
+          #75 : Case Data.Info.MenuType of
+                  1 : Begin
+                        TempPos := CursorPos;
+
+                        While TempPos > 1 Do Begin
+                          Dec (TempPos);
+                          If ValidLightBar(TempPos) Then Begin
+                            DrawBar (CursorPos, False);
+                            DrawBar (TempPos, True);
+                            CursorPos := TempPos;
+                            Break;
+                          End;
+                        End;
+                      End;
+                  2 : Case Ch of
+                        #72 : If ValidLightBar(Data.Item[CursorPos]^.JumpUp) Then Begin
+                                ExecuteCommandList(CursorPos, 1);
+                                DrawBar (CursorPos, False);
+                                CursorPos := Data.Item[CursorPos]^.JumpUp;
+                                DrawBar (CursorPos, True);
+                              End;
+                        #75 : If ValidLightBar(Data.Item[CursorPos]^.JumpLeft) Then Begin
+                                ExecuteCommandList(CursorPos, 3);
+                                DrawBar (CursorPos, False);
+                                CursorPos := Data.Item[CursorPos]^.JumpLeft;
+                                DrawBar (CursorPos, True);
+                              End;
+                      End;
+                End;
+          #77,
+          #80 : Case Data.Info.MenuType of
+                  1 : Begin
+                        TempPos := CursorPos;
+
+                        While TempPos < Data.NumItems Do Begin
+                          Inc (TempPos);
+                          If ValidLightBar(TempPos) Then Begin
+                            DrawBar (CursorPos, False);
+                            DrawBar (TempPos, True);
+                            CursorPos := TempPos;
+                            Break;
+                          End;
+                        End;
+                      End;
+                  2 : Case Ch of
+                        #77 : If ValidLightBar(Data.Item[CursorPos]^.JumpRight) Then Begin
+                                ExecuteCommandList (CursorPos, 4);
+                                DrawBar (CursorPos, False);
+                                CursorPos := Data.Item[CursorPos]^.JumpRight;
+                                DrawBar (CursorPos, True);
+                              End;
+                        #80 : If ValidLightBar(Data.Item[CursorPos]^.JumpDown) Then Begin
+                                ExecuteCommandList (CursorPos, 2);
+                                DrawBar (CursorPos, False);
+                                CursorPos := Data.Item[CursorPos]^.JumpDown;
+                                DrawBar (CursorPos, True);
+                              End;
+                      End;
+                End;
+          #73 : If Data.Info.MenuType = 2 Then
+                  Case ExecuteCommandList(CursorPos, 7) of
+                    0 : ;
+                    1 : Break;
+                    2 : Exit;
+                  End;
+          #81 : If Data.Info.MenuType = 2 Then
+                  Case ExecuteCommandList(CursorPos, 8) of
+                    0 : ;
+                    1 : Break;
+                    2 : Exit;
+                  End;
+        End;
+      End Else
+        Case Ch of
+          #08 : If Length(TempStr) > 0 Then Begin
+                  Dec (TempStr[0]);
+                  AddChar(#8);
+                End;
+          #09 : If Data.Info.MenuType = 2 Then
+                  Case ExecuteCommandList(CursorPos, 5) of
+                    0 : ;
+                    1 : Break;
+                    2 : Exit;
+                  End;
+          #13 : Begin
+                  TBBSCore(Owner).io.AnsiGotoXY(Data.Info.DoneX, Data.Info.DoneY);
+
+                  If ViewOnly Then Exit;
+
+                  If Data.Info.MenuType = 1 Then
+                    Found := ExecuteCommandList(CursorPos, -1) = 2
+                  Else
+                    Found := ExecuteCommandList(CursorPos, 0) = 2;
+
+                  If Found Then Exit Else Break;
+                End;
+          #27 : If Data.Info.MenuType = 2 Then
+                  Case ExecuteCommandList(CursorPos, 6) of
+                    0 : ;
+                    1 : Break;
+                    2 : Exit;
+                  End;
+        Else
+          If Length(TempStr) < mysMaxMenuInput Then Begin
+            Found    := False;
+            ValidKey := False;
+            Count    := 0;
+
+            Repeat
+              Inc (Count);
+
+              Found := Data.Item[Count]^.HotKey = TempStr + UpCase(Ch);
+
+              If Not ValidKey Then
+                ValidKey := TempStr + UpCase(Ch) = Copy(Data.Item[Count]^.HotKey, 1, Length(TempStr + Ch));
+
+            Until Found or (Count >= Data.NumItems);
+
+            If Found And (TBBSCore(Owner).User.Access(Data.Item[Count]^.Access)) Then Begin
+              If Length(TempStr) > 0 Then AddChar (Ch);
+
+              If ValidLightBar(Count) Then Begin
+                DrawBar(CursorPos, False);
+                CursorPos := Count;
+                DrawBar(CursorPos, True);
+              End;
+
+              TBBSCore(Owner).io.AnsiGotoXY(Data.Info.DoneX, Data.Info.DoneY);
+
+              If Data.Info.MenuType = 1 Then
+                Found := ExecuteCommandList(CursorPos, -1) = 2
+              Else
+                Found := ExecuteCommandList(CursorPos, 0) = 2;
+
+              If Found Then Exit Else Break;
+            End Else
+              If ValidKey Then AddChar(Ch);
+          End;
+        End;
+    End;
+  End;
+End;
+
+Function TMenuEngine.LoadMenu (Forced: Boolean) : Boolean;
+Begin
+  Result := True;
+
+  If Not Data.Load (False, TBBSCore(Owner).Theme.MenuPath + MenuName + '.mnu') Then Begin
+    Result := False;
+
+    If TBBSCore(Owner).Theme.Flags AND thmFallback <> 0 Then
+      Result := Data.Load (False, Config.MenuPath + MenuName + '.mnu');
+
+    If Not Result Then Begin
+      If Forced Then Begin
+        Session.io.OutFullLn ('|CRError Loading ' + MenuName + '.mnu');
+        Session.SystemLog ('Error Loading Menu: ' + MenuName);
+
+        Halt(1);
+      End;
+
+      Exit;
+    End;
+  End;
+End;
+
+Procedure TMenuEngine.ExecuteMenu (Load, Forced, View, Action: Boolean);
+Var
+  Count : LongInt;
+Begin
+  SetAction := Action;
+  ViewOnly  := View;
+
+  If ViewOnly Then Begin
+    Case Data.Info.MenuType of
+      0 : DoStandardMenu;
+      1,
+      2 : If TBBSCore(Owner).io.Graphics > 0 Then
+            DoLightBarMenu
+          Else
+            DoStandardMenu;
+    End;
+
     Exit;
   End;
 
-  Repeat
-    Case LoadMenu(True, True, False) of
-      0 : Begin
-          { 1. Try Menu.FallBack   }
-          { 2. Try Config.dFallMNU }
-          { 3. Give error and halt }
-            If Not FallBack Then Exit;
+  If Load Then
+    If Not LoadMenu(Forced) Then Exit;
 
-            If (MenuName = Config.MatrixMenu) or (MenuName = Config.DefFallMenu) Then Begin
-              Session.io.OutFullLn ('|CRError Loading ' + MenuName + '.mnu');
-              Session.SystemLog ('Error Loading Menu: ' + MenuName);
-              Halt(1);
-            End;
+  If Not TBBSCore(Owner).User.Access(Data.Info.Access) Then Begin
+    MenuName := MenuOld;
 
-            If (Menu.FallBack <> '') and (MenuName <> Menu.FallBack) Then
-              MenuName := Menu.Fallback
-            Else
-              MenuName := Config.DefFallMenu;
-            Exit;
-          End;
-      1 : Break;
-      2 : Exit;
-    End;
-  Until False;
-
-  If Global and (Menu.Global = 1) Then Begin
-    Keys     := MenuName;
-    MR       := Menu;
-    MenuName := 'global';
-
-    LoadMenu(True, True, True);
-
-    MenuName := Keys;
-    Menu     := MR;
+    TBBSCore(Owner).io.OutFull(TBBSCore(Owner).GetPrompt(149));
+    Exit;
   End;
 
-  If Menu.InputType = 0 Then
-    HotKeys := Session.User.ThisUser.HotKeys
+  If Data.Info.Global Then
+    If Not Data.Load (True, TBBSCore(Owner).Theme.MenuPath + 'global.mnu') Then
+      If TBBSCore(Owner).Theme.Flags AND thmFallback <> 0 Then
+        Data.Load (True, Config.MenuPath + 'global.mnu');
+
+  If Data.Info.InputType = 0 Then
+    UseHotKeys := TBBSCore(Owner).User.ThisUser.HotKeys
   Else
-    HotKeys := Not Boolean(Menu.InputType - 1);
+    UseHotKeys := Not Boolean(Data.Info.InputType - 1);
 
-  Repeat
-    Done := False;
+  // Run FIRSTCMD commands and setup valid extended keys
 
-    Set_Node_Action (Session.GetPrompt(346));
+  ExtKeys    := '';
+  UseTimer   := False;
+  ReDraw     := NextReDraw;
+  NextReDraw := True;
+  UseLongKey := False;
 
-    Keys    := #13;
-    ExtKeys := '';
+  For Count := 1 to Data.NumItems Do Begin
+    If (Data.Item[Count]^.HotKey = 'EVERY') or
+       Not TBBSCore(Owner).User.Access(Data.Item[Count]^.Access) Then
+         Continue;
 
-    For A := 1 to CmdNum Do
-      If Session.User.Access(MenuList[A].Access) Then
-        If MenuList[A].HotKey = 'EVERY' Then Begin
-          If ExecuteCommand (MenuList[A].Command, MenuList[A].Data) Then Exit;
-        End Else
-        If MenuList[A].HotKey = 'TAB' Then
-          Keys := Keys + #9
-        Else
-        If MenuList[A].HotKey = 'ESCAPE' Then
-          Keys := Keys + #27
-        Else
-        If MenuList[A].HotKey = 'HOME' Then
-          ExtKeys := ExtKeys + #71
-        Else
-        If MenuList[A].HotKey = 'UP' Then
-          ExtKeys := ExtKeys + #72
-        Else
-        If MenuList[A].HotKey = 'PAGEUP' Then
-          ExtKeys := ExtKeys + #73
-        Else
-        If MenuList[A].HotKey = 'LEFT' Then
-          ExtKeys := ExtKeys + #75
-        Else
-        If MenuList[A].HotKey = 'RIGHT' Then
-          ExtKeys := ExtKeys + #77
-        Else
-        If MenuList[A].HotKey = 'END' Then
-          ExtKeys := ExtKeys + #79
-        Else
-        If MenuList[A].HotKey = 'DOWN' Then
-          ExtKeys := ExtKeys + #80
-        Else
-        If MenuList[A].HotKey = 'PAGEDOWN' Then
-          ExtKeys := ExtKeys + #81
-        Else
-          Keys := Keys + MenuList[A].HotKey[1];
+    If Data.Item[Count]^.HotKey = 'FIRSTCMD' Then Begin
+      If ExecuteCommandList(Count, -1) = 2 Then Exit;
+    End Else
+    If Data.Item[Count]^.HotKey = 'TAB'      Then ExtKeys := ExtKeys + #09 Else
+    If Data.Item[Count]^.HotKey = 'ESCAPE'   Then ExtKeys := ExtKeys + #27 Else
+    If Data.Item[Count]^.HotKey = 'UP'       Then ExtKeys := ExtKeys + #72 Else
+    If Data.Item[Count]^.HotKey = 'PAGEUP'   Then ExtKeys := ExtKeys + #73 Else
+    If Data.Item[Count]^.HotKey = 'LEFT'     Then ExtKeys := ExtKeys + #75 Else
+    If Data.Item[Count]^.HotKey = 'RIGHT'    Then ExtKeys := ExtKeys + #77 Else
+    If Data.Item[Count]^.HotKey = 'DOWN'     Then ExtKeys := ExtKeys + #80 Else
+    If Data.Item[Count]^.HotKey = 'PAGEDOWN' Then ExtKeys := ExtKeys + #81 Else
+    If Data.Item[Count]^.HotKey = 'HOME'     Then ExtKeys := ExtKeys + #71 Else
+    If Data.Item[Count]^.HotKey = 'END'      Then ExtKeys := ExtKeys + #79 Else
+    If Data.Item[Count]^.HotKey = 'TIMER'    Then UseTimer := True Else
+    If Byte(Data.Item[Count]^.HotKey[0]) > 1 Then UseLongKey := True;
+  End;
 
-    If (Menu.MenuType > 0) and (Session.io.Graphics = 1) Then
-      Do_LightBar_Menu
-    Else
-      Do_Internal_Menu;
-  Until Done;
+  Case Data.Info.MenuType of
+    0 : DoStandardMenu;
+    1,
+    2 : If TBBSCore(Owner).io.Graphics > 0 Then
+          DoLightBarMenu
+        Else
+          DoStandardMenu;
+  End;
 End;
 
 End.

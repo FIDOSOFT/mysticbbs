@@ -84,7 +84,7 @@ Type
     Procedure   OutBS            (Num : Byte; Del: Boolean);
     Procedure   OutFull          (Str : String);
     Procedure   OutFullLn        (Str : String);
-    Procedure   OutFile          (FName : String; DoPause: Boolean; Speed: Byte);
+    Function    OutFile          (FName : String; DoPause: Boolean; Speed: Byte) : Boolean;
     Function    OutYN            (Y : Boolean) : String;
     Function    OutON            (O : Boolean) : String;
     Procedure   PauseScreen;
@@ -192,15 +192,8 @@ Var
 Begin
   {$IFDEF WINDOWS}
   If OutBufPos > 0 Then Begin
-    If Not TBBSCore(Core).LocalMode Then Begin
+    If Not TBBSCore(Core).LocalMode Then
       Res := TBBSCore(Core).Client.WriteBuf(OutBuffer, OutBufPos);
-
-      (* Moved to m_sockets_class 1.10a14
-      While (Res = -1) and (WSAGetLastError = EWOULDBLOCK) Do Begin
-        WaitMS(10);
-        Res := TBBSCore(Core).Client.WriteBuf(OutBuffer, OutBufPos);
-      End;*)
-    End;
 
     OutBufPos := 0;
   End;
@@ -533,6 +526,10 @@ Begin
           End;
     'M' : Case Code[2] of
             'B' : LastMCIValue := TBBSCore(Core).Msgs.MBase.Name;
+            'D' : If Session.Menu.Data <> NIL Then
+                    LastMCIValue := Session.Menu.Data.Info.Description
+                  Else
+                    LastMCIValue := '';
             'E' : LastMCIValue := strI2S(TBBSCore(Core).User.ThisUser.Emails);
             'G' : LastMCIValue := TBBSCore(Core).Msgs.Group.Name;
             'L' : LastMCIValue := OutON(TBBSCore(Core).User.ThisUser.UseLBIndex);
@@ -694,9 +691,6 @@ Procedure TBBSIO.OutFull (Str : String);
 Var
   A : Byte;
   B : Byte;
-  D : DirStr;
-  N : NameStr;
-  E : ExtStr;
 Begin
   A := 1;
 
@@ -720,8 +714,7 @@ Begin
           While (Str[B] <> ' ') and (Str[B] <> '|') and (B <= Length(Str)) Do
             Inc (B);
 
-          FSplit  (strStripLOW(Copy(Str, A + 1, B - A - 1)), D, N, E);
-          OutFile (TBBSCore(Core).Theme.TextPath + N + E, True, 0);
+          OutFile (JustFile(strStripLOW(Copy(Str, A + 1, B - A - 1))), True, 0);
 
           A := B;
 
@@ -919,7 +912,7 @@ Begin
   If O Then OutON := 'On' Else OutON := 'Off'; {++lang}
 End;
 
-Procedure TBBSIO.OutFile (FName : String; DoPause: Boolean; Speed: Byte);
+Function TBBSIO.OutFile (FName : String; DoPause: Boolean; Speed: Byte) : Boolean;
 Var
   Buffer  : Array[1..4096] of Char;
   BufPos  : LongInt;
@@ -931,6 +924,25 @@ Var
   Str     : String;
   Ch      : Char;
   Done    : Boolean;
+
+  Function CheckFileInPath (Path: String) : Boolean;
+  Var
+    Temp : String;
+  Begin
+    Result := False;
+    Temp   := Path + FName;
+
+    If (Graphics = 1) and (FileExist(Temp + '.ans')) Then Begin
+      Ext    := '.ans';
+      FName  := Temp;
+      Result := True;
+    End Else
+    If FileExist(Temp + '.asc') Then Begin
+      Ext    := '.asc';
+      FName  := Temp;
+      Result := True;
+    End;
+  End;
 
   Function GetChar : Char;
   Begin
@@ -951,37 +963,42 @@ Var
   End;
 
 Begin
-  If Pos(PathChar, FName) = 0 Then
-    FName := TBBSCore(Core).Theme.TextPath + FName;
+  Result := False;
+  NoFile := True;
 
-  If Pos('.', FName) > 0 Then
-    Ext := ''
-  Else
-  If (Graphics = 1) and (FileExist(FName + '.ans')) Then
-    Ext := '.ans'
-  Else
-    Ext := '.asc';
+  If (Pos(PathSep, FName) > 0) or (Pos('.', FName) > 0) Then Begin
+    If Not FileExist(FName) Then
+      If Not CheckFileInPath('') Then Exit;
+  End Else Begin
+    If Not CheckFileInPath(Session.Theme.TextPath) Then
+      If Session.Theme.Flags AND thmFallBack <> 0 Then Begin
+        If Not CheckFileInPath(Config.TextPath) Then Exit;
+      End Else
+        Exit;
 
-  If FileExist(FName + Copy(Ext, 1, 3) + '1') Then Begin
-    Repeat
-      BufPos := Random(9);
-      If BufPos = 0 Then
-        Code := Ext[Length(Ext)]
-      Else
-        Code := strI2S(BufPos);
-    Until FileExist(FName + Copy(Ext, 1, 3) + Code);
+    If FileExist(FName + Copy(Ext, 1, 3) + '1') Then Begin
+      Repeat
+        BufPos := Random(9);
 
-    Ext := Copy(Ext, 1, 3) + Code;
+        If BufPos = 0 Then
+          Code := Ext[Length(Ext)]
+        Else
+          Code := strI2S(BufPos);
+
+      Until FileExist(FName + Copy(Ext, 1, 3) + Code);
+
+      Ext := Copy(Ext, 1, 3) + Code;
+    End;
   End;
 
   Assign (dFile, FName + Ext);
+
   {$I-} Reset(dFile, 1); {$I+}
-  If IoResult <> 0 Then Begin
-    NoFile := True;
-    Exit;
-  End;
+
+  If IoResult <> 0 Then Exit;
 
   NoFile       := False;
+  Result       := True;
   Old          := AllowPause;
   AllowPause   := DoPause;
   PausePtr     := 1;
@@ -1032,7 +1049,7 @@ Begin
                     Str := Str + GetChar;
                   End;
 
-                  OutFile (TBBSCore(Core).Theme.TextPath + strStripLOW(Str), True, 0);
+                  OutFile (JustFile(strStripLOW(Str)), True, 0);
 
                   Continue;
                 End;

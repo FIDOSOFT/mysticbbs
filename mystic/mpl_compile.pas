@@ -787,7 +787,6 @@ End;
 Function TParserEngine.ParseElement (VN: Word; TypeCheck: Boolean; VT: TIdentTypes) : TIdentTypes;
 Var
   Element : String;
-  RecNum  : Word;
   Count   : Word;
   Found   : Boolean;
   Offset  : LongInt;
@@ -1659,8 +1658,6 @@ Function TParserEngine.ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var In
   End;
 
   Procedure ParseVarType;
-  Var
-    Count   : LongInt;
   Begin
     GetIdent(False);
 

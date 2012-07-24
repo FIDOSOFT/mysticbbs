@@ -25,7 +25,7 @@ Type
     User          : TBBSUser;
     Msgs          : TMsgBase;
     FileBase      : TFileBase;
-    Menu          : TMenuSystem;
+    Menu          : TMenuEngine;
     IO            : TBBSIO;
     Client        : TSocketClass;
     EventFile     : File of EventRec;
@@ -131,7 +131,7 @@ Begin
   IO       := TBBSIO.Create(Pointer(Self));
   Msgs     := TMsgBase.Create(Pointer(Self));
   FileBase := TFileBase.Create(Pointer(Self));
-  Menu     := TMenuSystem.Create(Pointer(Self));
+  Menu     := TMenuEngine.Create(Pointer(Self));
 End;
 
 Destructor TBBSCore.Destroy;

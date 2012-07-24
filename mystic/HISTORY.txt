@@ -4302,3 +4302,103 @@
 
  + MakeTheme now only looks at the "mysticbbs" environment variable if
    mystic.dat is not found in the same directory.
+
+ + The "Transfer of XXX" file prompt has been enhanced to attempt to
+   always strip the filepath from the file, in case of a strange situation
+   where it somehow gets into the prompt info code.
+
+ + Display files that are not found in a theme directory now have the option
+   to "fallback" to the default display file directory, if Theme fallback
+   is enabled for the theme.
+
+ + Added new ANSI menu editor to replace the old outdated crap.  The new
+   editor has references to all of the menu commands as well as the special
+   functional hotkeys.
+
+ + Revamped the entire menu system.  Menu files must be converted if you are
+   any version pre 1.10 alpha 15 using the CvtMenus program.  Simply copy
+   this into your folder with all of the *.mnu files are run it one time ONLY
+
+   After you are done you will want to review your system because the new
+   system is not a direct convertion of file format.  The method that Mystic
+   links menu commands has changed.  The conversion program does its best to
+   analyze your menu files and create a menu that functions the same, but
+   there may be issues - particularly in lightbar grid menus I would guess
+   since they can be quite complex.
+
+ + Each menu option on a menu now as its own "execution list" of menu
+   commands.  This basically replaces the old "kludge" stacking of commands
+   to execute back to back with a single hotkey.  It is a much more clean
+   approach this way, and it allows for more options!
+
+ + Each menu command now has the option to redraw the menu or not after its
+   command list executes.
+
+ + Menus can now be internally generated from 1 to 4 columns (up from 3)
+
+ + Menus now contain a description configurable within the menu flags.  A
+   new MCI code |MD goes along with it, and will display the description
+   of the current menu.
+
+ + Menus now have an optional "user status" field in the menu flags.  If this
+   is set to a non-blank value, the user's action in node listings will be
+   updated to this value.  If the value is left blank, Mystic will use the
+   default "Browsing menus" prompt from the theme prompts.
+
+ + Menus now have a "theme fallback" option similar to the recent change to
+   the display file system.  If a menu is not found in its theme menu
+   directory, then if the option is enabled, Mystic will look for it in the
+   default menu directory configured in the System Configuration.  When
+   combined with the similar display changes, it makes it very easy to build
+   additional themes off of the default.  In your new themes, the stuff that
+   you haven't themed can simply fall back to your default theme now.
+
+ + Merged the "Hot Key" and "Long Key" options from the old menu system into
+   one single hotkey field.
+
+ + Added an "Input char" option to menu flags that defines how the user's
+   input is echoed back to them at a menu prompt.  Valid options are
+   Uppercase, Lowercase, and hidden.
+
+ + Lightbar menus now allow extended input while the lightbar continues to
+   function!  This works for both standard lightbar and lightbar grid menus.
+
+   For example, you can set the hotkey to "OWNAGE" and have full lightbar
+   menu.  Mystic will still recognize and execute the commands linked to
+   OWNAGE if the user types it.  In addition, it has a smart input so that
+   it only allows valid characters to be entered.  Mystic will use the X/Y
+   location of the cursor after the menu prompt is displayed, so it is best
+   to set where you might want to see the user's input (if its not hidden)
+   using the menu footer/prompt.
+
+ + Lightbar grid menus now allow the following events to be handled in
+   addition to arrow keys:
+
+      Page Up
+      Page Down
+      Escape
+      Tab
+
+ + In a lightbar grid menu, each menu command now has the ability to execute
+   on a grid-specific event.  The following are available options:
+
+     Selected
+     Up
+     Down
+     Left
+     Right
+     Tab
+     Escape
+     PgUp
+     PgDn
+
+ + All displayed menu items now have an option for display type.  If it set
+   to Access it will only be displayed if the user has access.  If it is set
+   to Always, it will always been displayed, and if it is set to Never, it
+   will never be displayed.
+
+ + Lightbar and Lightbar/Grid menus now display menu header and prompts if
+   they are not set to a blank value.  They were ignored in the past, but
+   this provides some better flexibility.  If you have lightbar menus you
+   may need to validate that the header/footers in your menu flags are blank
+   if you do not want this feature.
