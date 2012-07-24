@@ -2319,7 +2319,11 @@ Begin
   If Pos('.', FN) = 0 Then FN := FN + mplExtExecute;
 
   If Pos(PathChar, FN) = 0 Then
-    FN := Config.ScriptPath + FN;
+    If FileExist(Session.Theme.ScriptPath + FN) Then
+      FN := Session.Theme.ScriptPath + FN
+    Else
+    If Session.Theme.Flags and thmFallBack <> 0 Then
+      FN := Config.ScriptPath + FN;
 
   MPEName := FN;
 
