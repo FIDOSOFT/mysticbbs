@@ -37,6 +37,7 @@ Type
     Function    ExecuteCommandList (Num, JumpID: LongInt) : Byte;
     Function    ExecuteByHotkey    (Key: String; Interval: LongInt) : Byte;
     Function    ExecuteCommand     (Cmd, CmdData: String) : Boolean;
+    Function    SpecialKey         (Str: String) : Boolean;
     Function    ShowMenu : Boolean;
     Procedure   GenerateMenu;
     Procedure   DoStandardMenu;
@@ -403,6 +404,16 @@ Begin
   End;
 End;
 
+Function TMenuEngine.SpecialKey (Str: String) : Boolean;
+Begin
+  Result :=
+    (Str = 'AFTER') or
+    (Str = 'EVERY') or
+    (Str = 'FIRSTCMD') or
+    (Str = 'LINEFEED') or
+    (Str = 'TIMER');
+End;
+
 Procedure TMenuEngine.GenerateMenu;
 Var
   Format : Byte;
@@ -469,10 +480,11 @@ End;
 
 Procedure TMenuEngine.DoStandardMenu;
 Var
-  Ch     : Char;
-  Temp   : String[mysMaxMenuInput];
-  Count  : LongInt;
-  Found  : Boolean;
+  Ch       : Char;
+  Temp     : String[mysMaxMenuInput];
+  Count    : LongInt;
+  Found    : Boolean;
+  ValidKey : Boolean;
 
   Procedure Translate;
   Begin
@@ -553,21 +565,26 @@ Begin
                 End;
 
                 If UseHotKeys Then Begin
-                  Count := 0;
+                  ValidKey := False;
+                  Found    := False;
+                  Count    := 0;
 
                   Repeat
                     Inc (Count);
 
+                    If SpecialKey(Data.Item[Count]^.HotKey) Then Continue;
+
                     Found := Data.Item[Count]^.HotKey = Temp + UpCase(Ch);
+
+                    If Not ValidKey Then
+                      ValidKey := Temp + UpCase(Ch) = Copy(Data.Item[Count]^.HotKey, 1, Length(Temp + Ch));
                   Until Found or (Count >= Data.NumItems);
 
                   If Found And (TBBSCore(Owner).User.Access(Data.Item[Count]^.Access)) Then Begin
                     AddChar;
                     Break;
                   End Else
-                    If UseLongKey Then
-                      If ((Temp[1] = '/') And (Temp[0] > #0)) or ((Temp[0] = #0) And (Ch = '/')) Then
-                        AddChar;
+                    If ValidKey Then AddChar;
                 End Else
                   AddChar;
               End;
@@ -851,6 +868,8 @@ Begin
 
             Repeat
               Inc (Count);
+
+              If SpecialKey(Data.Item[Count]^.HotKey) Then Continue;
 
               Found := Data.Item[Count]^.HotKey = TempStr + UpCase(Ch);
 
