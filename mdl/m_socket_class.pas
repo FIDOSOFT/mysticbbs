@@ -174,9 +174,6 @@ Begin
 End;
 
 Procedure TSocketClass.BufFlush;
-Var
-  Count : LongInt;
-  Start : LongInt;
 Begin
   If FOutBufPos > 0 Then Begin
     If FTelnetClient or FTelnetServer Then

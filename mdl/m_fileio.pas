@@ -247,7 +247,8 @@ Var
   BWrite  : LongInt;
   FileBuf : Array[1..4096] of Char;
 Begin
-  Result := False;
+  Result   := False;
+  FileMode := 66;
 
   Assign (SF, Source);
   {$I-} Reset(SF, 1); {$I+}
@@ -366,7 +367,7 @@ Function JustFile (Str: String) : String;
 Var
   Count : Byte;
 Begin
-  For Count := Ord(Str[0]) DownTo 1 Do
+  For Count := Length(Str) DownTo 1 Do
     If (Str[Count] = '/') or (Str[Count] = '\') Then Begin
       Delete (Str, 1, Count);
       Break;
