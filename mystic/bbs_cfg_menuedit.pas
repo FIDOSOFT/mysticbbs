@@ -78,7 +78,7 @@ Const
     (  Name: 'GP';   Desc: 'Page Sysop for chat'          ),
     (  Name: 'GR';   Desc: 'Return from gosub menu'       ),
     (  Name: 'GS';   Desc: 'Gosub to new menu'            ),
-    (  Name: 'GT';   Desc: 'Display a line of text'       ),
+    (  Name: 'GT';   Desc: 'Display line of text'         ),
     (  Name: 'GU';   Desc: 'Display user list'            ),
     (  Name: 'GX';   Desc: 'Execute MPL program'          ),
     (  Name: 'G?';   Desc: 'Open ANSI help browser'       ),
@@ -188,6 +188,7 @@ Var
   Count : Byte;
 Begin
   Result := 'Unknown Command';
+
   For Count := 1 to Num_Cmds Do
     If Str = MenuCmds[Count].Name Then Begin
       Result := MenuCmds[Count].Desc;
@@ -228,20 +229,20 @@ Begin
   List := TAnsiMenuList.Create;
 
   List.Add ('FIRSTCMD', 0);
-  List.Add ('EVERY', 0);
-  List.Add ('AFTER', 0);
+  List.Add ('EVERY',    0);
+  List.Add ('AFTER',    0);
   List.Add ('LINEFEED', 0);
-  List.Add ('TIMER', 0);
-  List.Add ('UP', 0);
-  List.Add ('DOWN', 0);
-  List.Add ('LEFT', 0);
-  List.Add ('RIGHT', 0);
-  List.Add ('ENTER', 0);
-  List.Add ('TAB', 0);
-  List.Add ('ESCAPE', 0);
-  List.Add ('HOME', 0);
-  List.Add ('END', 0);
-  List.Add ('PAGEUP', 0);
+  List.Add ('TIMER',    0);
+  List.Add ('UP',       0);
+  List.Add ('DOWN',     0);
+  List.Add ('LEFT',     0);
+  List.Add ('RIGHT',    0);
+  List.Add ('ENTER',    0);
+  List.Add ('TAB',      0);
+  List.Add ('ESCAPE',   0);
+  List.Add ('HOME',     0);
+  List.Add ('END',      0);
+  List.Add ('PAGEUP',   0);
   List.Add ('PAGEDOWN', 0);
 
   List.Open (35, 4, 46, 21);
@@ -275,10 +276,11 @@ Begin
   Form.AddNone ('C', ' Command ', 15, 11,  9, Topic + 'Menu command function');
   Form.AddStr  ('A', ' Access ' , 16, 12, 26, 12,  8, 30, 30, @Menu.Item[Num]^.CmdData[CmdNum]^.Access, Topic + 'Access level to run this command');
   Form.AddStr  ('D', ' Data '   , 18, 13, 26, 13,  6, 40, 80, @Menu.Item[Num]^.CmdData[CmdNum]^.Data, Topic + 'Menu command optional data');
-  Form.AddTog  ('G', ' Execute ', 15, 14, 26, 14,  9,  6,  0, 8, 'Selected Up Down Left Right Tab Escape PgUp PgDn', @Menu.Item[Num]^.CmdData[CmdNum]^.JumpID, Topic + '(Grid) Execute command on what Grid event?');
+  Form.AddTog  ('G', ' Execute ', 15, 14, 26, 14,  9,  6,  0, 10, 'Selected Up Down Left Right Tab Escape PgUp PgDn Home End', @Menu.Item[Num]^.CmdData[CmdNum]^.JumpID, Topic + '(Grid) Execute command on what Grid event?');
 
   Repeat
     CmdStr := '(' + Menu.Item[Num]^.CmdData[CmdNum]^.MenuCmd + ') ' + GetCommandDesc(Menu.Item[Num]^.CmdData[CmdNum]^.MenuCmd);
+
     WriteXY (26, 11, 113, strPadR(CmdStr, 40, ' '));
 
     Case Form.Execute of
@@ -302,8 +304,8 @@ End;
 
 Procedure EditItem (Num: Word);
 Const
-  Status1 = '(TAB) to edit menu commands';
-  Status2 = '(TAB) Switch   (/) Commands';
+  Status1 = ' (TAB) to edit menu commands ';
+  Status2 = ' (TAB) Switch   (/) Commands ';
 Var
   Box   : TAnsiMenuBox;
   List  : TAnsiMenuList;
@@ -335,53 +337,60 @@ Begin
   List.LoAttr      := 113;
   List.NoInput     := True;
   List.NoWindow    := True;
+  Box.Shadow       := False;
   Box.Header       := ' Command #' + strI2S(Num) + ' (' + MenuName + ') ';
   Topic            := '|03(|09Menu Editor|03) |01-|09> |15';
 
-  Box.Open (3, 2, 77, 21);
+  Box.Open (2, 5, 79, 21);
 
-  VerticalLine (20, 4, 10);
-  VerticalLine (71, 3, 11);
+  VerticalLine (18,  6, 14);
+  VerticalLine (60, 10, 14);
+  VerticalLine (73, 10, 14);
 
-  WriteXY (5, 12, 112, 'Command                     Access       Data');
-  WriteXY (5, 13, 112, strRep('Ä', 71));
-  WriteXY (5, 20, 112, strPadC(Status1, 72, ' '));
-  WriteXY (5, 19, 112, strRep('Ä', 71));
+  WriteXY (4, 15, 112, 'Command ' + strRep(#196, 18) + ' Access ' + strRep(#196, 5) + ' Data ' + strRep(#196, 29));
 
   MakeList;
 
-  List.Open (4, 13, 77, 19);
+  List.Open (2, 15, 79, 21);
   List.Picked := 0;
   List.Update;
 
-  Form.AddPipe ('D', ' Display Text ' ,  6,  4, 22,  4, 14, 40, 160, @Menu.Item[Num]^.Text,    Topic + 'Text displayed on generated menus');
-  Form.AddPipe ('O', ' LightBar Low ' ,  6,  5, 22,  5, 14, 40, 160, @Menu.Item[Num]^.TextLo,  Topic + 'Normal text in lightbar menu');
-  Form.AddPipe ('I', ' LightBar High ',  5,  6, 22,  6, 15, 40, 160, @Menu.Item[Num]^.TextHi,  Topic + 'Highlighted text in lightbar menu');
-  Form.AddCaps ('H', ' Hot Key '      , 11,  7, 22,  7,  9, 12, mysMaxMenuInput, @Menu.Item[Num]^.HotKey,  Topic + 'Key to run this command (CTRL-L/Extended Key List)');
-  Form.AddStr  ('A', ' Access '       , 12,  8, 22,  8,  8, 30, 30, @Menu.Item[Num]^.Access, Topic + 'ACS level required to access this command');
-  Form.AddTog  ('N', ' Display Type ' ,  6,  9, 22,  9, 14,  6,  0, 2, 'Access Always Never', @Menu.Item[Num]^.ShowType, Topic + 'How should this command be displayed?');
-  Form.AddByte ('X', 'X'              , 16, 10, 22, 10,  1,  2,  0, 80, @Menu.Item[Num]^.X,   Topic + 'X coordinate of lightbar');
-  Form.AddByte ('Y', 'Y'              , 18, 10, 25, 10,  1,  2,  0, 50, @Menu.Item[Num]^.Y,   Topic + 'Y coordinate of lightbar');
-  Form.AddByte ('U', ' Up '           , 67,  3, 73,  3,  4,  3,  0, 255, @Menu.Item[Num]^.JumpUp, Topic + '(Grid) Item # to jump to when UP is pressed');
-  Form.AddByte ('D', ' Down '         , 65,  4, 73,  4,  6,  3,  0, 255, @Menu.Item[Num]^.JumpDown, Topic + '(Grid) Item # to jump to when DOWN is pressed');
-  Form.AddByte ('L', ' Left '         , 65,  5, 73,  5,  6,  3,  0, 255, @Menu.Item[Num]^.JumpLeft, Topic + '(Grid) Item # to jump to when LEFT is pressed');
-  Form.AddByte ('R', ' Right '        , 64,  6, 73,  6,  7,  3,  0, 255, @Menu.Item[Num]^.JumpRight, Topic + '(Grid) Item # to jump to when RIGHT is pressed');
-  Form.AddByte ('E', ' Escape '       , 63,  7, 73,  7,  8,  3,  0, 255, @Menu.Item[Num]^.JumpEscape, Topic + '(Grid) Item # to jump to when ESCAPE is pressed');
-  Form.AddByte ('T', ' Tab '          , 66,  8, 73,  8,  5,  3,  0, 255, @Menu.Item[Num]^.JumpTab, Topic + '(Grid) Item # to jump to when TAB is pressed');
-  Form.AddByte ('P', ' PageUp '       , 63,  9, 73,  9,  8,  3,  0, 255, @Menu.Item[Num]^.JumpPgUp, Topic + '(Grid) Item # to jump to when PGUP is pressed');
-  Form.AddByte ('G', ' PageDn '       , 63, 10, 73, 10,  8,  3,  0, 255, @Menu.Item[Num]^.JumpPgDn, Topic + '(Grid) Item # to jump to when PGDN is pressed');
-  Form.AddBol  ('W', ' Redraw '       , 63, 11, 73, 11,  8,  3,  @Menu.Item[Num]^.ReDraw, Topic + 'Redraw menu after running this command?');
+  Form.AddPipe ('D', ' Display Text ' ,  4,  6, 20,  6, 14, 58, 160, @Menu.Item[Num]^.Text,    Topic + 'Text displayed on generated menus');
+  Form.AddPipe ('O', ' LightBar Low ' ,  4,  7, 20,  7, 14, 58, 160, @Menu.Item[Num]^.TextLo,  Topic + 'Normal text in lightbar menu');
+  Form.AddPipe ('I', ' LightBar High ',  3,  8, 20,  8, 15, 58, 160, @Menu.Item[Num]^.TextHi,  Topic + 'Highlighted text in lightbar menu');
+  Form.AddCaps ('H', ' Hot Key '      ,  9,  9, 20,  9,  9, 12, mysMaxMenuInput, @Menu.Item[Num]^.HotKey,  Topic + 'Key to run this command (CTRL-L/Extended Key List)');
+  Form.AddStr  ('A', ' Access '       , 10, 10, 20, 10,  8, 30, 30, @Menu.Item[Num]^.Access, Topic + 'ACS level required to access this command');
+  Form.AddTog  ('S', ' Display Type ' ,  4, 11, 20, 11, 14,  6,  0, 2, 'Access Always Never', @Menu.Item[Num]^.ShowType, Topic + 'How should this command be displayed?');
+  Form.AddByte ('X', 'X'              , 14, 12, 20, 12,  1,  2,  0, 80, @Menu.Item[Num]^.X,   Topic + 'X coordinate of lightbar');
+  Form.AddByte ('Y', 'Y'              , 16, 12, 23, 12,  1,  2,  0, 50, @Menu.Item[Num]^.Y,   Topic + 'Y coordinate of lightbar');
+  Form.AddWord ('M', ' Timer '        , 11, 13, 20, 13,  7,  5,  0, 65535, @Menu.Item[Num]^.Timer, Topic + 'Timer interval (seconds)');
+  Form.AddBol  ('W', ' Redraw '       , 10, 14, 20, 14,  8,  3,  @Menu.Item[Num]^.ReDraw, Topic + 'Redraw menu after running this command?');
+
+  Form.AddByte ('U', ' Up '           , 56, 10, 62, 10,  4,  3,  0, 255, @Menu.Item[Num]^.JumpUp, Topic + '(Grid) Item # to jump to when UP is pressed');
+  Form.AddByte ('D', ' Down '         , 54, 11, 62, 11,  6,  3,  0, 255, @Menu.Item[Num]^.JumpDown, Topic + '(Grid) Item # to jump to when DOWN is pressed');
+  Form.AddByte ('L', ' Left '         , 54, 12, 62, 12,  6,  3,  0, 255, @Menu.Item[Num]^.JumpLeft, Topic + '(Grid) Item # to jump to when LEFT is pressed');
+  Form.AddByte ('R', ' Right '        , 53, 13, 62, 13,  7,  3,  0, 255, @Menu.Item[Num]^.JumpRight, Topic + '(Grid) Item # to jump to when RIGHT is pressed');
+  Form.AddByte ('E', ' Home '         , 54, 14, 62, 14,  6,  3,  0, 255, @Menu.Item[Num]^.JumpHome, Topic + '(Grid) Item # to jump to when HOME is pressed');
+
+  Form.AddByte ('C', ' Escape '       , 65, 10, 75, 10,  8,  3,  0, 255, @Menu.Item[Num]^.JumpEscape, Topic + '(Grid) Item # to jump to when ESCAPE is pressed');
+  Form.AddByte ('T', ' Tab '          , 68, 11, 75, 11,  5,  3,  0, 255, @Menu.Item[Num]^.JumpTab, Topic + '(Grid) Item # to jump to when TAB is pressed');
+  Form.AddByte ('P', ' PageUp '       , 65, 12, 75, 12,  8,  3,  0, 255, @Menu.Item[Num]^.JumpPgUp, Topic + '(Grid) Item # to jump to when PGUP is pressed');
+  Form.AddByte ('G', ' PageDn '       , 65, 13, 75, 13,  8,  3,  0, 255, @Menu.Item[Num]^.JumpPgDn, Topic + '(Grid) Item # to jump to when PGDN is pressed');
+  Form.AddByte ('N', ' End '          , 68, 14, 75, 14,  5,  3,  0, 255, @Menu.Item[Num]^.JumpEnd, Topic + '(Grid) Item # to jump to when END is pressed');
+
+  WriteXY (25, 21, 113, Status1);
 
   Repeat
     Case Form.Execute of
       #09 : Begin
+              WriteXY (25, 21, 113, Status2);
+
               Repeat
                 MakeList;
 
-                WriteXY (5, 20, 112, strPadC(Status2, 72, ' '));
-
                 List.NoInput := False;
-                List.Open (4, 13, 77, 19);
+
+                List.Open (2, 15, 79, 21);
 
                 Case List.ExitCode of
                   '/' : Case GetCommandOption(10, 'A-Add|D-Delete|') of
@@ -404,7 +413,7 @@ Begin
                 End;
               Until False;
 
-              WriteXY (5, 20, 112, strPadC(Status1, 72, ' '));
+              WriteXY (25, 21, 113, Status1);
 
               If List.ExitCode = #27 Then Break;
             End;
