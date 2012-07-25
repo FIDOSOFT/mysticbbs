@@ -327,6 +327,10 @@ Begin
           AddVar ({$IFDEF MPLPARSER} 'usercalls',     {$ENDIF} iLongInt);
           AddStr ({$IFDEF MPLPARSER} 'userpassword',  {$ENDIF} iString, 15);
           AddVar ({$IFDEF MPLPARSER} 'userflags',     {$ENDIF} iLongInt);
+          AddVar ({$IFDEF MPLPARSER} 'userfbase',     {$ENDIF} iLongInt);
+          AddVar ({$IFDEF MPLPARSER} 'userfgroup',    {$ENDIF} iLongInt);
+          AddVar ({$IFDEF MPLPARSER} 'usermbase',     {$ENDIF} iLongInt);
+          AddVar ({$IFDEF MPLPARSER} 'usermgroup',    {$ENDIF} iLongInt);
         End;
     2 : Begin
           AddPointer ({$IFDEF MPLPARSER} 'cfgsyspath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.SystemPath     {$ELSE} NIL {$ENDIF});
