@@ -4444,3 +4444,17 @@
  + Similar to the display file and menu systems, the MPL scripts directory
    will now also fallback from the theme scripts path to the default
    scripts directory if the feature is enabled in the selected theme.
+
+ + Enhanced the ANSI listbox functions for some better efficiency.
+
+ + ANSI listbox now searches for an entire search string, rather than
+   jumping to first characters.  For example, in the User Editor when you
+   are at the list of user names, you can simply start typing the user
+   name of the person you are looking for, and you will get there.
+
+   Anytime you do anything that isn't typing a character, the search string
+   will be "reset" allow you to continue searching for something else.
+
+ ! Setting inactivity to 0 (to globally disable it) wasn't working.  I don't
+   know if this was a fault in 1.10 alphas or also in 1.09, so I am
+   mentioning it just in case.
