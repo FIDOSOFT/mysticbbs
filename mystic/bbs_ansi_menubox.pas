@@ -47,7 +47,7 @@ Type
   End;
 
   TAnsiMenuList = Class
-    List       : Array[1..65535] of ^TAnsiMenuListBoxRec;
+    List       : Array[1..10000] of ^TAnsiMenuListBoxRec;
     Box        : TAnsiMenuBox;
     HiAttr     : Byte;
     LoAttr     : Byte;
@@ -72,6 +72,7 @@ Type
     X1         : Byte;
     Y1         : Byte;
     NoInput    : Boolean;
+    LastBarPos : Byte;
 
     Constructor Create;
     Destructor  Destroy; Override;
@@ -82,6 +83,8 @@ Type
     Procedure   SetStatusProc (P: TAnsiMenuListStatusProc);
     Procedure   Clear;
     Procedure   Delete (RecPos : Word);
+    Procedure   UpdatePercent;
+    Procedure   UpdateBar (X, Y: Byte; RecPos: Word; IsHi: Boolean);
     Procedure   Update;
   End;
 
@@ -173,10 +176,7 @@ Begin
   Input := TAnsiMenuInput.Create;
 
   Box.Header    := ' ' + Header + ' ';
-
-//Input.Attr     := 15 + 4 * 16;
-//Input.FillAttr :=  7 + 4 * 16;
-  Input.LoChars  := #13#27;
+  Input.LoChars := #13#27;
 
   Box.Open (WinSize, 10, WinSize + Offset + 3, 15);
 
@@ -420,6 +420,7 @@ Begin
   Marked     := 0;
   Picked     := 1;
   NoInput    := False;
+  LastBarPos := 0;
   StatusProc := NIL;
 
   Session.io.BufFlush;
@@ -459,63 +460,110 @@ Begin
   Inherited Destroy;
 End;
 
-// this class is very inefficient and needs to have updates redone
-// BarON
-// BarOFF
-// UpdatePercent
+Procedure TAnsiMenuList.UpdateBar (X, Y: Byte; RecPos: Word; IsHi: Boolean);
+Var
+  Str  : String;
+  Attr : Byte;
+Begin
+  If IsHi Then
+    Attr := HiAttr
+  Else
+    Attr := LoAttr;
+
+  If RecPos <= ListMax Then Begin
+    Str := ' ' + List[RecPos]^.Name + ' ';
+
+    Case Format of
+      0 : Str := strPadR(Str, Width, ' ');
+      1 : Str := strPadL(Str, Width, ' ');
+      2 : Str := strPadC(Str, Width, ' ');
+    End;
+  End Else
+    Str := strRep(' ', Width);
+
+  WriteXY (X, Y, Attr, Str);
+
+  If AllowTag Then
+    If (RecPos <= ListMax) and (List[RecPos]^.Tagged = 1) Then
+      WriteXY (TagPos, Y, TagAttr, TagChar)
+    Else
+      WriteXY (TagPos, Y, TagAttr, ' ');
+End;
+
+Procedure TAnsiMenuList.UpdatePercent;
+Var
+  NewPos : LongInt;
+Begin
+  If Not PosBar Then Exit;
+
+  If (ListMax > 0) and (WinSize > 0) Then Begin
+    NewPos := (Picked * WinSize) DIV ListMax;
+
+    If Picked >= ListMax Then NewPos := Pred(WinSize);
+
+    If (NewPos < 0) or (Picked = 1) Then NewPos := 0;
+
+    NewPos := Y1 + 1 + NewPos;
+
+    If LastBarPos <> NewPos Then Begin
+      If LastBarPos > 0 Then
+        WriteXY (X1 + Width + 1, LastBarPos, Box.BoxAttr2, #176);
+
+      LastBarPos := NewPos;
+
+      WriteXY (X1 + Width + 1, NewPos, Box.BoxAttr2, #178);
+    End;
+  End;
+End;
 
 Procedure TAnsiMenuList.Update;
 Var
-  A : LongInt;
-  S : String;
-  B : Integer;
-  C : Integer;
+  Loop   : LongInt;
+  CurRec : Integer;
 Begin
-  For A := 0 to WinSize - 1 Do Begin
-    C := TopPage + A;
+  For Loop := 0 to WinSize - 1 Do Begin
+    CurRec := TopPage + Loop;
 
-    If C <= ListMax Then Begin
-      S := ' ' + List[C]^.Name + ' ';
-      Case Format of
-        0 : S := strPadR (S, Width, ' ');
-        1 : S := strPadL (S, Width, ' ');
-        2 : S := strPadC (S, Width, ' ');
-      End;
-    End Else
-      S := strRep(' ', Width);
-
-    If C = Picked Then B := HiAttr Else B := LoAttr;
-
-    WriteXY (X1 + 1, Y1 + 1 + A, B, S);
-
-    If PosBar Then
-      WriteXY (X1 + Width + 1, Y1 + 1 + A, Box.BoxAttr2, #176);
-
-    If AllowTag Then
-      If (C <= ListMax) and (List[C]^.Tagged = 1) Then
-        WriteXY (TagPos, Y1 + 1 + A, TagAttr, TagChar)
-      Else
-        WriteXY (TagPos, Y1 + 1 + A, TagAttr, ' ');
+    UpdateBar (X1 + 1, Y1 + 1 + Loop, CurRec, CurRec = Picked);
   End;
 
-  If PosBar Then
-    If (ListMax > 0) and (WinSize > 0) Then Begin
-      A := (Picked * WinSize) DIV ListMax;
-      If Picked >= ListMax Then A := Pred(WinSize);
-      If (A < 0) or (Picked = 1) Then A := 0;
-      WriteXY (X1 + Width + 1, Y1 + 1 + A, Box.BoxAttr2, #178);
-    End;
+  UpdatePercent;
 
   Session.io.BufFlush;
 End;
 
 Procedure TAnsiMenuList.Open (BX1, BY1, BX2, BY2 : Byte);
+
+  Procedure DownArrow;
+  Begin
+    If Picked < ListMax Then Begin
+      If Picked >= TopPage + WinSize - 1 Then Begin
+        Inc (TopPage);
+        Inc (Picked);
+
+        Update;
+      End Else Begin
+        UpdateBar (X1 + 1, Y1 + Picked - TopPage + 1, Picked, False);
+
+        Inc (Picked);
+
+        UpdateBar (X1 + 1, Y1 + Picked - TopPage + 1, Picked, True);
+
+        UpdatePercent;
+      End;
+    End;
+  End;
+
 Var
-  Ch    : Char;
-  A     : Word;
-  sPos  : Word;
-  ePos  : Word;
-  First : Boolean;
+  Ch          : Char;
+  Count       : Word;
+  StartPos    : Word;
+  EndPos      : Word;
+  First       : Boolean;
+  SavedRec    : Word;
+  SavedTop    : Word;
+  SearchStr   : String[80];
+  LastWasChar : Boolean;
 Begin
   If Not NoWindow Then
     Box.Open (BX1, BY1, BX2, BY2);
@@ -532,11 +580,22 @@ Begin
   WinSize := BY2 - Y1 - 1;
   TagPos  := X1 + 1;
 
+  If PosBar Then
+    For Count := 1 to WinSize Do
+      WriteXY (X1 + Width + 1, Y1 + Count, Box.BoxAttr2, #176);
+
   If NoInput Then Exit;
 
   Update;
 
+  LastWasChar := False;
+
   Repeat
+    If Not LastWasChar Then
+      SearchStr := ''
+    Else
+      LastWasChar := False;
+
     If Assigned(StatusProc) Then
       If ListMax > 0 Then
         StatusProc(Picked, List[Picked]^.Name)
@@ -552,10 +611,21 @@ Begin
                 TopPage := 1;
                 Update;
               End;
-        #72 : If (TopPage > 1) Or (Picked > 1) Then Begin { up arrow }
-                If Picked > 1 Then Dec (Picked);
-                If Picked < TopPage Then Dec (TopPage);
-                Update;
+        #72 : If (Picked > 1) Then Begin
+                If Picked <= TopPage Then Begin
+                  Dec (Picked);
+                  Dec (TopPage);
+
+                  Update;
+                End Else Begin
+                  UpdateBar (X1 + 1, Y1 + Picked - TopPage + 1, Picked, False);
+
+                  Dec (Picked);
+
+                  UpdateBar (X1 + 1, Y1 + Picked - TopPage + 1, Picked, True);
+
+                  UpdatePercent;
+                End;
               End;
         #73,
         #75 : If (TopPage > 1) or (Picked > 1) Then Begin { page up / left arrow }
@@ -568,11 +638,7 @@ Begin
                 Picked := ListMax;
                 Update;
               End;
-        #80 : If Picked < ListMax Then Begin
-                Inc (Picked);
-                If Picked > TopPage + WinSize - 1 Then Inc (TopPage);
-                Update;
-              End;
+        #80 : DownArrow;
         #77,
         #81 : If (Picked <> ListMax) Then Begin { pgdn/right }
                 If ListMax > WinSize Then Begin
@@ -580,11 +646,14 @@ Begin
                     Picked := ListMax
                   Else
                     Inc (Picked, WinSize);
+
                   Inc (TopPage, WinSize);
+
                   If TopPage + WinSize > ListMax Then TopPage := ListMax - WinSize + 1;
                 End Else Begin
                   Picked := ListMax;
                 End;
+
                 Update;
               End;
       Else
@@ -602,31 +671,34 @@ Begin
           List[Picked]^.Tagged := 1;
           Inc (Marked);
         End;
-        If Picked < ListMax Then Inc (Picked);
-        If Picked > TopPage + WinSize - 1 Then Inc (TopPage);
-        Update;
+
+        DownArrow;
       End Else
       If Pos(Ch, LoChars) > 0 Then Begin
         ExitCode := Ch;
         Exit;
       End Else Begin
-        Ch    := UpCase(Ch);
-        First := True;
-        sPos  := Picked + 1;
-        ePos  := ListMax;
+        SavedTop    := TopPage;
+        SavedRec    := Picked;
+        LastWasChar := True;
+        SearchStr   := SearchStr + UpCase(Ch);
+        First       := True;
+        StartPos    := Picked + 1;
+        EndPos      := ListMax;
 
-        If sPos > ListMax Then sPos := 1;
+        If StartPos > ListMax Then StartPos := 1;
 
-        A := sPos;
+        Count := StartPos;
 
-        While (A <= ePos) Do Begin
-          If UpCase(List[A]^.Name[1]) = Ch Then Begin
-            While A <> Picked Do Begin
-              If Picked < A Then Begin
+        While (Count <= EndPos) Do Begin
+          If strUpper(Copy(List[Count]^.Name, 1, Length(SearchStr))) = SearchStr Then Begin
+
+            While Count <> Picked Do Begin
+              If Picked < Count Then Begin
                 If Picked < ListMax Then Inc (Picked);
                 If Picked > TopPage + WinSize - 1 Then Inc (TopPage);
               End Else
-              If Picked > A Then Begin
+              If Picked > Count Then Begin
                 If Picked > 1 Then Dec (Picked);
                 If Picked < TopPage Then Dec (TopPage);
               End;
@@ -634,17 +706,24 @@ Begin
             Break;
           End;
 
-          If (A = ListMax) and First Then Begin
-            A     := 0;
-            sPos  := 1;
-            ePos  := Picked - 1;
-            First := False;
+          If (Count = ListMax) and First Then Begin
+            Count    := 0;
+            StartPos := 1;
+            EndPos   := Picked - 1;
+            First    := False;
           End;
 
-          Inc (A);
+          Inc (Count);
         End;
 
-        Update;
+        If TopPage <> SavedTop Then
+          Update
+        Else
+        If Picked <> SavedRec Then Begin
+          UpdateBar (X1 + 1, Y1 + SavedRec - SavedTop + 1, SavedRec, False);
+          UpdateBar (X1 + 1, Y1 + Picked - TopPage + 1, Picked, True);
+          UpdatePercent;
+        End;
       End;
   Until False;
 End;
