@@ -63,7 +63,7 @@ Type
 
   RecMessageText = Array[1..mysMaxMsgLines] of String[79];      // large global msg buffer is bad
 
-  AccessFlagType = Set of 1..25;
+  AccessFlagType = Set of 1..26;
 
   RecEchoMailAddr = Record
     Zone,
