@@ -34,6 +34,8 @@ Type
     Function    OpenCreateBase      (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
     Procedure   AppendMessageText   (Var Msg: PMsgBaseABS; Lines: Integer; ReplyID: String);
     Procedure   AssignMessageData   (Var Msg: PMsgBaseABS);
+    Function    GetRecord           (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+    Procedure   GetMessageStats     (Var TempBase: RecMessageBase; Var Total, New, Yours: LongInt);
     Function    GetTotalMessages    (Var TempBase: RecMessageBase) : LongInt;
     Procedure   PostTextFile        (Data: String; AllowCodes: Boolean);
     Function    SaveMessage         (mArea: RecMessageBase; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mLines: Integer) : Boolean;
@@ -136,6 +138,22 @@ Begin
   Result := True;
 End;
 
+Function TMsgBase.GetRecord (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, Config.DataPath + 'mbases.dat');
+
+  If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
+
+  If ioSeek(F, Num) And (ioRead(F, TempBase)) Then
+    Result := True;
+
+  Close (F);
+End;
+
 Function TMsgBase.GetTotalMessages (Var TempBase: RecMessageBase) : LongInt;
 Var
   TempMsg : PMsgBaseABS;
@@ -146,6 +164,41 @@ Begin
 
   If OpenCreateBase(TempMsg, TempBase) Then Begin
     Result := TempMsg^.NumberOfMsgs;
+
+    TempMsg^.CloseMsgBase;
+
+    Dispose (TempMsg, Done);
+  End;
+End;
+
+Procedure TMsgBase.GetMessageStats (Var TempBase: RecMessageBase; Var Total, New, Yours: LongInt);
+Var
+  TempMsg : PMsgBaseABS;
+  MsgTo   : String[40];
+Begin
+  Total := 0;
+  New   := 0;
+  Yours := 0;
+
+  If TempBase.Name = 'None' Then Exit;
+
+  If OpenCreateBase(TempMsg, TempBase) Then Begin
+    Total := TempMsg^.NumberOfMsgs;
+
+    TempMsg^.SeekFirst(TempMsg^.GetLastRead(Session.User.UserNum) + 1);
+
+    While TempMsg^.SeekFound Do Begin
+      Inc (New);
+
+      TempMsg^.MsgStartUp;
+
+      MsgTo := strUpper(TempMsg^.GetTo);
+
+      If (MsgTo = strUpper(Session.User.ThisUser.Handle)) or (MsgTo = strUpper(Session.User.ThisUser.RealName)) Then
+        Inc(Yours);
+
+      TempMsg^.SeekNext;
+    End;
 
     TempMsg^.CloseMsgBase;
 
@@ -3454,11 +3507,9 @@ Const
 
   Procedure ScanBase;
   Var
-    MsgBase   : PMsgBaseABS;
     NewMsgs   : LongInt;
     YourMsgs  : LongInt;
     TotalMsgs : LongInt;
-    MsgTo     : String;
   Begin
     Session.io.PromptInfo[1]  := MBase.Name;
     Session.io.PromptInfo[2]  := strI2S(Global_CurBase);
@@ -3471,33 +3522,7 @@ Const
     If ShowScanPrompt Then
       Session.io.OutFull(Session.GetPrompt(487));
 
-    Case MBase.BaseType of
-      0 : MsgBase := New(PMsgBaseJAM, Init);
-      1 : MsgBase := New(PMsgBaseSquish, Init);
-    End;
-
-    MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
-
-    If MsgBase^.OpenMsgBase Then Begin
-      TotalMsgs := MsgBase^.NumberOfMsgs;
-
-      MsgBase^.SeekFirst(MsgBase^.GetLastRead(Session.User.UserNum) + 1);
-
-      While MsgBase^.SeekFound Do Begin
-        Inc (NewMsgs);
-
-        MsgBase^.MsgStartUp;
-
-        MsgTo := strUpper(MsgBase^.GetTo);
-
-        If (MsgTo = strUpper(Session.User.ThisUser.Handle)) or (MsgTo = strUpper(Session.User.ThisUser.RealName)) Then
-          Inc(YourMsgs);
-
-        MsgBase^.SeekNext;
-      End;
-
-      MsgBase^.CloseMsgBase;
-    End;
+    GetMessageStats(MBase, TotalMsgs, NewMsgs, YourMsgs);
 
     Inc (Global_TotalMsgs, TotalMsgs);
     Inc (Global_NewMsgs,   NewMsgs);
@@ -3515,8 +3540,6 @@ Const
 
     If (ShowIfNew And (NewMsgs > 0)) or (ShowIfYou And (YourMsgs > 0)) or (Not ShowIfNew And Not ShowIfYou) Then
       Session.io.OutFullLn(Session.GetPrompt(488));
-
-    Dispose (MsgBase, Done);
   End;
 
 Var

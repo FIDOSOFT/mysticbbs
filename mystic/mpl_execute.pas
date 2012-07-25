@@ -92,6 +92,8 @@ Type
 
     Procedure GetMBaseVars    (Var M: RecMessageBase);
     Function  GetMBaseRecord  (Num: LongInt) : Boolean;
+    Function  GetMBaseStats   (Num: LongInt; Var Total, New, Yours: LongInt) : Boolean;
+
     Procedure GetMGroupVars   (Var G: RecGroup);
     Function  GetMGroupRecord (Num: LongInt) : Boolean;
     Procedure GetFBaseVars    (Var F: RecFileBase);
@@ -241,22 +243,22 @@ Begin
   Move (M.SysopACS, VarData[IdxVarMBase + 5 ]^.Data^, SizeOf(M.SysopACS));
 End;
 
-Function TInterpEngine.GetMBaseRecord (Num: LongInt) : Boolean;
+Function TInterpEngine.GetMBaseStats (Num: LongInt; Var Total, New, Yours: LongInt) : Boolean;
 Var
-  F : File;
   M : RecMessageBase;
 Begin
-  Result := False;
+  Result := Session.Msgs.GetRecord(Num, M);
 
-  Assign (F, Config.DataPath + 'mbases.dat');
-  If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
+  If Result Then
+    Session.Msgs.GetMessageStats(M, Total, New, Yours);
+End;
 
-  If ioSeek(F, Num) And (ioRead(F, M)) Then Begin
-    GetMBaseVars(M);
-    Result := True;
-  End;
-
-  Close (F);
+Function TInterpEngine.GetMBaseRecord (Num: LongInt) : Boolean;
+Var
+  M : RecMessageBase;
+Begin
+  Result := Session.Msgs.GetRecord(Num, M);
+  If Result Then GetMBaseVars(M);
 End;
 
 Procedure TInterpEngine.GetMGroupVars (Var G: RecGroup);
@@ -1893,6 +1895,10 @@ Begin
     539 : PutUserRecord(Param[1].L);
     540 : Begin
             TempBool := Session.User.FindUser(Param[1].S, False);
+            Store (TempBool, 1);
+          End;
+    541 : Begin
+            TempBool := GetMBaseStats(Param[1].L, LongInt(Pointer(Param[2].vData)^), LongInt(Pointer(Param[3].vData)^), LongInt(Pointer(Param[4].vData)^));
             Store (TempBool, 1);
           End;
   End;

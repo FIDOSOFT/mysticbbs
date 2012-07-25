@@ -289,6 +289,7 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'putthisuser',    {$ENDIF} '',       iNone);    // 538
           AddProc    ({$IFDEF MPLPARSER} 'putuser',        {$ENDIF} 'l',      iNone);    // 539
           AddProc    ({$IFDEF MPLPARSER} 'isuser',         {$ENDIF} 's',      iBool);    // 540
+          AddProc    ({$IFDEF MPLPARSER} 'getmbasestats',  {$ENDIF} 'lLLL',   iBool);    // 541
 
 { END OF PROCEDURE DEFINITIONS }
 

@@ -4458,3 +4458,33 @@
  ! Setting inactivity to 0 (to globally disable it) wasn't working.  I don't
    know if this was a fault in 1.10 alphas or also in 1.09, so I am
    mentioning it just in case.
+
+ + New MPL function: GetMBaseStats.  This can be used as a function or a
+   procedure (returning true if successful).  It takes 4 parameters.
+
+      #1: Message base number
+      #2: Total messages (this is a VAR parameter)
+      #3: New messages (this is a VAR parameter)
+      #4: New messages to you (this is a VAR parameter)
+
+   Example:
+
+      uses mbase;
+
+      var
+        count, total, new, yours : longint;
+      begin
+        count := 1;  //start @1 to skip email base
+
+        while getmbase(count) do begin
+          getmbasestats(count, total, new, yours);
+
+          writeln('base       : ' + mbasename);
+          writeln('total msgs : ' + int2str(total));
+          writeln('new msgs   : ' + int2str(new));
+          writeln('your msgs  : ' + int2str(yours));
+          writeln('');
+
+          count := count + 1
+        end;
+      end.
