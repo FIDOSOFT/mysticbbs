@@ -13,6 +13,8 @@
 //   - Fixed a few display bugs
 //   - Now saves your money between sessions
 //   - Added Top 10 list
+//   - Added command line option RESET to reset scores
+//   - Added command line option TOP10 to show top 10 and exit
 // ==========================================================================
 
 Uses
@@ -138,7 +140,7 @@ Begin
       fReadRec (F, OnePerson);
 
       For Count2 := 1 to 10 Do
-        If TopList[Count2].Cash < OnePerson.Cash Then Begin
+        If TopList[Count2].Cash <= OnePerson.Cash Then Begin
           For Count3 := 10 DownTo Count2 + 1 Do
             TopList[Count3] := TopList[Count3 - 1]
 
@@ -152,8 +154,8 @@ Begin
 
   ClrScr;
 
-  GotoXY (24, 3);
-  Write  ('|07Mystic BlackJack - Top 10 Players');
+  GotoXY (21, 3);
+  Write  ('|07Mystic BlackJack - Top 10 Money Holders');
 
   GotoXY (5, 6);
   Write  ('##  User                              Date                      Cash');
@@ -458,14 +460,24 @@ Begin
 
   DataPath := JustPath(ProgName);
 
-  // RESET to reset scores
-  // TOPLIST to show only scores and exit
+  If Upper(ParamStr(1)) = 'TOP10' Then Begin
+    ExecuteTopTen;
+    Halt;
+  End;
+
+  If Upper(ParamStr(1)) = 'RESET' Then Begin
+    FileErase(DataPath + 'blackjack.ply');
+    WriteLn ('|CRScores have been reset|CR|CR|PA');
+  End;
 
   Randomize;
   DeckCreate;
   LoadPlayer;
 
   DispFile (DataPath + 'blackjack')
+  WriteXY  (12, 23, 8, 'Mystic BlackJack v' + Version + '   Code: g00r00    Art: Grymmjack');
+
+  DrawCash;
 
   Repeat
     Print ('  |15Want to play a game?', '  |10(|14Y|02/|14N|10)|08: |07')
@@ -567,6 +579,7 @@ Begin
                 DrawCard (1, 2, 1, 6);
                 Dealer_Hidden := 0;
                 UpdateScores;
+
                 While Dealer_Score < Player_Score and Dealer_Score < 22 and Dealer_Cards < 5 Do Begin
                   GetNewCard(True);
                   UpdateScores;
@@ -593,7 +606,7 @@ Begin
                   ReadKey;
                 End Else Begin
                   AdjustScore(2);
-                  Print('  |12Push.  Dealer wins.', '  Press a key.');
+                  Print('  |12Push. No winner.', '  Press a key.');
                   ReadKey;
                 End;
 
