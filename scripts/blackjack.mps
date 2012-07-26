@@ -89,8 +89,6 @@ Begin
       PlayerNumber := fPos(F) / SizeOf(Player);
       Break;
     End;
-
-    Break;
   End;
 
   fClose (F);
