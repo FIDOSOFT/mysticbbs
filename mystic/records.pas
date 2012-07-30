@@ -270,6 +270,7 @@ Const
   UserNoLastCall = $00000010;
   UserNoPWChange = $00000020;
   UserNoHistory  = $00000040;
+  UserNoTimeout  = $00000080;
 
 Type
   RecUser = Record                                              // USERS.DAT
