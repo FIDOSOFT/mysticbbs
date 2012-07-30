@@ -28,9 +28,9 @@ Begin
 
   Box.Header := ' Index ' + strI2S(FBase.Index) + ' ';
 
-  Box.Open (6, 5, 75, 20);
+  Box.Open (6, 5, 75, 21);
 
-  VerticalLine (22, 7, 20);
+  VerticalLine (22, 7, 19);
   VerticalLine (69, 7, 9);
 
   Form.AddStr  ('N', ' Base Name'    , 11,  7, 24,  7, 11, 30, 40, @FBase.Name, Topic + 'File base name');
@@ -44,7 +44,7 @@ Begin
   Form.AddStr  ('P', ' FTP ACS'      , 13, 15, 24, 15,  9, 30, 30, @FBase.FTPACS, Topic + 'ACS to access via FTP');
   Form.AddStr  ('S', ' Sysop ACS '   , 11, 16, 24, 16, 11, 30, 30, @FBase.SysopACS, Topic + 'ACS for Sysop access');
   Form.AddTog  ('E', ' Default Scan' ,  8, 17, 24, 17, 14,  6, 0, 2, 'No Yes Always', @FBase.DefScan, Topic + 'Default scan setting');
-  Form.AddPath ('I', ' File Path'    , 11, 18, 24, 18, 11, 30, 120, @FBase.Path, Topic + 'Directory where files are stored');
+  Form.AddPath ('I', ' File Path'    , 11, 18, 24, 18, 11, 50, 120, @FBase.Path, Topic + 'Directory where files are stored');
   Form.AddStr  ('A', ' Data File'    , 11, 19, 24, 19, 11, 30, 40,  @FBase.FileName, Topic + 'Data file name');
 
   Form.AddBits ('R', ' Free Files'   , 57,  7, 71,  7, 12, FBFreeFiles, @FBase.Flags, Topic + 'Files in base are free?');
