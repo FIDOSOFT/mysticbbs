@@ -396,7 +396,6 @@ Begin
       If (Interval MOD Data.Item[Count]^.Timer <> 0) Then
         Continue
       Else Begin
-
         Case Data.Item[Count]^.TimerType of
           0 : Result := ExecuteCommandList(Count, -1);
           1,
@@ -452,8 +451,7 @@ Begin
       4 : Format := 19;
     End;
 
-//    If Data.Info.Header <> '' Then
-      TBBSCore(Owner).io.OutFullLn (Data.Info.Header);
+    TBBSCore(Owner).io.OutFullLn (Data.Info.Header);
 
     Listed := 0;
 
@@ -631,6 +629,7 @@ Var
   LastSec : LongInt;
 Begin
   Session.io.BufFlush;
+  Session.io.PurgeInputBuffer;
 
   LastSec := TimerSeconds;
 
@@ -686,7 +685,7 @@ Var
               (Data.Item[BarPos]^.TextLo <> '') And
               (Data.Item[BarPos]^.TextHi <> '') And
               (Data.Item[BarPos]^.ShowType <> 2) And
-              ( (((Data.Item[BarPos]^.ShowType = 0) And (TBBSCore(Owner).User.Access(Data.Item[BarPos]^.Access)) Or (Data.Item[BarPos]^.ShowType = 1)))
+              ((((Data.Item[BarPos]^.ShowType = 0) And (TBBSCore(Owner).User.Access(Data.Item[BarPos]^.Access)) Or (Data.Item[BarPos]^.ShowType = 1)))
               );
   End;
 
@@ -776,7 +775,8 @@ Begin
 
       ShowMenu;
 
-      TBBSCore(Owner).io.OutFullLn(Data.Info.Header);
+      If Data.Info.Header <> '' Then
+        TBBSCore(Owner).io.OutFull(Data.Info.Header);
 
       If Data.Info.Footer <> '' Then
         TBBSCore(Owner).io.OutFull(Data.Info.Footer);
