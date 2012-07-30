@@ -295,6 +295,8 @@ Begin
   Prefix := '';
   Str    := DirSlash(Str);
 
+  If DirExists(Str) Then Exit;
+
   Count := Pos(PathSep, Str);
 
   While (Count > 0) Do Begin
