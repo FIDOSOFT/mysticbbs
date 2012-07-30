@@ -4488,3 +4488,19 @@
           count := count + 1
         end;
       end.
+
+ + New MPL procedure: WriteXY.  This procedure writes a string of text at
+   the defined X/Y location with a specific text attribute.  This of course
+   requires the user has ANSI to function properly.
+
+     WriteXY (1, 10, 8, 'Prints at X:1 Y:10 with dark grey text');
+
+ + New MPL procedure WriteXYpipe.  This procedure writes a string of text at
+   the defined location, similar to WriteXY *except* it parses pipe color
+   codes *and* requires a "maximum field size" of which it will always
+   extend or restrict the length of the text within that field.
+
+     WriteXYPipe (1, 10, 8, 50, 'This pads to 50 chars at location 1,10');
+
+ + Added new user flag "UserNoTimeout" which makes a single user immune to
+   inactivity timeout check.
