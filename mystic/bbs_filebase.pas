@@ -2920,8 +2920,9 @@ Var
   Procedure Scan_Base;
   Begin
     Session.io.PromptInfo[1] := FBase.Name;
-    Session.io.OutBS (Screen.CursorX, True);
+    Session.io.OutBS   (Screen.CursorX, True);
     Session.io.OutFull (Session.GetPrompt(87));
+    Session.io.BufFlush;
 
     Case ListFiles (3, Str) of
       0 : Found := False;
@@ -2991,8 +2992,10 @@ Var
   Procedure Scan_Current_Base;
   Begin
     Session.io.PromptInfo[1] := FBase.Name;
-    Session.io.OutBS (Screen.CursorX, True);
+
+    Session.io.OutBS   (Screen.CursorX, True);
     Session.io.OutFull (Session.GetPrompt(87));
+    Session.io.BufFlush;
 
     Case ListFiles (2, '') of
       0 : Found := False;
