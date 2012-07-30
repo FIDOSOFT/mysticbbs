@@ -60,38 +60,39 @@ End;
 
 Procedure Upgrade_User_Level (Now: Boolean; Var U: RecUser; Sec: Byte);
 Var
-  A : Char;
-  T : RecSecurity;
+  Flags   : Char;
+  TempSec : RecSecurity;
 Begin
-  Reset (Session.User.SecurityFile);
-  Seek  (Session.User.SecurityFile, Sec - 1);
-  Read  (Session.User.SecurityFile, T);
-  Close (Session.User.SecurityFile);
+  Assign (Session.User.SecurityFile, Config.DataPath + 'security.dat');
+  Reset  (Session.User.SecurityFile);
+  Seek   (Session.User.SecurityFile, Sec - 1);
+  Read   (Session.User.SecurityFile, TempSec);
+  Close  (Session.User.SecurityFile);
 
   U.Security  := Sec;
-  U.StartMenu := T.StartMenu;
-  U.TimeLeft  := T.Time;
+  U.StartMenu := TempSec.StartMenu;
+  U.TimeLeft  := TempSec.Time;
   U.Expires   := '00/00/00';
-  U.ExpiresTo := T.ExpiresTo;
+  U.ExpiresTo := TempSec.ExpiresTo;
 
-  If T.Expires > 0 Then
-    U.Expires := DateJulian2Str(CurDateJulian + T.Expires, 1);
+  If TempSec.Expires > 0 Then
+    U.Expires := DateJulian2Str(CurDateJulian + TempSec.Expires, 1);
 
-  For A := 'A' to 'Z' Do
-    If Ord(A) - 64 in T.AF1 Then
-      U.AF1 := U.AF1 + [Ord(A) - 64]
+  For Flags := 'A' to 'Z' Do
+    If Ord(Flags) - 64 in TempSec.AF1 Then
+      U.AF1 := U.AF1 + [Ord(Flags) - 64]
     Else
-      If T.Hard Then
-        U.AF1 := U.AF1 - [Ord(A) - 64];
+      If TempSec.Hard Then
+        U.AF1 := U.AF1 - [Ord(Flags) - 64];
 
-  For A := 'A' to 'Z' Do
-    If Ord(A) - 64 in T.AF2 Then
-      U.AF2 := U.AF2 + [Ord(A) - 64]
+  For Flags := 'A' to 'Z' Do
+    If Ord(Flags) - 64 in TempSec.AF2 Then
+      U.AF2 := U.AF2 + [Ord(Flags) - 64]
     Else
-      If T.Hard Then
-        U.AF2 := U.AF2 - [Ord(A) - 64];
+      If TempSec.Hard Then
+        U.AF2 := U.AF2 - [Ord(Flags) - 64];
 
-  If Now Then Session.User.Security := T;
+  If Now Then Session.User.Security := TempSec;
 End;
 
 Procedure AutoSig_Edit;

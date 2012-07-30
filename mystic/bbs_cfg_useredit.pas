@@ -126,7 +126,7 @@ Begin
             Form.AddByte ('S', ' Security'  , 7,  6, 23,  6, 14,  3, 0, 255, @U.Security, Topic + 'User''s security level');
             Form.AddFlag ('1', ' Flags #1'  , 7,  7, 23,  7, 14, @U.AF1, Topic + 'User''s access flags: Set 1');
             Form.AddFlag ('2', ' Flags #2'  , 7,  8, 23,  8, 14, @U.AF2, Topic + 'User''s access flags: Set 2');
-            Form.AddWord ('T', ' Time Left' , 7,  9, 23,  9, 14, 10, 0, 1440, @U.TimeLeft, Topic + 'Total number of minutes left for today');
+            Form.AddWord ('T', ' Time Left' , 7,  9, 23,  9, 14, 4, 0, 1440, @U.TimeLeft, Topic + 'Total number of minutes left for today');
             Form.AddWord ('I', ' Time Bank' , 7, 10, 23, 10, 14,  5, 0, 65000, @U.TimeBank, Topic + 'Total minutes in time bank');
             Form.AddDate ('X', ' Expires'   , 7, 11, 23, 11, 14, @U.Expires, Topic + 'User''s account expiration date (00/00/00: Disabled)');
             Form.AddByte ('O', ' To'        , 7, 12, 23, 12, 14, 3, 0, 255, @U.ExpiresTo, Topic + 'Security profile to give user after expiration');
@@ -186,7 +186,8 @@ Begin
             Form.AddBits ('N', ' No Ratios'   , 7,  8, 23,  8, 14, UserNoRatio,    @U.Flags, Topic + 'Ignore file ratios?');
             Form.AddBits ('C', ' No CallStats', 7,  9, 23,  9, 14, UserNoLastCall, @U.Flags, Topic + 'Exclude from caller stats?');
             Form.AddBits ('P', ' No PW Change', 7, 10, 23, 10, 14, UserNoPWChange, @U.Flags, Topic + 'Exclude from forced password change');
-            Form.AddBits ('H', ' No History'  , 7, 11, 23, 11, 14, UserNoHistory,  @U.Flags, Topic + 'Exclude for BBS history stats');
+            Form.AddBits ('H', ' No History'  , 7, 11, 23, 11, 14, UserNoHistory,  @U.Flags, Topic + 'Exclude from BBS history stats');
+            Form.AddBits ('T', ' No Timeout'  , 7, 12, 23, 12, 14, UserNoTimeout,  @U.Flags, Topic + 'Exclude from inactivity timeout');
           End;
     End;
 
@@ -200,9 +201,10 @@ Begin
               Temp := Configuration_SecurityEditor(False);
 
               If Temp <> -1 Then Begin
-                Changed := True;
+                NeedForm := True;
+                Changed  := True;
 
-                Upgrade_User_Level(True, U, Temp);
+                Upgrade_User_Level(Session.User.IsThisUser(U.Handle), U, Temp);
               End;
             End;
       #27 : Begin
@@ -332,6 +334,8 @@ Begin
 
   Session.InUserEdit := False;
   Session.LocalMode  := SavedLocal;
+
+  Session.SetTimeLeft(Session.User.ThisUser.TimeLeft);
 
   {$IFNDEF UNIX}
     UpdateStatusLine(StatusPtr, '');
