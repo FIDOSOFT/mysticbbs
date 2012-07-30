@@ -590,7 +590,14 @@ Begin
                       If B^ < MaxSize Then Inc(B^) Else B^ := MinNum;
                       Changed := True;
                     End;
-      ItemPath    : S^ := DirSlash(Input.GetStr(FieldX, FieldY, FieldSize, MaxSize, 1, S^));
+      ItemPath    : Begin
+                      S^ := DirSlash(Input.GetStr(FieldX, FieldY, FieldSize, MaxSize, 1, S^));
+
+                      If Not DirExists(S^) Then
+                        If ShowMsgBox(1, 'Create ' + S^ + '?') Then
+                          If Not DirCreate(S^) Then
+                            ShowMsgBox(0, 'Unable to create');
+                    End;
       ItemChar    : Begin
                       TempStr := Input.GetStr(FieldX, FieldY, FieldSize, MaxSize, 1, C^);
                       Changed := TempStr[1] <> C^;
