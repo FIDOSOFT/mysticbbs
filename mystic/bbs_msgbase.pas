@@ -1321,8 +1321,11 @@ Var
     Res := False;
 
     If (ScanMode = 3) and First Then Begin
+
       If Mode = 'S' Then Session.io.OutRawLn('');
+
       Session.io.OutFull (Session.GetPrompt(130));
+      Session.io.BufFlush;
     End;
 
     If Not First Then
@@ -1832,6 +1835,7 @@ Var
 
         Repeat
           Inc (PageTotal);
+
           MsgInfo[PageTotal].Num     := MsgBase^.GetMsgNum;
           MsgInfo[PageTotal].MsgFrom := MsgBase^.GetFrom;
           MsgInfo[PageTotal].MsgTo   := MsgBase^.GetTo;
@@ -2768,8 +2772,9 @@ Begin
       GetMessageScan;
 
       If ((Mand) and (MBase.DefNScan = 2)) or ((Not Mand) and (MScan.NewScan > 0)) Then Begin
-        Session.io.OutBS (Screen.CursorX, True);
+        Session.io.OutBS   (Screen.CursorX, True);
         Session.io.OutFull (Session.GetPrompt(130));
+        Session.io.BufFlush;
 
         If Not ReadMessages(Mode, '') Then Begin
           Session.io.OutRawLn('');
@@ -3519,8 +3524,10 @@ Const
     YourMsgs  := 0;
     TotalMsgs := 0;
 
-    If ShowScanPrompt Then
+    If ShowScanPrompt Then Begin
       Session.io.OutFull(Session.GetPrompt(487));
+      Session.io.BufFlush;
+    End;
 
     GetMessageStats(MBase, TotalMsgs, NewMsgs, YourMsgs);
 
@@ -3538,8 +3545,10 @@ Const
     If ShowScanPrompt Then
       Session.io.OutBS(Screen.CursorX, True);
 
-    If (ShowIfNew And (NewMsgs > 0)) or (ShowIfYou And (YourMsgs > 0)) or (Not ShowIfNew And Not ShowIfYou) Then
+    If (ShowIfNew And (NewMsgs > 0)) or (ShowIfYou And (YourMsgs > 0)) or (Not ShowIfNew And Not ShowIfYou) Then Begin
       Session.io.OutFullLn(Session.GetPrompt(488));
+      Session.io.BufFlush;
+    End;
   End;
 
 Var
