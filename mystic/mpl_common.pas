@@ -290,6 +290,8 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'putuser',        {$ENDIF} 'l',      iNone);    // 539
           AddProc    ({$IFDEF MPLPARSER} 'isuser',         {$ENDIF} 's',      iBool);    // 540
           AddProc    ({$IFDEF MPLPARSER} 'getmbasestats',  {$ENDIF} 'lLLL',   iBool);    // 541
+          AddProc    ({$IFDEF MPLPARSER} 'writexy',        {$ENDIF} 'bbbs',   iNone);    // 542
+          AddProc    ({$IFDEF MPLPARSER} 'writexypipe',    {$ENDIF} 'bbbbs',  iNone);    // 543
 
 { END OF PROCEDURE DEFINITIONS }
 
