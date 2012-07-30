@@ -466,8 +466,12 @@ Begin
   End;
 
   If Upper(ParamStr(1)) = 'RESET' Then Begin
-    FileErase(DataPath + 'blackjack.ply');
-    WriteLn ('|CRScores have been reset|CR|CR|PA');
+    If InputYN('|CR|12Reset blackjack scores? ') Then Begin
+      FileErase(DataPath + 'blackjack.ply');
+      WriteLn ('|CRScores have been reset|CR|CR|PA');
+    End;
+    
+    Halt;
   End;
 
   Randomize;
