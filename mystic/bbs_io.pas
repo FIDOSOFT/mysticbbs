@@ -1276,7 +1276,7 @@ Begin
       InMacro := False;
 
   If TBBSCore(Core).CheckTimeOut Then
-    If (Config.Inactivity > 0) and (TimerSeconds - TBBSCore(Core).TimeOut >= Config.Inactivity) Then Begin
+    If (Config.Inactivity > 0) and (Session.User.ThisUser.Flags And UserNoTimeOut = 0) and (TimerSeconds - TBBSCore(Core).TimeOut >= Config.Inactivity) Then Begin
       TBBSCore(Core).SystemLog('Inactivity timeout');
       OutFullLn (TBBSCore(Core).GetPrompt(136));
       Halt(0);
