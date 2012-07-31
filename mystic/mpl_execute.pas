@@ -1622,7 +1622,7 @@ Begin
             TempLong := DateStr2Julian(Param[1].S);
             Store (TempLong, 4);
           End;
-    53  : DateG2J(Param[1].L, Param[2].L, Param[3].L, LongInt(VarData[Param[4].vID]^.Data));
+    53  : DateG2J(Param[1].L, Param[2].L, Param[3].L, LongInt(Pointer(VarData[Param[4].vID]^.Data)^));
     54  : DateJ2G(Param[1].L, SmallInt(Pointer(Param[2].vData)^), SmallInt(Pointer(Param[3].vData)^), SmallInt(Pointer(Param[4].vData)^));
     55  : Begin
             TempBool := DateValid(Param[1].S);
