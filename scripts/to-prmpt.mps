@@ -1,27 +1,43 @@
-// .--------------------------.
-// | TO-PRMPT.MPS : RELEASE 2 |-----------------------------------------------
-// `--------------------------'
+// .-------------------------.
+// | TO-PRMPT.MPS : UPDATE 2 |===============================================
+// `-------------------------'
 //
 //  This mod is was originally written for use with Mystic BBS v1.07.3 by
 //  Testoverride, based on some demo MPL code written by g00r00.
 //
 //  It has been updated for Mystic BBS 1.10+ by g00r00, and released without
 //  Testoverride's assistance.  This is not an intentional thing, but TO has
-//  been missing lately, so given the circumstances, I think it's okay.
+//  been missing lately, so given the circumstances that it was based off of
+//  g00r00's code, we feel it's okay to go forward with this release.
 //
 //  You are free to modify and do whatever you'd like to with this code, but
 //  please if you do make significant changes please let the original authors
 //  know so that we can include it into our release if it is worthwhile.
 //
-//  The code itself isn't as pretty as it could be since MPL has evolved over
-//  time, but it is still functional and seems to be widely used.
-//
 //  The original authors contact info follows:
 //
-//    Testoverride - testoverride@comcast.net
+//    Testoverride - testoverride@comcast.net (unconfirmed)
 //          g00r00 - mysticbbs@gmail.com
 //
+//  --------------------------------------------------------------------------
+//  INSTALLATION
+//  --------------------------------------------------------------------------
+//
+//  Replace the following prompts with the following data if you want to
+//  replace them with TO-PRMPT lightbar prompt functionality (exclude quotes):
+//
+//     Message reading prompt : Set Prompt #116 to "!to-prmpt MESSAGE"
+//     E-mail reading prompt  : Set Prompt #115 to "!to-prmpt EMAIL"
+//     File Listing prompt    : Set Prompt #044 to "!to-prmpt FILE"
+//     Pause prompt           : Set Prompt #132 to "!to-prmpt PAUSE"
+//
+//  When you have changed the prompts, you must compile them again with
+//  MAKETHEME, or if you changed them inside the internal prompt editor, the
+//  theme prompts file will already be compiled for you.
+//  
+//  --------------------------------------------------------------------------
 //  New updates for 1.10:
+//  --------------------------------------------------------------------------
 //
 //    - Converted to new MPL 1.10
 //    - Changed the s255 ACS check to use the message owner MCI code instead
@@ -29,7 +45,8 @@
 //    - Added the 'M' command to the message reader prompt (move message)
 //    - Added the 'F' command to the message reader prompt (forward)
 //    - Some conversions of IF statements to CASE statements for code clarity
-// ---------------------------------------------------------------------------
+//
+// ===========================================================================
 
 Var
   Selection : Byte;
@@ -414,8 +431,6 @@ Begin
   If Selection = 5 Then
     stuffkey('Q')
 End
-
-// MAIN PROGRAM BLOCK!
 
 Const
   FailStr = '|CRUSAGE: to-prmpt [ MESSAGE | FILE | EMAIL | PAUSE ]|CR|PA';
