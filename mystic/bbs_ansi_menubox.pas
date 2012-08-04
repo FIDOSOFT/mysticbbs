@@ -12,7 +12,19 @@ Procedure WriteXYPipe      (X, Y, A, SZ : Byte; S: String);
 Function  InXY             (X, Y, Field, Max, Mode: Byte; Default: String) : String;
 Function  InBox            (Header, Text, Def: String; Len, MaxLen: Byte) : String;
 Procedure VerticalLine     (X, Y1, Y2 : Byte);
-Function  ShowMsgBox       (BoxType : Byte; Str : String) : Boolean;
+Function  ShowMsgBox       (BoxType: Byte; Str: String) : Boolean;
+Procedure DefListBoxSearch (Var Owner: Pointer; Str: String);
+
+Const
+  BoxFrameType : Array[1..8] of String[8] =
+        ('ÚÄ¿³³ÀÄÙ',
+         'ÉÍ»ººÈÍ¼',
+         'ÖÄ·ººÓÄ½',
+         'ÕÍ¸³³ÔÍ¾',
+         'ÛßÛÛÛÛÜÛ',
+         'ÛßÜÛÛßÜÛ',
+         '        ',
+         '.-.||`-''');
 
 Type
   TAnsiMenuBox = Class
@@ -40,6 +52,7 @@ Type
   End;
 
   TAnsiMenuListStatusProc = Procedure (Num: Word; Str: String);
+  TAnsiMenuListSearchProc = Procedure (Var Owner: Pointer; Str: String);
 
   TAnsiMenuListBoxRec = Record
     Name   : String;
@@ -73,6 +86,10 @@ Type
     Y1         : Byte;
     NoInput    : Boolean;
     LastBarPos : Byte;
+    SearchProc : TAnsiMenuListSearchProc;
+    SearchX    : Byte;
+    SearchY    : Byte;
+    SearchA    : Byte;
 
     Constructor Create;
     Destructor  Destroy; Override;
@@ -81,6 +98,7 @@ Type
     Procedure   Add (Str: String; B: Byte);
     Procedure   Get (Num: Word; Var Str: String; Var B: Boolean);
     Procedure   SetStatusProc (P: TAnsiMenuListStatusProc);
+    Procedure   SetSearchProc (P: TAnsiMenuListSearchProc);
     Procedure   Clear;
     Procedure   Delete (RecPos : Word);
     Procedure   UpdatePercent;
@@ -155,6 +173,26 @@ Begin
   End;
 
   Session.io.BufFlush;
+End;
+
+Procedure DefListBoxSearch (Var Owner: Pointer; Str: String);
+Begin
+  If Str = '' Then
+    Str := strRep(BoxFrameType[TAnsiMenuList(Owner).Box.FrameType][7], 17)
+  Else Begin
+    If Length(Str) > 15 Then
+      Str := Copy(Str, Length(Str) - 15 + 1, 255);
+
+    Str := '[' + strLower(Str) + ']';
+
+    While Length(Str) < 17 Do
+      Str := Str + BoxFrameType[TAnsiMenuList(Owner).Box.FrameType][7];
+  End;
+
+  WriteXY (TAnsiMenuList(Owner).SearchX,
+           TAnsiMenuList(Owner).SearchY,
+           TAnsiMenuList(Owner).SearchA,
+           Str);
 End;
 
 Function InBox (Header, Text, Def: String; Len, MaxLen: Byte) : String;
@@ -309,16 +347,6 @@ Begin
 End;
 
 Procedure TAnsiMenuBox.Open (X1, Y1, X2, Y2: Byte);
-Const
-  BF : Array[1..8] of String[8] =
-        ('ÚÄ¿³³ÀÄÙ',
-         'ÉÍ»ººÈÍ¼',
-         'ÖÄ·ººÓÄ½',
-         'ÕÍ¸³³ÔÍ¾',
-         'ÛßÛÛÛÛÜÛ',
-         'ÛßÜÛÛßÜÛ',
-         '        ',
-         '.-.||`-''');
 Var
   A  : Integer;
   B  : Integer;
@@ -340,16 +368,16 @@ Begin
     BoxAttr4 := BoxAttr;
   End;
 
-  WriteXY (X1, Y1, BoxAttr, BF[FrameType][1] + strRep(BF[FrameType][2], B));
-  WriteXY (X2, Y1, BoxAttr4, BF[FrameType][3]);
+  WriteXY (X1, Y1, BoxAttr,  BoxFrameType[FrameType][1] + strRep(BoxFrameType[FrameType][2], B));
+  WriteXY (X2, Y1, BoxAttr4, BoxFrameType[FrameType][3]);
 
   For A := Y1 + 1 To Y2 - 1 Do Begin
-    WriteXY (X1, A, BoxAttr, BF[FrameType][4] + strRep(' ', B));
-    WriteXY (X2, A, BoxAttr2, BF[FrameType][5]);
+    WriteXY (X1, A, BoxAttr, BoxFrameType[FrameType][4] + strRep(' ', B));
+    WriteXY (X2, A, BoxAttr2, BoxFrameType[FrameType][5]);
   End;
 
-  WriteXY (X1,   Y2, BoxAttr3, BF[FrameType][6]);
-  WriteXY (X1+1, Y2, BoxAttr2, strRep(BF[FrameType][7], B) + BF[FrameType][8]);
+  WriteXY (X1,   Y2, BoxAttr3, BoxFrameType[FrameType][6]);
+  WriteXY (X1+1, Y2, BoxAttr2, strRep(BoxFrameType[FrameType][7], B) + BoxFrameType[FrameType][8]);
 
   If Header <> '' Then
     Case HeadType of
@@ -414,7 +442,7 @@ Begin
   NoWindow   := False;
   AllowTag   := False;
   TagChar    := '*';
-  TagKey     := #32;
+  TagKey     := #09;
   TagPos     := 0;
   TagAttr    := 15 + 7 * 16;
   Marked     := 0;
@@ -422,6 +450,10 @@ Begin
   NoInput    := False;
   LastBarPos := 0;
   StatusProc := NIL;
+  SearchProc := DefListBoxSearch;
+  SearchX    := 0;
+  SearchY    := 0;
+  SearchA    := 0;
 
   Session.io.BufFlush;
 End;
@@ -562,11 +594,15 @@ Var
   First       : Boolean;
   SavedRec    : Word;
   SavedTop    : Word;
-  SearchStr   : String[80];
+  SearchStr   : String;
   LastWasChar : Boolean;
 Begin
   If Not NoWindow Then
     Box.Open (BX1, BY1, BX2, BY2);
+
+  If SearchX = 0 Then SearchX := BX1 + 2;
+  If SearchY = 0 Then SearchY := BY2;
+  If SearchA = 0 Then SearchA := Box.BoxAttr4;
 
   X1 := BX1;
   Y1 := BY1;
@@ -589,11 +625,15 @@ Begin
   Update;
 
   LastWasChar := False;
+  SearchStr   := '';
 
   Repeat
-    If Not LastWasChar Then
+    If Not LastWasChar Then Begin
+      If Assigned(SearchProc) And (SearchStr <> '') Then
+        SearchProc (Self, '');
+
       SearchStr := ''
-    Else
+    End Else
       LastWasChar := False;
 
     If Assigned(StatusProc) Then
@@ -678,20 +718,40 @@ Begin
         ExitCode := Ch;
         Exit;
       End Else Begin
+        If Ch <> #01 Then Begin
+          If Ch = #25 Then Begin
+            LastWasChar := False;
+            Continue;
+          End;
+
+          If Ch = #8 Then Begin
+            If Length(SearchStr) > 0 Then
+              Dec(SearchStr[0])
+            Else
+              Continue;
+          End Else
+            If Ord(Ch) < 32 Then
+              Continue
+            Else
+              SearchStr := SearchStr + UpCase(Ch);
+        End;
+
         SavedTop    := TopPage;
         SavedRec    := Picked;
         LastWasChar := True;
-        SearchStr   := SearchStr + UpCase(Ch);
         First       := True;
         StartPos    := Picked + 1;
         EndPos      := ListMax;
+
+        If Assigned(SearchProc) Then
+          SearchProc(Self, SearchStr);
 
         If StartPos > ListMax Then StartPos := 1;
 
         Count := StartPos;
 
         While (Count <= EndPos) Do Begin
-          If strUpper(Copy(List[Count]^.Name, 1, Length(SearchStr))) = SearchStr Then Begin
+          If Pos(strUpper(SearchStr), strUpper(List[Count]^.Name)) > 0 Then Begin
 
             While Count <> Picked Do Begin
               If Picked < Count Then Begin
@@ -755,7 +815,12 @@ Begin
   End;
 End;
 
-Procedure TAnsiMenuList.SetStatusProc (P : TAnsiMenuListStatusProc);
+Procedure TAnsiMenuList.SetSearchProc (P: TAnsiMenuListSearchProc);
+Begin
+  SearchProc := P;
+End;
+
+Procedure TAnsiMenuList.SetStatusProc (P: TAnsiMenuListStatusProc);
 Begin
   StatusProc := P;
 End;

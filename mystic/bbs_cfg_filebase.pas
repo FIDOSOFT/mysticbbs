@@ -121,6 +121,7 @@ Begin
   List.NoWindow := True;
   List.LoChars  := #13#27#47;
   List.AllowTag := True;
+  List.SearchY  := 21;
 
   If FBaseFile.FileSize = 0 Then InsertRecord;
 

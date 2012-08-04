@@ -715,6 +715,7 @@ Begin
   Box.Header    := ' Themes ';
   List.LoChars  := #13#27#47;
   List.NoWindow := True;
+  List.SearchY  := 19;
 
   Box.Open (8, 6, 73, 19);
 

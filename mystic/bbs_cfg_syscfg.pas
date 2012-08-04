@@ -544,6 +544,8 @@ Begin
   Box  := TAnsiMenuBox.Create;
   Form := TAnsiMenuForm.Create;
 
+  Box.Header := ' Message Base Settings ';
+
   Box.Open (4, 5, 77, 19);
 
   VerticalLine (27, 7, 17);
@@ -588,6 +590,8 @@ Begin
   Box  := TAnsiMenuBox.Create;
   Form := TAnsiMenuForm.Create;
 
+  Box.Header := ' New User Settings 1 ';
+
   Box.Open (18, 5, 63, 16);
 
   VerticalLine (39, 7, 14);
@@ -618,6 +622,8 @@ Begin
 
   Box  := TAnsiMenuBox.Create;
   Form := TAnsiMenuForm.Create;
+
+  Box.Header := ' New User Settings 2 ';
 
   Box.Open (8, 5, 73, 21);
 
@@ -668,6 +674,8 @@ Begin
   Box  := TAnsiMenuBox.Create;
   Form := TAnsiMenuForm.Create;
 
+  Box.Header := ' Console Settings ';
+
   Box.Open (5, 5, 76, 16);
 
   VerticalLine (17, 7, 14);
@@ -687,6 +695,5 @@ Begin
   Box.Close;
   Box.Free;
 End;
-
 
 End.

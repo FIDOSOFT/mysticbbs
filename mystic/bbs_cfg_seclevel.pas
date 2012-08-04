@@ -100,6 +100,7 @@ Begin
   Box.Header    := ' Security Levels ';
   List.LoChars  := #13#27#47;
   List.NoWindow := True;
+  List.SearchY  := 21;
 
   Box.Open (21, 5, 59, 21);
 

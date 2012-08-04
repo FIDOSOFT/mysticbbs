@@ -91,6 +91,7 @@ Begin
   Box.Header    := ' Archive Editor ';
   List.NoWindow := True;
   List.LoChars  := #13#27#47;
+  List.SearchY  := 20;
 
   Box.Open (13, 5, 67, 20);
 

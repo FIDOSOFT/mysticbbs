@@ -82,6 +82,7 @@ Begin
   List := TAnsiMenuList.Create;
 
   List.NoWindow := True;
+  List.SearchY  := 20;
   List.LoChars  := #13#27#47;
 
   If Msg Then

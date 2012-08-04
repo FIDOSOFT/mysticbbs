@@ -339,6 +339,7 @@ Begin
   List.LoAttr      := 113;
   List.NoInput     := True;
   List.NoWindow    := True;
+  List.SearchY     := 21;
   Box.Shadow       := False;
   Box.Header       := ' Command #' + strI2S(Num) + ' (' + MenuName + ') ';
   Topic            := '|03(|09Menu Editor|03) |01-|09> |15';
@@ -372,7 +373,7 @@ Begin
   Form.AddBol  ('W', ' Redraw'        , 33, 14, 43, 14,  8,  3,  @Menu.Item[Num]^.ReDraw, Topic + 'Redraw menu after running this command?');
 
   Form.AddByte ('U', ' Up'            , 56, 10, 62, 10,  4,  3,  0, 255, @Menu.Item[Num]^.JumpUp, Topic + Grid + 'UP');
-  Form.AddByte ('D', ' Down'          , 54, 11, 62, 11,  6,  3,  0, 255, @Menu.Item[Num]^.JumpDown, Topic + Grid + 'DOWN');
+  Form.AddByte (#01, ' Down'          , 54, 11, 62, 11,  6,  3,  0, 255, @Menu.Item[Num]^.JumpDown, Topic + Grid + 'DOWN');
   Form.AddByte ('L', ' Left'          , 54, 12, 62, 12,  6,  3,  0, 255, @Menu.Item[Num]^.JumpLeft, Topic + Grid + 'LEFT');
   Form.AddByte ('R', ' Right'         , 53, 13, 62, 13,  7,  3,  0, 255, @Menu.Item[Num]^.JumpRight, Topic + Grid + 'RIGHT');
   Form.AddByte ('E', ' Home'          , 54, 14, 62, 14,  6,  3,  0, 255, @Menu.Item[Num]^.JumpHome, Topic + Grid + 'HOME');
@@ -495,6 +496,7 @@ Begin
 
   List.NoWindow := True;
   List.LoChars  := #13#27#47;
+  List.SearchY  := 21;
   Box.Header    := ' Command list (' + MenuName + ') ';
 
   Box.Open (9, 5, 72, 21);
@@ -658,6 +660,7 @@ Begin
 
   List.NoWindow := True;
   List.LoChars  := #13#27#47;
+  List.SearchY  := 21;
   Box.Header    := ' Menu Editor (' + Session.Theme.Desc + ') ';
 
   Box.Open (12, 5, 68, 21);
