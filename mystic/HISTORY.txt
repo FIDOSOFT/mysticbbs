@@ -4504,3 +4504,14 @@
 
  + Added new user flag "UserNoTimeout" which makes a single user immune to
    inactivity timeout check.
+
+ + Enhanced the ANSI listbox search capabilities.  Most listboxes will now
+   allow you to type a search string in which it will use to attempt to
+   select an item that matches the search string.  While you are typing you
+   can use CTRL-A to search "again" with the current string, or CTRL-Y to
+   delete the current string.  Moving the lightbar selector will also reset
+   the current search string.  The search string is case insensitive.
+
+   Since the space key may need to be used in a search string, the hotkey
+   used to mark items in a listbox has changed from the SPACE key to the TAB
+   key.
