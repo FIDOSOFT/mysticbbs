@@ -2,6 +2,16 @@
 // | TO-PRMPT.MPS : UPDATE 2 |===============================================
 // `-------------------------'
 //
+//  This mod is a lightbar prompt replacement for standard message reading,
+//  standard file listing, standard e-mail reader, and the pause y/n/c
+//  prompt.
+//
+//  See installation section for more details.
+//
+//  -------------------------------------------------------------------------
+//  BACKGROUND
+//  -------------------------------------------------------------------------
+//
 //  This mod is was originally written for use with Mystic BBS v1.07.3 by
 //  Testoverride, based on some demo MPL code written by g00r00.
 //
@@ -26,15 +36,16 @@
 //  Replace the following prompts with the following data if you want to
 //  replace them with TO-PRMPT lightbar prompt functionality (exclude quotes):
 //
-//     Message reading prompt : Set Prompt #116 to "!to-prmpt MESSAGE"
+//     Message reading prompts: Set Prompt #116 to "!to-prmpt MESSAGE"
+//                              Set Prompt #213 to "!to-prmpt MESSAGE"
 //     E-mail reading prompt  : Set Prompt #115 to "!to-prmpt EMAIL"
 //     File Listing prompt    : Set Prompt #044 to "!to-prmpt FILE"
 //     Pause prompt           : Set Prompt #132 to "!to-prmpt PAUSE"
 //
 //  When you have changed the prompts, you must compile them again with
 //  MAKETHEME, or if you changed them inside the internal prompt editor, the
-//  theme prompts file will already be compiled for you.
-//  
+//  theme prompts file will usually be compiled for you.
+//
 //  --------------------------------------------------------------------------
 //  New updates for 1.10:
 //  --------------------------------------------------------------------------
