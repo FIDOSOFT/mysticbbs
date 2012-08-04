@@ -488,8 +488,8 @@ Begin
     Config.FeedbackTo     := FeedbackTo;
     Config.Inactivity     := Inactivity;
     Config.DefStartMenu   := DefStartMenu;
-    Config.DefFallMenu    := DefFallMenu;
     Config.DefThemeFile   := DefThemeFile;
+    Config.UNUSED         := '';
     Config.DefTermMode    := DefTermMode;
     Config.DefScreenSize  := DefScreenSize;
     Config.UseMatrix      := UseMatrix;
@@ -817,7 +817,6 @@ Var
   SecFile    : File of RecSecurity;
   OldSec     : OldSecurityRec;
   OldSecFile : File of OldSecurityRec;
-  A          : LongInt;
 Begin
   WriteLn ('[-] Updating security definitions...');
 
