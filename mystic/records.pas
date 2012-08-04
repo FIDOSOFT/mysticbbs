@@ -14,7 +14,7 @@
 Const
   mysSoftwareID  = 'Mystic';                                    // no idea
   mysCopyYear    = '1997-2012';                                 // its been a long time!
-  mysVersion     = '1.10 A15';                                  // current version
+  mysVersion     = '1.10 A16';                                  // current version
   mysDataChanged = '1.10 A11';                                  // version of last records change
 
   {$IFDEF WIN32}
