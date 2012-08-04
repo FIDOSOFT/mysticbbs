@@ -457,7 +457,7 @@ Begin
 
     For Count := 1 to Data.NumItems Do Begin
       If (Data.Item[Count]^.ShowType = 2) or
-         (Data.Item[Count]^.Text = '') or
+         ((Data.Item[Count]^.Text = '') and (Data.Item[Count]^.HotKey <> 'LINEFEED')) or
          (Data.Item[Count]^.HotKey = 'EVERY') or
          (Data.Item[Count]^.HotKey = 'AFTER') or
          (Data.Item[Count]^.HotKey = 'FIRSTCMD') or
@@ -467,7 +467,7 @@ Begin
       If Data.Item[Count]^.HotKey = 'LINEFEED' Then Begin
         If Listed MOD Data.Info.DispCols <> 0 Then Session.io.OutRawLn('');
 
-        Session.io.OutFull(Data.Item[Count]^.Text);
+        Session.io.OutFullLn(Data.Item[Count]^.Text);
 
         While Listed Mod Data.Info.DispCols <> 0 Do Inc(Listed);
       End Else Begin
@@ -753,6 +753,23 @@ Var
   Ch        : Char;
   Found     : Boolean;
   ValidKey  : Boolean;
+
+  Function ExecuteGridCommand (NewCmd, ExecType: LongInt) : LongInt;
+  Begin
+    If ValidLightBar(NewCmd) Then Begin
+      Result := ExecuteCommandList(CursorPos, ExecType);
+
+      If Result <> 2 Then Begin
+        DrawBar (CursorPos, False);
+        CursorPos := NewCmd;
+        DrawBar (CursorPos, True);
+
+        Session.io.BufFlush;
+      End;
+    End Else
+      Result := ExecuteCommandList(CursorPos, ExecType);
+  End;
+
 Begin
   CursorPos := 0;
 
@@ -790,7 +807,9 @@ Begin
 
     For Count := 1 to Data.NumItems Do
       If ValidLightBar(Count) Then Begin
+
         If CursorPos = 0 Then CursorPos := Count;
+
         DrawBar (Count, False);
       End;
 
@@ -814,100 +833,71 @@ Begin
       If TBBSCore(Owner).ShutDown Then Exit;
 
       If TBBSCore(Owner).io.IsArrow Then Begin
-        Case Ch of
-          #72,
-          #75 : Case Data.Info.MenuType of
-                  1 : Begin
+        Case Data.Info.MenuType of
+          1 : Case Ch of
+                #72,
+                #75 : Begin
                         TempPos := CursorPos;
 
                         While TempPos > 1 Do Begin
                           Dec (TempPos);
+
                           If ValidLightBar(TempPos) Then Begin
                             DrawBar (CursorPos, False);
                             DrawBar (TempPos, True);
+
                             CursorPos := TempPos;
+
                             Break;
                           End;
                         End;
                       End;
-                  2 : Case Ch of
-                        #72 : If ValidLightBar(Data.Item[CursorPos]^.JumpUp) Then Begin
-                                ExecuteCommandList(CursorPos, 1);
-                                DrawBar (CursorPos, False);
-                                CursorPos := Data.Item[CursorPos]^.JumpUp;
-                                DrawBar (CursorPos, True);
-                              End;
-                        #75 : If ValidLightBar(Data.Item[CursorPos]^.JumpLeft) Then Begin
-                                ExecuteCommandList(CursorPos, 3);
-                                DrawBar (CursorPos, False);
-                                CursorPos := Data.Item[CursorPos]^.JumpLeft;
-                                DrawBar (CursorPos, True);
-                              End;
-                      End;
-                End;
-          #77,
-          #80 : Case Data.Info.MenuType of
-                  1 : Begin
+                #77,
+                #80 : Begin
                         TempPos := CursorPos;
 
                         While TempPos < Data.NumItems Do Begin
                           Inc (TempPos);
+
                           If ValidLightBar(TempPos) Then Begin
                             DrawBar (CursorPos, False);
                             DrawBar (TempPos, True);
+
                             CursorPos := TempPos;
+
                             Break;
                           End;
                         End;
                       End;
-                  2 : Case Ch of
-                        #77 : If ValidLightBar(Data.Item[CursorPos]^.JumpRight) Then Begin
-                                ExecuteCommandList (CursorPos, 4);
-                                DrawBar (CursorPos, False);
-                                CursorPos := Data.Item[CursorPos]^.JumpRight;
-                                DrawBar (CursorPos, True);
-                              End;
-                        #80 : If ValidLightBar(Data.Item[CursorPos]^.JumpDown) Then Begin
-                                ExecuteCommandList (CursorPos, 2);
-                                DrawBar (CursorPos, False);
-                                CursorPos := Data.Item[CursorPos]^.JumpDown;
-                                DrawBar (CursorPos, True);
-                              End;
-                      End;
                 End;
-          #71 : If Data.Info.MenuType = 2 Then
-                  Case ExecuteCommandList(CursorPos, 9) of
-                    0 : ;
-                    1 : Break;
-                    2 : Exit;
-                  End;
-          #73 : If Data.Info.MenuType = 2 Then
-                  Case ExecuteCommandList(CursorPos, 7) of
-                    0 : ;
-                    1 : Break;
-                    2 : Exit;
-                  End;
-          #79 : If Data.Info.MenuType = 2 Then
-                  Case ExecuteCommandList(CursorPos, 10) of
-                    0 : ;
-                    1 : Break;
-                    2 : Exit;
-                  End;
-          #81 : If Data.Info.MenuType = 2 Then
-                  Case ExecuteCommandList(CursorPos, 8) of
-                    0 : ;
-                    1 : Break;
-                    2 : Exit;
-                  End;
+          2 : Begin
+                Case Ch of
+                  #71 : TempPos := ExecuteGridCommand(Data.Item[CursorPos]^.JumpHome,  9);
+                  #72 : TempPos := ExecuteGridCommand(Data.Item[CursorPos]^.JumpUp,    1);
+                  #73 : TempPos := ExecuteGridCommand(Data.Item[CursorPos]^.JumpPgUp,  7);
+                  #75 : TempPos := ExecuteGridCommand(Data.Item[CursorPos]^.JumpLeft,  3);
+                  #77 : TempPos := ExecuteGridCommand(Data.Item[CursorPos]^.JumpRight, 4);
+                  #79 : TempPos := ExecuteGridCommand(Data.Item[CursorPos]^.JumpEnd,  10);
+                  #80 : TempPos := ExecuteGridCommand(Data.Item[CursorPos]^.JumpDown,  2);
+                  #81 : TempPos := ExecuteGridCommand(Data.Item[CursorPos]^.JumpPgDn,  8);
+                End;
+
+                Case TempPos of
+                  0 : ;
+                  1 : Break;
+                  2 : Exit;
+                End;
+              End;
         End;
       End Else
         Case Ch of
           #08 : If Length(TempStr) > 0 Then Begin
                   Dec (TempStr[0]);
+
                   AddChar(#8);
                 End;
           #09 : If Data.Info.MenuType = 2 Then
-                  Case ExecuteCommandList(CursorPos, 5) of
+                  Case ExecuteGridCommand(Data.Item[CursorPos]^.JumpTab, 5) of
                     0 : ;
                     1 : Break;
                     2 : Exit;
@@ -924,12 +914,13 @@ Begin
 
                   If Found Then Exit Else Break;
                 End;
-          #27 : If Data.Info.MenuType = 2 Then
-                  Case ExecuteCommandList(CursorPos, 6) of
+          #27 : If Data.Info.MenuType = 2 Then begin
+                  Case ExecuteGridCommand(Data.Item[CursorPos]^.JumpEscape, 6) of
                     0 : ;
                     1 : Break;
                     2 : Exit;
                   End;
+                end;
         Else
           If Length(TempStr) < mysMaxMenuInput Then Begin
             Found    := False;
