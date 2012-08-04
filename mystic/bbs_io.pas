@@ -977,7 +977,9 @@ Begin
         If Not CheckFileInPath(Config.TextPath) Then Exit;
       End Else
         Exit;
+  End;
 
+  If Pos('.', FName) = 0 Then
     If FileExist(FName + Copy(Ext, 1, 3) + '1') Then Begin
       Repeat
         BufPos := Random(9);
@@ -991,7 +993,6 @@ Begin
 
       Ext := Copy(Ext, 1, 3) + Code;
     End;
-  End;
 
   Assign (dFile, FName + Ext);
 
@@ -1337,6 +1338,9 @@ Begin
   BufFlush;
 
   Repeat
+    If InMacro Then
+      If DoInputEvents(Result) Then Exit;
+
     If LastSecond <> TimerSeconds Then Begin
       LastSecond := TimerSeconds;
 
