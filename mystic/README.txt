@@ -13,6 +13,8 @@ Current build options used with Free Pascal are as follows:
 
 fpc -CX -XX -Xs -O3 -B -OpPENTIUM3 -OoREGVAR -OoSTACKFRAME -OoPEEPHOLE -OoASMCSE -WN <source file>
 
+(-WN is specific to Windows so it should be omitted on other platforms)
+
 Mystic BBS is compiled to require a Pentium 3 or better processor (SSE instruction set) which
 means that it should run on any computer built in the late 90s up to current day.
 
@@ -31,4 +33,4 @@ With the 1.10 final/stable release we will be officially annoucing Mystic as a G
 at that time we will branch off to a current stable and development code base as well as release
 an upgrade package to get everyone on the same page with both binary and source distributions.
 
-If you are not running at least 1.10 Alpha 11 than this code will not run for you.
+If you are not running at least 1.10 Alpha 15 than this code will not run for you.
