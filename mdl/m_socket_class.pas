@@ -1,6 +1,6 @@
-{$I M_OPS.PAS}
-
 Unit m_Socket_Class;
+
+{$I M_OPS.PAS}
 
 Interface
 
@@ -61,8 +61,8 @@ Type
     Function    WriteLine       (Str: String) : LongInt;
     Function    WriteStr        (Str: String) : LongInt;
     Function    WriteFile       (Str: String) : Boolean;
+    Function    WriteBufEscaped (Var Buf: TSocketBuffer; Var Len: LongInt) : LongInt;
     Procedure   TelnetInBuffer  (Var Buf: TSocketBuffer; Var Len: LongInt);
-    Procedure   TelnetOutBuffer (Var Buf: TSocketBuffer; Var Len: LongInt);
     Function    ReadBuf         (Var Buf; Len: LongInt) : LongInt;
     Function    ReadLine        (Var Str: String) : LongInt;
     Function    SetBlocking     (Block: Boolean): LongInt;
@@ -72,6 +72,8 @@ Type
     Procedure   WaitInit        (Port: Word);
     Function    WaitConnection  : TSocketClass;
     Procedure   PurgeInputData;
+    Procedure   PurgeOutputData;
+    Function    PeekChar (Num: Byte) : Char;
     Function    ReadChar        : Char;
     Function    WriteChar       (Ch: Char) : LongInt;
     Procedure   Status          (Str: String);
@@ -136,15 +138,23 @@ Begin
   Inherited Destroy;
 End;
 
-Procedure TSocketClass.PurgeInputData;
-Var
-  Buf : Array[1..1024] of Char;
+Procedure TSocketClass.PurgeOutputData;
 Begin
-  If FSocketHandle = -1 Then Exit;
+  FOutBufPos := 0;
+End;
 
-  If DataWaiting Then
-    Repeat
-    Until ReadBuf(Buf, SizeOf(Buf)) <> 1024;
+Procedure TSocketClass.PurgeInputData;
+//Var
+//  Buf : Array[1..1024] of Char;
+Begin
+//  If FSocketHandle = -1 Then Exit;
+
+  FInBufPos := 0;
+  FInBufEnd := 0;
+
+//  If DataWaiting Then
+//    Repeat
+//    Until ReadBuf(Buf, SizeOf(Buf)) <> 1024;
 End;
 
 Procedure TSocketClass.Disconnect;
@@ -177,9 +187,9 @@ Procedure TSocketClass.BufFlush;
 Begin
   If FOutBufPos > 0 Then Begin
     If FTelnetClient or FTelnetServer Then
-      TelnetOutBuffer(FOutBuf, FOutBufPos);
-
-    WriteBuf (FOutBuf, FOutBufPos);
+      WriteBufEscaped(FOutBuf, FOutBufPos)
+    Else
+      WriteBuf(FOutBuf, FOutBufPos);
 
     FOutBufPos := 0;
   End;
@@ -191,11 +201,8 @@ Begin
 
   Inc(FOutBufPos);
 
-  If FOutBufPos > TSocketBufferSize Then Begin
-    WriteBuf (FOutBuf, FOutBufPos - 1);
-
-    FOutBufPos := 0;
-  End;
+  If FOutBufPos > TSocketBufferSize Then
+    BufFlush;
 End;
 
 Procedure TSocketClass.BufWriteStr (Str: String);
@@ -250,9 +257,9 @@ Begin
   Result := True;
 End;
 
-Procedure TSocketClass.TelnetOutBuffer (Var Buf: TSocketBuffer; Var Len: LongInt);
+Function TSocketClass.WriteBufEscaped (Var Buf: TSocketBuffer; Var Len: LongInt) : LongInt;
 Var
-  Temp    : TSocketBuffer;
+  Temp    : Array[0..TSocketBufferSize * 2] of Char;
   TempPos : LongInt;
   Count   : LongInt;
 Begin
@@ -269,8 +276,15 @@ Begin
       Inc (TempPos);
     End;
 
-  Buf := Temp;
-  Len := TempPos - 1;
+  Dec(TempPos);
+
+  Result := fpSend(FSocketHandle, @Temp, TempPos, FPSENDOPT);
+
+  While (Result = -1) and (SocketError = ESOCKEWOULDBLOCK) Do Begin
+    WaitMS(10);
+
+    Result := fpSend(FSocketHandle, @Temp, TempPos, FPSENDOPT);
+  End;
 End;
 
 Procedure TSocketClass.TelnetInBuffer (Var Buf: TSocketBuffer; Var Len: LongInt);
@@ -401,6 +415,15 @@ End;
 Function TSocketClass.ReadChar : Char;
 Begin
   ReadBuf(Result, 1);
+End;
+
+Function TSocketClass.PeekChar (Num: Byte) : Char;
+Begin
+  If (FInBufPos = FInBufEnd) and DataWaiting Then
+    ReadBuf(Result, 0);
+
+  If FInBufPos + Num < FInBufEnd Then
+    Result := FInBuf[FInBufPos + Num];
 End;
 
 Function TSocketClass.ReadBuf (Var Buf; Len: LongInt) : LongInt;
