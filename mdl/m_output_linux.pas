@@ -580,7 +580,13 @@ Procedure TOutputLinux.PutScreenImage (Image: TConsoleImageRec);
 Var
   CountX : Byte;
   CountY : Byte;
+  OT, OB : Byte;
 Begin
+  OT := FWinTop;
+  OB := FWinBot;
+
+  SetWindow (1, 1, 80, ScreenSize, False);
+
   For CountY := Image.Y1 to Image.Y2 Do Begin
     CursorXY (Image.X1, CountY);
 
@@ -594,7 +600,8 @@ Begin
   End;
 
   SetTextAttr (Image.CursorA);
-  CursorXY (Image.CursorX, Image.CursorY);
+  CursorXY    (Image.CursorX, Image.CursorY);
+  SetWindow   (1, OT, 80, OB, False);
 
   BufFlush;
 End;
