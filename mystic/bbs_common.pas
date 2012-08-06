@@ -170,6 +170,8 @@ End;
 
 Function ShellDOS (ExecPath: String; Command: String) : LongInt;
 Begin
+  Session.io.BufFlush;
+
   {$IFDEF WINDOWS}
     ExecInheritsHandles := True;
   {$ENDIF}
