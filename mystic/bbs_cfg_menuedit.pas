@@ -501,7 +501,7 @@ Begin
 
   Box.Open (9, 5, 72, 21);
 
-  WriteXY (11,  6, 112, 'Hot Key        Text                                     Exec');
+  WriteXY (11,  6, 112, 'HotKey     Text                                        C# Ex');
   WriteXY (11,  7, 112, strRep('Ä', 60));
   WriteXY (11, 19, 112, strRep('Ä', 60));
   WriteXY (29, 20, 112, cfgCommandList);
@@ -517,8 +517,9 @@ Begin
       If (Str = '') And (Menu.Item[Count]^.TextLo <> '') Then
         Str := strStripMCI(Menu.Item[Count]^.TextLo);
 
-      List.Add (strPadR(Menu.Item[Count]^.HotKey, 15, ' ') +
-                strPadR(Str, 43, ' ') +
+      List.Add (strPadR(Menu.Item[Count]^.HotKey, 10, ' ') + ' ' +
+                strPadR(Str, 43, ' ') + ' ' +
+                strPadL(strI2S(Count), 2, ' ') + ' ' +
                 strPadL(strI2S(Menu.Item[Count]^.Commands), 2, ' '), 0);
     End;
 
