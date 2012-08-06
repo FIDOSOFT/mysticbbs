@@ -4515,3 +4515,9 @@
    Since the space key may need to be used in a search string, the hotkey
    used to mark items in a listbox has changed from the SPACE key to the TAB
    key.
+
+ + If Message base list columns is set to 1, the toggle newscan and qwkscan
+   message base lists will also now be 1 column.
+
+ + If file base list columns is set to 1, the toggle new scan list will now
+   also be shown in a single list.

@@ -515,10 +515,10 @@ Var
 
         Session.io.OutFull (Session.GetPrompt(93));
 
-        If (Total MOD 2 = 0) And (Total > 0) Then Session.io.OutRawLn('');
+        If (Total MOD Config.MColumns = 0) And (Total > 0) Then Session.io.OutRawLn('');
       End;
 
-      If EOF(MBaseFile) and (Total MOD 2 <> 0) Then Session.io.OutRawLn('');
+      If EOF(MBaseFile) and (Total MOD Config.MColumns <> 0) Then Session.io.OutRawLn('');
 
       If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
         Case Session.io.MorePrompt of

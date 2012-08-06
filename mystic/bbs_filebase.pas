@@ -793,10 +793,10 @@ Var
         Session.io.PromptInfo[3] := Session.io.OutYN(FScan.NewScan > 0);
         Session.io.OutFull (Session.GetPrompt(201));
 
-        If (Total MOD 2 = 0) And (Total > 0) Then Session.io.OutRawLn('');
+        If (Total MOD Config.FColumns = 0) And (Total > 0) Then Session.io.OutRawLn('');
       End;
 
-      If EOF(FBaseFile) and (Total MOD 2 <> 0) Then Session.io.OutRawLn('');
+      If EOF(FBaseFile) and (Config.FColumns MOD 2 <> 0) Then Session.io.OutRawLn('');
 
       If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
         Case Session.io.MorePrompt of
