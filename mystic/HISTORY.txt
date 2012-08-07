@@ -4521,3 +4521,8 @@
 
  + If file base list columns is set to 1, the toggle new scan list will now
    also be shown in a single list.
+
+ ! Mystic was not checking the "Download ACS" for each file base when files
+   were added to the batch queue within a file listing.  Instead it was
+   relying on the List ACS.  This is now fixed.
+
