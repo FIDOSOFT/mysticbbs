@@ -49,6 +49,7 @@ Type
     FTelnetSubData : String;
     FTelnetClient  : Boolean;
     FTelnetServer  : Boolean;
+    FDisconnect    : Boolean;
 
     Constructor Create;
     Destructor  Destroy; Override;
@@ -73,7 +74,7 @@ Type
     Function    WaitConnection  : TSocketClass;
     Procedure   PurgeInputData;
     Procedure   PurgeOutputData;
-    Function    PeekChar (Num: Byte) : Char;
+    Function    PeekChar        (Num: Byte) : Char;
     Function    ReadChar        : Char;
     Function    WriteChar       (Ch: Char) : LongInt;
     Procedure   Status          (Str: String);
@@ -122,7 +123,7 @@ Begin
   FTelnetEcho   := False;
   FTelnetClient := False;
   FTelnetServer := False;
-{  FHostIP       := '127.0.0.1';}
+  FDisconnect   := True;
   FHostIP       := '';
   StatusUpdated := False;
 
@@ -131,7 +132,7 @@ End;
 
 Destructor TSocketClass.Destroy;
 Begin
-  Disconnect;
+  If FDisconnect Then Disconnect;
 
   SocketStatus.Free;
 
