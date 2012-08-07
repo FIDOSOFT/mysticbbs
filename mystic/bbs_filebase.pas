@@ -796,7 +796,7 @@ Var
         If (Total MOD Config.FColumns = 0) And (Total > 0) Then Session.io.OutRawLn('');
       End;
 
-      If EOF(FBaseFile) and (Config.FColumns MOD 2 <> 0) Then Session.io.OutRawLn('');
+      If EOF(FBaseFile) and (Total MOD Config.FColumns <> 0) Then Session.io.OutRawLn('');
 
       If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
         Case Session.io.MorePrompt of
@@ -1140,6 +1140,7 @@ Begin
   Old := FBase;
 
   Reset (FBaseFile);
+
   While Not Eof(FBaseFile) Do Begin
     Read (FBaseFile, FBase);
 
@@ -1760,8 +1761,8 @@ Var
 
     PageSize := Session.io.ScreenInfo[2].Y - Session.io.ScreenInfo[1].Y + 1;
 
-    botdesc := topdesc;
-    botpage := toppage;
+    BotDesc := TopDesc;
+    BotPage := TopPage;
 
     If Session.User.Access(FBase.SysopACS) Then
       PrintMessage (339)
@@ -2067,7 +2068,10 @@ Var
                     Result := 1;
                     Break;
                   End;
-            #32 : If ListSize > 0 Then Begin
+            #32 : If Not Session.User.Access(FBase.DLACS) Then
+                     PrintMessage(212)
+                  Else
+                  If ListSize > 0 Then Begin
                     If List[CurPos].Batch Then Begin
                       For A := 1 to BatchNum Do
                         If Batch[A].FileName = List[CurPos].FileName Then Begin
@@ -2221,7 +2225,9 @@ Var
 
                 DrawPage;
               End;
-        'F' : Begin
+        'F' : If Not Session.User.Access(FBase.DLACS) Then
+                Session.io.OutFullLn (Session.GetPrompt(224))
+              Else Begin
                 Repeat
                   If BatchNum = mysMaxBatchQueue Then Begin
                     Session.io.OutFullLn (Session.GetPrompt(46));
@@ -2743,6 +2749,7 @@ Begin
   End;
 
   Session.io.OutFull (Session.GetPrompt(344));
+
   FName := Session.io.GetInput(70, 70, 11, '');
 
   If FName = '' Then Exit;
@@ -2899,6 +2906,7 @@ Begin
       Close (FDirFile);
     End Else Begin
       Session.SystemLog ('Download: ' + Batch[A].FileName + ' FAILED');
+
       Session.io.OutFullLn (Session.GetPrompt(386));
     End;
   End;
