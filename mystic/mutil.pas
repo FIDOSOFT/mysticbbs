@@ -37,11 +37,11 @@ Uses
     HeapTrc,
     LineInfo,
   {$ENDIF}
-  INIFiles,
   m_Output,
   m_DateTime,
   m_Strings,
   m_FileIO,
+  m_IniReader,
   mutil_Common,
   mutil_Status,
   mutil_ImportNA,
@@ -104,7 +104,7 @@ Begin
     Halt(1);
   End;
 
-  INI := TINIFile.Create(FN);
+  INI := TINIReader.Create(FN);
 
   Console.WriteXY (26, 10, 8, FN);
 
