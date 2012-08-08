@@ -13,15 +13,11 @@ BUGS AND POSSIBLE ISSUES
   compile (IceDevil)
 ! After data file review, add missing variables to various MPL Get/Put
   functions.
-! MYSTPACK has access denied errors (caphood)
 ! RAR internal viewer does not work with files that have embedded comments
 ! Investigate strange crashing when Mystic is built in the FPC editor vs
   the makewin script.  Something is out of whack with compiler options?  OR
   FPC BUG?  DirAttr is suspect in MPL is it 1 byte or 4 in size?
-! MDL screensave/restore in local console is broken in Windows(?) only?
 ! View archive not working if its external view? [Griffin]
-! Editing current theme will prob not save right [g00r00]
-! GetThisUser
 ! Message header does not ackknowledge user's date format.
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
@@ -35,23 +31,11 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Ability to list files in a base that is not the current file base
 - MCI code to show how many files are in current filebase
 - Online ANSI file viewer (integrate with art gallery)
-- Online ANSI help system
-- Finish Data structure review
-- NEWAPP.MPS
 - Online text editor / ansi editor?
 - Better theme selection (menu command option to select theme)
 - Externalize remaining prompt data (msg flags, etc)
 - File comments and rating system
-- Global node message menu command (0;) = add option to ignore your own node
 - Integrate eventual online ANSI help system into configuration utilities
-- LEET "TIMER" event menu commands from Mystic 2
-- In fact, replace entire menu engine iwth Mystic 2 engine which is SO far
-  beyond anything built in ever... But converting old menus will be the
-  challenge.  Do people really want to re-do their menu commands for all the
-  added features, if that is needed?
-- If not above, then possibly add whatever CAN be added in without a complete
-  overhaul. (Everything except chain execution and specific key event chains
-  I think?)
 - Split 1 and 2 column msg/file list prompts and provide a user ability to
   pick which they'd like to use?
 - File attachments and crossposts
@@ -72,9 +56,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
   also have a full screen mode in Windows, Linux, and OSX.
 - Possibility of OS/2 port again?  Need to find a working OS/2 VMware in
   order to do this.  Once MDL is ported over it should almost just work.
-- How feasible is an Amiga port?  Can an emulator on the PC side be good
-  enough to use as a development environment?  How reliable/complete is FPC
-  for Amiga?  Does anyone even care? :)
 - MVIEW rewrite to mimic oldskool AcidView type deals, which would be amazing
   combined with the SDL stuff if that happens.
 - Mystic-DOS rewrite or just code a file manager which would probably be a
@@ -83,14 +64,10 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
   even from a remote telnet connection in Windows, if desired.
 - MIDE version using the Lazaurs GUI editor [Spec].   Maybe he would be
   interested in working on that?
-- PCBoard-style "quickscan"?  Yes?  No?
-- This line intentionally means nothing.
 - Filebase allow anonymous flag for FTP or just use FreeFiles
 - Template system similar to Mystic 2 (ansiedit.ans ansiedit.ans.cfg)
 - Rename Template filenames to allow more than 8 characters (for clarity)
 - Does anyone use Version 7 compiled nodelists?  Worth supporting?
-- Ignore user inactivity flag per user
-- Default protocol per user
 - ANSI message upload post processor option: Auto/Disabled/Ask
 - Prompt for disconect after UL or DL (and add option to filebase settings)
 - Finish optional user prompts
@@ -98,19 +75,22 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - MCI code for # of files in current file area
 - Redo random ANSI system to use A-Z instead of 1-9 can have upgrade util
   rename them automatically.
-- ANSI listbox is terribly inefficient with its output.
-- So much cool stuff to do with the new themes
 - LastOn revamp make sure its not global and new stuff is populated
-- ANSI online help that can execute menu commands/restore screen
 - MPL fAppend?  Why didnt I add that?
 - MCI code to save and restore user screen?
 - BBS email forward to e-mail address
 - Email pasword resets
 - Email verification
+- BinkP and FTP echomail polling/hosting options
+-    ^^ Auto tosses into/out of Mystic
+-    ^^ AREAFIX
+-    ^^ TIC processing
+-    ^^ Needs to be powerful enough to HUB an entire FTN network
 - MPL trunc/round?
+- Internal Zmodem and TN/Link protocols or at least MBBSPROT executable
+     ^^ driver that ships with Mystic and can be used by others.
 - Salted SHA-1 or SHA-256 password encryption
 - User editor: Reset password/Force change... cannot view PWs
-- Who's online should show all nodes (including inactive nodes)
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
 ===========================================
@@ -133,7 +113,7 @@ Disconnect while posting design:
           Line 5: Network address (or blank if none)
           Line 6: MsgText
              overwrite if exists
-5. During LOGIN, check for msg_<UID>.txt
+5. During LOGIN, check for msg_<UID>.txt or have menu command to do it?
 6. If exists, process and prompt user:
 
      You were recently disconnected while posting a message:
