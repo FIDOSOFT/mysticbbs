@@ -42,8 +42,8 @@ Type
     Constructor Create (Var Owner: Pointer);
     Destructor  Destroy; Override;
 
-    Procedure   dszGetFile            (Var LogFile: Text; Var FName: String; Var Res: Boolean);
-    Function    dszSearch             (FName: String) : Boolean;
+    Procedure   DszGetFile            (Var LogFile: Text; Var FName: String; Var Res: Boolean);
+    Function    DszSearch             (FName: String) : Boolean;
     Procedure   GetTransferTime       (Size: Longint; Var Mins : Integer; Var Secs: Byte);
     Procedure   ExecuteArchive        (FName: String; Temp: String; Mask: String; Mode: Byte);
     Procedure   ExecuteProtocol       (Send: Boolean; FName: String);
@@ -57,7 +57,7 @@ Type
     Procedure   BatchDelete;
     Procedure   SetFileScan;
     Procedure   GetFileScan;
-    Function    SelectProtocol        (Batch : Boolean) : Char;
+    Function    SelectProtocol        (UseDefault, Batch: Boolean) : Char;
     Function    WildcardMatch         (Wildcard, FName: String) : Boolean;
     Procedure   CheckFileNameLength   (FPath : String; Var FName : String);
     Procedure   GetFileDescription    (FN: String);
@@ -406,7 +406,7 @@ Begin
 
   If Not FileExist(Data) Then Exit;
 
-  If SelectProtocol(False) = 'Q' Then Exit;
+  If SelectProtocol(True, False) = 'Q' Then Exit;
 
   ExecuteProtocol(True, Data);
 
@@ -934,52 +934,78 @@ Begin
   Result := True;
 End;
 
-Function TFileBase.SelectProtocol (Batch: Boolean) : Char;
+Function TFileBase.SelectProtocol (UseDefault, Batch: Boolean) : Char;
+
+  Function LoadByKey (Key: Char) : Boolean;
+  Begin
+    Result := False;
+
+    If Key = 'Q' Then Exit;
+
+    Reset (ProtocolFile);
+
+    While Not Eof(ProtocolFile) Do Begin
+      Read (ProtocolFile, Protocol);
+
+      If ((Protocol.Active) And (Key = Protocol.Key) And (Protocol.Batch = Batch) And (Protocol.OSType = OSType)) Then Begin
+        Result := True;
+        Break;
+      End;
+    End;
+
+    Close(ProtocolFile);
+  End;
+
 Var
-  Keys  : String;
-  OldP1 : String;
-  Ch    : Char;
+  SavedP1 : String;
+  SavedP2 : String;
+  Keys    : String;
 Begin
-  OldP1  := Session.io.PromptInfo[1];
-  Result := 'Q';
-  Keys   := 'Q';
+  SavedP1 := Session.io.PromptInfo[1];
+  SavedP2 := Session.io.PromptInfo[2];
+  Result  := Session.User.ThisUser.Protocol;
 
-  Session.io.OutFullLn(Session.GetPrompt(359));
+  If Not LoadByKey(Result) Then Begin
+    Keys := 'Q';
 
-  Reset (ProtocolFile);
+    Session.io.OutFullLn(Session.GetPrompt(359));
 
-  While Not Eof(ProtocolFile) Do Begin
-    Read (ProtocolFile, Protocol);
-    If Protocol.Active And (Protocol.Batch = Batch) And (Protocol.OSType = OSTYpe) Then Begin
-      Keys := Keys + Protocol.Key;
+    Reset (ProtocolFile);
 
-      Session.io.PromptInfo[1] := Protocol.Key;
-      Session.io.PromptInfo[2] := Protocol.Desc;
+    While Not Eof(ProtocolFile) Do Begin
+      Read (ProtocolFile, Protocol);
 
-      Session.io.OutFullLn (Session.GetPrompt(61));
+      If Protocol.Active And (Protocol.Batch = Batch) And (Protocol.OSType = OSTYpe) Then Begin
+        Keys := Keys + Protocol.Key;
+
+        Session.io.PromptInfo[1] := Protocol.Key;
+        Session.io.PromptInfo[2] := Protocol.Desc;
+
+        Session.io.OutFullLn (Session.GetPrompt(61));
+      End;
+    End;
+
+    Close (ProtocolFile);
+
+    Session.io.OutFull (Session.GetPrompt(62));
+
+    Result := Session.io.OneKey(Keys, True);
+
+    If Result = 'Q' Then Begin
+      Session.io.PromptInfo[1] := SavedP1;
+      Session.io.PromptInfo[2] := SavedP2;
+
+      Exit;
     End;
   End;
 
-  Close (ProtocolFile);
+  LoadByKey(Result);
 
-  Session.io.OutFull (Session.GetPrompt(62));
-
-  Session.io.PromptInfo[1] := OldP1;
-
-  Ch := Session.io.OneKey(Keys, True);
-
-  If Ch = 'Q' Then Exit;
-
-  Reset (ProtocolFile);
-  While Not Eof(ProtocolFile) Do Begin
-    Read(ProtocolFile, Protocol);
-    If ((Protocol.Active) And (Ch = Protocol.Key) And (Protocol.Batch = Batch) And (Protocol.OSType = OSType)) Then Break;
-  End;
-  Close(ProtocolFile);
+  Session.io.PromptInfo[1] := Protocol.Desc;
 
   Session.io.OutFullLn (Session.GetPrompt(65));
 
-  Result := Ch;
+  Session.io.PromptInfo[1] := SavedP1;
 End;
 
 Procedure TFileBase.ExecuteArchive (FName: String; Temp: String; Mask: String; Mode: Byte);
@@ -1132,7 +1158,8 @@ Begin
     Exit;
   End;
 
-  Session.io.OutFull   (Session.GetPrompt(47));
+  Session.io.OutFull (Session.GetPrompt(47));
+
   FName := Session.io.GetInput(70, 70, 11, '');
 
   If FName = '' Then Exit;
@@ -2548,7 +2575,7 @@ Begin
     FileName := FBase.Path + FileName;
   End;
 
-  If SelectProtocol(Blind) = 'Q' Then Begin
+  If SelectProtocol(True, Blind) = 'Q' Then Begin
     FBase := OLD;
     Exit;
   End;
@@ -2842,7 +2869,7 @@ Begin
 
   Session.io.OutFullLn (Session.GetPrompt(79));
 
-  If SelectProtocol(True) = 'Q' Then Exit;
+  If SelectProtocol(True, True) = 'Q' Then Exit;
 
   Assign  (FL, Session.TempPath + 'file.lst');
   ReWrite (FL);
@@ -2874,7 +2901,7 @@ Begin
   For A := 1 to BatchNum Do Begin
     Session.io.PromptInfo[1] := JustFile(Batch[A].FileName);
 
-    If dszSearch (Batch[A].FileName) Then Begin
+    If DszSearch (Batch[A].FileName) Then Begin
       Session.SystemLog ('Download: ' + Batch[A].FileName);
 
       Session.io.OutFullLn (Session.GetPrompt(385));
