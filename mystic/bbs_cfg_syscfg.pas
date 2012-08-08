@@ -307,7 +307,7 @@ Begin
   Form.AddStr  (#0,  ' DL Failed',          47, 11, 60, 11, 11, 15, mysMaxAcsSize, @Config.AcsDLFailed, Topic + 'ACS to download failed files');
   Form.AddLong ('C', ' Min Upload Space',   40, 12, 60, 12, 18,  9, 0, 999999999, @Config.FreeUL, Topic + 'Min space to allow uploads (kb)');
   Form.AddLong ('-', ' Min CD-ROM Space',   40, 13, 60, 13, 18,  9, 0, 999999999, @Config.FreeCDROM, Topic + 'Min space for CD-ROM copy (kb)');
-  Form.AddChar (#0,  ' Default Protocol',   40, 14, 60, 14, 18,  0, 255, @Config.FProtocol, Topic + 'Default Protocol hotkey');
+  Form.AddChar (#0,  ' Default Protocol',   40, 14, 60, 14, 18,  32, 96, @Config.FProtocol, Topic + 'Default Protocol hotkey');
 
   Form.Execute;
 
@@ -646,7 +646,7 @@ Begin
 
   Form.AddTog  ('D', ' Date Type',      47,  7, 60,  7, 11, 8, 1, 4, 'MM/DD/YY DD/MM/YY YY/DD/MM Ask', @Config.UserDateType, Topic);
   Form.AddTog  ('O', ' Hot Keys',       48,  8, 60,  8, 10, 3, 0, 2, 'No Yes Ask', @Config.UserHotKeys, Topic);
-  Form.AddTog  ('P', ' Protocol',       48,  9, 60,  9, 10, 3, 0, 2, 'No Yes Ask', @Config.UserProtocol, Topic);
+  Form.AddBol  ('P', ' Ask Protocol',   48,  9, 60,  9, 10, 3, @Config.UserProtocol, Topic);
   Form.AddTog  ('N', ' Node Chat',      47, 10, 60, 10, 11, 6, 0, 2, 'Normal ANSI Ask', @Config.UserFullChat, Topic);
   Form.AddTog  ('F', ' File List',      47, 11, 60, 11, 11, 6, 0, 2, 'Normal ANSI Ask', @Config.UserFileList, Topic);
   Form.AddTog  ('1', ' Message Reader', 42, 12, 60, 12, 16, 6, 0, 2, 'Normal ANSI Ask', @Config.UserReadType, Topic);

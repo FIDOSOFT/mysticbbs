@@ -133,7 +133,7 @@ Begin
             Form.AddStr  ('T', ' Theme'     , 7, 13, 23, 13, 14, 20,  20, @U.Theme, Topic + 'Filename of user''s theme');
             Form.AddStr  ('A', ' Start Menu', 7, 14, 23, 14, 14, 20, 20, @U.StartMenu, Topic + 'User is sent to this menu after logging in');
             Form.AddStr  ('V', ' Archive'   , 7, 15, 23, 15, 14,  4,  4, @U.Archive, Topic + 'User''s archive type extension');
-            Form.AddChar ('P', ' Protocol'  , 7, 16, 23, 16, 14, 32, 254, @U.Protocol, Topic + 'Default protocol hotkey');
+            Form.AddChar ('P', ' Protocol'  , 7, 16, 23, 16, 14, 32, 96, @U.Protocol, Topic + 'Default protocol hotkey');
             Form.AddByte ('C', ' Screensize', 7, 17, 23, 17, 14,  2,  0, 50, @U.ScreenSize, Topic + 'User''s terminal size in lines');
             Form.AddBol  ('K', ' Hot Keys'  , 7, 18, 23, 18, 14,  3,  @U.HotKeys, Topic + 'User''s hotkey input status');
             Form.AddBol  ('U', ' Auto-Sig'  , 7, 19, 23, 19, 14,  3,  @U.SigUse, Topic + 'Use auto signature?');
