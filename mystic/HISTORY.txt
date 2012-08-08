@@ -4526,3 +4526,13 @@
    were added to the batch queue within a file listing.  Instead it was
    relying on the List ACS.  This is now fixed.
 
+ + Mystic now allows users to select a default file transfer protocol.  If
+   a protocol has been selected by a user they will not be asked to select
+   a protocol when transfering files.
+
+   A new addition to the GE menu command (optional data 32) will allow the
+   user to select their default protocol.
+
+ + Restructured some class code to reduce executable sizes in the Mystic
+   binary.  The result is about 120kb smaller executable size in Windows for
+   Mystic.exe.
