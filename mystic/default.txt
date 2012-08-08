@@ -148,9 +148,10 @@
 062 |CR|14Select Protocol [|15Q/Quit|14]: |XX
 063 |CR|12Cannot download files in local mode!|DE|DE|DE
 064 |01[|10þ|01] |09Search all file groups? |11
-065 |CR|12Start your transfer now.
-066 |CR|14File area "|FB" is password protected.|CR|09Password: |XX
-067 |CR|12Access denied.
+; Start your file transfer now  &1=selected protocol
+065 |CR|12Start your |15|&1 |12transfer now...
+066 UNUSED
+067 UNUSED
 068 |CR|12You do not have access to upload here!
 069 |CR|12Illegal filename.|DE|DE|DE
 070 |CR|14Searching for duplicate files ...
