@@ -932,6 +932,11 @@ Begin
     Else
       ThisUser.ScreenSize := Config.DefScreenSize;
 
+    If Config.UserProtocol > 0 Then
+      ThisUser.Protocol := Session.FileBase.SelectProtocol(False, True)
+    Else
+      ThisUser.Protocol := Config.FProtocol;
+
     GetPassword(False);
   End;
 
@@ -1337,6 +1342,7 @@ Begin
     29  : ThisUser.UseFullChat := Not ThisUser.UseFullChat;
     30  : ThisUser.QwkFiles := Not ThisUser.QwkFiles;
     31  : Session.FileBase.SelectArchive;
+    32  : ThisUser.Protocol := Session.FileBase.SelectProtocol(False, True);
   End;
 End;
 
