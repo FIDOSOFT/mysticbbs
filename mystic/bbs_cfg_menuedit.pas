@@ -275,8 +275,8 @@ Begin
   VerticalLine (24, 11, 14);
 
   Form.AddNone ('C', ' Command ', 15, 11,  9, Topic + 'Menu command function');
-  Form.AddStr  ('A', ' Access ' , 16, 12, 26, 12,  8, 30, 30, @Menu.Item[Num]^.CmdData[CmdNum]^.Access, Topic + 'Access level to run this command');
-  Form.AddStr  ('D', ' Data '   , 18, 13, 26, 13,  6, 40, 160, @Menu.Item[Num]^.CmdData[CmdNum]^.Data, Topic + 'Menu command optional data');
+  Form.AddStr  ('D', ' Data '   , 18, 12, 26, 12,  6, 40, 160, @Menu.Item[Num]^.CmdData[CmdNum]^.Data, Topic + 'Menu command optional data');
+  Form.AddStr  ('A', ' Access ' , 16, 13, 26, 13,  8, 30, 30, @Menu.Item[Num]^.CmdData[CmdNum]^.Access, Topic + 'Access level to run this command');
   Form.AddTog  ('G', ' Execute ', 15, 14, 26, 14,  9,  6,  0, 10, 'Selected Up Down Left Right Tab Escape PgUp PgDn Home End', @Menu.Item[Num]^.CmdData[CmdNum]^.JumpID, Topic + '(Grid) Execute command on what Grid event?');
 
   Repeat
