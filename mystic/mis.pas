@@ -199,7 +199,7 @@ Var
 Begin
   If FocusPtr = NIL Then Exit;
 
-  FocusPtr.Server.StatusUpdated := False;
+  FocusPtr.StatusUpdated := False;
 
   // UPDATE CONNECTION STATS
 
@@ -210,12 +210,12 @@ Begin
 
   // UPDATE STATUS MESSAGES
 
-  Offset := FocusPtr.Server.SocketStatus.Count;
+  Offset := FocusPtr.ServerStatus.Count;
 
   For Count := 22 DownTo 15 Do Begin
     If Offset > 0 Then Begin
       Dec(Offset);
-      Console.WriteXY (4, Count, 7, strPadR(FocusPtr.Server.SocketStatus.Strings[Offset], 74, ' '));
+      Console.WriteXY (4, Count, 7, strPadR(FocusPtr.ServerStatus.Strings[Offset], 74, ' '));
     End Else
       Console.WriteXY (4, Count, 7, strPadR(' ', 74, ' '));
   End;
@@ -573,7 +573,7 @@ Begin
       End;
 
     If (FocusPtr <> NIL) Then
-      If FocusPtr.Server.StatusUpdated Then Begin
+      If FocusPtr.StatusUpdated Then Begin
         UpdateStatus;
         Count := 1;
       End Else

@@ -299,7 +299,7 @@ Begin
 
     Client.WriteLine(re_LoggedIn);
 
-    Server.Server.Status(User.Handle + ' logged in');
+    Server.Status(User.Handle + ' logged in');
   End Else
     Client.WriteLine(re_BadLogin);
 End;
@@ -476,7 +476,7 @@ Begin
   If GotQuit Then Begin
     Client.WriteLine(re_Goodbye);
 
-    Server.Server.Status (User.Handle + ' logged out');
+    Server.Status (User.Handle + ' logged out');
 
     DeleteMessages;
   End;
