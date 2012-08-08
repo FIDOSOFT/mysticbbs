@@ -17,7 +17,6 @@ Uses
     cNetDB,
   {$ENDIF}
   Sockets,
-  Classes,
   m_DateTime,
   m_Strings;
 
@@ -28,8 +27,6 @@ Type
   TSocketBuffer = Array[0..TSocketBufferSize] of Char;
 
   TSocketClass = Class
-    SocketStatus   : TStringList;
-    StatusUpdated  : Boolean;
     FSocketHandle  : LongInt;
     FPort          : LongInt;
     FPeerName      : String;
@@ -77,7 +74,6 @@ Type
     Function    PeekChar        (Num: Byte) : Char;
     Function    ReadChar        : Char;
     Function    WriteChar       (Ch: Char) : LongInt;
-    Procedure   Status          (Str: String);
 
     Property SocketHandle : LongInt READ FSocketHandle WRITE FSocketHandle;
     Property PeerPort     : LongInt READ FPort         WRITE FPort;
@@ -91,8 +87,6 @@ Implementation
 { TELNET NEGOTIATION CONSTANTS }
 
 Const
-  MaxStatusText = 20;
-
   Telnet_IAC    = #255;
   Telnet_DONT   = #254;
   Telnet_DO     = #253;
@@ -125,16 +119,11 @@ Begin
   FTelnetServer := False;
   FDisconnect   := True;
   FHostIP       := '';
-  StatusUpdated := False;
-
-  SocketStatus := TStringList.Create;
 End;
 
 Destructor TSocketClass.Destroy;
 Begin
   If FDisconnect Then Disconnect;
-
-  SocketStatus.Free;
 
   Inherited Destroy;
 End;
@@ -145,17 +134,9 @@ Begin
 End;
 
 Procedure TSocketClass.PurgeInputData;
-//Var
-//  Buf : Array[1..1024] of Char;
 Begin
-//  If FSocketHandle = -1 Then Exit;
-
   FInBufPos := 0;
   FInBufEnd := 0;
-
-//  If DataWaiting Then
-//    Repeat
-//    Until ReadBuf(Buf, SizeOf(Buf)) <> 1024;
 End;
 
 Procedure TSocketClass.Disconnect;
@@ -608,35 +589,6 @@ Begin
     Client.WriteStr(#255#251#001#255#251#003);  // IAC WILL ECHO
 
   Result := Client;
-End;
-
-Procedure TSocketClass.Status (Str: String);
-Var
-  Res : String;
-Begin
-  If SocketStatus = NIL Then Exit;
-
-  Try
-    If SocketStatus.Count > MaxStatusText Then
-      SocketStatus.Delete(0);
-
-    Res := '(' + Copy(DateDos2Str(CurDateDos, 1), 1, 5) + ' ' + TimeDos2Str(CurDateDos, False) + ') ' + Str;
-
-    If Length(Res) > 74 Then Begin
-      SocketStatus.Add(Copy(Res, 1, 74));
-
-      If SocketStatus.Count > MaxStatusText Then
-        SocketStatus.Delete(0);
-
-      SocketStatus.Add(strRep(' ', 14) + Copy(Res, 75, 255));
-    End Else
-      SocketStatus.Add(Res);
-  Except
-    { ignore exceptions here -- happens when socketstatus is NIL}
-    { need to review criticals now that they are in FP's RTL}
-  End;
-
-  StatusUpdated := True;
 End;
 
 End.
