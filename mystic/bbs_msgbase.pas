@@ -1112,7 +1112,7 @@ Begin
   End Else Begin
     FN := Session.TempPath + Session.io.GetInput(70, 70, 11, '');
 
-    If Session.FileBase.SelectProtocol(False) = 'Q' Then Exit;
+    If Session.FileBase.SelectProtocol(True, False) = 'Q' Then Exit;
 
     Session.FileBase.ExecuteProtocol(False, FN);
 
@@ -3274,7 +3274,7 @@ Begin
   If Session.LocalMode Then
     Session.FileBase.ExecuteArchive (Config.QWKPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
   Else Begin
-    If Session.FileBase.SelectProtocol(False) = 'Q' Then Exit;
+    If Session.FileBase.SelectProtocol(True, False) = 'Q' Then Exit;
 
     Session.FileBase.ExecuteProtocol(False, Session.TempPath + Config.qwkBBSID + '.rep');
 
