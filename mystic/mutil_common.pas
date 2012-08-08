@@ -5,15 +5,15 @@ Unit MUTIL_Common;
 Interface
 
 Uses
-  INIFiles,
   m_Output,
+  m_IniReader,
   mutil_Status;
 
 {$I RECORDS.PAS}
 
 Var
   Console      : TOutput;
-  INI          : TINIFile;
+  INI          : TINIReader;
   BarOne       : TStatusBar;
   BarAll       : TStatusBar;
   ProcessTotal : Byte = 0;
