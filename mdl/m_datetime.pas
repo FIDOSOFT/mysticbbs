@@ -69,10 +69,12 @@ Var
   XYear   : LongInt;
 Begin
   If Month <= 2 Then Begin
-    Dec(Year);
-    Inc(Month, 12);
+    Dec (Year);
+    Inc (Month, 12);
   End;
-  Dec(Month, 3);
+
+  Dec (Month, 3);
+
   Century := Year DIV 100;
   XYear   := Year MOD 100;
   Century := (Century * JulianDay1) SHR 2;
@@ -277,9 +279,11 @@ Begin
   If Twelve Then Begin
     If DT.Hour > 11 Then Begin
       If DT.Hour = 12 Then Inc(DT.Hour, 12);
+
       Result := strZero(DT.Hour - 12) + ':' + strZero(DT.Min) + 'p'
     End Else Begin
       If DT.Hour = 0 Then Inc(DT.Hour, 12);
+
       Result := strZero(DT.Hour) + ':' + strZero(DT.Min) + 'a';
     End;
   End Else
