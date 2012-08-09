@@ -1363,7 +1363,8 @@ Begin
 
   Queue.Add(ReceivePath, FName);
 
-  Queue.QData[Queue.QSize]^.Status := QueueIntransit;
+  Queue.QData[Queue.QSize]^.FileSize := FSize;
+  Queue.QData[Queue.QSize]^.Status   := QueueIntransit;
 
   Assign (WrkFile, ReceivePath + FName);
 
