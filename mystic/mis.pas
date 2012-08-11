@@ -36,7 +36,8 @@ Uses
   m_Output,
   m_Input,
   m_DateTime,
-  m_Socket_Class,
+  m_io_Base,
+  m_io_Sockets,
   m_FileIO,
   m_Strings,
   m_Term_Ansi,
@@ -264,16 +265,17 @@ Procedure LocalLogin;
 Const
   BufferSize = 1024 * 4;
 Var
-  Client : TSocketClass;
+  Client : TIOSocket;
   Res    : LongInt;
   Buffer : Array[1..BufferSize] of Char;
   Done   : Boolean;
   Ch     : Char;
 Begin
+  Console.TextAttr := 7;
   Console.ClearScreen;
   Console.WriteStr ('Connecting to 127.0.0.1... ');
 
-  Client := TSocketClass.Create;
+  Client := TIOSocket.Create;
 
   If Not Client.Connect('127.0.0.1', bbsConfig.InetTNPort) Then
     Console.WriteLine('Unable to connect')
@@ -284,7 +286,7 @@ Begin
     Console.SetWindow (1, 1, 80, 24, True);
     Console.WriteXY   (1, 25, 112, strPadC('Local TELNET: ALT-X to Quit', 80, ' '));
 
-    Term.SetReplyClient(Client);
+    Term.SetReplyClient(TIOBase(Client));
 
     Repeat
       If Client.WaitForData(0) > 0 Then Begin

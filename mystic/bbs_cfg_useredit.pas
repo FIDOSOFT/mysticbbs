@@ -325,6 +325,8 @@ Procedure Configuration_LocalUserEdit;
 Var
   SavedLocal : Boolean;
 Begin
+  Session.io.BufFlush;
+
   SavedLocal := Session.LocalMode;
 
   Session.InUserEdit := True;

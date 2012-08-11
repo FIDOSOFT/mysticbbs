@@ -1,19 +1,31 @@
 Unit bbs_FileBase;
 
 {$I M_OPS.PAS}
+
 {$MODESWITCH NESTEDPROCVARS-}
 
 Interface
 
 Uses
+  m_io_Base,
+  {$IFDEF WINDOWS}
+    m_io_Sockets,
+  {$ENDIF}
+  {$IFDEF UNIX}
+    m_io_STDIO,
+  {$ENDIF}
   DOS,
   mkCrap,
   m_Strings,
   m_FileIO,
   m_DateTime,
+  m_Protocol_Queue,
+  m_Protocol_Base,
+  m_Protocol_Zmodem,
   bbs_Common,
   bbs_General,
   bbs_NodeInfo,
+  bbs_Ansi_MenuBox,
   AView;
 
 Type
@@ -46,7 +58,7 @@ Type
     Function    DszSearch             (FName: String) : Boolean;
     Procedure   GetTransferTime       (Size: Longint; Var Mins : Integer; Var Secs: Byte);
     Procedure   ExecuteArchive        (FName: String; Temp: String; Mask: String; Mode: Byte);
-    Procedure   ExecuteProtocol       (Send: Boolean; FName: String);
+    Procedure   ExecuteProtocol       (Mode: Byte; FName: String);
     Function    SelectArchive         : Boolean;
     Function    ListFileAreas         (Compress: Boolean) : Integer;
     Procedure   ChangeFileArea        (Data: String);
@@ -103,14 +115,11 @@ Begin
   Inherited Destroy;
 End;
 
-Procedure TFileBase.dszGetFile (Var LogFile: Text; Var FName: String; Var Res: Boolean);
+Procedure TFileBase.DszGetFile (Var LogFile: Text; Var FName: String; Var Res: Boolean);
 Type
   TLineBuf = Array[0..1024] of Char;
 Var
   LineBuf  : TLineBuf;
-  TempStr1 : DirStr;
-  TempStr2 : NameStr;
-  TempStr3 : ExtStr;
   WordPos  : Integer;
   Count    : Integer;
 Begin
@@ -132,6 +141,7 @@ Begin
   While WordPos < 11 Do Begin
     If LineBuf[Count] = #32 Then Begin
       Inc (WordPos);
+
       Repeat
         Inc (Count);
       Until LineBuf[Count] <> #32;
@@ -142,14 +152,17 @@ Begin
   Repeat
     FName := FName + LineBuf[Count];
     Inc (Count);
-  Until (LineBuf[Count] = #32) or (LineBuf[Count] = #0) or (Count = 1024);
+  Until (LineBuf[Count] = #0) or (Count = 1024);
 
-  FSplit(FName, TempStr1, TempStr2, TempStr3);
+  While FName[Length(FName)] <> #32 Do
+    Dec(FName[0]);
 
-  FName := TempStr2 + TempStr3;
+  Dec(FName[0]);
+
+  FName := JustFile(FName);
 End;
 
-Function TFileBase.dszSearch (FName: String) : Boolean;
+Function TFileBase.DszSearch (FName: String) : Boolean;
 Var
   LogFile  : Text;
   FileName : String;
@@ -159,13 +172,14 @@ Begin
 
   Assign (LogFile, Session.TempPath + 'xfer.log');
   {$I-} Reset(LogFile); {$I+}
+
   If IoResult <> 0 Then Begin
     Session.SystemLog('ERROR: Can''t find xfer.log');
     Exit;
   End;
 
   While Not Eof(LogFile) Do Begin
-    dszGetFile(LogFile, FileName, Status);
+    DszGetFile(LogFile, FileName, Status);
 
     {$IFDEF FS_SENSITIVE}
       If FileName = FName Then Begin
@@ -173,6 +187,7 @@ Begin
     If strUpper(FileName) = strUpper(FName) Then Begin
     {$ENDIF}
       Result := Status;
+
       Break;
     End;
   End;
@@ -180,70 +195,214 @@ Begin
   Close (LogFile);
 End;
 
-Procedure TFileBase.ExecuteProtocol (Send: Boolean; FName: String);
+{$IFNDEF UNIX}
+Procedure ProtocolStatus (Start, Finish: Boolean; Status: RecProtocolStatus);
 Var
-  T     : Text;
-  Cmd   : String;
-  Count : Byte;
-  Res   : String;
-  Path  : String;
+  KBRate : LongInt;
 Begin
-  If Send Then
-    Cmd := Protocol.SendCmd
-  Else
-    Cmd := Protocol.RecvCmd;
+  Screen.WriteXY (19, 10, 113, strPadR(Status.FileName, 56, ' '));
+  Screen.WriteXY (19, 11, 113, strPadR(strComma(Status.FileSize), 15, ' '));
+  Screen.WriteXY (19, 12, 113, strPadR(strComma(Status.Position), 15, ' '));
+  Screen.WriteXY (64, 11, 113, strPadR(strI2S(Status.Errors), 3, ' '));
 
-  Res   := '';
-  Path  := '';
-  Count := 1;
+  KBRate := 0;
 
-  While Count <= Length(Cmd) Do Begin
-    If Cmd[Count] = '%' Then Begin
-      Inc(Count);
-      {$IFNDEF UNIX}
-      If Cmd[Count] = '0' Then Res := Res + strI2S(Session.Client.FSocketHandle) Else
+  If (TimerSeconds - Status.StartTime > 0) and (Status.Position > 0) Then
+    KBRate := Round((Status.Position / (TimerSeconds - Status.StartTime)) / 1024);
+
+  Screen.WriteXY (64, 12, 113, strPadR(strI2S(KBRate) + ' k/sec', 12, ' '));
+End;
+{$ENDIF}
+
+Procedure TFileBase.ExecuteProtocol (Mode: Byte; FName: String);
+// mode: 0=recv batch, 1=recv file, 2=send file, 3= send batch
+Var
+  Command : String;
+  T       : Text;
+  Res     : String;
+
+  {$IFNDEF UNIX}
+    Box    : TAnsiMenuBox;
+    SavedL : Boolean;
+    SavedA : Boolean;
+  {$ENDIF}
+
+  Procedure ExecInternal;
+  Var
+    Protocol : TProtocolBase;
+    Queue    : TProtocolQueue;
+    Count    : Word;
+    Client   : TIOBase;
+  Begin
+    {$IFDEF UNIX}
+      Client := TSTDIO.Create;
+    {$ELSE}
+      Client := Session.Client;
+    {$ENDIF}
+
+    Command := strStripB(strUpper(Command), ' ');
+    Queue   := TProtocolQueue.Create;
+
+    If Command = '@ZMODEM' Then
+      Protocol := TProtocolZmodem.Create(Client, Queue)
+    Else Begin
+      {$IFDEF UNIX}
+      Client.Free;
       {$ENDIF}
-      If Cmd[Count] = '1' Then Res := Res + '1' Else
-      If Cmd[Count] = '2' Then Res := Res + strI2S(Session.Baud) Else
-      If Cmd[Count] = '3' Then Res := Res + FName Else
-      If Cmd[Count] = '4' Then Res := Res + Session.UserIPInfo Else
-      If Cmd[Count] = '5' Then Res := Res + Session.UserHostInfo Else
-      If Cmd[Count] = '6' Then Res := Res + strReplace(Session.User.ThisUser.Handle, ' ', '_') Else
-      If Cmd[Count] = '7' Then Res := Res + strI2S(Session.NodeNum);
-    End Else
-      Res := Res + Cmd[Count];
+      Queue.Free;
+      Exit;
+    End;
 
-    Inc (Count);
+    Case Mode of
+      0,
+      1  : Protocol.ReceivePath := DirSlash(FName);
+      2  : Queue.Add(JustPath(FName), JustFile(FName));
+      3  : Begin
+             Assign (T, Session.TempPath + 'file.lst');
+             Reset  (T);
+
+             While Not Eof(T) Do Begin
+               ReadLn (T, Res);
+
+               Queue.Add(JustPath(Res), JustFile(Res));
+             End;
+
+             Close (T);
+           End;
+    End;
+
+    Session.io.BufFlush;
+
+    {$IFNDEF UNIX}
+      SavedL              := Session.LocalMode;
+      SavedA              := Screen.Active;
+      Session.LocalMode   := True;
+      Protocol.StatusProc := ProtocolStatus;
+
+      Session.io.LocalScreenEnable;
+
+      Box := TAnsiMenuBox.Create;
+
+      Case Mode of
+        0..1 : Box.Header := ' ' + Protocol.Status.Protocol + ' Upload ';
+        2..3 : Box.Header := ' ' + Protocol.Status.Protocol + ' Download ';
+      End;
+
+      Box.Open (6, 8, 76, 14);
+
+      Screen.WriteXY ( 8, 10, 112, 'File Name:');
+      Screen.WriteXY (13, 11, 112, 'Size:');
+      Screen.WriteXY ( 9, 12, 112, 'Position:');
+      Screen.WriteXY (56, 11, 112, 'Errors:');
+      Screen.WriteXY (58, 12, 112, 'Rate:');
+    {$ENDIF}
+
+    Case Mode of
+      0..1 : Protocol.QueueReceive;
+      2..3 : Protocol.QueueSend;
+    End;
+
+    {$IFNDEF UNIX}
+      Box.Free;
+
+      Session.io.BufFlush;
+
+      If Not SavedA Then
+        Session.io.LocalScreenDisable;
+
+      Session.LocalMode := SavedL;
+    {$ENDIF}
+
+    Assign  (T, Session.TempPath + 'xfer.log');
+    ReWrite (T);
+
+    For Count := 1 to Queue.QSize Do Begin
+      Res[1] := 'E';
+
+      If Queue.QData[Count]^.Status = QueueSuccess Then Res[1] := 'Z';
+
+      WriteLn(T, Res[1] + ' 0 0 0 0 0 0 0 0 0 ' + Queue.QData[Count]^.FileName + ' -1');
+    End;
+
+    Close (T);
+
+    Protocol.Free;
+    Queue.Free;
+    {$IFDEF UNIX}
+      Client.Free;
+    {$ENDIF}
   End;
 
-  {$IFDEF UNIX}
-    Assign  (T, Session.TempPath + 'xfer.sh');
-    ReWrite (T);
-    WriteLn (T, 'export DSZLOG=' + Session.TempPath + 'xfer.log');
-    WriteLn (T, Res);
-    Close   (T);
-  {$ELSE}
-    Assign  (T, Session.TempPath + 'xfer.bat');
-    ReWrite (T);
-    WriteLn (T, 'SET DSZLOG=' + Session.TempPath + 'xfer.log');
-    WriteLn (T, Res);
-    Close   (T);
-  {$ENDIF}
+  Procedure ExecExternal;
+  Var
+    Path  : String;
+    Count : Byte;
+  Begin
+    Res   := '';
+    Path  := '';
+    Count := 1;
 
-  { If uploading and batch, switch to upload directory via shelldos }
-  If Not Send And Protocol.Batch Then Path := FName;
+    While Count <= Length(Command) Do Begin
+      If Command[Count] = '%' Then Begin
+        Inc(Count);
+        {$IFNDEF UNIX}
+        If Command[Count] = '0' Then Res := Res + strI2S(TIOSocket(Session.Client).FSocketHandle) Else
+        {$ENDIF}
+        If Command[Count] = '1' Then Res := Res + '1' Else
+        If Command[Count] = '2' Then Res := Res + strI2S(Session.Baud) Else
+        If Command[Count] = '3' Then Res := Res + FName Else
+        If Command[Count] = '4' Then Res := Res + Session.UserIPInfo Else
+        If Command[Count] = '5' Then Res := Res + Session.UserHostInfo Else
+        If Command[Count] = '6' Then Res := Res + strReplace(Session.User.ThisUser.Handle, ' ', '_') Else
+        If Command[Count] = '7' Then Res := Res + strI2S(Session.NodeNum);
+      End Else
+        Res := Res + Command[Count];
 
-  If Res[1] = '!' Then Begin
-    Delete     (Res, 1, 1);
-    ExecuteMPL (NIL, Res);
-  End Else
-  {$IFDEF UNIX}
-    ShellDOS (Path, 'sh ' + Session.TempPath + 'xfer.sh');
-  {$ELSE}
-    ShellDOS (Path, Session.TempPath + 'xfer.bat');
-  {$ENDIF}
+      Inc (Count);
+    End;
 
-  DirChange (Config.SystemPath);
+    {$IFDEF UNIX}
+      Assign  (T, Session.TempPath + 'xfer.sh');
+      ReWrite (T);
+      WriteLn (T, 'export DSZLOG=' + Session.TempPath + 'xfer.log');
+      WriteLn (T, Res);
+      Close   (T);
+    {$ELSE}
+      Assign  (T, Session.TempPath + 'xfer.bat');
+      ReWrite (T);
+      WriteLn (T, 'SET DSZLOG=' + Session.TempPath + 'xfer.log');
+      WriteLn (T, Res);
+      Close   (T);
+    {$ENDIF}
+
+    // If uploading and batch, switch to upload directory via shelldos
+    If (Mode < 2) And Protocol.Batch Then Path := FName;
+
+    If Res[1] = '!' Then Begin
+      Delete     (Res, 1, 1);
+      ExecuteMPL (NIL, Res);
+    End Else
+    {$IFDEF UNIX}
+      ShellDOS (Path, 'sh ' + Session.TempPath + 'xfer.sh');
+    {$ELSE}
+      ShellDOS (Path, Session.TempPath + 'xfer.bat');
+    {$ENDIF}
+
+    DirChange (Config.SystemPath);
+  End;
+
+Begin
+  Set_Node_Action(Session.GetPrompt(351));
+
+  If Mode > 1 Then
+    Command := Protocol.SendCmd
+  Else
+    Command := Protocol.RecvCmd;
+
+  If Command[1] = '@' Then
+    ExecInternal
+  Else
+    ExecExternal;
 End;
 
 Procedure TFileBase.GetTransferTime (Size: Longint; Var Mins : Integer; Var Secs: Byte);
@@ -324,6 +483,7 @@ Begin
 
   If FileSize(FScanFile) < Session.User.UserNum - 1 Then Begin
     Seek (FScanFile, FileSize(FScanFile));
+
     For A := FileSize(FScanFile) to Session.User.UserNum - 1 Do
       Write (FScanFile, Temp);
   End;
@@ -408,7 +568,7 @@ Begin
 
   If SelectProtocol(True, False) = 'Q' Then Exit;
 
-  ExecuteProtocol(True, Data);
+  ExecuteProtocol(2, Data);
 
   Session.io.OutRawLn ('');
 
@@ -511,6 +671,7 @@ Begin
 
         While Not Eof(FDirFile) Do Begin
           Read (FDirFile, FDir);
+
           If (NewFiles and (FDir.DateTime > FScan.LastNew)) or Not NewFiles Then
             If FDir.Flags And FDirDeleted = 0 Then Begin
               Inc (TotalFiles);
@@ -557,7 +718,7 @@ Begin
 
   Session.io.OutFullLn (Session.GetPrompt(225));
 
-  Result := (TotalFiles = 0);
+  Result := (TotalFiles > 0);
 
   If Not Result Then Session.io.OutFullLn(Session.GetPrompt(425));
 End;
@@ -947,7 +1108,7 @@ Function TFileBase.SelectProtocol (UseDefault, Batch: Boolean) : Char;
     While Not Eof(ProtocolFile) Do Begin
       Read (ProtocolFile, Protocol);
 
-      If ((Protocol.Active) And (Key = Protocol.Key) And (Protocol.Batch = Batch) And (Protocol.OSType = OSType)) Then Begin
+      If ((Protocol.Active) And (Key = Protocol.Key) And (Protocol.Batch = Batch) And ((Protocol.OSType = OSType) or (Protocol.OSType = 3))) Then Begin
         Result := True;
         Break;
       End;
@@ -1528,6 +1689,7 @@ Begin
 
   If Total = 0 Then Begin
     Session.io.OutFullLn (Session.GetPrompt(37));
+
     FBase := Old;
   End Else Begin
     Repeat
@@ -2580,7 +2742,7 @@ Begin
     Exit;
   End;
 
-  ExecuteProtocol(False, FBase.Path);
+  ExecuteProtocol(0, FBase.Path);
 
 { ++lang ADD: update node status to transferring file? }
 
@@ -2649,7 +2811,7 @@ Begin
               {$IFDEF UNIX}
               If Config.TestCmdLine[A] = '0' Then Temp := Temp + '1' Else
               {$ELSE}
-              If Config.TestCmdLine[A] = '0' Then Temp := Temp + strI2S(Session.Client.FSocketHandle) Else
+              If Config.TestCmdLine[A] = '0' Then Temp := Temp + strI2S(TIOSocket(Session.Client).FSocketHandle) Else
               {$ENDIF}
               If Config.TestCmdLine[A] = '1' Then Temp := Temp + '1' Else
               If Config.TestCmdLine[A] = '2' Then Temp := Temp + '38400' Else
@@ -2893,7 +3055,7 @@ Begin
   Close (FBaseFile);
   Close (FL);
 
-  ExecuteProtocol(True, Session.TempPath + 'file.lst');
+  ExecuteProtocol(3, Session.TempPath + 'file.lst');
 
   Reset (FBaseFile);
 

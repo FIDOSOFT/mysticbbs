@@ -11,6 +11,8 @@ Implementation
 Uses
   {$IFDEF WINDOWS}
     Windows,
+    m_io_Base,
+    m_io_Sockets,
   {$ENDIF}
   m_Types,
   m_Strings,
@@ -218,7 +220,7 @@ Begin
   PassHandle := 0;
 
   If Not Session.LocalMode Then
-    PassHandle := Session.Client.FSocketHandle;
+    PassHandle := TIOSocket(Session.Client).FSocketHandle;
 
   If Session.User.UserNum <> -1 Then Begin
     Reset (Session.User.UserFile);
@@ -297,7 +299,7 @@ Begin
       {$IFDEF UNIX}
       If Cmd[A] = '0' Then Temp := Temp + '1' Else
       {$ELSE}
-      If Cmd[A] = '0' Then Temp := Temp + strI2S(Session.Client.FSocketHandle) Else
+      If Cmd[A] = '0' Then Temp := Temp + strI2S(TIOSocket(Session.Client).FSocketHandle) Else
       {$ENDIF}
       If Cmd[A] = '1' Then Temp := Temp + '1' Else
       If Cmd[A] = '2' Then Temp := Temp + strI2S(Session.Baud) Else

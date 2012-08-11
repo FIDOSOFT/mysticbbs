@@ -8,6 +8,8 @@ Uses
   {$IFDEF WINDOWS}
     Windows,
     WinSock2,
+    m_io_Base,
+    m_io_Sockets,
   {$ENDIF}
   m_Types,
   m_DateTime,
@@ -98,7 +100,7 @@ Type
     Function    DoInputEvents    (Var Ch: Char) : Boolean;
     Function    GetKey           : Char;
     Function    GetYN            (Str: String; Yes: Boolean) : Boolean;
-    Function    GetPW            (Str : String; BadStr : String; PW : String) : Boolean;
+    Function    GetPW            (Str: String; BadStr: String; PW: String) : Boolean;
     Function    OneKey           (Str: String; Echo: Boolean) : Char;
     Procedure   RemoteRestore    (Var Image: TConsoleImageRec);
     Procedure   PurgeInputBuffer;
@@ -914,7 +916,7 @@ Begin
   If O Then OutON := 'On' Else OutON := 'Off'; {++lang}
 End;
 
-Function TBBSIO.OutFile (FName : String; DoPause: Boolean; Speed: Byte) : Boolean;
+Function TBBSIO.OutFile (FName: String; DoPause: Boolean; Speed: Byte) : Boolean;
 Var
   Buffer  : Array[1..4096] of Char;
   BufPos  : LongInt;
@@ -943,6 +945,11 @@ Var
       Ext    := '.asc';
       FName  := Temp;
       Result := True;
+    End Else
+    If FileExist(Temp) Then Begin
+      Ext    := '.' + JustFileExt(FName);
+      FName  := Path + JustFileName(FName);
+      Result := True;
     End;
   End;
 
@@ -968,7 +975,7 @@ Begin
   Result := False;
   NoFile := True;
 
-  If (Pos(PathSep, FName) > 0) or (Pos('.', FName) > 0) Then Begin
+  If (Pos(PathSep, FName) > 0) Then Begin
     If Not FileExist(FName) Then
       If Not CheckFileInPath('') Then Exit;
   End Else Begin
@@ -979,7 +986,7 @@ Begin
         Exit;
   End;
 
-  If Pos('.', FName) = 0 Then
+  If (Pos('.', FName) = 0) Then
     If FileExist(FName + Copy(Ext, 1, 3) + '1') Then Begin
       Repeat
         BufPos := Random(9);
@@ -1175,7 +1182,7 @@ Begin
       Handles[1] := SocketEvent;
 
       WSAResetEvent  (Handles[1]);
-      WSAEventSelect (TBBSCore(Core).Client.FSocketHandle, Handles[1], FD_READ OR FD_CLOSE);
+      WSAEventSelect (TIOSocket(TBBSCore(Core).Client).FSocketHandle, Handles[1], FD_READ OR FD_CLOSE);
 
       Case WaitForMultipleObjects(2, @Handles, False, Wait) of
         WAIT_OBJECT_0     : InType := 1;

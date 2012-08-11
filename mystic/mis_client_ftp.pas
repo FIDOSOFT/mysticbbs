@@ -10,15 +10,16 @@ Interface
 
 Uses
   SysUtils,
+  m_io_Base,
+  m_io_Sockets,
   m_Strings,
   m_FileIO,
-  m_Socket_Class,
   m_DateTime,
   MIS_Server,
   MIS_NodeData,
   MIS_Common;
 
-Function CreateFTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateFTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
 Type
   TFTPServer = Class(TServerClient)
@@ -33,7 +34,7 @@ Type
     Data       : String;
     DataPort   : Word;
     DataIP     : String;
-    DataSocket : TSocketClass;
+    DataSocket : TIOSocket;
     User       : RecUser;
     UserPos    : LongInt;
     FBasePos   : LongInt;
@@ -41,7 +42,7 @@ Type
     SecLevel   : RecSecurity;
     FileMask   : String;
 
-    Constructor Create (Owner: TServerManager; CliSock: TSocketClass);
+    Constructor Create (Owner: TServerManager; CliSock: TIOSocket);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
 
@@ -101,12 +102,12 @@ Const
   re_DLLimit     = '550 Download limit would be exceeded';
   re_DLRatio     = '550 Download/upload ratio would be exceeded';
 
-Function CreateFTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateFTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 Begin
   Result := TFTPServer.Create(Owner, CliSock);
 End;
 
-Constructor TFTPServer.Create (Owner: TServerManager; CliSock: TSocketClass);
+Constructor TFTPServer.Create (Owner: TServerManager; CliSock: TIOSocket);
 Begin
   Inherited Create(Owner, CliSock);
 
@@ -245,7 +246,7 @@ End;
 
 Function TFTPServer.OpenDataSession : Boolean;
 Var
-  WaitSock : TSocketClass;
+  WaitSock : TIOSocket;
 Begin
   Result := False;
 
@@ -258,7 +259,7 @@ Begin
   Client.WriteLine(re_DataOpening);
 
   If IsPassive Then Begin
-    WaitSock := TSocketClass.Create;
+    WaitSock := TIOSocket.Create;
 
     WaitSock.WaitInit(DataPort);
 
@@ -272,7 +273,7 @@ Begin
 
     WaitSock.Free;
   End Else Begin
-    DataSocket := TSocketClass.Create;
+    DataSocket := TIOSocket.Create;
 
     If Not DataSocket.Connect(DataIP, DataPort) Then Begin
       Client.WriteLine(re_NoData);
@@ -415,7 +416,7 @@ End;
 
 Procedure TFTPServer.cmdPASV;
 Var
-  WaitSock : TSocketClass;
+  WaitSock : TIOSocket;
 Begin
   If LoggedIn Then Begin
     DataPort := Random(bbsConfig.inetFTPPortMax - bbsConfig.inetFTPPortMin) + bbsConfig.inetFTPPortMin;
@@ -424,7 +425,7 @@ Begin
 
     IsPassive := True;
 
-    WaitSock := TSocketClass.Create;
+    WaitSock := TIOSocket.Create;
 
     WaitSock.WaitInit(DataPort);
 
@@ -708,7 +709,7 @@ End;
 
 Procedure TFTPServer.cmdEPSV;
 Var
-  WaitSock : TSocketClass;
+  WaitSock : TIOSocket;
 Begin
   If LoggedIn Then Begin
     If Data = '' Then Begin
@@ -717,7 +718,7 @@ Begin
 
       Client.WriteLine('229 Entering Extended Passive Mode (|||' + strI2S(DataPort) + '|)');
 
-      WaitSock := TSocketClass.Create;
+      WaitSock := TIOSocket.Create;
 
       WaitSock.WaitInit(DataPort);
 

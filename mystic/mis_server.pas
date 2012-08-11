@@ -6,7 +6,8 @@ Interface
 
 Uses
   Classes,
-  m_Socket_Class,
+  m_io_Base,
+  m_io_Sockets,
   MIS_Common,
   MIS_NodeData;
 
@@ -16,12 +17,12 @@ Const
 Type
   TServerManager    = Class;
   TServerClient     = Class;
-  TServerCreateProc = Function (Manager: TServerManager; Config: RecConfig; ND: TNodeData; Client: TSocketClass): TServerClient;
+  TServerCreateProc = Function (Manager: TServerManager; Config: RecConfig; ND: TNodeData; Client: TIOSocket): TServerClient;
 
   TServerManager = Class(TThread)
     Critical      : TRTLCriticalSection;
     NodeInfo      : TNodeData;
-    Server        : TSocketClass;
+    Server        : TIOSocket;
     ServerStatus  : TStringList;
     StatusUpdated : Boolean;
     ClientList    : TList;
@@ -41,15 +42,15 @@ Type
     Procedure   Execute;     Override;
     Procedure   Status       (Str: String);
     Function    CheckIP      (IP, Mask: String) : Boolean;
-    Function    IsBlockedIP  (Var Client: TSocketClass) : Boolean;
-    Function    DuplicateIPs (Var Client: TSocketClass) : Byte;
+    Function    IsBlockedIP  (Var Client: TIOSocket) : Boolean;
+    Function    DuplicateIPs (Var Client: TIOSocket) : Byte;
   End;
 
   TServerClient = Class(TThread)
-    Client  : TSocketClass;
+    Client  : TIOSocket;
     Manager : TServerManager;
 
-    Constructor Create (Owner: TServerManager; CliSock: TSocketClass);
+    Constructor Create (Owner: TServerManager; CliSock: TIOSocket);
     Destructor  Destroy; Override;
   End;
 
@@ -75,7 +76,7 @@ Begin
   ClientActive  := 0;
   ClientMaxIPs  := 1;
   NewClientProc := CreateProc;
-  Server        := TSocketClass.Create;
+  Server        := TIOSocket.Create;
   ServerStatus  := TStringList.Create;
   StatusUpdated := False;
   ClientList    := TList.Create;
@@ -122,7 +123,7 @@ Begin
   End;
 End;
 
-Function TServerManager.IsBlockedIP (Var Client: TSocketClass) : Boolean;
+Function TServerManager.IsBlockedIP (Var Client: TIOSocket) : Boolean;
 Var
   TF  : Text;
   Str : String;
@@ -146,16 +147,26 @@ Begin
   End;
 End;
 
-Function TServerManager.DuplicateIPs (Var Client: TSocketClass) : Byte;
+Function TServerManager.DuplicateIPs (Var Client: TIOSocket) : Byte;
 Var
   Count : Byte;
 Begin
   Result := 0;
-
+(*
   For Count := 0 to ClientMax - 1 Do
     If ClientList[Count] <> NIL Then  // use Assigned?
-      If Client.PeerIP = TSocketClass(ClientList[Count]).PeerIP Then
+      If Client.PeerIP = TIOSocket(ClientList[Count]).PeerIP Then
+        Inc(Result);*)
+
+  For Count := 0 to ClientMax - 1 Do
+    If Assigned(ClientList[Count]) Then Begin
+//    writeln('client ip:', client.peerip);
+//    writeln('comp ip  :', TIOSocket(clientlist[count]).fpeerip);
+//    waitms(3000);
+
+      If Client.PeerIP = TIOSocket(ClientList[Count]).PeerIP Then
         Inc(Result);
+    End;
 End;
 
 Procedure TServerManager.Status (Str: String);
@@ -193,7 +204,7 @@ End;
 
 Procedure TServerManager.Execute;
 Var
-  NewClient : TSocketClass;
+  NewClient : TIOSocket;
 Begin
   Repeat Until Server <> NIL;  // Synchronize with server class
   Repeat Until ServerStatus <> NIL; // Syncronize with status class
@@ -224,7 +235,7 @@ Begin
       If Not NewClient.WriteFile(TextPath + 'blocked.txt') Then NewClient.WriteLine('BLOCKED');
       NewClient.Free;
     End Else
-    If (ClientMaxIPs > 0) and (DuplicateIPs(NewClient) > ClientMaxIPs) Then Begin
+    If (ClientMaxIPs > 0) and (DuplicateIPs(NewClient) >= ClientMaxIPs) Then Begin
       Inc (ClientRefused);
       Status('MULTI: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
       If Not NewClient.WriteFile(TextPath + 'dupeip.txt') Then NewClient.WriteLine('Only ' + strI2S(ClientMaxIPs) + ' connection(s) per user');
@@ -273,7 +284,7 @@ Begin
   Inherited Destroy;
 End;
 
-Constructor TServerClient.Create (Owner: TServerManager; CliSock: TSocketClass);
+Constructor TServerClient.Create (Owner: TServerManager; CliSock: TIOSocket);
 Var
   Count : Byte;
 Begin

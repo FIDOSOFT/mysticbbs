@@ -15,32 +15,33 @@ Uses
   {$IFDEF WINDOWS}
     Windows,
   {$ENDIF}
+  m_io_Base,
+  m_io_Sockets,
   m_Strings,
-  m_Socket_Class,
   MIS_Common,
   MIS_NodeData,
   MIS_Server;
 
-Function CreateTelnet (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateTelnet (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 { must match server create or there will be access violations }
 
 Type
   TTelnetServer = Class(TServerClient)
     ND       : TNodeData;
     Snooping : Boolean;
-    Constructor Create (Owner: TServerManager; ND: TNodeData; CliSock: TSocketClass);
+    Constructor Create (Owner: TServerManager; ND: TNodeData; CliSock: TIOSocket);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
   End;
 
 Implementation
 
-Function CreateTelnet (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateTelnet (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 Begin
   Result := TTelnetServer.Create(Owner, ND, CliSock);
 End;
 
-Constructor TTelnetServer.Create (Owner: TServerManager; ND: TNodeData; CliSock: TSocketClass);
+Constructor TTelnetServer.Create (Owner: TServerManager; ND: TNodeData; CliSock: TIOSocket);
 Begin
   Inherited Create(Owner, CliSock);
 

@@ -596,6 +596,8 @@ Begin
 
                     If SpecialKey(Data.Item[Count]^.HotKey) Then Continue;
 
+                    // check command acs for validkey?
+
                     Found := Data.Item[Count]^.HotKey = Temp + UpCase(Ch);
 
                     If Not ValidKey Then

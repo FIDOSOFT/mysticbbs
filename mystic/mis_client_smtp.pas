@@ -10,9 +10,10 @@ Interface
 Uses
   Classes,
   SysUtils,
+  m_io_Base,
+  m_io_Sockets,
   m_Strings,
   m_FileIO,
-  m_Socket_Class,
   m_DateTime,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
@@ -21,7 +22,7 @@ Uses
   MIS_NodeData,
   MIS_Common;
 
-Function CreateSMTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateSMTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
 Type
   TSMTPServer = Class(TServerClient)
@@ -35,7 +36,7 @@ Type
     FromPos    : LongInt;
     ToList     : TStringList;
 
-    Constructor Create (Owner: TServerManager; CliSock: TSocketClass);
+    Constructor Create (Owner: TServerManager; CliSock: TIOSocket);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
 
@@ -62,12 +63,12 @@ Const
   re_NeedRcpt     = '503 Must send RCPT TO: first';
   re_ErrorSending = '550 Mailbox not found';
 
-Function CreateSMTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateSMTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 Begin
   Result := TSMTPServer.Create(Owner, CliSock);
 End;
 
-Constructor TSMTPServer.Create (Owner: TServerManager; CliSock: TSocketClass);
+Constructor TSMTPServer.Create (Owner: TServerManager; CliSock: TIOSocket);
 Begin
   Inherited Create(Owner, CliSock);
 

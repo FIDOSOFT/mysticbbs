@@ -8,15 +8,16 @@ Interface
 
 Uses
   SysUtils,
+  m_io_Base,
+  m_io_Sockets,
   m_Strings,
   m_FileIO,
-  m_Socket_Class,
   m_DateTime,
   MIS_Server,
   MIS_NodeData,
   MIS_Common;
 
-Function CreateNNTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateNNTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
 Type
   TNNTPServer = Class(TServerClient)
@@ -32,7 +33,7 @@ Type
     CurArticle : LongInt;
     EndSession : Boolean;
 
-    Constructor Create (Owner: TServerManager; CliSock: TSocketClass);
+    Constructor Create (Owner: TServerManager; CliSock: TIOSocket);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
 
@@ -70,12 +71,12 @@ Const
   re_Unknown       = '500 Unknown command';
   re_UnknownOption = '501 Unknown option';
 
-Function CreateNNTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateNNTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 Begin
   Result := TNNTPServer.Create(Owner, CliSock);
 End;
 
-Constructor TNNTPServer.Create (Owner: TServerManager; CliSock: TSocketClass);
+Constructor TNNTPServer.Create (Owner: TServerManager; CliSock: TIOSocket);
 Begin
   Inherited Create(Owner, CliSock);
 

@@ -1114,7 +1114,7 @@ Begin
 
     If Session.FileBase.SelectProtocol(True, False) = 'Q' Then Exit;
 
-    Session.FileBase.ExecuteProtocol(False, FN);
+    Session.FileBase.ExecuteProtocol(1, FN);
 
     OK := Session.FileBase.dszSearch(JustFile(FN));
   End;
@@ -3276,7 +3276,7 @@ Begin
   Else Begin
     If Session.FileBase.SelectProtocol(True, False) = 'Q' Then Exit;
 
-    Session.FileBase.ExecuteProtocol(False, Session.TempPath + Config.qwkBBSID + '.rep');
+    Session.FileBase.ExecuteProtocol(1, Session.TempPath + Config.qwkBBSID + '.rep');
 
     If Not Session.FileBase.dszSearch(Config.qwkBBSID + '.rep') Then Begin
       Session.io.PromptInfo[1] := Config.qwkBBSID + '.rep';

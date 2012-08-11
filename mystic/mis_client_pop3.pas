@@ -12,9 +12,10 @@ Uses
   MD5,
   Classes,
   SysUtils,
+  m_io_Base,
+  m_io_Sockets,
   m_Strings,
   m_FileIO,
-  m_Socket_Class,
   m_DateTime,
   MIS_Server,
   MIS_NodeData,
@@ -23,7 +24,7 @@ Uses
   BBS_MsgBase_JAM,
   BBS_MsgBase_Squish;
 
-Function CreatePOP3 (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreatePOP3 (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
 Const
   MaxMailBoxSize = 1000;
@@ -50,7 +51,7 @@ Type
     MailInfo : Array[1..MaxMailBoxSize] of PMailMessageRec;
     MailSize : LongInt;
 
-    Constructor Create (Owner: TServerManager; CliSock: TSocketClass);
+    Constructor Create (Owner: TServerManager; CliSock: TIOSocket);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
 
@@ -91,12 +92,12 @@ Const
   re_ResetOK        = re_OK + 'Messages reset';
   re_MsgDeleted     = re_OK + 'Message deleted';
 
-Function CreatePOP3 (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreatePOP3 (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 Begin
   Result := TPOP3Server.Create(Owner, CliSock);
 End;
 
-Constructor TPOP3Server.Create (Owner: TServerManager; CliSock: TSocketClass);
+Constructor TPOP3Server.Create (Owner: TServerManager; CliSock: TIOSocket);
 Begin
   Inherited Create(Owner, CliSock);
 

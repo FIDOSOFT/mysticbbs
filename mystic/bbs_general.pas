@@ -206,7 +206,7 @@ Begin
   Close (TF);
 End;
 
-Function SearchBBS (Str : String; Temp : BBSListRec) : Boolean;
+Function SearchBBS (Str: String; Temp: BBSListRec) : Boolean;
 Begin
   Str := strUpper(Str);
 

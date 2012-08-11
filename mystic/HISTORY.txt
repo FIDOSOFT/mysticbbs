@@ -4535,4 +4535,19 @@
 
  + Restructured some class code to reduce executable sizes in the Mystic
    binary.  The result is about 120kb smaller executable size in Windows for
-   Mystic.exe.
+   Mystic.exe.  The other versions should see similar results.
+
+ ! Mystic was not properly parsing long filenames with spaces in them during
+   external file transfer.
+
+ ! Mystic was not properly setting the "Transfering files" node status when
+   executing transfer protocols.
+
+ + Mystic now has internal Zmodem protocol.  To enable it, just use the
+   @ZMODEM text for the send/receive commands in the Protocol editor, and
+   Mystic will do the rest.  The Zmodem has been tested extensively with:
+
+      mTelnet
+      SyncTerm
+      SEXYZ
+      NetRunner

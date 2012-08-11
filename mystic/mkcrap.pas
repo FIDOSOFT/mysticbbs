@@ -43,9 +43,11 @@ Var
   SecsPast, DaysPast: LongInt;
 Begin
   DateG2J (DT.Year, DT.Month, DT.Day, DaysPast);
+
   DaysPast := DaysPast - DATEc1970;
   SecsPast := DaysPast * 86400;
   SecsPast := SecsPast + (LongInt(DT.Hour) * 3600) + (DT.Min * 60) + (DT.Sec);
+
   DTToUnixDate := SecsPast;
 End;
 
@@ -114,39 +116,35 @@ Function SaveFile(FN: String; Var Rec; FS: Word): Word;
 
 
 Procedure Str2Az(Str: String; MaxLen: Byte; Var AZStr); {Convert string to asciiz}
-        Begin
-        If Length(Str) >= MaxLen Then
-                Begin
-                Str[MaxLen] := #0;
-                Move(Str[1], AZStr, MaxLen);
-                End
-        Else
-                Begin
-                Str[Length(Str) + 1] := #0;
-                Move(Str[1], AZStr, Length(Str) + 1);
-                End;
-        End;
+Begin
+  If Length(Str) >= MaxLen Then Begin
+    Str[MaxLen] := #0;
+    Move(Str[1], AZStr, MaxLen);
+  End Else Begin
+    Str[Length(Str) + 1] := #0;
+    Move(Str[1], AZStr, Length(Str) + 1);
+  End;
+End;
 
 Function MonthStr(MonthNo: Word): String;
 Begin
-        Case MonthNo of
-                01: MonthStr := 'Jan';
-                02: MonthStr := 'Feb';
-                03: MonthStr := 'Mar';
-                04: MonthStr := 'Apr';
-                05: MonthStr := 'May';
-                06: MonthStr := 'Jun';
-                07: MonthStr := 'Jul';
-                08: MonthStr := 'Aug';
-                09: MonthStr := 'Sep';
-                10: MonthStr := 'Oct';
-                11: MonthStr := 'Nov';
-                12: MonthStr := 'Dec';
-        Else
-                MonthStr := '???';
-        End;
+  Case MonthNo of
+    01: MonthStr := 'Jan';
+    02: MonthStr := 'Feb';
+    03: MonthStr := 'Mar';
+    04: MonthStr := 'Apr';
+    05: MonthStr := 'May';
+    06: MonthStr := 'Jun';
+    07: MonthStr := 'Jul';
+    08: MonthStr := 'Aug';
+    09: MonthStr := 'Sep';
+    10: MonthStr := 'Oct';
+    11: MonthStr := 'Nov';
+    12: MonthStr := 'Dec';
+   Else
+     MonthStr := '???';
+   End;
 End;
-
 
 Function FormattedDate(DT: DateTime; Mask: String): String;
 Var

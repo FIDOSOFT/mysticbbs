@@ -25,6 +25,7 @@ Program Install;
 {$MODESWITCH NESTEDPROCVARS-}
 
 Uses
+  m_FileIO,
   m_Strings,
   m_Input,
   m_Output,
@@ -119,20 +120,23 @@ Begin
 	IsDir := ((wAttr And Directory) = Directory);
 End;
 
-Procedure MakeDir (Str: String);
+Function MakeDir (Str: String) : Boolean;
 Var
-  A      : Byte;
-  CurDIR : String;
-  Prefix : String;
+  PathPos : Byte;
+  CurDIR  : String;
+  Prefix  : String;
 Begin
-  Prefix := '';
+  Result := True;
 
-  A := Pos(PathChar, Str);
+  If DirExists(Str) Then Exit;
 
-  While (A > 0) Do Begin
-    CurDIR := Copy(Str, 1, A);
+  Prefix  := '';
+  PathPos := Pos(PathChar, Str);
 
-    Delete (Str, 1, A);
+  While (PathPos > 0) Do Begin
+    CurDIR := Copy(Str, 1, PathPos);
+
+    Delete (Str, 1, PathPos);
 
     Prefix := Prefix + CurDIR;
 
@@ -143,7 +147,7 @@ Begin
       End;
     End;
 
-    A := Pos(PathChar, Str);
+    PathPos := Pos(PathChar, Str);
   End;
 End;
 
@@ -633,7 +637,7 @@ Begin
 						End;
 			#60 : Begin
 							GetPaths := True;
-							Break;
+              Break;
 						End;
 			#72 : If Pos > 1 Then Dec(Pos) Else Pos := 9;
 			#80 : If Pos < 9 Then Inc(Pos) Else Pos := 1;

@@ -28,6 +28,10 @@ Uses
     HeapTrc,
     LineInfo,
   {$ENDIF}
+  {$IFDEF WINDOWS}
+    m_io_Base,
+    m_io_Sockets,
+  {$ENDIF}
   {$IFDEF UNIX}
     BaseUnix,
   {$ENDIF}
@@ -411,7 +415,7 @@ Begin
     Session.LocalMode := Session.CommHandle = -1;
 
     If Not Session.LocalMode Then Begin
-      Session.Client.FSocketHandle := Session.CommHandle;
+      TIOSocket(Session.Client).FSocketHandle := Session.CommHandle;
 
       Session.io.LocalScreenDisable;
     End;

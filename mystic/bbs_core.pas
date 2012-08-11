@@ -5,10 +5,13 @@ Unit BBS_Core;
 Interface
 
 Uses
+  m_io_Base,
+  {$IFNDEF UNIX}
+  m_io_Sockets,
+  {$ENDIF}
   m_FileIO,
   m_Strings,
   m_DateTime,
-  m_Socket_Class,
   BBS_Common,
   BBS_IO,
   BBS_MsgBase,
@@ -22,12 +25,14 @@ Const
 
 Type
   TBBSCore = Class
+    {$IFNDEF UNIX}
+      Client        : TIOBase;
+    {$ENDIF}
     User          : TBBSUser;
     Msgs          : TMsgBase;
     FileBase      : TFileBase;
     Menu          : TMenuEngine;
     IO            : TBBSIO;
-    Client        : TSocketClass;
     EventFile     : File of EventRec;
     ThemeFile     : File of RecTheme;
     VoteFile      : File of VoteRec;
@@ -122,9 +127,9 @@ Begin
   InMessage     := False;
   MessageCheck  := mysMessageThreshold;
 
-  {$IFDEF WINDOWS}
-    Client := TSocketClass.Create;
-    Client.FTelnetServer := True;
+  {$IFNDEF UNIX}
+    Client := TIOSocket.Create;
+    TIOSocket(Client).FTelnetServer := True;
   {$ENDIF}
 
   User     := TBBSUser.Create(Pointer(Self));

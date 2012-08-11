@@ -5,6 +5,10 @@ Unit bbs_Common;
 Interface
 
 Uses
+  {$IFDEF WINDOWS}
+    m_io_Base,
+    m_io_Sockets,
+  {$ENDIF}
   {$IFDEF UNIX}
     Unix,
   {$ENDIF}
@@ -13,8 +17,7 @@ Uses
   m_Output,
   m_Input,
   m_DateTime,
-  m_FileIO,
-  m_Socket_Class;
+  m_FileIO;
 
 {$I RECORDS.PAS}
 
