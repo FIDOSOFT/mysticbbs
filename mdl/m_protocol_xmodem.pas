@@ -5,7 +5,7 @@ Unit m_Protocol_XModem;
 Interface
 
 Uses
-  m_Socket_Class,
+  m_io_Base,
   m_Protocol_Base,
   m_Protocol_Queue;
 
@@ -14,13 +14,13 @@ Type
     DoCRC : Boolean;
     Do1K  : Boolean;
 
-    Constructor Create (Var C: TSocketClass; Var Q: TProtocolQueue); Override;
+    Constructor Create (Var C: TIOBase; Var Q: TProtocolQueue); Override;
     Destructor  Destroy; Override;
   End;
 
 Implementation
 
-Constructor TProtocolXmodem.Create (Var C: TSocketClass; Var Q: TProtocolQueue);
+Constructor TProtocolXmodem.Create (Var C: TIOBase; Var Q: TProtocolQueue);
 Begin
   Inherited Create(C, Q);
 

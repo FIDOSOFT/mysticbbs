@@ -7,7 +7,7 @@ Interface
 Uses
   m_DateTime,
   m_Input,
-  m_Socket_Class,
+  m_io_Base,
   m_Protocol_Queue;
 
 Type
@@ -32,7 +32,7 @@ Type
     Status      : RecProtocolStatus;
     StatusProc  : TProtocolStatusProc;
     AbortProc   : TProtocolAbortProc;
-    Client      : TSocketClass;
+    Client      : TIOBase;
     Queue       : TProtocolQueue;
     EndTransfer : Boolean;
     Connected   : Boolean;
@@ -40,7 +40,7 @@ Type
     StatusTimer : LongInt;
     ReceivePath : String;
 
-    Constructor Create (Var C: TSocketClass; Var Q: TProtocolQueue); Virtual;
+    Constructor Create (Var C: TIOBase; Var Q: TProtocolQueue); Virtual;
     Destructor  Destroy; Override;
 
     Function    AbortTransfer   : Boolean;
@@ -58,7 +58,7 @@ Begin
   Result := False;
 End;
 
-Constructor TProtocolBase.Create (Var C: TSocketClass; Var Q: TProtocolQueue);
+Constructor TProtocolBase.Create (Var C: TIOBase; Var Q: TProtocolQueue);
 Begin
   Client      := C;
   Queue       := Q;

@@ -5,7 +5,7 @@ Unit m_Protocol_YModem;
 Interface
 
 Uses
-  m_Socket_Class,
+  m_io_Base,
   m_Protocol_Queue,
   m_Protocol_Xmodem;
 
@@ -13,13 +13,13 @@ Type
   TProtocolYmodem = Class(TProtocolXmodem)
     UseG : Boolean;
 
-    Constructor Create (Var C: TSocketClass; Var Q: TProtocolQueue); Override;
+    Constructor Create (Var C: TIOBase; Var Q: TProtocolQueue); Override;
     Destructor  Destroy; Override;
   End;
 
 Implementation
 
-Constructor TProtocolYModem.Create (Var C: TSocketClass; Var Q: TProtocolQueue);
+Constructor TProtocolYModem.Create (Var C: TIOBase; Var Q: TProtocolQueue);
 Begin
   Inherited Create(C, Q);
 

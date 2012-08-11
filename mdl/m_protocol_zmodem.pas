@@ -2,7 +2,7 @@ Unit m_Protocol_Zmodem;
 
 {$I M_OPS.PAS}
 
-{$DEFINE ZDEBUG}
+{.$DEFINE ZDEBUG}
 
 Interface
 
@@ -13,7 +13,7 @@ Uses
   m_FileIO,
   m_Strings,
   m_Input,
-  m_Socket_Class,
+  m_io_Base,
   m_Protocol_Base,
   m_Protocol_Queue;
 
@@ -44,7 +44,7 @@ Type
     RxBytes    : LongInt;
     RxCount    : LongInt;
 
-    Constructor Create (Var C: TSocketClass; Var Q: TProtocolQueue); Override;
+    Constructor Create (Var C: TIOBase; Var Q: TProtocolQueue); Override;
     Destructor  Destroy; Override;
 
     Procedure   QueueReceive; Override;
@@ -187,7 +187,7 @@ Begin
 End;
 {$ENDIF}
 
-Constructor TProtocolZmodem.Create (Var C: TSocketClass; Var Q: TProtocolQueue);
+Constructor TProtocolZmodem.Create (Var C: TIOBase; Var Q: TProtocolQueue);
 Begin
   Inherited Create (C, Q);
 

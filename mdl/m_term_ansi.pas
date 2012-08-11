@@ -6,7 +6,7 @@ Interface
 
 Uses
   m_Output,
-  m_Socket_Class,
+  m_io_Base,
   m_Strings;
 
 Type
@@ -14,7 +14,7 @@ Type
     Screen   : TOutput;
     WasValid : Boolean;
   Private
-    Client  : TSocketClass;
+    Client  : TIOBase;
     State   : Byte;
     SavedX  : Byte;
     SavedY  : Byte;
@@ -33,7 +33,7 @@ Type
     Destructor  Destroy; Override;
     Procedure   Process (Ch: Char);
     Procedure   ProcessBuf (Var Buf; BufLen : Word);
-    Procedure   SetReplyClient (Var Cli: TSocketClass);
+    Procedure   SetReplyClient (Var Cli: TIOBase);
   End;
 
 Implementation
@@ -57,7 +57,7 @@ Begin
   Inherited Destroy;
 End;
 
-Procedure TTermAnsi.SetReplyClient (Var Cli: TSocketClass);
+Procedure TTermAnsi.SetReplyClient (Var Cli: TIOBase);
 Begin
   Client := Cli;
 End;
