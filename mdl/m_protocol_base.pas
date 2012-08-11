@@ -36,6 +36,8 @@ Type
     Queue       : TProtocolQueue;
     EndTransfer : Boolean;
     Connected   : Boolean;
+    StatusCheck : Word;
+    StatusTimer : LongInt;
     ReceivePath : String;
 
     Constructor Create (Var C: TSocketClass; Var Q: TProtocolQueue); Virtual;
@@ -44,6 +46,9 @@ Type
     Function    AbortTransfer   : Boolean;
     Procedure   StatusUpdate    (Starting, Ending: Boolean);
     Function    ReadByteTimeOut (hSec: LongInt) : SmallInt;
+
+    Procedure   QueueReceive; Virtual;
+    Procedure   QueueSend; Virtual;
   End;
 
 Implementation
@@ -62,6 +67,8 @@ Begin
   ReceivePath := '';
   StatusProc  := NIL;
   AbortProc   := @NoAbortProc;
+  StatusCheck := 100;
+  StatusTimer := 0;
 
   FillChar(Status, SizeOf(Status), 0);
 End;
@@ -84,10 +91,10 @@ Begin
   Result := -1;
 
   If Client.DataWaiting Then Begin
-    Connected := Client.ReadBuf(Res, 1) <> -1;
+    Connected := Client.ReadBuf(Res, 1) >= 0;
     Result    := Res;
   End Else
-    Case Client.WaitForData(HSec * 10) of
+    Case Client.WaitForData(hSec * 10) of
       -1 : Connected := False;
       0  : ;
     Else
@@ -102,6 +109,14 @@ Begin
     EndTransfer := (Not Connected) or AbortProc;
 
   AbortTransfer := EndTransfer;
+End;
+
+Procedure TProtocolBase.QueueReceive;
+Begin
+End;
+
+Procedure TProtocolBase.QueueSend;
+Begin
 End;
 
 End.

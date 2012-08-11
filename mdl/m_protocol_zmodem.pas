@@ -2,7 +2,7 @@ Unit m_Protocol_Zmodem;
 
 {$I M_OPS.PAS}
 
-{.$DEFINE ZDEBUG}
+{$DEFINE ZDEBUG}
 
 Interface
 
@@ -21,8 +21,6 @@ Const
   ZBufSize    = 1024;  // 1024 only maybe 8k ZEDZAP someday
   ZAttnLen    = 32;
   RxTimeOut   : Word = 500;
-  StatusCheck : Word = 50;
-  StatusTimer : LongInt = 0;
 
 Type
   ZHdrType = Array[0..3] of Byte;
@@ -49,8 +47,9 @@ Type
     Constructor Create (Var C: TSocketClass; Var Q: TProtocolQueue); Override;
     Destructor  Destroy; Override;
 
-    Procedure   QueueReceive; Virtual;
-    Procedure   QueueSend; Virtual;
+    Procedure   QueueReceive; Override;
+    Procedure   QueueSend; Override;
+
     Function    ZInitReceiver        : SmallInt;
     Function    ZGetByte             : SmallInt;
     Function    ZDLRead              : SmallInt;
@@ -80,6 +79,7 @@ Implementation
 Const
   CANBRK     = 4;
   EscAll     = $0040;
+  ZCRC       = 13;
   ZABORT     = 7;
   ZRQINIT    = 0;
   ZPAD       = 42;
@@ -843,7 +843,7 @@ Var
 Begin
   {$IFDEF ZDEBUG} ZLog(''); {$ENDIF}
   {$IFDEF ZDEBUG} ZLog('ZSendFile -> begin'); {$ENDIF}
-  {$IFDEF ZDEBUG} ZLog('ZSendFile -> file:' + Queue^.QData[Queue^.QPos]^.FName); {$ENDIF}
+  {$IFDEF ZDEBUG} ZLog('ZSendFile -> file:' + Queue.QData[Queue.QPos].FileName); {$ENDIF}
 
   Result := ZERROR;
 
@@ -897,14 +897,22 @@ Begin
         ZFIN,
         ZTIMEOUT  : Begin
                       Close (WrkFile);
+
                       Exit;
                     End;
         ZSKIP     : Begin
                       Close (WrkFile);
                       ZSendFile := ZSKIP;
+
                       Exit;
                     End;
-        ZRPOS     : Goto start;
+        ZCRC :      Begin
+                      ZPutLong(FileCRC32(Status.FilePath + Status.FileName));
+                      ZSendHexHeader(ZCRC);
+
+                      Continue;
+                    End;
+        ZRPOS     : Goto Start;
       End;
     Until (C <> ZRINIT);
   Until False;
@@ -1118,7 +1126,7 @@ Begin
 
     FillChar (TxHdr, SizeOf(TxHdr), 0); // zero out all flags
 
-    TxHdr[ZF0] := CANFDX OR CANOVIO OR CANFC32 {OR CANBRK};
+    TxHdr[ZF0] := CANFDX OR CANOVIO OR CANFC32 OR CANBRK;
 
     If EscapeAll Then
       TxHdr[ZF0] := TxHdr[ZF0] or ESCALL;

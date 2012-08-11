@@ -72,6 +72,7 @@ Begin
   Assign (F, fPath + fName);
 
   {$I-} Reset(F, 1); {$I+}
+
   If IoResult = 0 Then Begin
     QData[QSize]^.FileSize := FileSize(F);
     QData[QSize]^.Status   := QueuePending;
