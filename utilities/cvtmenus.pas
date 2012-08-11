@@ -3,6 +3,7 @@ Program CvtMenus;
 {$I M_OPS.PAS}
 
 Uses
+  lineinfo,
   DOS,
   m_Strings,
   m_FileIO,
@@ -198,6 +199,8 @@ Begin
 
       For Loop := Count to Cmds Do
         If MenuCmd[Count].HotKey = MenuCmd[Loop].HotKey Then Begin
+          If Length(MenuCmd[Loop].Command) < 2 Then Continue;
+
           Inc (NewItem[NewItems].Commands);
 
           NewCmds := NewItem[NewItems].Commands;
@@ -216,6 +219,14 @@ Begin
     End;
 
     DoneList.Free;
+
+    // New engine will send header/footer for lightbar menus
+    // old engine did not, so zero these out just in case
+
+    If Menu.MenuType > 0 Then Begin
+      Menu.Header := '';
+      Menu.Prompt := '';
+    End;
 
     FlagStr := strPadR(
       '0' +                         // char type
@@ -243,6 +254,10 @@ Begin
     For Count := 1 to NewItems Do Begin
       NewItem[Count].ReDraw    := 1;
       NewItem[Count].TimerType := 0;
+      NewItem[Count].ShowType  := 0;
+
+      If (NewItem[Count].Text = '') and (Menu.MenuType = 0) Then
+        NewItem[Count].ShowType := 2;
 
       FlagStr := strPadR(
         strI2S(NewItem[Count].ReDraw) +
