@@ -4551,3 +4551,16 @@
       SyncTerm
       SEXYZ
       NetRunner
+
+ + The file directory editor is now available in the standard file listing.
+   In the past it only worked in the lightbar file listing.  Whoops.  The
+   hotkey is E if you have SysOp access.
+
+ ! File list downloader was not properly allowing a download after the list
+   was created.
+
+ + File list compiler now only adds the filebase header/footer to the list
+   if the filebase has files listed.
+
+ + File list compiler now uses megabytes instead of kilobytes in the file
+   base summary footer.

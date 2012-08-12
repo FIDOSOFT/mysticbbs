@@ -2,8 +2,6 @@ Unit MPL_Compile;
 
 {$I M_OPS.PAS}
 
-{$MODESWITCH NESTEDPROCVARS-}
-
 Interface
 
 Uses

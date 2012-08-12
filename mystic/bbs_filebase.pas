@@ -2,8 +2,6 @@ Unit bbs_FileBase;
 
 {$I M_OPS.PAS}
 
-{$MODESWITCH NESTEDPROCVARS-}
-
 Interface
 
 Uses
@@ -619,18 +617,20 @@ Function TFileBase.ExportFileList (NewFiles : Boolean; Qwk: Boolean) : Boolean;
 Var
   TF         : Text;
   DF         : File;
-  A          : Byte;
+  Count      : Byte;
   Temp       : String[mysMaxFileDescLen];
   Str        : String;
-  AreaFiles  : Integer;
-  AreaSize   : LongInt;
+  AreaFiles  : LongInt;
+  AreaSize   : Cardinal;
   TotalFiles : LongInt;
 Begin
   If NewFiles Then Begin
     If Qwk Then Temp := 'newfiles.dat' Else Temp := 'newfiles.txt';
+
     Session.io.OutFullLn (Session.GetPrompt(219));
   End Else Begin
     Temp := 'allfiles.txt';
+
     Session.io.OutFullLn (Session.GetPrompt(220));
   End;
 
@@ -645,72 +645,79 @@ Begin
 
   While Not Eof(FBaseFile) Do Begin
     Read (FBaseFile, FBase);
-    If Session.User.Access(FBase.ListACS) Then Begin
-      Session.io.OutFull (Session.GetPrompt(222));
 
-      GetFileScan;
+    If Not Session.User.Access(FBase.ListACS) Then Continue;
 
-      AreaFiles := 0;
-      AreaSize  := 0;
+    Session.io.OutFull (Session.GetPrompt(222));
 
-      WriteLn (TF, '');
-      WriteLn (TF, '.-' + strRep('-', Length(strStripPipe(FBase.Name))) + '-.');
-      WriteLn (TF, '| ' + strStripPipe(FBase.Name) + ' |');
-      WriteLn (TF, '`-' + strRep('-', Length(strStripPipe(FBase.Name))) + '-''');
-      WriteLn (TF, '.' + strRep('-', 77) + '.');
-      WriteLn (TF, '| File     Size    Date    Description                                        |');
-      WriteLn (TF, '`' + strRep('-', 77) + '''');
+    GetFileScan;
 
-      Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
-      {$I-} Reset (FDirFile); {$I+}
-      If IoResult = 0 Then Begin
-        Assign (DF, Config.DataPath + FBase.FileName + '.des');
-        {$I-} Reset (DF, 1); {$I+}
+    AreaFiles := 0;
+    AreaSize  := 0;
 
-        If IoResult <> 0 Then ReWrite (DF, 1);
+    Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
+    {$I-} Reset (FDirFile); {$I+}
+    If IoResult = 0 Then Begin
+      Assign (DF, Config.DataPath + FBase.FileName + '.des');
+      {$I-} Reset (DF, 1); {$I+}
 
-        While Not Eof(FDirFile) Do Begin
-          Read (FDirFile, FDir);
+      If IoResult <> 0 Then ReWrite (DF, 1);
 
-          If (NewFiles and (FDir.DateTime > FScan.LastNew)) or Not NewFiles Then
-            If FDir.Flags And FDirDeleted = 0 Then Begin
-              Inc (TotalFiles);
-              Inc (AreaFiles);
-              Inc (AreaSize, FDir.Size DIV 1024);
+      While Not Eof(FDirFile) Do Begin
+        Read (FDirFile, FDir);
 
-              WriteLn (TF, FDir.FileName);
-              Write   (TF, ' `- ' + strPadL(strComma(FDir.Size), 11, ' ') + '  ' + DateDos2Str(FDir.DateTime, Session.User.ThisUser.DateType) + '  ');
+        If (NewFiles and (FDir.DateTime > FScan.LastNew)) or Not NewFiles Then
+          If FDir.Flags And FDirDeleted = 0 Then Begin
+            Inc (TotalFiles);
+            Inc (AreaFiles);
+            Inc (AreaSize, (FDir.Size DIV 1024) DIV 1024);
 
-              Seek (DF, FDir.DescPtr);
-              For A := 1 to FDir.DescLines Do Begin
-                BlockRead (DF, Temp[0], 1);
-                BlockRead (DF, Temp[1], Ord(Temp[0]));
-                If A = 1 Then WriteLn (TF, Temp) Else WriteLn (TF, strRep(' ', 27) + Temp);
-              End;
+            If AreaFiles = 1 Then Begin
+              WriteLn (TF, '');
+              WriteLn (TF, '.-' + strRep('-', Length(strStripPipe(FBase.Name))) + '-.');
+              WriteLn (TF, '| ' + strStripPipe(FBase.Name) + ' |');
+              WriteLn (TF, '`-' + strRep('-', Length(strStripPipe(FBase.Name))) + '-''');
+              WriteLn (TF, '.' + strRep('-', 77) + '.');
+              WriteLn (TF, '| File     Size    Date    Description                                        |');
+              WriteLn (TF, '`' + strRep('-', 77) + '''');
             End;
-        End;
 
-        Session.io.PromptInfo[2] := strI2S(FileSize(FDirFile));
+            WriteLn (TF, FDir.FileName);
+            Write   (TF, ' `- ' + strPadL(strComma(FDir.Size), 11, ' ') + '  ' + DateDos2Str(FDir.DateTime, Session.User.ThisUser.DateType) + '  ');
 
-        Close (FDirFile);
-        Close (DF);
+            Seek (DF, FDir.DescPtr);
 
-        SetFileScan;
+            For Count := 1 to FDir.DescLines Do Begin
+              BlockRead (DF, Temp[0], 1);
+              BlockRead (DF, Temp[1], Ord(Temp[0]));
 
-        Str := 'Total files: ' + strI2S(AreaFiles) + ' (' + strI2S(AreaSize) + 'k)';
+              If Count = 1 Then WriteLn (TF, Temp) Else WriteLn (TF, strRep(' ', 27) + Temp);
+            End;
+          End;
+      End;
+
+      Session.io.PromptInfo[2] := strI2S(FileSize(FDirFile));
+
+      Close (FDirFile);
+      Close (DF);
+
+      SetFileScan;
+
+      If AreaFiles > 0 Then Begin
+        Str := 'Total files: ' + strI2S(AreaFiles) + ' (' + strI2S(AreaSize) + 'mb)';
 
         WriteLn (TF, '.' + strRep('-', 77) + '.');
         WriteLn (TF, '| ' + strPadR(Str, 76, ' ') + '|');
         WriteLn (TF, '`' + strRep('-', 77) + '''');
-      End Else
-        Session.io.PromptInfo[2] := '0';
+      End;
+    End Else
+      Session.io.PromptInfo[2] := '0';
 
-      Session.io.PromptInfo[1] := FBase.Name;
-      Session.io.PromptInfo[3] := strI2S(AreaFiles);
+    Session.io.PromptInfo[1] := FBase.Name;
+    Session.io.PromptInfo[3] := strI2S(AreaFiles);
 
-      Session.io.OutBS (Screen.CursorX, False);
-      Session.io.OutFullLn (Session.GetPrompt(223));
-    End;
+    Session.io.OutBS     (Screen.CursorX, False);
+    Session.io.OutFullLn (Session.GetPrompt(223));
   End;
 
   Close (FBaseFile);
@@ -1136,7 +1143,7 @@ Begin
     While Not Eof(ProtocolFile) Do Begin
       Read (ProtocolFile, Protocol);
 
-      If Protocol.Active And (Protocol.Batch = Batch) And (Protocol.OSType = OSTYpe) Then Begin
+      If Protocol.Active And (Protocol.Batch = Batch) And ((Protocol.OSType = OSTYpe) or (Protocol.OSType = 3)) Then Begin
         Keys := Keys + Protocol.Key;
 
         Session.io.PromptInfo[1] := Protocol.Key;
@@ -2015,6 +2022,31 @@ Var
     End;
   End;
 
+  Procedure DoEditor;
+  Var
+    SavedPos : LongInt;
+  Begin
+    {$I-} SavedPos := FilePos(FBaseFile); {$I+}
+
+    If IoResult = 0 Then
+      Close (FBaseFile)
+    Else
+      SavedPos := -1;
+
+    Close (FDirFile);
+    Close (DataFile);
+
+    DirectoryEditor(True, List[CurPos].FileName);
+
+    If SavedPos <> -1 Then Begin
+      Reset (FBaseFile);
+      Seek  (FBaseFile, SavedPos);
+    End;
+
+    Reset (FDirFile);
+    Reset (DataFile, 1);
+  End;
+
   Procedure DrawPage;
   Var
     OK      : Boolean;
@@ -2313,25 +2345,7 @@ Var
                       End;
                     End;
               'E' : If Session.User.Access(FBase.SysopACS) Then Begin
-                      { Save file POS if FBaseFile is open }
-                      {$I-} B := FilePos(FBaseFile); {$I+}
-                      If IoResult = 0 Then
-                        Close (FBaseFile)
-                      Else
-                        B := -1;
-
-                      Close (FDirFile);
-                      Close (DataFile);
-
-                      DirectoryEditor(True, List[CurPos].FileName);
-
-                      If B <> -1 Then Begin
-                        Reset (FBaseFile);
-                        Seek  (FBaseFile, B);
-                      End;
-
-                      Reset (FDirFile);
-                      Reset (DataFile, 1);
+                      DoEditor;
 
                       FullReDraw;
                       DrawPage;
@@ -2366,9 +2380,10 @@ Var
 
   Procedure Ascii_List;
   Var
-    A : LongInt;
-    B : LongInt;
+    A      : LongInt;
+    B      : LongInt;
     okSave : Byte;
+    Keys   : String[20];
   Begin
     ListType := 0;
 
@@ -2384,10 +2399,21 @@ Var
 
     Result := 2;
 
+    Keys := #13 + 'FNPQV';
+
+    If Session.User.Access(FBase.SysopACS) Then Keys := Keys + 'E';
+
     Repeat
       Session.io.OutFull (Session.GetPrompt(44));
 
-      Case Session.io.OneKey(#13'FNPQV', True) of
+      Case Session.io.OneKey(Keys, True) of
+        'E' : Begin
+                DoEditor;
+
+                DrawPage;
+
+                If CurPos > ListSize Then CurPos := ListSize;
+              End;
         #13,
         'N' : If LastPage Then
                 Break

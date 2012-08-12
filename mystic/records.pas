@@ -307,9 +307,9 @@ Type
     FirstOn      : LongInt;               { Date/Time of First Call      }
     LastOn       : LongInt;               { Date/Time of Last Call       }
     Calls        : LongInt;               { Number of calls to BBS       }
-    CallsToday   : SmallInt;              { Number of calls today        }
-    DLs          : SmallInt;              { # of downloads               }
-    DLsToday     : SmallInt;              { # of downloads today         }
+    CallsToday   : SmallWord;             { Number of calls today        }
+    DLs          : SmallWord;             { # of downloads               }
+    DLsToday     : SmallWord;             { # of downloads today         }
     DLk          : LongInt;               { # of downloads in K          }
     DLkToday     : LongInt;               { # of downloaded K today      }
     ULs          : LongInt;               { total number of uploads      }

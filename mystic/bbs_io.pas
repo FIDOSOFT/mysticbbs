@@ -23,7 +23,7 @@ Const
   MaxPromptInfo    = 15;
 
 Type
-  TGetKeyCallBack = Function (Forced: Boolean) : Boolean Is Nested;
+  TGetKeyCallBack = Function (Forced: Boolean) : Boolean;// Is Nested;
 
   TBBSIO = Class
     Core           : Pointer;

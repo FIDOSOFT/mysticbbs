@@ -158,14 +158,14 @@ Begin
             Form.AddDate ('A', ' Last Call'     ,  7,  7, 23,  7, 14, @LastCall, Topic + 'Date of last call (MM/DD/YY)');
             Form.AddLong ('C', ' Calls'         ,  7,  8, 23,  8, 14,  7, 0, 9999999, @U.Calls, Topic + 'Total number of calls to the BBS');
             Form.AddWord ('L', ' Calls Today'   ,  7,  9, 23,  9, 14,  5, 0, 65000, @U.CallsToday, Topic + 'Total number of calls today');
-            Form.AddLong ('D', ' Downloads'     ,  7, 10, 23, 10, 14,  7, 0, 9999999, @U.DLs, Topic + 'Total number of downloads');
+            Form.AddWord ('D', ' Downloads'     ,  7, 10, 23, 10, 14,  7, 0, 65000, @U.DLs, Topic + 'Total number of downloads');
             Form.AddWord ('T', ' DLs Today'     ,  7, 11, 23, 11, 14,  5, 0, 65000, @U.DLsToday, Topic + 'Total downloads today');
             Form.AddLong ('W', ' DL KB'         ,  7, 12, 23, 12, 14, 10, 0, 2000000000, @U.DLk, Topic + 'Total downloads in kilobytes');
             Form.AddLong ('K', ' DL KB Today'   ,  7, 13, 23, 13, 14, 10, 0, 2000000000, @U.DLkToday, Topic + 'Downloads in kilobytes today');
             Form.AddLong ('U', ' Uploads'       ,  7, 14, 23, 14, 14, 10, 0, 2000000000, @U.ULs, Topic + 'Total number of uploads');
             Form.AddLong ('B', ' Upload KB'     ,  7, 15, 23, 15, 14, 10, 0, 2000000000, @U.ULk, Topic + 'Total uploads in kilobytes');
             Form.AddLong ('M', ' Msg Posts'     ,  7, 16, 23, 16, 14, 10, 0, 2000000000, @U.Posts, Topic + 'Total number of message posts');
-            Form.AddWord ('E', ' E-Mails'       ,  7, 17, 23, 17, 14,  5, 0, 65000, @U.Emails, Topic + 'Number of e-mails sent');
+            Form.AddLong ('E', ' E-Mails'       ,  7, 17, 23, 17, 14,  5, 0, 65000, @U.Emails, Topic + 'Number of e-mails sent');
             Form.AddLong ('I', ' File Ratings'  ,  7, 18, 23, 18, 14, 10, 0, 2000000000, @U.FileRatings, Topic + 'Total file ratings');
             Form.AddLong ('N', ' File Comments' ,  7, 19, 23, 19, 14, 10, 0, 2000000000, @U.FileComment, Topic + 'Total file comments');
             Form.AddDate ('P', ' Last PW Date'  ,  7, 20, 23, 20, 14, @U.LastPWChange, Topic + 'Date of last password change');
