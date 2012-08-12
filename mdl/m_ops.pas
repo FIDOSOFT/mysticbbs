@@ -28,8 +28,8 @@
   -------------------------------------------------------------------------
 }
 
-{.$DEFINE DEBUG}
-{$DEFINE RELEASE}
+{$DEFINE DEBUG}
+{.$DEFINE RELEASE}
 {.$DEFINE LOGGING}
 
 { ------------------------------------------------------------------------- }
@@ -63,7 +63,6 @@
 {$BOOLEVAL OFF}
 {$IMPLICITEXCEPTIONS OFF}
 {$OBJECTCHECKS OFF}
-{$MODESWITCH NESTEDPROCVARS}
 
 {$IFDEF CPUX86_64
   {$FPUTYPE SSE64}

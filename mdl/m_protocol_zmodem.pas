@@ -2,9 +2,11 @@ Unit m_Protocol_Zmodem;
 
 {$I M_OPS.PAS}
 
-{.$DEFINE ZDEBUG}
+{$DEFINE ZDEBUG}
 
 Interface
+
+// Ported from ZMODEM.C
 
 Uses
   DOS,
@@ -95,7 +97,7 @@ Const
   XOFF       = 19;
   CAN        = 24;
   ZCAN       = 16;
-  CDLE       = 16;
+  DLE        = 16;
   ZBIN       = 65;
   GOTCAN     = 272;
   ZCRCE      = 104;
@@ -132,9 +134,9 @@ Const
   ZSINIT     = 2;
   ZFREECNT   = 17;
   ZCOMPL     = 15;
-  cDleHi     = cDle + $80;
-  cXonHi     = Xon + $80;
-  cXoffHi    = Xoff + $80;
+  DleHi      = Dle OR $80;
+  XonHi      = Xon OR $80;
+  XoffHi     = Xoff OR $80;
 
   CancelStr : String = #24#24#24#24#24#24#24#24#8#8#8#8#8#8#8#8;
 
@@ -165,6 +167,7 @@ Begin
     GOTCRCG : Result := 'GOTCRCG';
     GOTCRCQ : Result := 'GOTCRCQ';
     GOTCRCW : Result := 'GOTCRCW';
+    ZCRC    : Result := 'ZCRC';
   Else
     Result := 'UNKNOWN:' + strI2S(Ord(B));
   End;
@@ -279,7 +282,42 @@ Function TProtocolZmodem.ZDLRead : SmallInt;
 Begin
   Result := ReadByteTimeOut(RxTimeOut);
 
-  If Result <> CAN Then Exit;
+  If Result <> ZDLE Then Exit;
+
+  Result := ReadByteTimeOut(RxTimeOut);
+
+  If Result = CAN Then Begin
+    Result := ReadByteTimeOut(RxTimeOut);
+    If Result = CAN Then Begin
+      Result := ReadByteTimeOut(RxTimeOut);
+      If Result = CAN Then
+        Result := ReadByteTimeOut(RxTimeOut);
+    End
+  End;
+
+  Case Result of
+    CAN    : Result := GOTCAN;
+    ZCRCE,
+    ZCRCG,
+    ZCRCQ,
+    ZCRCW  : Result := (Result OR 256);
+    ZRUB0  : Result := $007F;
+    ZRUB1  : Result := $00FF;
+  Else
+    If Result >= 0 Then
+      If ((Result AND $60) = $40) Then
+        Result := Result XOR $40
+      Else
+        Result := ZERROR;
+  End;
+End;
+
+(*
+Function TProtocolZmodem.ZDLRead : SmallInt;
+Begin
+  Result := ReadByteTimeOut(RxTimeOut);
+
+  If Result <> ZDLE Then Exit;
 
   Result := ReadByteTimeOut(RxTimeOut);
 
@@ -308,6 +346,7 @@ Begin
         Result := ZERROR;
   End;
 End;
+*)
 
 Function TProtocolZmodem.ZReceiveBinaryHeader (Var Hdr: ZHdrType) : SmallInt;
 Var
@@ -415,41 +454,35 @@ Begin
 End;
 
 Procedure TProtocolZmodem.SendEscaped (B: SmallInt);
-Var
-  C1 : Char;
-  C2 : Char;
 Begin
-  If (EscapeAll) And ((B AND $60) = 0) Then Begin
-    Client.BufWriteChar(Char(ZDLE));
-    LastSent := B XOR $40;
-  End Else If (B and $11) = 0 Then
-    LastSent := B
-  Else Begin
-    C1 := Char(B and $7F);
-    C2 := Char(LastSent and $7F);
+  Case B of
+    DLE,
+    DLEHI,
+    XON,
+    XONHI,
+    XOFF,
+    XOFFHI,
+    ZDLE :  Begin
+              Client.BufWriteChar(Char(ZDLE));
+              LastSent := B XOR $40;
+            End;
+    13,
+    13 OR $80 : If {EscapeAll And} (LastSent AND $7F = Ord('@')) Then Begin
+                  Client.BufWriteChar(Char(ZDLE));
+                  LastSent := B XOR $40;
+                End Else
+                  LastSent := B;
+    255     : Begin
+                Client.BufWriteChar(Char(ZDLE));
+                LastSent := ZRUB1;
+              End;
 
-    Case B of
-      Xon,
-      Xoff,
-      cDle,
-      cXonHi,
-      cXoffHi,
-      cDleHi,
-      ZDle    : Begin
-                  Client.BufWriteChar(Char(ZDLE));
-                  LastSent := B xor $40;
-                End;
-      255     : Begin
-                  Client.BufWriteChar(Char(ZDLE));
-                  LastSent := ZRUB1;
-                End;
-    Else
-      If ((C1 = #13) and (C2 = #$40)) Then Begin
-        Client.BufWriteChar(Char(ZDLE));
-        LastSent := B xor $40;
-      End Else
-        LastSent := B;
-    End;
+  Else
+    If {(EscapeAll) and} ((B AND $60) = 0) Then Begin
+      Client.BufWriteChar(Char(ZDLE));
+      LastSent := B XOR $40;
+    End Else
+      LastSent := B;
   End;
 
   Client.BufWriteChar(Char(LastSent));
@@ -907,11 +940,28 @@ Begin
                       Exit;
                     End;
         ZCRC :      Begin
+                      {$IFDEF ZDEBUG} ZLog('ZSendFile -> Sending File CRC response'); {$ENDIF}
+
                       ZPutLong(FileCRC32(Status.FilePath + Status.FileName));
                       ZSendHexHeader(ZCRC);
 
-                      Continue;
+                      RxPos := 0;
+
+                      // SYNCTERM expects ZDATA after a ZCRC i am not sure
+                      // this is correct because how do we know the ZPOS from
+                      // receiver if it works this way?  zmodem doc isnt very
+                      // clear on this.  Lets try it...
+
+                      Goto Start; //Continue;
                     End;
+(* is SYNCTERM really asking for the FREENCNT here????? WTF
+        ZFREECNT: Begin
+                  ZPutLong (LongInt($FFFFFFFF));
+                  ZSendHexHeader (ZACK);
+
+                  Continue;
+                End;
+*)
         ZRPOS     : Goto Start;
       End;
     Until (C <> ZRINIT);
@@ -961,6 +1011,8 @@ Start:
           StatusUpdate(False, False);
           StatusTimer := TimerSet(StatusCheck);
         End;
+
+        {$IFDEF ZDEBUG} ZLog('ZSendFile -> Sent ZDATA block position now: ' + strI2S(TxPos)); {$ENDIF}
       End Else Begin
         {$IFDEF ZDEBUG} ZLog('ZSendFile -> Sending ZEOF want ZRINIT'); {$ENDIF}
 
@@ -1006,6 +1058,8 @@ Start:
 
                       ioSeek (WrkFile, TxPos);
 
+                      {$IFDEF ZDEBUG} ZLog('ZSendFile -> Got ZRPOS Sending ZDATA position: ' + strI2S(TxPos)); {$ENDIF}
+
                       Client.PurgeInputData;
                       Client.PurgeOutputData;
 
@@ -1041,7 +1095,7 @@ Start:
                       Exit;
                     End;
         End;
-      End;
+      End {$IFDEF ZDEBUG}Else ZLog('ZSendFile -> Nonsense response: ' + HeaderType(C)) {$ENDIF};
     End;
   End;
 
@@ -1158,15 +1212,26 @@ Again:
                   If ZReceiveData (RxBuf, ZATTNLEN) = GOTCRCW Then Begin
                     Attn := '';
                     Tmp  := 0;
+
                     While RxBuf[Tmp] <> 0 Do Begin
                       Attn := Attn + Chr(RxBuf[Tmp]);
                       Inc (Tmp);
                     End;
+
                     ZPutLong (1);
                     ZSendHexHeader (ZACK);
                   End Else
                     ZSendHexHeader (ZNAK);
+(*
+                  RxBufLen  := (Word(RxHdr[ZP1]) SHL 8) OR RxHdr[ZP0];
+                  UseCrc32  := (RxHdr[ZF0] AND CANFC32) <> 0;
+                  EscapeAll := (RxHdr[ZF0] AND ESCALL) = ESCALL;
 
+                  {$IFDEF ZDEBUG} ZLog('ZInitSender -> ZSINIT'); {$ENDIF}
+                  {$IFDEF ZDEBUG} ZLog('ZInitSender -> CRC32:' + strI2S(Ord(UseCrc32))); {$ENDIF}
+                  {$IFDEF ZDEBUG} ZLog('ZInitSender -> EscapeAll:' + strI2S(Ord(EscapeAll))); {$ENDIF}
+                  {$IFDEF ZDEBUG} ZLog('ZInitSender -> BlockSize:' + strI2S(RxBufLen)); {$ENDIF}
+*)
                   Goto Again;
                 End;
       ZFREECNT: Begin
@@ -1178,10 +1243,12 @@ Again:
       ZCOMMAND: Begin
                   If ZReceiveData (RxBuf, ZBUFSIZE) = GOTCRCW Then Begin
                     ZPutLong (0);
+
                     Repeat
                       ZSendHexHeader (ZCOMPL);
                       Inc (Errors);
                     Until (Errors >= 10) or (ZGetHeader(RxHdr) = ZFIN);
+
                     ZAckBiBi;
                     ZInitSender := ZCOMPL;
                     Exit;
@@ -1212,12 +1279,14 @@ Label
   ErrorCRC16,
   ErrorCRC32;
 Var
-  C, D   : SmallInt;
-  CRC    : SmallInt;
-  ulCRC  : LongInt;
-  Count  : SmallInt;
+  C, D  : SmallInt;
+  CRC   : SmallInt;
+  ulCRC : LongInt;
+  Count : SmallInt;
 Begin
   RxCount := 0;
+
+  {$IFDEF ZDEBUG} ZLog('ZReceiveData -> begin'); {$ENDIF}
 
   If RxFrameIdx = ZBIN32 Then Begin
     ulCRC := LongInt($FFFFFFFF);
@@ -1251,6 +1320,8 @@ ErrorCRC32:
                         Exit;
                       End;
 
+                      {$IFDEF ZDEBUG} ZLog('ZReceiveData -> Successful packet ' + HeaderType(D) + ' size ' + strI2S(RxCount)); {$ENDIF}
+
                       Result := D;
 
                       Exit;
@@ -1260,6 +1331,8 @@ ErrorCRC32:
                       Exit;
                     End;
         Else
+          {$IFDEF ZDEBUG} ZLog('ZReceiveData -> Got bad frame type? ' + HeaderType(C)); {$ENDIF}
+
           ZReceiveData := C;
           Exit;
         End;
@@ -1326,7 +1399,7 @@ ErrorCRC16:
     End;
   End;
 
-  {$IFDEF ZDEBUG} ZLog('ZReceiveData -> ZERROR (frameidx=' + strI2S(RxFrameIdx) + ')'); {$ENDIF}
+  {$IFDEF ZDEBUG} ZLog('ZReceiveData -> Long packet (frameidx=' + strI2S(RxFrameIdx) + '; rxcount=' + strI2S(RxCount) + ')'); {$ENDIF}
 
   ZReceiveData := ZERROR;
 End;
@@ -1526,7 +1599,7 @@ MoreData:
 
                   C := ZReceiveData(RxBuf, ZBUFSIZE);
 
-                  {$IFDEF ZDEBUG} ZLog('ZRecvFile -> MoreData -> Got ' + HeaderType(C)); {$ENDIF}
+                  {$IFDEF ZDEBUG} ZLog('ZRecvFile -> MoreData -> Got ' + HeaderType(C) + ' want data packet'); {$ENDIF}
 
                   Case C of { we can combine zreceivedata and case here }
                     ZCAN    : Begin
@@ -1577,10 +1650,9 @@ MoreData:
 
                                 BlockWrite (WrkFile, RxBuf, RxCount);
 
-                                Rxbytes := RxBytes + RxCount;
+                                RxBytes := RxBytes + RxCount;
 
                                 ZPutLong (RxBytes);
-
                                 ZSendBinaryHeader (ZACK);
 
                                 Status.Position  := RxBytes;
@@ -1603,9 +1675,9 @@ MoreData:
                     GOTCRCE : Begin
                                 RetryCount := 25;
 
-                                BlockWrite (WrkFile, RxBuf, Rxcount);
+                                BlockWrite (WrkFile, RxBuf, RxCount);
 
-                                Rxbytes := RxBytes + Rxcount;
+                                RxBytes := RxBytes + RxCount;
 
                                 Status.Position  := RxBytes;
                                 Status.BlockSize := RxCount;
