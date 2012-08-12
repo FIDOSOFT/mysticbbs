@@ -1,5 +1,5 @@
 // .-------------------------.
-// | TO-PRMPT.MPS : UPDATE 2 |===============================================
+// | TO-PRMPT.MPS : UPDATE 3 |===============================================
 // `-------------------------'
 //
 //  This mod is a lightbar prompt replacement for standard message reading,
@@ -354,7 +354,7 @@ End
 
 Procedure MESSAGE
 Begin
-  Write ('|CR|05[|13=|14!|07 reading messages |15|$L04|&5 |07of |15|$R04|&6 |08// |15n|09ext |15p|07revious |15a|07gain |15r|07eply |15j|07ump |15q|07uit |00')
+  Write ('|CR|08 >>|07 Reading messages |15|$L04|&5 |07of |15|$R04|&6 |08// |15n|09ext |15p|07revious |15a|07gain |15r|07eply |15j|07ump |15q|07uit |00')
 
   Selection := MPromptMenu
 
@@ -378,8 +378,12 @@ Begin
 End
 
 Procedure DOPAUSE
+Var
+  SavedX : Byte;
 Begin
-  Write ('|05[|13=|14!|07 paused |13-|07 more|08 // |15y|09es |15n|07o |15c|07ontinuous |00')
+  Write ('|08 >> |07Paused |13-|07 more|08 // |15y|09es |15n|07o |15c|07ontinuous |00');
+
+  SavedX := WhereX;
 
   Selection := PPromptMenu
 
@@ -391,11 +395,13 @@ Begin
   Else
   If Selection = 3 Then
     stuffkey('C')
+
+  Write('|[X' + PadLT(Int2Str(SavedX), 2, '0'));  
 End
 
 Procedure Email
 Begin
-  Write ('|CR|05[|13=|14!|07 reading e-mail |08// |15N|09ext |15P|07revious |15A|07gain |15R|07eply |15J|07ump |15D|07elete |15Q|07uit |00')
+  Write ('|CR|08 >>|07 Reading e-mail |08// |15N|09ext |15P|07revious |15A|07gain |15R|07eply |15J|07ump |15D|07elete |15Q|07uit |00')
 
   Selection := EPromptMenu
 
