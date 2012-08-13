@@ -2,7 +2,7 @@ Unit m_Protocol_Zmodem;
 
 {$I M_OPS.PAS}
 
-{$DEFINE ZDEBUG}
+{.$DEFINE ZDEBUG}
 
 Interface
 
@@ -196,7 +196,7 @@ Begin
 
   Status.Protocol := 'Zmodem';
   LastSent        := 0;
-  EscapeAll       := False;
+  EscapeAll       := True;
   Attn            := '';
 End;
 
@@ -304,11 +304,12 @@ Begin
     ZRUB0  : Result := $007F;
     ZRUB1  : Result := $00FF;
   Else
-    If Result >= 0 Then
-      If ((Result AND $60) = $40) Then
-        Result := Result XOR $40
-      Else
-        Result := ZERROR;
+    If ((Result AND $60) = $40) Then
+      Result := Result XOR $40
+    Else Begin
+      Result := ZERROR;
+      {$IFDEF ZDEBUG} ZLog('ZDLRead -> Got ZERROR'); {$ENDIF}
+    End;
   End;
 End;
 
@@ -1399,7 +1400,7 @@ ErrorCRC16:
     End;
   End;
 
-  {$IFDEF ZDEBUG} ZLog('ZReceiveData -> Long packet (frameidx=' + strI2S(RxFrameIdx) + '; rxcount=' + strI2S(RxCount) + ')'); {$ENDIF}
+  {$IFDEF ZDEBUG} ZLog('ZReceiveData -> Long packet (frameidx=' + HeaderType(RxFrameIdx) + '; rxcount=' + strI2S(RxCount) + ')'); {$ENDIF}
 
   ZReceiveData := ZERROR;
 End;
