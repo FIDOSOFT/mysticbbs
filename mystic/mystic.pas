@@ -182,7 +182,13 @@ Procedure Linux_Init;
 Var
   Count : Word;
   TChat : ChatRec;
+  Info  : Stat;
 Begin
+  If fpStat('mystic', Info) = 0 Then Begin
+    fpSetGID (Info.st_GID);
+    fpSetUID (Info.st_UID);
+  End;
+
   Session.NodeNum := 0;
 
   For Count := 1 to Config.INetTNNodes Do Begin

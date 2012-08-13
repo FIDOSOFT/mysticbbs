@@ -337,6 +337,23 @@ Begin
   SwitchFocus;
 End;
 
+{$IFDEF UNIX}
+Procedure SetUserOwner;
+Var
+  Info   : Stat;
+  MysLoc : String;
+Begin
+  MysLoc := GetEnv('mysticbbs');
+
+  If MysLoc <> '' Then MysLoc := DirSlash(MysLoc);
+
+  If fpStat(MysLoc + 'mis', Info) = 0 Then Begin
+    fpSetGID (Info.st_GID);
+    fpSetUID (Info.st_UID);
+  End;
+End;
+{$ENDIF}
+
 Function ServerStartup : Boolean;
 Begin
   Result := False;
@@ -393,6 +410,10 @@ Begin
 
     Result := True;
   End;
+
+  {$IFDEF UNIX}
+    SetUserOwner;
+  {$ENDIF}
 End;
 
 {$IFDEF UNIX}
