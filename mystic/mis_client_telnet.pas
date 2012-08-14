@@ -109,7 +109,8 @@ Var
   Num    : LongInt;
   NI     : TNodeInfoRec;
   Proc   : TProcess;
-  Buffer : Array[1..BufferSize] of Char;
+//  Buffer : Array[1..BufferSize] of Char;
+  Buffer : TIOBuffer;
   bRead  : LongInt;
   bWrite : LongInt;
 Begin
@@ -137,7 +138,7 @@ Begin
     If Proc.Output.NumBytesAvailable > 0 Then Begin
       While Proc.Output.NumBytesAvailable > 0 Do Begin
         bRead := Proc.Output.Read(Buffer, BufferSize);
-        Client.WriteBuf (Buffer, bRead);
+        Client.WriteBufEscaped (Buffer, bRead);
 
         If Snooping Then
           Term.ProcessBuf(Buffer[1], bRead);
