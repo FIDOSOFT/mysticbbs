@@ -4548,7 +4548,7 @@
    Mystic will do the rest.  The Zmodem has been tested extensively with:
 
       mTelnet
-      SyncTerm
+      SyncTerm (still problems with uploads as of now)
       SEXYZ
       NetRunner
 
@@ -4564,3 +4564,8 @@
 
  + File list compiler now uses megabytes instead of kilobytes in the file
    base summary footer.
+
+ + MIS and MYSTIC now switch ownership to the group/user who owns each
+   binary upon startup on Unix-based systems.  MIS waits until after it
+   binds the ports, so if it is SUDO started, it can listen on ports less
+   than 1024 while not running as a root application/daemon.
