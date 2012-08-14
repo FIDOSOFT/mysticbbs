@@ -4547,10 +4547,12 @@
    @ZMODEM text for the send/receive commands in the Protocol editor, and
    Mystic will do the rest.  The Zmodem has been tested extensively with:
 
-      mTelnet
-      SyncTerm (still problems with uploads as of now)
-      SEXYZ
-      NetRunner
+      mTelnet    Windows         Downloads and Uploads successful
+      SyncTerm   Windows/Linux   Downloads ok, uploads fail
+      SEXYZ      Windows         Downloads and uploads successful
+      NetRunner  Windows         Downloads and uploads successful
+      ZOC        Windows         Downloads and uploads successful
+      Qodem      Linux           Downloads ok, Upload Qodem segfault
 
  + The file directory editor is now available in the standard file listing.
    In the past it only worked in the lightbar file listing.  Whoops.  The
