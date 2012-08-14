@@ -1061,8 +1061,8 @@ Start:
 
                       {$IFDEF ZDEBUG} ZLog('ZSendFile -> Got ZRPOS Sending ZDATA position: ' + strI2S(TxPos)); {$ENDIF}
 
-                      Client.PurgeInputData;
-                      Client.PurgeOutputData;
+//                      Client.PurgeInputData;
+//                      Client.PurgeOutputData;
 
                       If TxPos < Status.FileSize Then Begin
                         ZPutLong (TxPos);
@@ -1106,11 +1106,14 @@ End;
 Procedure TProtocolZmodem.ZEndSender;
 Var
   TimeOut : LongInt;
+  C       : SmallInt;
 Begin
+  {$IFDEF ZDEBUG} ZLog('ZEndSender -> begin'); {$ENDIF}
+
   TimeOut := TimerSet(500);
 
   While Not AbortTransfer And Not TimerUp(TimeOut) Do Begin
-    Client.PurgeInputData;
+//    Client.PurgeInputData;
 
     ZPutLong (0);
     ZSendBinaryHeader (ZFIN);
@@ -1118,7 +1121,11 @@ Begin
     If Not Client.DataWaiting Then
       WaitMS(500)
     Else
-      Case ZGetHeader(RxHdr) of
+      C := ZGetHeader(RxHdr);
+
+      {$IFDEF ZDEBUG} ZLog('ZEndSender -> Got header:' + HeaderType(C)); {$ENDIF}
+
+      Case C of
         ZFIN: Begin
                 Client.BufWriteStr('OO');
                 Client.BufFlush;
@@ -1441,7 +1448,7 @@ Begin
   {$IFDEF ZDEBUG} ZLog('ZRecvFile -> File:' + FName); {$ENDIF}
   {$IFDEF ZDEBUG} ZLog('ZRecvFile -> Size:' + strI2S(FSize)); {$ENDIF}
 
-  Client.PurgeInputData;
+//  Client.PurgeInputData;
 
   Queue.Add(ReceivePath, FName);
 
@@ -1554,6 +1561,11 @@ NextHeader:
 
                   ZReceiveFile := C;
 
+                  Exit;
+                End;
+      RCDO    : Begin
+                  Close (WrkFile);
+                  ZReceiveFile := ZERROR;
                   Exit;
                 End;
       ZERROR  : Begin
@@ -1702,6 +1714,7 @@ Begin
 
   Client.PurgeInputData;
   Client.PurgeOutputData;
+
   Client.BufWriteStr(Attn);
   Client.BufWriteStr(CancelStr);
   Client.BufFlush;
