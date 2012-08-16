@@ -906,6 +906,8 @@ Begin
     FillChar (TxBuf, SizeOf(TxBuf), 0);
 
     TxHdr[ZF0] := ZCRESUM;
+    // do we need to send more stuff here?  maybe that is why syncterm is
+    // puking?
 
     TmpStr := Status.FileName + #0 + strI2S(Status.FileSize);
 
@@ -956,6 +958,7 @@ Begin
                       Goto Start; //Continue;
                     End;
 (* is SYNCTERM really asking for the FREENCNT here????? WTF
+looks like ZOC might too.  something is wrong with what we expect here.
         ZFREECNT: Begin
                   ZPutLong (LongInt($FFFFFFFF));
                   ZSendHexHeader (ZACK);
@@ -1113,8 +1116,6 @@ Begin
   TimeOut := TimerSet(500);
 
   While Not AbortTransfer And Not TimerUp(TimeOut) Do Begin
-//    Client.PurgeInputData;
-
     ZPutLong (0);
     ZSendBinaryHeader (ZFIN);
 
@@ -1176,10 +1177,9 @@ Label
 Var
   Tmp    : SmallInt;
   N      : SmallInt;
-  Errors : SmallInt;
 Begin
-  UseCRC32   := True;
-  Errors     := 0;
+  UseCRC32      := True;
+  Status.Errors := 0;
 
   {$IFDEF ZDEBUG} ZLog('ZInitSender -> begin'); {$ENDIF}
 
@@ -1199,6 +1199,11 @@ Begin
 
 Again:
 
+    If Status.Errors > 10 Then Begin
+      ZInitSender := ZERROR;
+      Exit;
+    End;
+
     Tmp := ZGetHeader(RxHdr);
 
     {$IFDEF ZDEBUG} ZLog('ZInitSender -> Got response ' + HeaderType(Tmp)); {$ENDIF}
@@ -1213,7 +1218,10 @@ Again:
                     Exit;
                   End;
 
+                  Inc (Status.Errors);
+
                   ZSendHexHeader (ZNAK);
+
                   Goto Again;
                 End;
       ZSINIT  : Begin
@@ -1240,6 +1248,8 @@ Again:
                   {$IFDEF ZDEBUG} ZLog('ZInitSender -> EscapeAll:' + strI2S(Ord(EscapeAll))); {$ENDIF}
                   {$IFDEF ZDEBUG} ZLog('ZInitSender -> BlockSize:' + strI2S(RxBufLen)); {$ENDIF}
 *)
+                  Inc (Status.Errors);
+
                   Goto Again;
                 End;
       ZFREECNT: Begin
@@ -1254,8 +1264,8 @@ Again:
 
                     Repeat
                       ZSendHexHeader (ZCOMPL);
-                      Inc (Errors);
-                    Until (Errors >= 10) or (ZGetHeader(RxHdr) = ZFIN);
+                      Inc (Status.Errors);
+                    Until (Status.Errors >= 10) or (ZGetHeader(RxHdr) = ZFIN);
 
                     ZAckBiBi;
                     ZInitSender := ZCOMPL;
