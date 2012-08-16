@@ -368,41 +368,41 @@ Begin
   For Count := 1 to ParamCount Do Begin
     Temp := strUpper(ParamStr(Count));
 
-    If Pos('-TID', Temp) > 0 Then Begin
+    If Copy(Temp, 1, 4) = '-TID' Then Begin
       Session.CommHandle := strS2I(Copy(Temp, 5, Length(Temp)));
       Session.Baud       := 38400;
     End Else
-    If Pos('-B', Temp) > 0 Then Begin
+    If Copy(Temp, 1, 2) = '-B' Then Begin
       Session.Baud := strS2I(Copy(Temp, 3, Length(Temp)));
       If Session.Baud = 0 Then Session.LocalMode := True;
     End Else
-    If Pos('-T', Temp) > 0 Then
+    If Copy(Temp, 1, 2) = '-T' Then
       Session.TimeOffset := strS2I(Copy(Temp, 3, Length(Temp)))
     Else
-    If Pos('-N', Temp) > 0 Then
+    If Copy(Temp, 1, 2) = '-N' Then
       Session.NodeNum := strS2I(Copy(Temp, 3, Length(Temp)))
     Else
-    If Pos('-CFG', Temp) > 0 Then Begin
+    If Copy(Temp, 1, 4) = '-CFG' Then Begin
       Session.ConfigMode := True;
       Session.LocalMode  := True;
       Session.NodeNum    := 0;
     End Else
-    If Pos('-IP', Temp) > 0 Then
+    If Copy(Temp, 1, 3) = '-IP' Then
       Session.UserIPInfo := Copy(Temp, 4, Length(Temp))
     Else
-    If Pos('-UID', Temp) > 0 Then
+    If Copy(Temp, 1, 4) = '-UID' Then
       Session.UserHostInfo := Copy(Temp, 5, Length(Temp))
     Else
-    If Pos('-HOST', Temp) > 0 Then
+    If Copy(Temp, 1, 5) = '-HOST' Then
       Session.UserHostInfo := Copy(ParamStr(Count), 6, Length(Temp))
     Else
-    If Pos('-U', Temp) > 0 Then
+    If Copy(Temp, 1, 2) = '-U' Then
       UserName := strReplace(Copy(Temp, 3, Length(Temp)), '_', ' ')
     Else
-    If Pos('-P', Temp) > 0 Then
+    If Copy(Temp, 1, 2) = '-P' Then
       Password := Copy(Temp, 3, Length(Temp))
     Else
-    If Pos('-X', Temp) > 0 Then
+    If Copy(Temp, 1, 2) = '-X' Then
       Script := strReplace(Copy(ParamStr(Count), 3, Length(Temp)), '_', ' ')
     Else
     If Temp = '-L' Then Session.LocalMode := True;
