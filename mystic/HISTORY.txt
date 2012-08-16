@@ -4277,9 +4277,6 @@
       ; Sysop password prompt
       493 |CR|09Sysop Password: |XX
 
- + MIDE now has a -50 command line option which forces the editor into 50
-   line text mode.
-
  + MPL identifiers now have a maximum size of 30 characters, up from 20.
 
  ! Mystic was not properly stripping the path of exported text files when
@@ -4545,14 +4542,16 @@
 
  + Mystic now has internal Zmodem protocol.  To enable it, just use the
    @ZMODEM text for the send/receive commands in the Protocol editor, and
-   Mystic will do the rest.  The Zmodem has been tested extensively with:
+   Mystic will do the rest.  The Zmodem has been tested extensively with
+   the following clients.  The current status is as follows:
 
-      mTelnet    Windows         Downloads and Uploads successful
-      SyncTerm   Windows/Linux   Downloads ok, uploads fail
-      SEXYZ      Windows         Downloads and uploads successful
-      NetRunner  Windows         Downloads and uploads successful
-      ZOC        Windows         Downloads and uploads successful
-      Qodem      Linux           Downloads ok, Upload Qodem segfault
+      mTelnet       Windows         Downloads and Uploads successful
+      SEXYZ         Windows         Downloads and uploads successful
+      NetRunner     Windows/Linux   Downloads and uploads successful
+      ZOC           Windows         Downloads and uploads successful
+      SyncTerm      Windows/Linux   Downloads ok, uploads fail
+      Qodem         Linux           Downloads ok, Upload Qodem segfault
+      HyperTerminal Windows         Nothing works (ever) with this terminal
 
  + The file directory editor is now available in the standard file listing.
    In the past it only worked in the lightbar file listing.  Whoops.  The
@@ -4571,3 +4570,62 @@
    binary upon startup on Unix-based systems.  MIS waits until after it
    binds the ports, so if it is SUDO started, it can listen on ports less
    than 1024 while not running as a root application/daemon.
+
+ + Display files can now be aborted with the SPACE bar during transmission. I
+   may remove this feature if people do not like it.
+
+ + New MCI code AO turns off display file aborting within the current display
+   file.
+
+ ! The date shown in the message base header while reading messages should
+   now properly display in the user's configured date format.  In the past
+   it was always MM/DD/YY format.
+
+ ! Mystic was converting the passed hostname to all upper case.  This is no
+   longer the case.
+
+ ! Mystic was converting the passed MPL program (from command line) to all
+   upper case.  This caused the Unix versions to fail to execute the MPL
+   program and exit.
+
+ + MIDE now has a mide.ini configuration file.  This file is in the .INI file
+   format and allows various things such as auto indent, tab space, screen
+   mode (25 or 50 line) and others to be defined.
+
+ + MIDE now has a "Run" option which will compile and execute the current
+   MPL program without logging into Mystic itself.  You will need to set up
+   the options with mide.ini in order for this to work.  See the default
+   mide.ini for more information.
+
+ ! Posts made via QWK were not being counted in the BBS history.
+
+ + Mystic now supports QWK control posts.  This means that with modern QWK
+   readers you can add/drop message bases that are included in your packet
+   from within the offline reader.
+
+   If the reader does not support that feature, you can post a message in
+   your reader to "MYSTICQWK" with the subject of either "ADD" or "DROP" in
+   the message base in which you want to add or drop from your QWK packets.
+
+   Tested with MultiMail
+
+ + Mystic now supports the QWKE extension for offline mail.  What does this
+   mean?  Well it means first off that the 12 character message base name
+   limitation is completely gone.  Mystic will now generate the full base
+   name with MCI codes stripped in QWKE packets.  It also means that the
+   25 character limitation on From, To, and Subject fields is gone.
+
+   In addition, it opens up room for future enhancements such as offline
+   file requests, and the ability to maintain master file lists / new file
+   lists, as well as setting lastread pointers from within the offline
+   reader.  And file attachments, and and...
+
+   A new menu command (OE) has been added to download a QWKE packet.  When
+   uploading a .REP packet, Mystic can determine if the REP is QWK or QWKE
+   so there is no need for a new upload menu command.
+
+ + Given the new changes, Mystic now includes ALL message bases in QWK
+   packets regardless of if it is in the QWK scan settings.  Mystic will
+   NOT send any messages if you are not subscribed to the message base, but
+   it should still appear in the offline reader.  This is changed so that
+   users can add/drop message bases.
