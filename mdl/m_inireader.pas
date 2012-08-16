@@ -85,8 +85,6 @@ Begin
 End;
 
 Function TIniReader.ReadInteger (Category, Value: String; DefValue: LongInt) : LongInt;
-Var
-  Str : String;
 Begin
   Result := strS2I(ReadString(Category, Value, strI2S(DefValue)));
 End;
