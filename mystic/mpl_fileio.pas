@@ -1,6 +1,6 @@
-{$I M_OPS.PAS}
-
 Unit MPL_FileIO;
+
+{$I M_OPS.PAS}
 
 // all file io units should be compiled into one source file...
 // also, make this ONLY allocate the size of the file if the file size is
@@ -25,6 +25,7 @@ Type
     BufPos   : LongInt;
     InFile   : File;
     BufEOF   : Boolean;
+    Opened   : Boolean;
 
     Constructor Init (BufferSize: LongInt);
     Destructor  Done;
@@ -70,6 +71,7 @@ Begin
   BufEOF   := False;
   BufRead  := 0;
   Buffer   := NIL;
+  Opened   := False;
 End;
 
 Destructor TCharFile.Done;
@@ -83,6 +85,7 @@ End;
 Function TCharFile.Open (FN : String) : Boolean;
 Begin
   Open     := False;
+  Opened   := False;
   FileMode := 66;
 
   Assign (InFile, FN);
@@ -99,12 +102,15 @@ Begin
 
   FillBuffer;
 
-  Open := True;
+  Open   := True;
+  Opened := True;
 End;
 
 Procedure TCharFile.Close;
 Begin
   System.Close (InFile);
+  Opened := False;
+
   Done;
 End;
 

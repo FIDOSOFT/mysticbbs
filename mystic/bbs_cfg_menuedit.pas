@@ -30,7 +30,7 @@ Type
   End;
 
 Const
-  Num_Cmds = 97;
+  Num_Cmds = 98;
   MenuCmds : Array[1..Num_Cmds] of CmdRec = (
     // AUTOSIG MENU COMMANDS
     (  Name: 'AE';   Desc: 'Autosig editor'               ),
@@ -61,8 +61,8 @@ Const
     (  Name: 'FU';   Desc: 'Upload files'                 ),
     (  Name: 'FV';   Desc: 'View archive'                 ),
     (  Name: 'FZ';   Desc: 'Toggle newscan bases'         ),
-    (  Name: 'F1';   Desc: '(SYSOP) Mass upload'          ),
-    (  Name: 'F2';   Desc: '(SYSOP) Directory editor'     ),
+    (  Name: 'F1';   Desc: '(SYS) Mass upload'            ),
+    (  Name: 'F2';   Desc: '(SYS) Directory editor'       ),
     (  Name: 'F3';   Desc: 'Send file by location'        ),
 
     // GENERAL MENU COMMANDS
@@ -109,6 +109,7 @@ Const
     // OFFLINE MAIL MENU COMMANDS
     (  Name: 'OS';   Desc: 'Set QWK scanned bases'        ),
     (  Name: 'OD';   Desc: 'Download QWK packet'          ),
+    (  Name: 'OE';   Desc: 'Download QWKE packet'         ),
     (  Name: 'OU';   Desc: 'Upload REP packet'            ),
 
     // DOWNLOAD QUEUE MENU COMMANDS
@@ -144,18 +145,18 @@ Const
     (  Name: '-Y';   Desc: 'Ask Yes/No (default Yes)'     ),
 
     // SYSOP/EDITORS MENU COMMANDS
-    (  Name: '*#';   Desc: '(SYSOP) Menu editor'          ),
-    (  Name: '*A';   Desc: '(SYSOP) Archive editor'       ),
-    (  Name: '*E';   Desc: '(SYSOP) Event editor'         ),
-    (  Name: '*F';   Desc: '(SYSOP) File base editor'     ),
-    (  Name: '*G';   Desc: '(SYSOP) Message group editor' ),
-    (  Name: '*L';   Desc: '(SYSOP) Security level editor'),
-    (  Name: '*B';   Desc: '(SYSOP) Message base editor'  ),
-    (  Name: '*P';   Desc: '(SYSOP) Protocol editor'      ),
-    (  Name: '*R';   Desc: '(SYSOP) File group editor'    ),
-    (  Name: '*S';   Desc: '(SYSOP) System configuration' ),
-    (  Name: '*U';   Desc: '(SYSOP) User editor'          ),
-    (  Name: '*V';   Desc: '(SYSOP) Voting booth editor'  )
+    (  Name: '*#';   Desc: '(SYS) Menu editor'            ),
+    (  Name: '*A';   Desc: '(SYS) Archive editor'         ),
+    (  Name: '*E';   Desc: '(SYS) Event editor'           ),
+    (  Name: '*F';   Desc: '(SYS) File base editor'       ),
+    (  Name: '*G';   Desc: '(SYS) Message group editor'   ),
+    (  Name: '*L';   Desc: '(SYS) Security level editor'  ),
+    (  Name: '*B';   Desc: '(SYS) Message base editor'    ),
+    (  Name: '*P';   Desc: '(SYS) Protocol editor'        ),
+    (  Name: '*R';   Desc: '(SYS) File group editor'      ),
+    (  Name: '*S';   Desc: '(SYS) System configuration'   ),
+    (  Name: '*U';   Desc: '(SYS) User editor'            ),
+    (  Name: '*V';   Desc: '(SYS) Voting booth editor'    )
   );                       {123456789012345678901234567890}
 
 Var
@@ -451,23 +452,24 @@ Begin
   Box.Header := ' Menu Flags (' + MenuName + ') ';
   Topic      := '|03(|09Menu Flags|03) |01-|09> |15';;
 
-  Box.Open (6, 5, 75, 20);
+  Box.Open (6, 5, 75, 21);
 
-  VerticalLine (22, 7, 19);
+  VerticalLine (22, 7, 20);
 
   Form.AddStr  ('D', ' Description' ,   9,  7, 24,  7, 13, 30, 30, @Menu.Info.Description, Topic + 'Description of menu');
   Form.AddStr  ('A', ' Access'      ,  14,  8, 24,  8,  8, 30, 30, @Menu.Info.Access, Topic + 'Security requirements to access this menu');
-  Form.AddTog  ('T', ' Menu Type'   ,  11,  9, 24,  9, 11, 13,  0, 2, 'Standard Lightbar Lightbar/Grid', @Menu.Info.MenuType, Topic + 'Type of menu');
-  Form.AddTog  ('I', ' Input Type'  ,  10, 10, 24, 10, 12, 12,  0, 2, 'User_Defined HotKey LongKey', @Menu.Info.InputType, Topic + 'Input type for this menu');
-  Form.AddTog  ('C', ' Input Chars' ,   9, 11, 24, 11, 13,  9,  0, 2, 'Uppercase Lowercase Hidden', @Menu.Info.CharType, Topic + 'Input format display');
-  Form.AddBol  ('G', ' Use Global'  ,  10, 12, 24, 12, 12,  3, @Menu.Info.Global, Topic + 'Include global menu options in this menu?');
-  Form.AddStr  ('N', ' Node Status' ,   9, 13, 24, 13, 13, 30, 30, @Menu.Info.NodeStatus, Topic + 'Node/User status set when this menu is loaded');
-  Form.AddStr  ('F', ' Display File',   8, 14, 24, 14, 14, 20, 20, @Menu.Info.DispFile, Topic + 'Display file shown instead of generated menu');
-  Form.AddTog  ('L', ' Display Cols',   8, 15, 24, 15, 14,  1,  1,  4, '1 2 3 4', @Menu.Info.DispCols, Topic + 'Number of columns in generated menu');
-  Form.AddPipe ('H', ' Menu Header' ,   9, 16, 24, 16, 13, 50, 160, @Menu.Info.Header, Topic + 'Menu header displayed in generated menu');
-  Form.AddPipe ('P', ' Menu Prompt' ,   9, 17, 24, 17, 13, 50, 160, @Menu.Info.Footer, Topic + 'Menu prompt displayed in generated menu');
-  Form.AddByte ('X', ' X'           ,  19, 18, 24, 18,  3,  2,  0,  80, @Menu.Info.DoneX, Topic + 'Locate to X coordinate after lightbar menu');
-  Form.AddByte ('Y', ' Y'           ,  19, 19, 24, 19,  3,  2,  0,  50, @Menu.Info.DoneY, Topic + 'Locate to Y coordinate after lightbar menu');
+  Form.AddStr  ('B', ' Fallback'    ,  12,  9, 24,  9, 10, 20, 20, @Menu.Info.Fallback, Topic + 'Menu loaded if user has no access (Blank/Last)');
+  Form.AddTog  ('T', ' Menu Type'   ,  11, 10, 24, 10, 11, 13,  0, 2, 'Standard Lightbar Lightbar/Grid', @Menu.Info.MenuType, Topic + 'Type of menu');
+  Form.AddTog  ('I', ' Input Type'  ,  10, 11, 24, 11, 12, 12,  0, 2, 'User_Defined HotKey LongKey', @Menu.Info.InputType, Topic + 'Input type for this menu');
+  Form.AddTog  ('C', ' Input Chars' ,   9, 12, 24, 12, 13,  9,  0, 2, 'Uppercase Lowercase Hidden', @Menu.Info.CharType, Topic + 'Input format display');
+  Form.AddBol  ('G', ' Use Global'  ,  10, 13, 24, 13, 12,  3, @Menu.Info.Global, Topic + 'Include global menu options in this menu?');
+  Form.AddStr  ('N', ' Node Status' ,   9, 14, 24, 14, 13, 30, 30, @Menu.Info.NodeStatus, Topic + 'Node/User status set when this menu is loaded');
+  Form.AddStr  ('F', ' Display File',   8, 15, 24, 15, 14, 20, 20, @Menu.Info.DispFile, Topic + 'Display file shown instead of generated menu');
+  Form.AddTog  ('L', ' Display Cols',   8, 16, 24, 16, 14,  1,  1,  4, '1 2 3 4', @Menu.Info.DispCols, Topic + 'Number of columns in generated menu');
+  Form.AddPipe ('H', ' Menu Header' ,   9, 17, 24, 17, 13, 50, 160, @Menu.Info.Header, Topic + 'Menu header displayed in generated menu');
+  Form.AddPipe ('P', ' Menu Prompt' ,   9, 18, 24, 18, 13, 50, 160, @Menu.Info.Footer, Topic + 'Menu prompt displayed in generated menu');
+  Form.AddByte ('X', ' X'           ,  19, 19, 24, 19,  3,  2,  0,  80, @Menu.Info.DoneX, Topic + 'Locate to X coordinate after lightbar menu');
+  Form.AddByte ('Y', ' Y'           ,  19, 20, 24, 20,  3,  2,  0,  50, @Menu.Info.DoneY, Topic + 'Locate to Y coordinate after lightbar menu');
 
   Form.Execute;
 

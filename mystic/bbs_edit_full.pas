@@ -347,7 +347,7 @@ Begin
 
     UpdatePosition;
   End Else Begin
-    If CurY < TotalLine Then CurX := 1;
+    {If CurY < TotalLine Then} CurX := 1;
 
     keyDownArrow;
   End;

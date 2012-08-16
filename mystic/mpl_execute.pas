@@ -248,7 +248,7 @@ Function TInterpEngine.GetMBaseStats (Num: LongInt; Var Total, New, Yours: LongI
 Var
   M : RecMessageBase;
 Begin
-  Result := Session.Msgs.GetRecord(Num, M);
+  Result := Session.Msgs.GetBaseByNum(Num, M);
 
   If Result Then
     Session.Msgs.GetMessageStats(M, Total, New, Yours);
@@ -258,7 +258,7 @@ Function TInterpEngine.GetMBaseRecord (Num: LongInt) : Boolean;
 Var
   M : RecMessageBase;
 Begin
-  Result := Session.Msgs.GetRecord(Num, M);
+  Result := Session.Msgs.GetBaseByNum(Num, M);
   If Result Then GetMBaseVars(M);
 End;
 

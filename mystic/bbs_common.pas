@@ -26,7 +26,7 @@ Uses
 // replace with MDL/FP RTL functions
 
 Const
-  WinConsoleTitle = 'Mystic Node ';
+  WinConsoleTitle = mysSoftwareID + ' Node ';
   CopyID          = 'Copyright (C) ' + mysCopyYear + ' By James Coyle.  All Rights Reserved.';
   DateTypeStr : Array[1..4] of String[8] = ('MM/DD/YY', 'DD/MM/YY', 'YY/DD/MM', 'Ask     ');
 

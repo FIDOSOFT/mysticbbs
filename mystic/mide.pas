@@ -19,13 +19,17 @@
 //
 // ====================================================================
 
-{$I M_OPS.PAS}
-
 Program MIDE;
+
+{$I M_OPS.PAS}
 
 Uses
   {$IFDEF DEBUG}
+    LineInfo,
     HeapTrc,
+  {$ENDIF}
+  {$IFDEF UNIX}
+    Unix,
   {$ENDIF}
   DOS,
   m_Types,
@@ -37,19 +41,18 @@ Uses
   m_QuickSort,
   m_Strings,
   m_FileIO,
+  m_IniReader,
   MPL_Compile;
-
-{$I RECORDS.PAS}
 
 Const
   mideVersion      = '2.0.0';
   mideMaxFileLines = 10000;
   mideMaxOpenFiles = 10;
   mideMaxLineSize  = 254;
-  mideTabSpaces    = 2;
   mideTopY         : Byte = 1;
   mideBotY         : Byte = 24;
   mideWinSize      : Byte = 24;
+  mideExecOpts     : String[100] = '';
 
   colTextString  = 27;  { 27 }
   colTextKeyword = 31;  { 31 }
@@ -60,6 +63,14 @@ Const
   colEditHeader  = 31;  { 31 }
   colEditStatus  = 9 + 1 * 16;
   colEditPosBar  = 9 + 1 * 16;
+
+Var
+  cfg_TabSpaces  : Byte;
+  cfg_Screen50   : Boolean;
+  cfg_AutoIndent : Boolean;
+  cfg_ExecPath   : String[160];
+  cfg_ExecUser   : String[35];
+  cfg_ExecPW     : String[20];
 
 Type
   PEditorWindow = ^TEditorWindow;
@@ -217,7 +228,7 @@ Begin
     ReadLn (TF, Str);
 
     While Pos (#9, Str) > 0 Do Begin
-      Insert (strRep(' ', mideTabSpaces), Str, Pos(#9, Str));
+      Insert (strRep(' ', cfg_TabSpaces), Str, Pos(#9, Str));
       Delete (Str, Pos(#9, Str), 1);
     End;
 
@@ -254,7 +265,7 @@ Begin
   Load := True;
 End;
 
-Procedure DrawLine (Y : Byte; S : String);
+Procedure DrawLine (Y: Byte; S: String);
 Var
   sPos : Byte;
 
@@ -271,7 +282,6 @@ Var
         If Console.CursorX < 79 Then Console.WriteChar (Str[A]);
     End;
   End;
-
 Begin
   Console.WriteXY (2, Y, colTextNormal, strPadR(Copy(S, CurWin[CurWinNum]^.ScrlX + 1, 255), 77, ' '));
 End;
@@ -434,6 +444,7 @@ Begin
   FileList.HiChars    := #77;
   FileList.HiAttr     := ColorBar;
   FileList.LoAttr     := ColorBox;
+
   DirList.NoWindow    := True;
   DirList.NoInput     := True;
   DirList.HiAttr      := ColorBox;
@@ -613,35 +624,41 @@ Begin
     FillScreen;
 End;
 
-Function Get_File_Name (Def: String) : String;
+Function InBox (Header, Text, Def: String; Len, MaxLen: Byte) : String;
 Var
-  Box   : TMenuBox;
-  InKey : TMenuInput;
-  Str   : String;
+  Box     : TMenuBox;
+  Input   : TMenuInput;
+  Offset  : Byte;
+  Str     : String;
+  WinSize : Byte;
 Begin
-  Box   := TMenuBox.Create(Console);
-  InKey := TMenuInput.Create(Console);
-
-  InKey.LoChars := #13#27;
-
-  Box.Header := ' Save a file ';
-  Box.Open (10, 8, 70, 13);
-
-  Console.WriteXY (12, 10, 112, 'File name:');
-
-  Str := InKey.GetStr(12, 11, 57, 255, 1, Def);
-
-  If InKey.ExitCode = #27 Then
-    Str := ''
+  If Len > Length(Text) Then
+    Offset := Len
   Else
-    If Pos('.', Str) = 0 Then Str := Str + '.mps';
+    Offset := Length(Text);
+
+  WinSize := (80 - Offset + 2) DIV 2;
+
+  Box   := TMenuBox.Create(Console);
+  Input := TMenuInput.Create(Console);
+
+  Box.Header    := ' ' + Header + ' ';
+  Input.LoChars := #13#27;
+
+  Box.Open (WinSize, 10, WinSize + Offset + 3, 15);
+
+  Console.WriteXY (WinSize + 2, 12, 112, Text);
+
+  Str := Input.GetStr(WinSize + 2, 13, Len, MaxLen, 1, Def);
 
   Box.Close;
 
-  InKey.Free;
+  If Input.ExitCode = #27 Then Str := '';
+
+  Input.Free;
   Box.Free;
 
-  Get_File_Name := Str;
+  Result := Str;
 End;
 
 Function SaveFile (FNum: Byte; Check, AskReName: Boolean) : Boolean;
@@ -667,7 +684,7 @@ Begin
       Exit;
 
   If AskReName Then
-    S := Get_File_Name(CurWin[FNum]^.FileName)
+    S := InBox('File', 'File Name:', CurWin[FNum]^.FileName, 50, 255)
   Else
     S := CurWin[FNum]^.FileName;
 
@@ -737,11 +754,13 @@ Begin
   End;
 End;
 
-Procedure Compile;
+Function Compile : Boolean;
 Var
-  Box      : TMenuBox;
-  Compile  : TParserEngine;
+  Box     : TMenuBox;
+  Compile : TParserEngine;
 Begin
+  Result := False;
+
   If CurWinNum = 0 Then Exit;
 
   If Not SaveFile(CurWinNum, True, False) Then Exit;
@@ -755,15 +774,45 @@ Begin
   Console.WriteXY (16, 11, 112, 'Message: Ok');
   Console.WriteXY (11, 13,  31, strPadC('Working...', 59, ' '));
 
-  Compile := TParserEngine.Create(@CompileStatusUpdate);
-  Compile.Compile(CurWin[CurWinNum]^.FileName);
-  Compile.Free;
+  Compile := TParserEngine.Create(CompileStatusUpdate);
+  Result  := Compile.Compile(CurWin[CurWinNum]^.FileName);
 
+  Compile.Free;
   Box.Close;
   Box.Free;
 
   CurWin[CurWinNum]^.ReDrawFull;
 End;
+
+Procedure RunProgram;
+Var
+  Image  : TConsoleImageRec;
+  CmdStr : String;
+Begin
+  If Not Compile Then Exit;
+
+  Console.GetScreenImage(1, 1, 80, Console.ScreenSize, Image);
+
+  mideExecOpts := InBox('Execute', 'Enter optional data or blank for none:', mideExecOpts, 50, 100);
+
+  CmdStr := cfg_ExecPath + 'mystic' + ' -u' + cfg_ExecUser + ' -p' + cfg_ExecPW + ' -x' + JustFileName(CurWin[CurWinNum]^.FileName);
+
+  If mideExecOpts <> '' Then
+    CmdStr := CmdStr + '_' + strReplace(mideExecOpts, ' ', '_');
+
+  // save directory?
+
+  {$IFDEF UNIX}
+    Shell (CmdStr);
+  {$ELSE}
+    Exec (GetEnv('COMSPEC'), '/C' + CmdStr);
+  {$ENDIF}
+
+  // restore directory?
+
+  Console.PutScreenImage(Image);
+End;
+
 
 Procedure CloseFile;
 Var
@@ -960,44 +1009,20 @@ Begin
 End;
 
 Procedure DownArrow;
-{Var
-  Count : Byte;}
 Begin
   If CurWinNum = 0 Then Exit;
 
-(*
-  If AnyShift Then Begin
-    Clips   := 0;
-    ClipNow := True;
+  With CurWin[CurWinNum]^ Do Begin
+    If CurLine = TotalLines Then Exit;
+    Inc (CurLine);
 
-    ClipMarkText;
+    If CurY < (mideWinSize - 2) Then
+      Inc (CurY)
+    Else
+      ScrollDown;
 
-    Repeat
-      If KeyPressed Then
-        Case ReadKey of
-          #00 : Case ReadKey of
-                  #72 : ClipDeleteText;
-{                 #73 : For Count := 1 to 21 Do ClipDeleteText;}
-                  #80 : ClipMarkText;
-{                 #81 : For Count := 1 to 21 Do ClipMarkText;}
-                End;
-        End;
-    Until Not AnyShift;
-
-    ClipCopyText;
-  End Else
-*)
-    With CurWin[CurWinNum]^ Do Begin
-      If CurLine = TotalLines Then Exit;
-      Inc (CurLine);
-
-      If CurY < (mideWinSize - 2) Then
-        Inc (CurY)
-      Else
-        ScrollDown;
-
-      Relocate(False);
-    End;
+    Relocate(False);
+  End;
 End;
 
 Procedure UpArrow;
@@ -1120,7 +1145,7 @@ Var
 Begin
   If CurWinNum = 0 Then Exit;
 
-  For A := 1 to mideTabSpaces Do
+  For A := 1 to cfg_TabSpaces Do
     AddChar(' ');
 End;
 
@@ -1140,9 +1165,9 @@ Begin
     S1 := TextData[CurLine]^;
     S2 := TextData[CurLine + 1]^;
 
-{If Config.AutoIndent Then}
-    If (S2 = '') Then
-      While S1[Indent] = ' ' Do Inc(Indent);
+   If cfg_AutoIndent Then
+     If (S2 = '') Then
+       While S1[Indent] = ' ' Do Inc(Indent);
 
     S2 := strStripB(Copy(S1, CurX+ScrlX, 255) + S2, ' ');
     Delete (S1, CurX+ScrlX, 255);
@@ -1331,7 +1356,7 @@ Begin
                         Break;
                       End;
                 'N' : Begin
-                        Str  := Get_File_Name('new.mps');
+                        Str  := InBox('New MPL Program', 'File Name:', 'new.mps', 50, 255);
                         Make := True;
 
                         If Str <> '' Then Begin
@@ -1408,9 +1433,10 @@ Begin
           End;
       3 : Begin
             CoolBoxOpen (26, 'Compile');
-            BoxOpen (27, 4, 42, 6);
+            BoxOpen     (27, 4, 42, 7);
 
-            Form.AddNone('C', '  Compile  F9 '    , 28,  5, 14, 'Compile current file into Mystic executable');
+            Form.AddNone('R', '  Run      F8 '    , 28,  5, 14, 'Compile and then execute MPL program');
+            Form.AddNone('C', '  Compile  F9 '    , 28,  6, 14, 'Compile current file into Mystic executable');
 
             Res := Form.Execute;
 
@@ -1432,16 +1458,22 @@ Begin
                         DrawStatus;
                         Exit;
                       End;
+                'R' : Begin
+                        Console.PutScreenImage(Image);
+                        Form.Free;
+                        RunProgram;
+                        DrawStatus;
+                        Exit;
+                      End;
               Else
                 MenuPtr := 0;
               End;
           End;
       4 : Begin
             CoolBoxOpen (41, 'Options');
-            BoxOpen (42, 4, 61, 7);
+            BoxOpen (42, 4, 61, 6);
 
             Form.AddNone('E', '  Editor Options  ', 43, 5, 18, '');
-            Form.AddNone('C', '  Color Options  ' , 43, 6, 18, '');
 
             Res := Form.Execute;
 
@@ -1456,7 +1488,13 @@ Begin
             Else
               Case Res of
                 #27 : Break;
-                'C' : Begin
+                'E' : Begin
+                        Console.PutScreenImage(Image);
+                        Form.Free;
+                        LoadAndOpen(StartDir + 'mide.ini');
+                        ReDrawScreen;
+                        DrawStatus;
+                        Exit;
                       End;
               Else
                 MenuPtr := 0;
@@ -1544,11 +1582,11 @@ Begin
 End;
 
 Var
-  Ch     : Char;
-  A      : Byte;
-  Str    : String;
-  FN     : String;
-  Mode50 : Boolean = False;
+  Ch  : Char;
+  A   : Byte;
+  Str : String;
+  FN  : String;
+  INI : TINIReader;
 Begin
   GetDir (0, StartDir);
 
@@ -1559,14 +1597,20 @@ Begin
 
   Console.SetWindowTitle('MIDE');
 
-  For A := 1 to ParamCount Do Begin
-    If Pos('-50', ParamStr(A)) > 0 Then
-      Mode50 := True
-    Else
-      Str := ParamStr(A);
-  End;
+  INI := TINIReader.Create('mide.ini');
 
-  If Mode50 Then Begin
+  cfg_Screen50   := (INI.ReadInteger('General', 'screenmode', 25) = 50);
+  cfg_TabSpaces  := INI.ReadInteger('General', 'tab_spaces', 2);
+  cfg_AutoIndent := strUpper(INI.ReadString('General', 'auto_indent', 'true')) = 'TRUE';
+  cfg_ExecPath   := DirSlash(INI.ReadString('Execute', 'rootpath', ''));
+  cfg_ExecUser   := INI.ReadString('Execute', 'username', 'Guest');
+  cfg_ExecPW     := INI.ReadString('Execute', 'password', 'Guest');
+
+  INI.Free;
+
+  Str := ParamStr(1);
+
+  If cfg_Screen50 Then Begin
     Console.SetScreenSize(50);
 
     mideBotY    := 49;
@@ -1612,36 +1656,12 @@ Begin
 
     Ch := Input.ReadKey;
 
-{ alt+0..9 - change windows }
-{ alt-x    - quit }
-//{ f1       - help on keyword }
-{ f2       - save }
-//{ f3       - open }
-{ f9       - compile }
-
     Case Ch of
       #00 : Begin
               Ch := Input.ReadKey;
 
               Case Ch of
-(*
-                #25 : If (Clips > 0) and (CurWinNum <> 0) Then Begin
-                        For A := 0 to Clips - 1 Do Begin
-                          InsertLine (CurWin[CurWinNum]^.CurLine + A);
-                          CurWin[CurWinNum]^.TextData[CurWin[CurWinNum]^.CurLine + A]^ := ClipData[A + 1];
-                        End;
-                        DrawPage;
-                      End;
-*)
                 #45 : Break;
-(*
-                #46 : Begin
-                        Clips := 0;
-                        StatusLineBot('');
-                      End;
-
-                #59 : ShowHelp;
-*)
                 #60 : If TotalWinNum > 0 Then SaveFile(CurWinNum, False, False);
                 #61 : If TotalWinNum < mideMaxOpenFiles Then Begin
                         Str := StartDir;
@@ -1654,7 +1674,7 @@ Begin
                 #62 : If TotalWinNum > 0 Then CloseFile;
 //                #63 : SearchText(False);
 //                #64 : SearchText(True);
-//                #66 : Options;
+                #66 : RunProgram;
                 #67 : Compile;
                 #71 : If CurWinNum > 0 Then Begin {home}
                         CurWin[CurWinNum]^.CurX := 1;

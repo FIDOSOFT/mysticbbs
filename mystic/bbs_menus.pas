@@ -279,7 +279,8 @@ Begin
           End;
     'O' : Case Cmd[2] of
             'S' : Session.Msgs.ToggleNewScan(True);
-            'D' : Session.Msgs.DownloadQWK(CmdData);
+            'D' : Session.Msgs.DownloadQWK(False, CmdData);
+            'E' : Session.Msgs.DownloadQWK(True, CmdData);
             'U' : Session.Msgs.UploadREP;
           End;
     'Q' : Case Cmd[2] of
@@ -594,9 +595,7 @@ Begin
                   Repeat
                     Inc (Count);
 
-                    If SpecialKey(Data.Item[Count]^.HotKey) Then Continue;
-
-                    // check command acs for validkey?
+                    If SpecialKey(Data.Item[Count]^.HotKey) Or Not TBBSCore(Owner).User.Access(Data.Item[Count]^.Access) Then Continue;
 
                     Found := Data.Item[Count]^.HotKey = Temp + UpCase(Ch);
 
@@ -837,6 +836,26 @@ Begin
       If TBBSCore(Owner).io.IsArrow Then Begin
         Case Data.Info.MenuType of
           1 : Case Ch of
+                #71 : Case ExecuteByHotKey('HOME', -1) of
+                        0 : ;
+                        1 : Break;
+                        2 : Exit;
+                      End;
+                #73 : Case ExecuteByHotKey('PAGEUP', -1) of
+                        0 : ;
+                        1 : Break;
+                        2 : Exit;
+                      End;
+                #79 : Case ExecuteByHotKey('END', -1) of
+                        0 : ;
+                        1 : Break;
+                        2 : Exit;
+                      End;
+                #81 : Case ExecuteByHotKey('PAGEDOWN', -1) of
+                        0 : ;
+                        1 : Break;
+                        2 : Exit;
+                      End;
                 #72,
                 #75 : Begin
                         TempPos := CursorPos;
@@ -898,12 +917,18 @@ Begin
 
                   AddChar(#8);
                 End;
-          #09 : If Data.Info.MenuType = 2 Then
-                  Case ExecuteGridCommand(Data.Item[CursorPos]^.JumpTab, 5) of
+          #09 : Begin
+                  Case Data.Info.MenuType of
+                    1 : Count := ExecuteByHotKey('TAB', -1);
+                    2 : Count := ExecuteGridCommand(Data.Item[CursorPos]^.JumpEscape, 5);
+                  End;
+
+                  Case Count of
                     0 : ;
                     1 : Break;
                     2 : Exit;
                   End;
+                End;
           #13 : Begin
                   TBBSCore(Owner).io.AnsiGotoXY(Data.Info.DoneX, Data.Info.DoneY);
 
@@ -916,13 +941,18 @@ Begin
 
                   If Found Then Exit Else Break;
                 End;
-          #27 : If Data.Info.MenuType = 2 Then begin
-                  Case ExecuteGridCommand(Data.Item[CursorPos]^.JumpEscape, 6) of
+          #27 : Begin
+                  Case Data.Info.MenuType of
+                    1 : Count := ExecuteByHotKey('ESCAPE', -1);
+                    2 : Count := ExecuteGridCommand(Data.Item[CursorPos]^.JumpEscape, 6);
+                  End;
+
+                  Case Count of
                     0 : ;
                     1 : Break;
                     2 : Exit;
                   End;
-                end;
+                End;
         Else
           If Length(TempStr) < mysMaxMenuInput Then Begin
             Found    := False;
@@ -932,12 +962,17 @@ Begin
             Repeat
               Inc (Count);
 
-              If SpecialKey(Data.Item[Count]^.HotKey) Then Continue;
+              If SpecialKey(Data.Item[Count]^.HotKey) or Not TBBSCore(Owner).User.Access(Data.Item[Count]^.Access) Then Continue;
 
               Found := Data.Item[Count]^.HotKey = TempStr + UpCase(Ch);
 
+              session.systemlog('comparing cmd: ' + data.item[count]^.hotkey + ' to ' + tempstr + upcase(ch));
+
               If Not ValidKey Then
                 ValidKey := TempStr + UpCase(Ch) = Copy(Data.Item[Count]^.HotKey, 1, Length(TempStr + Ch));
+
+              session.systemlog('valid key is: ' + stri2s(ord(validkey)));
+              session.systemlog('found is: ' + stri2s(ord(found)));
 
             Until Found or (Count >= Data.NumItems);
 
@@ -953,9 +988,9 @@ Begin
               TBBSCore(Owner).io.AnsiGotoXY(Data.Info.DoneX, Data.Info.DoneY);
 
               If Data.Info.MenuType = 1 Then
-                Found := ExecuteCommandList(CursorPos, -1) = 2
+                Found := ExecuteCommandList(Count, -1) = 2
               Else
-                Found := ExecuteCommandList(CursorPos, 0) = 2;
+                Found := ExecuteCommandList(Count, 0) = 2;
 
               If Found Then Exit Else Break;
             End Else
@@ -1013,9 +1048,15 @@ Begin
     If Not LoadMenu(Forced) Then Exit;
 
   If Not TBBSCore(Owner).User.Access(Data.Info.Access) Then Begin
+    If Data.Info.Fallback <> '' Then Begin
+      MenuName := Data.Info.Fallback;
+      Exit;
+    End;
+
     MenuName := MenuOld;
 
     TBBSCore(Owner).io.OutFull(TBBSCore(Owner).GetPrompt(149));
+
     Exit;
   End;
 

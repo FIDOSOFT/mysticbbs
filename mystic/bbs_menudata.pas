@@ -85,7 +85,7 @@ Begin
 
   ReadLn (Menu, Junk.Description);
   ReadLn (Menu, Junk.Access);
-  ReadLn (Menu, Junk.Password);
+  ReadLn (Menu, Junk.Fallback);
   ReadLn (Menu, Flags);
   ReadLn (Menu, Str);  // resv
   ReadLn (Menu, Junk.NodeStatus);
@@ -180,7 +180,7 @@ Begin
 
   WriteLn (Menu, Info.Description);
   WriteLn (Menu, Info.Access);
-  WriteLn (Menu, Info.Password);
+  WriteLn (Menu, Info.Fallback);
   WriteLn (Menu, Flags);
   WriteLn (Menu, '');  // resv
   WriteLn (Menu, Info.NodeStatus);

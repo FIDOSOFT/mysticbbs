@@ -70,7 +70,9 @@ Var
   TopPage      : Integer;
   BarPos       : Integer;
   NodeData     : TNodeData;
+  {$IFDEF UNIX}
   DaemonMode   : Boolean = False;
+  {$ENDIF}
 
 {$I MIS_ANSIWFC.PAS}
 

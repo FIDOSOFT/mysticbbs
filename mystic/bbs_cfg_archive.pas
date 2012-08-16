@@ -20,9 +20,7 @@ Procedure EditArchive (Var Arc: RecArchive);
 Var
   Box      : TAnsiMenuBox;
   Form     : TAnsiMenuForm;
-  Topic    : String;
 Begin
-  Topic := '';
   Box   := TAnsiMenuBox.Create;
   Form  := TAnsiMenuForm.Create;
 

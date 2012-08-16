@@ -394,7 +394,7 @@ Begin
       Session.UserHostInfo := Copy(Temp, 5, Length(Temp))
     Else
     If Pos('-HOST', Temp) > 0 Then
-      Session.UserHostInfo := Copy(Temp, 6, Length(Temp))
+      Session.UserHostInfo := Copy(ParamStr(Count), 6, Length(Temp))
     Else
     If Pos('-U', Temp) > 0 Then
       UserName := strReplace(Copy(Temp, 3, Length(Temp)), '_', ' ')
@@ -403,7 +403,7 @@ Begin
       Password := Copy(Temp, 3, Length(Temp))
     Else
     If Pos('-X', Temp) > 0 Then
-      Script := strReplace(Copy(Temp, 3, Length(Temp)), '_', ' ')
+      Script := strReplace(Copy(ParamStr(Count), 3, Length(Temp)), '_', ' ')
     Else
     If Temp = '-L' Then Session.LocalMode := True;
   End;

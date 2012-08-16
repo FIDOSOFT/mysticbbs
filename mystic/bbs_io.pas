@@ -48,7 +48,6 @@ Type
     InLimit        : Byte;
     InSize         : Byte;
     AllowAbort     : Boolean;
-    Aborted        : Boolean;
     NoFile         : Boolean;
     Graphics       : Byte;
     PausePtr       : Byte;
@@ -138,8 +137,6 @@ Begin
   UseInSize     := False;
   InLimit       := 0;
   InSize        := 0;
-  AllowAbort    := False;
-  Aborted       := False;
   NoFile        := False;
   Graphics      := 1;
   PausePtr      := 1;
@@ -191,13 +188,11 @@ Begin
 End;
 
 Procedure TBBSIO.BufFlush;
-Var
-  Res : LongInt;
 Begin
   {$IFDEF WINDOWS}
   If OutBufPos > 0 Then Begin
     If Not TBBSCore(Core).LocalMode Then
-      Res := TBBSCore(Core).Client.WriteBuf(OutBuffer, OutBufPos);
+      TBBSCore(Core).Client.WriteBuf(OutBuffer, OutBufPos);
 
     OutBufPos := 0;
   End;
@@ -462,6 +457,7 @@ Begin
           End;
     'A' : Case Code[2] of
             'G' : LastMCIValue := strI2S(DaysAgo(TBBSCore(Core).User.ThisUser.Birthday) DIV 365);
+            'O' : AllowAbort := False;
             'S' : LastMCIValue := OutON(TBBSCore(Core).User.ThisUser.SigUse);
             'V' : LastMCIValue := OutYN(Chat.Available);
           End;
@@ -918,16 +914,17 @@ End;
 
 Function TBBSIO.OutFile (FName: String; DoPause: Boolean; Speed: Byte) : Boolean;
 Var
-  Buffer  : Array[1..4096] of Char;
-  BufPos  : LongInt;
-  BufSize : LongInt;
-  dFile   : File;
-  Ext     : String[4];
-  Code    : String[2];
-  Old     : Boolean;
-  Str     : String;
-  Ch      : Char;
-  Done    : Boolean;
+  Buffer     : Array[1..4096] of Char;
+  BufPos     : LongInt;
+  BufSize    : LongInt;
+  dFile      : File;
+  Ext        : String[4];
+  Code       : String[2];
+  SavedPause : Boolean;
+  SavedAbort : Boolean;
+  Str        : String;
+  Ch         : Char;
+  Done       : Boolean;
 
   Function CheckFileInPath (Path: String) : Boolean;
   Var
@@ -1009,8 +1006,10 @@ Begin
 
   NoFile       := False;
   Result       := True;
-  Old          := AllowPause;
+  SavedPause   := AllowPause;
+  SavedAbort   := AllowAbort;
   AllowPause   := DoPause;
+  AllowAbort   := True;
   PausePtr     := 1;
   Done         := False;
   BufPos       := 0;
@@ -1025,6 +1024,11 @@ Begin
       BufFlush;
 
       If BufPos MOD BaudEmulator = 0 Then WaitMS(6);
+    End;
+
+    If AllowAbort And (InKey(0) = #32) Then Begin
+      AnsiColor(7);
+      Break;
     End;
 
     Case Ch of
@@ -1135,7 +1139,9 @@ Begin
     End;
   End;
 
-  AllowPause := Old;
+  AllowPause := SavedPause;
+  AllowAbort := SavedAbort;
+
   Close (dFile);
 
   BufFlush;

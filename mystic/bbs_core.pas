@@ -117,6 +117,7 @@ Begin
   UserHostInfo  := '';
   UserIPInfo    := '';
   CheckTimeOut  := True;
+  TimeOut       := TimerSeconds;
   TimeOffset    := 0;
   TimeSaved     := 0;
   TimerOn       := False;

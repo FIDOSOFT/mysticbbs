@@ -454,6 +454,7 @@ Begin
   SearchX    := 0;
   SearchY    := 0;
   SearchA    := 0;
+  TopPage    := 1;
 
   Session.io.BufFlush;
 End;
@@ -615,6 +616,9 @@ Begin
   Width   := BX2 - X1 - 1;
   WinSize := BY2 - Y1 - 1;
   TagPos  := X1 + 1;
+
+  While Picked > TopPage + WinSize - 1 Do
+    Inc (TopPage);
 
   If PosBar Then
     For Count := 1 to WinSize Do

@@ -562,7 +562,7 @@ Type
     Description : String[30];
     Access      : String[mysMaxAcsSize];
     DispFile    : String[20];
-    Password    : String[20];
+    Fallback    : String[20];
     NodeStatus  : String[30];
     Header      : String[160];
     Footer      : String[160];

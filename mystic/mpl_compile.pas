@@ -81,6 +81,7 @@ Type
     OutFile     : File;
     CurFile     : Byte;
     Ch          : Char;
+    LastCharPos : LongInt;
     IdentStr    : String;
     AllowOutput : Boolean;
     UpdateProc  : TParserUpdateProc;
@@ -267,18 +268,20 @@ Begin
   UpdateInfo.ErrorLine := 1;
   UpdateInfo.ErrorCol  := 0;
 
-  InFile[CurFile].DataFile.Seek(0);
+  If InFile[CurFile].DataFile.Opened Then Begin
+    InFile[CurFile].DataFile.Seek(0);
 
-  While Not InFile[CurFile].DataFile.EOF And (InFile[CurFile].DataFile.FilePos < InFile[CurFile].Position) Do Begin
-    Case InFile[CurFile].DataFile.Read of
-      #10 : Begin
-              Inc (UpdateInfo.ErrorLine);
-              UpdateInfo.ErrorCol := 0;
-            End;
-      #09,
-      #13 : ;
-    Else
-      Inc (UpdateInfo.ErrorCol);
+    While Not InFile[CurFile].DataFile.EOF And (InFile[CurFile].DataFile.FilePos < InFile[CurFile].Position) Do Begin
+      Case InFile[CurFile].DataFile.Read of
+        #10 : Begin
+                Inc (UpdateInfo.ErrorLine);
+                UpdateInfo.ErrorCol := 0;
+              End;
+        #09,
+        #13 : ;
+      Else
+        Inc (UpdateInfo.ErrorCol);
+      End;
     End;
   End;
 End;
@@ -469,6 +472,8 @@ Var
   BlockStart : Char;
   Str        : String;
 Begin
+  LastCharPos := InFile[CurFile].Position;
+
   GetChar;
 
   While Not UpdateInfo.ErrorType <> 0 Do Begin
@@ -608,9 +613,11 @@ End;
 Function TParserEngine.GetStr (Str: String; Forced, CheckSpace: Boolean) : Boolean;
 Var
   Count : Byte;
+  Saved : LongInt;
 Begin
   Result := False;
   Count  := 1;
+  Saved  := LastCharPos;
 
   If Not Forced Then SavePosition;
 
@@ -618,9 +625,10 @@ Begin
     NextChar;
 
     If UpCase(Ch) <> UpCase(Str[Count]) Then
-      If Forced Then
+      If Forced Then Begin
+        InFile[CurFile].Position := Saved;
         Error(mpsExpected, Str)
-      Else Begin
+      End Else Begin
         LoadPosition;
         Exit;
       End;
@@ -2804,8 +2812,11 @@ Begin
 
   If Not InFile[CurFile].DataFile.Open(FN) Then Begin
     InFile[CurFile].DataFile.Done;
+
     Error (mpsFileNotFound, FN);
+
     If CurFile > 1 Then Dec (CurFile);
+
     Exit;
   End;
 
@@ -2830,13 +2841,17 @@ Var
   VerStr : String;
   Count  : Byte;
 Begin
-  Result   := False;
-  VerStr   := mplVersion;
-  UsesUSER := False;
-  UsesCFG  := False;
+  Result     := False;
+  VerStr     := mplVersion;
+  UsesUSER   := False;
+  UsesCFG    := False;
+  UsesMBASE  := False;
+  UsesMGROUP := False;
+  UsesFBASE  := False;
+  UsesFGROUP := False;
 
   Assign  (OutFile, JustFileName(FN) + mplExtExecute);
-  {$I-} ReWrite (OutFile, 1); {$I+}
+  ReWrite (OutFile, 1);
 
   If IoResult <> 0 Then Begin
     Error (mpsOutputFile, 'File could be in use');
@@ -2853,6 +2868,7 @@ Begin
   For Count := 1 to CurFile Do Begin
     InFile[Count].DataFile.Close;
     InFile[Count].DataFile.Done;
+
     If IoResult <> 0 Then ;
   End;
 
