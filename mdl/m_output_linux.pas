@@ -122,6 +122,7 @@ Begin
   BufFlush;
 
 //  RestoreRawSettings(SavedTerm);
+
   SetRawMode(False);
 
   Inherited Destroy;
