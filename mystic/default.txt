@@ -214,7 +214,7 @@
 109 |CR|15Message aborted...
 110 |CR|12You must select a message base first!
 111 |CR|12You don't have access to read in this base!
-112 |CR|07(|14F|07)|15orward, |07(|14N|07)|15ew, |07(|14B|07)|15y You, |07(|14Y|07)|15ours, |07(|14S|07)|15earch, |07(|14Q|07)|15uit?
+112 |CR|07(|14F|07)|15orward, |07(|14N|07)|15ew, |07(|14B|07)|15y You, |07(|14Y|07)|15ours, |07(|14S|07)|15earch, |07(|14Q|07)|15uit? |XX
 113 |15No messages found.
 114 |CR|12There are no messages in |MB.|DE|DE|DE
 ; E-mail reader prompt

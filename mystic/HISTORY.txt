@@ -4629,3 +4629,7 @@
    NOT send any messages if you are not subscribed to the message base, but
    it should still appear in the offline reader.  This is changed so that
    users can add/drop message bases.
+
+ - Menu passwords have been removed from the menu flags.  If you want to
+   password protect your menus you can do the same thing by using the -P
+   and FIRSTCMD options on your menus.

@@ -2313,7 +2313,10 @@ Var
   VerStr : String;
   Res    : LongInt;
 Begin
-  Result     := 0;
+  Result := 0;
+
+  If FN = '' Then Exit;
+
   CurVarNum  := 0;
   CurVarID   := 0;
   ReloadMenu := False;

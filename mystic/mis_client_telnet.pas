@@ -141,7 +141,7 @@ Begin
         Client.WriteBufEscaped (Buffer, bRead);
 
         If Snooping Then
-          Term.ProcessBuf(Buffer[1], bRead);
+          Term.ProcessBuf(Buffer[0], bRead);
       End;
     End Else
     If Client.DataWaiting Then Begin
