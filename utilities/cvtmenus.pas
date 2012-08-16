@@ -201,6 +201,14 @@ Begin
         If MenuCmd[Count].HotKey = MenuCmd[Loop].HotKey Then Begin
           If Length(MenuCmd[Loop].Command) < 2 Then Continue;
 
+          // if lb menus check x/y/lo/hi values and assign if they were blank
+          If (Menu.MenuType > 0) And ((NewItem[NewItems].TextLo = '') or (NewItem[NewItems].TextHi = '')) Then Begin
+            NewItem[NewItems].X      := MenuCmd[Loop].X;
+            NewItem[NewItems].Y      := MenuCmd[Loop].Y;
+            NewItem[NewItems].TextLo := MenuCmd[Loop].TextLo;
+            NewItem[NewItems].TextHi := MenuCmd[Loop].TextHi;
+          End;
+
           Inc (NewItem[NewItems].Commands);
 
           NewCmds := NewItem[NewItems].Commands;
@@ -238,7 +246,7 @@ Begin
 
     WriteLn (NewF, 'Menu description');
     WriteLn (NewF, Menu.Access);
-    WriteLn (NewF, Menu.Password);
+    WriteLn (NewF, Menu.Fallback);
     WriteLn (NewF, FlagStr);
     WriteLn (NewF, '');
     WriteLn (NewF, ''); // node status
