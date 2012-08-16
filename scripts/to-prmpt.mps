@@ -40,7 +40,8 @@
 //                              Set Prompt #213 to "!to-prmpt MESSAGE"
 //     E-mail reading prompt  : Set Prompt #115 to "!to-prmpt EMAIL"
 //     File Listing prompt    : Set Prompt #044 to "!to-prmpt FILE"
-//     Pause prompt           : Set Prompt #132 to "!to-prmpt PAUSE"
+//     YNC Pause prompt       : Set Prompt #132 to "!to-prmpt PAUSE"
+//     Msg Editor prompt      : Set Prompt #354 to "!to-prmpt EDITOR"
 //
 //  When you have changed the prompts, you must compile them again with
 //  MAKETHEME, or if you changed them inside the internal prompt editor, the
@@ -55,12 +56,93 @@
 //    - Added the 'H' command to the message reader prompt (set lastread)
 //    - Added the 'M' command to the message reader prompt (move message)
 //    - Added the 'F' command to the message reader prompt (forward)
+//    - Added the FS editor prompt option
 //    - Some conversions of IF statements to CASE statements for code clarity
 //
 // ===========================================================================
 
 Var
   Selection : Byte;
+
+Function EditPromptMenu : Byte
+Var
+  Ch   : Char;
+  Done : Boolean;
+  Bar  : Byte;
+  Cmd  : Array[1..7] of String[80];
+  Xpos : Array[1..7] of String[80];
+Begin
+
+  Done := False
+  Bar  := 1
+
+  Xpos[1] := '|[X14'
+  Xpos[2] := '|[X20'
+  Xpos[3] := '|[X27'
+  Xpos[4] := '|[X34'
+  Xpos[5] := '|[X44'
+  Xpos[6] := '|[X52'
+  Xpos[7] := '|[X59'
+
+  Cmd[1] := ' |15S|07ave '
+  Cmd[2] := ' |15Q|07uote '
+  Cmd[3] := ' |15A|07bort '
+  Cmd[4] := ' |15C|07ontinue '
+  Cmd[5] := ' |15U|07pload '
+  Cmd[6] := ' |15T|07itle '
+  Cmd[7] := ' |15H|07elp '
+
+  Repeat
+    If Graphics > 0 Then
+      Write ('|15|17' + Xpos[Bar]+stripmci(Cmd[Bar]) + '|00|16');
+
+    Ch := ReadKey
+
+    If Graphics > 0 and IsArrow Then Begin
+      Write (Xpos[bar] + Cmd[Bar] + '|00|16');
+      If Ord(Ch) = 75 Then Begin
+        If Bar > 1 Then
+          Bar := Bar - 1
+      End Else
+      If Ord(Ch) = 77 Then Begin
+        If Bar < 7 Then
+          Bar := Bar + 1
+      End
+    End Else
+      If Ch = #13 and Graphics > 0 Then Begin
+        EditPromptMenu := Bar
+        Done           := True
+      End Else
+      If Upper(Ch) = 'S' Then Begin
+        EditPromptMenu := 1
+        Done           := True
+      End Else
+      If Upper(Ch) = 'Q' Then Begin
+        EditPromptMenu := 2
+        Done           := True
+      End Else
+      If Upper(Ch) = 'A' Then Begin
+        EditPromptMenu := 3
+        Done           := True
+      End Else
+      If Upper(Ch) = 'C' Then Begin
+        EditPromptMenu := 4
+        Done           := True
+      End Else
+      If Upper(Ch) = 'U' Then Begin
+        EditPromptMenu := 5
+        Done           := True
+      End Else
+      If Upper(Ch) = 'T' Then Begin
+        EditPromptMenu := 6
+        Done           := True
+      End Else
+      If Upper(Ch) = 'H' Then Begin
+        EditPromptMenu := 7
+        Done           := True
+      End
+  Until Done
+End
 
 Function FPromptMenu : Byte
 Var
@@ -74,17 +156,17 @@ Begin
   Done := False
   Bar  := 1
 
-  Xpos[1] := '|[X40'
-  Xpos[2] := '|[X45'
+  Xpos[1] := '|[X38'
+  Xpos[2] := '|[X44'
   Xpos[3] := '|[X54'
-  Xpos[4] := '|[X59'
-  Xpos[5] := '|[X64'
+  Xpos[4] := '|[X60'
+  Xpos[5] := '|[X66'
 
-  Cmd[1] := '|15n|07ext'
-  Cmd[2] := '|15p|07revious'
-  Cmd[3] := '|15f|07lag'
-  Cmd[4] := '|15v|07iew'
-  Cmd[5] := '|15q|07uit'
+  Cmd[1] := ' |15N|07ext '
+  Cmd[2] := ' |15P|07revious '
+  Cmd[3] := ' |15F|07lag '
+  Cmd[4] := ' |15V|07iew '
+  Cmd[5] := ' |15Q|07uit '
 
   Repeat
     If Graphics > 0 Then
@@ -113,19 +195,19 @@ Begin
       End Else
       If Upper(Ch) = 'P' Then Begin
         FPromptMenu := 2
-        Done     := True
+        Done        := True
       End Else
       If Upper(Ch) = 'F' Then Begin
         FPromptMenu := 3
-        Done     := True
+        Done        := True
       End Else
       If Upper(Ch) = 'V' Then Begin
         FPromptMenu := 4
-        Done     := True
+        Done        := True
       End Else
       If Upper(Ch) = 'Q' Then Begin
         FPromptMenu := 5
-        Done     := True
+        Done        := True
       End
   Until Done
 End
@@ -142,21 +224,21 @@ Begin
   Done := False
   Bar  := 1
 
-  Xpos[1] := '|[X23'
+  Xpos[1] := '|[X22'
   Xpos[2] := '|[X28'
-  Xpos[3] := '|[X37'
-  Xpos[4] := '|[X43'
-  Xpos[5] := '|[X49'
-  Xpos[6] := '|[X54'
-  Xpos[7] := '|[X61'
+  Xpos[3] := '|[X38'
+  Xpos[4] := '|[X45'
+  Xpos[5] := '|[X52'
+  Xpos[6] := '|[X58'
+  Xpos[7] := '|[X66'
 
-  Cmd[1] := '|15n|07ext'
-  Cmd[2] := '|15p|07revious'
-  Cmd[3] := '|15a|07gain'
-  Cmd[4] := '|15r|07eply'
-  Cmd[5] := '|15j|07ump'
-  Cmd[6] := '|15d|07elete'
-  Cmd[7] := '|15q|07uit'
+  Cmd[1] := ' |15N|07ext '
+  Cmd[2] := ' |15P|07revious '
+  Cmd[3] := ' |15A|07gain '
+  Cmd[4] := ' |15R|07eply '
+  Cmd[5] := ' |15J|07ump '
+  Cmd[6] := ' |15D|07elete '
+  Cmd[7] := ' |15Q|07uit '
 
   Repeat
     If Graphics > 0 Then
@@ -223,28 +305,27 @@ End
 
 Function MPromptMenu : Byte;
 Var
+  Done : Boolean;
   Ch   : Char
-  Done : Boolean
   Bar  : Byte
   Cmd  : Array[1..6] of String[80]
   Xpos : Array[1..6] of String[80]
 Begin
-  Done := False
-  Bar  := 1
+  Bar := 1;
 
-  Xpos[1] := '|[X38'
-  Xpos[2] := '|[X43'
+  Xpos[1] := '|[X36'
+  Xpos[2] := '|[X42'
   Xpos[3] := '|[X52'
-  Xpos[4] := '|[X58'
-  Xpos[5] := '|[X64'
-  Xpos[6] := '|[X69'
+  Xpos[4] := '|[X59'
+  Xpos[5] := '|[X66'
+  Xpos[6] := '|[X72'
 
-  Cmd[1] := '|15n|07ext|00|16'
-  Cmd[2] := '|15p|07revious|00|16'
-  Cmd[3] := '|15a|07gain|00|16'
-  Cmd[4] := '|15r|07eply|00|16'
-  Cmd[5] := '|15j|07ump|00|16'
-  Cmd[6] := '|15q|07uit|00|16'
+  Cmd[1] := ' |15N|07ext|00|16 '
+  Cmd[2] := ' |15P|07revious|00|16 '
+  Cmd[3] := ' |15A|07gain|00|16 '
+  Cmd[4] := ' |15R|07eply|00|16 '
+  Cmd[5] := ' |15J|07ump|00|16 '
+  Cmd[6] := ' |15Q|07uit|00|16 '
 
   Repeat
     If Graphics > 0 Then
@@ -292,7 +373,7 @@ Begin
       Else
         If (Pos(Ch, 'MEFD') > 0 And ACS('OM')) OR (Pos(Ch, 'X?[]HITGL') > 0) Then Begin
           StuffKey(Ch);
-          Done := True;
+          Break;
         End;
       End;
     End;
@@ -310,17 +391,17 @@ Begin
   Done := False
   Bar  := 1
 
-  Xpos[1] := '|[X22'
+  Xpos[1] := '|[X21'
   Xpos[2] := '|[X26'
-  Xpos[3] := '|[X29'
+  Xpos[3] := '|[X30'
 
-  Cmd[1] := '|15y|07es'
-  Cmd[2] := '|15n|07o'
-  Cmd[3] := '|15c|07ontinuous'
+  Cmd[1] := ' |15Y|07es '
+  Cmd[2] := ' |15N|07o '
+  Cmd[3] := ' |15C|07ontinuous '
 
   Repeat
     If Graphics > 0 Then
-      Write ('|11|19' + XPos[Bar] + StripMCI(Cmd[Bar]) + '|00|16')
+      Write ('|15|17' + XPos[Bar] + StripMCI(Cmd[Bar]) + '|00|16')
 
     Ch := ReadKey
 
@@ -354,34 +435,29 @@ End
 
 Procedure MESSAGE
 Begin
-  Write ('|CR|08 >>|07 Reading messages |15|$L04|&5 |07of |15|$R04|&6 |08// |15n|09ext |15p|07revious |15a|07gain |15r|07eply |15j|07ump |15q|07uit |00')
+  Write ('|CR|08>>|07 Reading messages |15|$L04|&5 |07of |15|$R04|&6 |08//  |15N|09ext  |15P|07revious  |15A|07gain  |15R|07eply  |15J|07ump  |15Q|07uit |00')
 
   Selection := MPromptMenu
 
-  If Selection = 1 Then
-    stuffkey('N')
-  Else
-  If Selection = 2 Then
-    stuffkey('P')
-  Else
-  If Selection = 3 Then
-    stuffkey('A')
-  Else
-  If Selection = 4 Then
-    stuffkey('R')
-  Else
-  If Selection = 5 Then
-    stuffkey('J')
-  Else
-  If Selection = 6 Then
-    stuffkey('Q')
+  MoveX(1);
+  TextColor(7);
+  ClrEOL;
+
+  Case Selection of
+    1 : stuffkey('N');
+    2 : stuffkey('P');
+    3 : stuffkey('A');
+    4 : stuffkey('R');
+    5 : stuffkey('J');
+    6 : stuffkey('Q');
+  End;
 End
 
 Procedure DOPAUSE
 Var
   SavedX : Byte;
 Begin
-  Write ('|08 >> |07Paused |13-|07 more|08 // |15y|09es |15n|07o |15c|07ontinuous |00');
+  Write ('|08>> |07Paused |08- |07More|08 //  |15Y|09es  |15N|07o  |15C|07ontinuous |00');
 
   SavedX := WhereX;
 
@@ -396,12 +472,12 @@ Begin
   If Selection = 3 Then
     stuffkey('C')
 
-  Write('|[X' + PadLT(Int2Str(SavedX), 2, '0'));  
+  Write('|[X' + PadLT(Int2Str(SavedX), 2, '0'));
 End
 
 Procedure Email
 Begin
-  Write ('|CR|08 >>|07 Reading e-mail |08// |15N|09ext |15P|07revious |15A|07gain |15R|07eply |15J|07ump |15D|07elete |15Q|07uit |00')
+  Write ('|CR|08>> |07Reading e-mail |08//  |15N|09ext  |15P|07revious  |15A|07gain  |15R|07eply  |15J|07ump  |15D|07elete  |15Q|07uit |00')
 
   Selection := EPromptMenu
 
@@ -427,9 +503,24 @@ Begin
     stuffkey('Q')
 End
 
+Procedure Editor;
+Begin
+  Write ('|CR|08<< |07Editor |08//  |15S|07ave  |15Q|07uote  |15A|07bort  |15C|07ontinue  |15U|07pload  |15T|07itle  |15H|07elp  |08>>');
+
+  Case EditPromptMenu of
+    1 : stuffKey('S');
+    2 : stuffKey('Q');
+    3 : stuffKey('A');
+    4 : stuffKey('C');
+    5 : stuffKey('U');
+    6 : stuffKey('T');
+    7 : stuffKey('H');
+  End;
+End;
+
 Procedure File
 Begin
-  Write ('|CR|07(|07|$R31|FB|07) |08// |15n|07ext |15p|07revious |15f|07lag |15v|07iew |15q|07uit >>')
+  Write ('|CR|08[|07|$R31|FB|08] |08//  |15N|07ext  |15P|07revious  |15F|07lag  |15V|07iew  |15Q|07uit  |08>>')
 
   Selection := FPromptMenu
 
@@ -450,7 +541,7 @@ Begin
 End
 
 Const
-  FailStr = '|CRUSAGE: to-prmpt [ MESSAGE | FILE | EMAIL | PAUSE ]|CR|PA';
+  FailStr = '|CRUSAGE: to-prmpt [ MESSAGE | FILE | EMAIL | PAUSE | EDITOR ]|CR|CR|PA';
 
 Begin
   AllowArrow := True;
@@ -463,6 +554,7 @@ Begin
       'FILE'   : FILE;
       'EMAIL'  : EMAIL;
       'PAUSE'  : DOPAUSE;
+      'EDITOR' : EDITOR;
     Else
       WriteLn(FailStr);
     End;
