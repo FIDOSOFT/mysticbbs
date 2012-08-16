@@ -34,7 +34,8 @@ Type
     Function    OpenCreateBase      (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
     Procedure   AppendMessageText   (Var Msg: PMsgBaseABS; Lines: Integer; ReplyID: String);
     Procedure   AssignMessageData   (Var Msg: PMsgBaseABS);
-    Function    GetRecord           (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+    Function    GetBaseByNum        (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+    Function    GetBaseByIndex      (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Procedure   GetMessageStats     (Var TempBase: RecMessageBase; Var Total, New, Yours: LongInt);
     Function    GetTotalMessages    (Var TempBase: RecMessageBase) : LongInt;
     Procedure   PostTextFile        (Data: String; AllowCodes: Boolean);
@@ -57,11 +58,14 @@ Type
     Procedure   GlobalMessageSearch (Mode: Char);
     Procedure   SetMessagePointers;
     Procedure   ViewSentEmail;
-    Procedure   DownloadQWK         (Data: String);
-    Procedure   UploadREP;
-    Procedure   WriteCONTROLDAT;
-    Function    WriteMSGDAT         : LongInt;
     Function    ResolveOrigin       (var mArea: RecMessageBase) : String;
+    // QWK and QWKE goodies
+    Procedure   DownloadQWK         (Extended: Boolean; Data: String);
+    Procedure   UploadREP;
+    Procedure   WriteCONTROLDAT     (Extended: Boolean);
+    Procedure   WriteTOREADEREXT;
+    Procedure   WriteDOORID         (Extended: Boolean);
+    Function    WriteMSGDAT         (Extended: Boolean) : LongInt;
   End;
 
 Implementation
@@ -72,6 +76,9 @@ Uses
   bbs_User,
   bbs_NodeInfo,
   bbs_cfg_UserEdit;
+
+Const
+  QwkControlName = 'MYSTICQWK';
 
 Type
   BSingle = Array [0..3] of Byte;
@@ -138,7 +145,7 @@ Begin
   Result := True;
 End;
 
-Function TMsgBase.GetRecord (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+Function TMsgBase.GetBaseByNum (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
 Var
   F : File;
 Begin
@@ -150,6 +157,28 @@ Begin
 
   If ioSeek(F, Num) And (ioRead(F, TempBase)) Then
     Result := True;
+
+  Close (F);
+End;
+
+Function TMsgBase.GetBaseByIndex (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, Config.DataPath + 'mbases.dat');
+
+  If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
+
+  While Not Eof(F) Do Begin
+    ioRead(F, TempBase);
+
+    If TempBase.Index = Num Then Begin
+      Result := True;
+      Break;
+    End;
+  End;
 
   Close (F);
 End;
@@ -1392,7 +1421,7 @@ Var
     End;
 
     Session.io.PromptInfo[3]  := MsgBase^.GetSubj;
-    Session.io.PromptInfo[4]  := MsgBase^.GetDate;
+    Session.io.PromptInfo[4]  := DateDos2Str(DateStr2Dos(MsgBase^.GetDate), Session.User.ThisUser.DateType);
     Session.io.PromptInfo[10] := MsgBase^.GetTime;
     Session.io.PromptInfo[5]  := strI2S(MsgBase^.GetMsgNum);
     Session.io.PromptInfo[6]  := strI2S(MsgBase^.GetHighMsgNum);
@@ -3045,449 +3074,6 @@ Begin
   MBase := Old;
 End;
 
-{ QWK OPTIONS }
-
-// this unbuffered foulness should be rewritten... if only people actually
-// used QWK... low priority.  also it doesnt copy the welcome, etc files.
-
-Procedure TMsgBase.WriteCONTROLDAT;
-Const
-  CRLF = #13#10; { for eventually having option for linux OR dos text files }
-Var
-  tFile : Text;
-Begin
-  Assign  (tFile, Session.TempPath + 'control.dat');
-  ReWrite (tFile);
-
-  Write (tFile, Config.BBSName + CRLF);
-  Write (tFile, CRLF); {bbs City/State}
-  Write (tFile, CRLF); {bbs Phone number}
-  Write (tFile, Config.SysopName + CRLF);
-  Write (tFile, '0,' + Config.qwkBBSID + CRLF);
-  Write (tFile, DateDos2Str(CurDateDos, 1), ',', TimeDos2Str(CurDateDos, False) + CRLF);
-  Write (tFile, strUpper(Session.User.ThisUser.Handle) + CRLF);
-  Write (tFile, CRLF);
-  Write (tFile, '0' + CRLF); {What is this line?}
-  Write (tFile, TotalMsgs, CRLF); {TOTAL MSG IN PACKET}
-  Write (tFile, TotalConf - 1, CRLF); {TOTAL CONF - 1}
-
-  Reset (MBaseFile);
-  Read  (MBaseFile, MBase); {SKIP EMAIL BASE}
-
-  While Not Eof(MBaseFile) Do Begin
-    Read (MBaseFile, MBase);
-
-    If Session.User.Access(MBase.ReadACS) Then Begin
-      GetMessageScan;
-
-      If MScan.QwkScan > 0 Then Begin
-        Write (tFile, MBase.Index, CRLF); {conf #}
-        Write (tFile, MBase.QwkName, CRLF); {conf name}
-      End;
-    End;
-  End;
-
-  Write (tFile, JustFile(Config.qwkWelcome) + CRLF);
-  Write (tFile, JustFile(Config.qwkNews) + CRLF);
-  Write (tFile, JustFile(Config.qwkGoodbye) + CRLF);
-
-  Close (tFile);
-End;
-
-{ converts TP real to Microsoft 4 bytes single }
-{ what kind of stupid standard uses this var type!? }
-
-Procedure Long2msb (Index : LongInt; Var MS : BSingle);
-Var
-  Exp : Byte;
-Begin
-  If Index <> 0 Then Begin
-    Exp := 0;
-
-    While Index And $800000 = 0 Do Begin
-      Inc (Exp);
-      Index := Index SHL 1
-    End;
-
-    Index := Index And $7FFFFF;
-  End Else
-    Exp := 152;
-
-  MS[0] := Index AND $FF;
-  MS[1] := (Index SHR 8) AND $FF;
-  MS[2] := (Index SHR 16) AND $FF;
-  MS[3] := 152 - Exp;
-End;
-
-Function TMsgBase.WriteMSGDAT : LongInt;
-{ returns last message added to qwk packet }
-Var
-  DataFile : File;
-  NdxFile  : File of QwkNdxHdr;
-  NdxHdr   : QwkNdxHdr;
-  QwkHdr   : QwkDATHdr;
-  Temp     : String;
-  MsgAdded : Integer; {# of message added in packet}
-  LastRead : LongInt;
-  BufStr   : String[128];
-  Blocks   : Word;
-  Index    : LongInt;
-  Count    : SmallInt;
-Begin
-  Inc (TotalConf);
-
-  MsgAdded := 0;
-
-  Case MBase.BaseType of
-    0 : MsgBase := New(PMsgBaseJAM, Init);
-    1 : MsgBase := New(PMsgBaseSquish, Init);
-  End;
-
-  MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
-
-  If Not MsgBase^.OpenMsgBase Then Begin
-    Dispose (MsgBase, Done);
-    Exit;
-  End;
-
-  Session.io.OutFull (Session.GetPrompt(231));
-
-  Assign (DataFile, Session.TempPath + 'messages.dat');
-  Reset  (DataFile, 1);
-  Seek   (DataFile, FileSize(DataFile));
-
-  LastRead := MsgBase^.GetLastRead(Session.User.UserNum) + 1;
-
-  MsgBase^.SeekFirst(LastRead);
-  While MsgBase^.SeekFound Do Begin
-    If ((Config.qwkMaxBase > 0) and (MsgAdded = Config.qwkMaxBase)) or
-    ((Config.qwkMaxPacket > 0) and (TotalMsgs = Config.qwkMaxPacket)) Then Break;
-
-    FillChar (QwkHdr, 128, ' ');
-
-    MsgBase^.MsgStartUp;
-
-    If MsgBase^.IsPriv Then
-      If Not ((MsgBase^.GetTo = Session.User.ThisUser.RealName) or (MsgBase^.GetTo = Session.User.ThisUser.Handle)) Then Begin
-        MsgBase^.SeekNext;
-        Continue;
-      End;
-
-    Inc (MsgAdded);
-    Inc (TotalMsgs);
-
-    LastRead := MsgBase^.GetMsgNum;
-
-    Temp := strPadR(strUpper(MsgBase^.GetFrom), 25, ' ');
-    Move (Temp[1], QwkHdr.UPFrom, 25);
-    Temp := strPadR(strUpper(MsgBase^.GetTo), 25, ' ');
-    Move (Temp[1], QwkHdr.UPTo, 25);
-    Temp := strPadR(MsgBase^.GetSubj, 25, ' ');
-    Move (Temp[1], QwkHdr.Subject, 25);
-    Temp := MsgBase^.GetDate;
-    Move (Temp[1], QwkHdr.Date, 8);
-    Temp := MsgBase^.GetTime;
-    Move (Temp[1], QwkHdr.Time, 5);
-    Temp := strPadR(strI2S(MsgBase^.GetMsgNum), 7, ' ');
-    Move (Temp[1], QwkHdr.MSGNum, 7);
-    Temp := strPadR(strI2S(MsgBase^.GetRefer), 8, ' ');
-    Move (Temp[1], QwkHdr.ReferNum, 8);
-
-    QwkHdr.Active  := #225;
-    QwkHdr.ConfNum := MBase.Index;
-    QwkHdr.Status  := ' ';
-
-    MsgBase^.MsgTxtStartUp;
-
-    Blocks := MsgBase^.GetTextLen DIV 128;
-    If MsgBase^.GetTextLen MOD 128 > 0 Then Inc(Blocks, 2) Else Inc(Blocks);
-    Temp := strPadR(strI2S(Blocks), 6, ' ');
-    Move (Temp[1], QwkHdr.NumChunk, 6);
-
-    If MsgAdded = 1 Then Begin
-      Assign  (NdxFile, Session.TempPath + strPadL(strI2S(MBase.Index), 3, '0') + '.ndx');
-      ReWrite (NdxFile);
-    End;
-
-    Index := FileSize(DataFile) DIV 128 + 1;
-
-    long2msb (Index, NdxHdr.MsgPos);
-
-    Write (NdxFile, NdxHdr);
-
-    BlockWrite (DataFile, QwkHdr, 128);
-
-    BufStr  := '';
-
-    While Not MsgBase^.EOM Do Begin
-      Temp := MsgBase^.GetString(79) + #227;
-
-      If Temp[1] = #1 Then Continue;
-
-      For Count := 1 to Length(Temp) Do Begin
-        BufStr := BufStr + Temp[Count];
-
-        If BufStr[0] = #128 Then Begin
-          BlockWrite (DataFile, BufStr[1], 128);
-          BufStr := '';
-        End;
-      End;
-    End;
-
-    If BufStr <> '' Then Begin
-      BufStr := strPadR(BufStr, 128, ' ');
-      BlockWrite (DataFile, BufStr[1], 128);
-    End;
-
-    MsgBase^.SeekNext;
-  End;
-
-  Close (DataFile);
-
-  If MsgAdded > 0 Then Close (NdxFile);
-
-  Session.io.PromptInfo[1] := strI2S(MBase.Index);
-  Session.io.PromptInfo[2] := MBase.Name;
-  Session.io.PromptInfo[3] := MBase.QwkName;
-  Session.io.PromptInfo[4] := strI2S(MsgBase^.NumberOfMsgs);
-  Session.io.PromptInfo[5] := strI2S(MsgAdded);
-
-  MsgBase^.CloseMsgBase;
-  Dispose (MsgBase, Done);
-
-  Session.io.OutBS (Screen.CursorX, True);
-  Session.io.OutFullLn (Session.GetPrompt(232));
-
-  Result := LastRead;
-End;
-
-Procedure TMsgBase.UploadREP;
-Var
-  DataFile : File;
-  OldMBase : RecMessageBase;
-  QwkHdr   : QwkDATHdr;
-  Temp     : String[128];
-  A        : SmallInt;
-  B        : SmallInt;
-  Chunks   : SmallInt;
-Begin
-  If Session.LocalMode Then
-    Session.FileBase.ExecuteArchive (Config.QWKPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
-  Else Begin
-    If Session.FileBase.SelectProtocol(True, False) = 'Q' Then Exit;
-
-    Session.FileBase.ExecuteProtocol(1, Session.TempPath + Config.qwkBBSID + '.rep');
-
-    If Not Session.FileBase.dszSearch(Config.qwkBBSID + '.rep') Then Begin
-      Session.io.PromptInfo[1] := Config.qwkBBSID + '.rep';
-      Session.io.OutFullLn (Session.GetPrompt(84));
-      Exit;
-    End;
-
-    Session.FileBase.ExecuteArchive (Session.TempPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
-  End;
-
-  Assign (DataFile, Session.TempPath + Config.qwkBBSID + '.msg');
-  {$I-} Reset (DataFile, 1); {$I+}
-  If IoResult <> 0 Then Begin
-    Session.io.OutFull (Session.GetPrompt(238));
-    DirClean(Session.TempPath, '');
-    Exit;
-  End;
-
-  BlockRead (DataFile, Temp[1], 128);
-  Temp[0] := #128;
-
-  If Pos(strUpper(Config.qwkBBSID), strUpper(Temp)) = 0 Then Begin
-    Session.io.OutFullLn (Session.GetPrompt(239));
-    Close (DataFile);
-    DirClean(Session.TempPath, '');
-    Exit;
-  End;
-
-  Session.io.OutFullLn (Session.GetPrompt(240));
-
-  OldMBase := MBase;
-
-  While Not Eof(DataFile) Do Begin
-    BlockRead (DataFile, QwkHdr, SizeOf(QwkHdr));
-    Move (QwkHdr.MsgNum, Temp[1], 7);
-    Temp[0] := #7;
-
-    Reset (MBaseFile);
-    While Not Eof(MBaseFile) Do Begin
-      Read (MBaseFile, MBase);
-      If (strS2I(Temp) = MBase.Index) and (Session.User.Access(MBase.PostACS)) Then Begin
-
-        Case MBase.BaseType of
-          0 : MsgBase := New(PMsgBaseJAM, Init);
-          1 : MsgBase := New(PMsgBaseSquish, Init);
-        End;
-
-        MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
-
-        If MsgBase^.OpenMsgBase Then Begin
-
-          AssignMessageData(MsgBase);
-
-          Temp[0] := #25;
-          Move (QwkHdr.UpTo, Temp[1], 25);
-          MsgBase^.SetTo(strStripR(Temp, ' '));
-          Move (QwkHdr.Subject, Temp[1], 25);
-          MsgBase^.SetSubj(strStripR(Temp, ' '));
-          Move (QwkHdr.ReferNum, Temp[1], 6);
-          Temp[0] := #6;
-          MsgBase^.SetRefer(strS2I(strStripR(Temp, ' ')));
-
-          Move(QwkHdr.NumChunk, Temp[1], 6);
-          Chunks := strS2I(Temp) - 1;
-
-          For A := 1 to Chunks Do Begin
-            BlockRead(DataFile, Temp[1], 128);
-            Temp[0] := #128;
-            Temp := strStripR(Temp, ' ');
-            For B := 1 to Length(Temp) Do Begin
-              If Temp[B] = #227 Then Temp[B] := #13;
-              MsgBase^.DoChar(Temp[B]);
-            End;
-          End;
-
-          If MBase.NetType > 0 Then Begin
-            MsgBase^.DoStringLn(#13 + '--- ' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ')');
-            MsgBase^.DoStringLn(' * Origin: ' + ResolveOrigin(MBase) + ' (' + strAddr2Str(Config.NetAddress[MBase.NetAddr]) + ')');
-          End;
-
-          MsgBase^.WriteMsg;
-
-          MsgBase^.CloseMsgBase;
-
-          Inc (Session.User.ThisUser.Posts);
-        End;
-        Dispose (MsgBase, Done);
-        Break;
-      End;
-    End;
-    Close (MBaseFile);
-  End;
-
-  Close    (DataFile);
-  DirClean (Session.TempPath, '');
-
-  MBase := OldMBase;
-End;
-
-Procedure TMsgBase.DownloadQWK (Data: String);
-Type
-  QwkLRRec = Record
-    Base : Word;
-    Pos  : LongInt;
-  End;
-Var
-  Old       : RecMessageBase;
-  DataFile  : File;
-  Temp      : String;
-  QwkLR     : QwkLRRec;
-  QwkLRFile : File of QwkLRRec;
-Begin
-  If Session.User.ThisUser.QwkFiles Then
-    Session.FileBase.ExportFileList(True, True);
-
-  Old  := MBase;
-  Temp := strPadR('Produced By ' + mysSoftwareID + ' BBS v' + mysVersion + '. ' + CopyID, 128, ' ');
-
-  Assign     (DataFile, Session.TempPath + 'messages.dat');
-  ReWrite    (DataFile, 1);
-  BlockWrite (DataFile, Temp[1], 128);
-  Close      (DataFile);
-
-  Assign  (QwkLRFile, Session.TempPath + 'qlr.dat');
-  ReWrite (QwkLRFile);
-
-  Reset  (MBaseFile);
-  Read   (MBaseFile, MBase); {Skip Email base}
-
-  Session.io.OutFullLn (Session.GetPrompt(230));
-
-  TotalMsgs   := 0;
-  TotalConf   := 0;
-  Session.User.IgnoreGroup := Pos('/ALLGROUP', strUpper(Data)) > 0;
-
-  While Not Eof(MBaseFile) Do Begin
-    Read (MBaseFile, MBase);
-    If Session.User.Access(MBase.ReadACS) Then Begin
-      GetMessageScan;
-      If MScan.QwkScan > 0 Then Begin
-        QwkLR.Base := FilePos(MBaseFile);
-        QwkLR.Pos  := WriteMsgDAT;
-        Write (QwkLRFile, QwkLR);
-      End;
-    End;
-  End;
-
-  WriteControlDAT;
-
-  Close (QwkLRFile);
-
-  If TotalMsgs > 0 Then Begin
-    Session.io.PromptInfo[1] := strI2S(TotalMsgs);
-    Session.io.PromptInfo[2] := strI2S(TotalConf);
-    Session.io.OutFullLn (Session.GetPrompt(233));
-
-    Temp := Config.qwkBBSID + '.qwk';
-
-    Session.io.OutFullLn (Session.GetPrompt(234));
-
-    Session.io.PromptInfo[1] := Temp;
-
-    If FileExist(Config.QwkWelcome) Then FileCopy(Config.qwkWelcome, Session.TempPath + JustFile(Config.qwkWelcome));
-    If FileExist(Config.QwkNews)    Then FileCopy(Config.qwkNews,    Session.TempPath + JustFile(Config.qwkNews));
-    If FileExist(Config.QwkGoodbye) Then FileCopy(Config.qwkGoodbye, Session.TempPath + JustFile(Config.qwkGoodbye));
-
-    If Session.LocalMode Then Begin
-      Session.FileBase.ExecuteArchive (Config.QWKPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
-      Session.io.OutFullLn (Session.GetPrompt(235));
-    End Else Begin
-      Session.FileBase.ExecuteArchive (Session.TempPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
-      Session.FileBase.SendFile (Session.TempPath + Temp);
-    End;
-
-    If Session.io.GetYN (Session.GetPrompt(236), True) Then Begin
-      Reset (MBaseFile);
-      Reset (QwkLRFile);
-
-      While Not Eof(QwkLRFile) Do Begin
-        Read (QwkLRFile, QwkLR);
-        Seek (MBaseFile, QwkLR.Base - 1);
-        Read (MBaseFile, MBase);
-
-        Case MBase.BaseType of
-          0 : MsgBase := New(PMsgBaseJAM, Init);
-          1 : MsgBase := New(PMsgBaseSquish, Init);
-        End;
-
-        MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
-
-        If MsgBase^.OpenMsgBase Then Begin
-          MsgBase^.SetLastRead (Session.User.UserNum, QwkLR.Pos);
-          MsgBase^.CloseMsgBase;
-        End;
-
-        Dispose(MsgBase, Done);
-      End;
-      Close (QwkLRFile);
-    End;
-  End Else
-    Session.io.OutFullLn (Session.GetPrompt(228));
-
-  Session.User.IgnoreGroup := False;
-
-  Close (MBaseFile);
-
-  MBase := Old;
-
-  DirClean (Session.TempPath, '');
-End;
-
 Procedure TMsgBase.MessageQuickScan (Data: String);
 // defaults to ALL groups/bases
 //   /CURRENT = scan only current message base
@@ -3827,6 +3413,578 @@ Begin
     Close (TF);
   End Else
     Result := mArea.Origin;
+End;
+
+// ==========================================================================
+// QWK/QWKE OPTIONS
+// ==========================================================================
+
+Procedure TMsgBase.WriteDOORID (Extended: Boolean);
+Const
+  CRLF = #13#10;
+Var
+  tFile : Text;
+Begin
+  Assign  (tFile, Session.TempPath + 'door.id');
+  ReWrite (tFile);
+
+  Write (tFile, 'DOOR = ' + mysSoftwareID + CRLF);
+  Write (tFile, 'VERSION = ' + mysVersion + CRLF);
+  Write (tFile, 'SYSTEM = ' + mysSoftwareID + ' ' + mysVersion + CRLF);
+  Write (tFile, 'CONTROLNAME = ' + qwkControlName + CRLF);
+  Write (tFile, 'CONTROLTYPE = ADD' + CRLF);
+  Write (tFile, 'CONTROLTYPE = DROP' + CRLF);
+
+  Close (tFile);
+End;
+
+Procedure TMsgBase.WriteTOREADEREXT;
+Const
+  CRLF = #13#10;
+Var
+  tFile : Text;
+Begin
+  Assign  (tFile, Session.TempPath + 'toreader.ext');
+  ReWrite (tFile);
+
+  Write (tFile, 'ALIAS ' + Session.User.ThisUser.Handle + CRLF);
+
+  Close (tFile);
+End;
+
+Procedure TMsgBase.WriteCONTROLDAT (Extended: Boolean);
+Const
+  CRLF = #13#10; { for eventually having option for linux OR dos text files }
+Var
+  tFile : Text;
+Begin
+  Assign  (tFile, Session.TempPath + 'control.dat');
+  ReWrite (tFile);
+
+  Write (tFile, Config.BBSName + CRLF);
+  Write (tFile, CRLF);
+  Write (tFile, CRLF);
+  Write (tFile, Config.SysopName + CRLF);
+  Write (tFile, '0,' + Config.qwkBBSID + CRLF);
+  Write (tFile, DateDos2Str(CurDateDos, 1), ',', TimeDos2Str(CurDateDos, False) + CRLF);
+  Write (tFile, strUpper(Session.User.ThisUser.Handle) + CRLF);
+  Write (tFile, CRLF);
+  Write (tFile, '0' + CRLF);
+  Write (tFile, TotalMsgs, CRLF); {TOTAL MSG IN PACKET}
+  Write (tFile, TotalConf - 1, CRLF); {TOTAL CONF - 1}
+
+  Reset (MBaseFile);
+  Read  (MBaseFile, MBase); {SKIP EMAIL BASE}
+
+  While Not Eof(MBaseFile) Do Begin
+    Read (MBaseFile, MBase);
+
+    If Session.User.Access(MBase.ReadACS) Then Begin
+      Write (tFile, MBase.Index, CRLF); {conf #}
+
+      If Extended Then
+        Write (tFile, strStripMCI(MBase.Name) + CRLF)
+      Else
+        Write (tFile, MBase.QwkName + CRLF);
+    End;
+  End;
+
+  Write (tFile, JustFile(Config.qwkWelcome) + CRLF);
+  Write (tFile, JustFile(Config.qwkNews) + CRLF);
+  Write (tFile, JustFile(Config.qwkGoodbye) + CRLF);
+
+  Close (tFile);
+End;
+
+{ converts TP real to Microsoft 4 bytes single }
+{ what kind of stupid standard uses this var type!? }
+
+Procedure Long2msb (Index : LongInt; Var MS : BSingle);
+Var
+  Exp : Byte;
+Begin
+  If Index <> 0 Then Begin
+    Exp := 0;
+
+    While Index And $800000 = 0 Do Begin
+      Inc (Exp);
+      Index := Index SHL 1
+    End;
+
+    Index := Index And $7FFFFF;
+  End Else
+    Exp := 152;
+
+  MS[0] := Index AND $FF;
+  MS[1] := (Index SHR 8) AND $FF;
+  MS[2] := (Index SHR 16) AND $FF;
+  MS[3] := 152 - Exp;
+End;
+
+Function TMsgBase.WriteMSGDAT (Extended: Boolean) : LongInt;
+{ returns last message added to qwk packet }
+Var
+  DataFile : File;
+  NdxFile  : File of QwkNdxHdr;
+  NdxHdr   : QwkNdxHdr;
+  QwkHdr   : QwkDATHdr;
+  Temp     : String;
+  MsgAdded : Integer; {# of message added in packet}
+  LastRead : LongInt;
+  BufStr   : String[128];
+  Blocks   : Word;
+  Index    : LongInt;
+  TooBig   : Boolean;
+
+  Procedure DoString (Str: String);
+  Var
+    Count : SmallInt;
+  Begin
+    For Count := 1 to Length(Temp) Do Begin
+      BufStr := BufStr + Temp[Count];
+
+      If BufStr[0] = #128 Then Begin
+        BlockWrite (DataFile, BufStr[1], 128);
+        BufStr := '';
+      End;
+    End;
+  End;
+
+Begin
+//  Inc (TotalConf);
+
+  MsgAdded := 0;
+
+  If Not OpenCreateBase(MsgBase, MBase) THen Exit;
+
+  Session.io.OutFull (Session.GetPrompt(231));
+
+  Assign (DataFile, Session.TempPath + 'messages.dat');
+  Reset  (DataFile, 1);
+  Seek   (DataFile, FileSize(DataFile));
+
+  LastRead := MsgBase^.GetLastRead(Session.User.UserNum) + 1;
+
+  MsgBase^.SeekFirst(LastRead);
+
+  While MsgBase^.SeekFound Do Begin
+    If ((Config.qwkMaxBase > 0) and (MsgAdded = Config.qwkMaxBase)) or
+    ((Config.qwkMaxPacket > 0) and (TotalMsgs = Config.qwkMaxPacket)) Then Break;
+
+    FillChar (QwkHdr, 128, ' ');
+
+    MsgBase^.MsgStartUp;
+
+    If MsgBase^.IsPriv Then
+      If Not ((MsgBase^.GetTo = Session.User.ThisUser.RealName) or (MsgBase^.GetTo = Session.User.ThisUser.Handle)) Then Begin
+        MsgBase^.SeekNext;
+        Continue;
+      End;
+
+    Inc (MsgAdded);
+    Inc (TotalMsgs);
+
+    LastRead := MsgBase^.GetMsgNum;
+
+    Temp := strPadR(strUpper(MsgBase^.GetFrom), 25, ' ');
+    Move (Temp[1], QwkHdr.UPFrom, 25);
+    Temp := strPadR(strUpper(MsgBase^.GetTo), 25, ' ');
+    Move (Temp[1], QwkHdr.UPTo, 25);
+    Temp := strPadR(MsgBase^.GetSubj, 25, ' ');
+    Move (Temp[1], QwkHdr.Subject, 25);
+    Temp := MsgBase^.GetDate;
+    Move (Temp[1], QwkHdr.Date, 8);
+    Temp := MsgBase^.GetTime;
+    Move (Temp[1], QwkHdr.Time, 5);
+    Temp := strPadR(strI2S(MsgBase^.GetMsgNum), 7, ' ');
+    Move (Temp[1], QwkHdr.MSGNum, 7);
+    Temp := strPadR(strI2S(MsgBase^.GetRefer), 8, ' ');
+    Move (Temp[1], QwkHdr.ReferNum, 8);
+
+    QwkHdr.Active  := #225;
+    QwkHdr.ConfNum := MBase.Index;
+    QwkHdr.Status  := ' ';
+
+    MsgBase^.MsgTxtStartUp;
+
+    Blocks := MsgBase^.GetTextLen DIV 128;
+
+    If MsgBase^.GetTextLen MOD 128 > 0 Then Inc(Blocks, 2) Else Inc(Blocks);
+
+    Temp := strPadR(strI2S(Blocks), 6, ' ');
+
+    Move (Temp[1], QwkHdr.NumChunk, 6);
+
+    If MsgAdded = 1 Then Begin
+      Assign  (NdxFile, Session.TempPath + strPadL(strI2S(MBase.Index), 3, '0') + '.ndx');
+      ReWrite (NdxFile);
+    End;
+
+    Index := FileSize(DataFile) DIV 128 + 1;
+
+    long2msb (Index, NdxHdr.MsgPos);
+
+    Write (NdxFile, NdxHdr);
+
+    BlockWrite (DataFile, QwkHdr, 128);
+
+    BufStr := '';
+    TooBig := False;
+
+    If Extended Then Begin
+      If Length(MsgBase^.GetFrom) > 25 Then Begin
+        DoString('From: ' + MsgBase^.GetFrom + #227);
+        TooBig := True;
+      End;
+
+      If Length(MsgBase^.GetTo) > 25 Then Begin
+        DoString('To: ' + MsgBase^.GetTo + #227);
+        TooBig := True;
+      End;
+
+      If Length(MsgBase^.GetSubj) > 25 Then Begin
+        DoString('Subject: ' + MsgBase^.GetSubj + #227);
+        TooBig := True;
+      End;
+
+      If TooBig Then DoString(#227);
+    End;
+
+    While Not MsgBase^.EOM Do Begin
+      Temp := MsgBase^.GetString(79) + #227;
+
+      If Temp[1] = #1 Then Continue;
+
+      DoString(Temp);
+    End;
+
+    If BufStr <> '' Then Begin
+      BufStr := strPadR(BufStr, 128, ' ');
+      BlockWrite (DataFile, BufStr[1], 128);
+    End;
+
+    MsgBase^.SeekNext;
+  End;
+
+  Close (DataFile);
+
+  If MsgAdded > 0 Then Close (NdxFile);
+
+  Session.io.PromptInfo[1] := strI2S(MBase.Index);
+  Session.io.PromptInfo[2] := MBase.Name;
+  Session.io.PromptInfo[3] := MBase.QwkName;
+  Session.io.PromptInfo[4] := strI2S(MsgBase^.NumberOfMsgs);
+  Session.io.PromptInfo[5] := strI2S(MsgAdded);
+
+  MsgBase^.CloseMsgBase;
+  Dispose (MsgBase, Done);
+
+  Session.io.OutBS (Screen.CursorX, True);
+  Session.io.OutFullLn (Session.GetPrompt(232));
+
+  Result := LastRead;
+End;
+
+Procedure TMsgBase.DownloadQWK (Extended: Boolean; Data: String);
+Type
+  QwkLRRec = Record
+    Base : Word;
+    Pos  : LongInt;
+  End;
+Var
+  Old       : RecMessageBase;
+  DataFile  : File;
+  Temp      : String;
+  QwkLR     : QwkLRRec;
+  QwkLRFile : File of QwkLRRec;
+Begin
+  If Session.User.ThisUser.QwkFiles Then
+    Session.FileBase.ExportFileList(True, True);
+
+  Old  := MBase;
+  Temp := strPadR('Produced By ' + mysSoftwareID + ' BBS v' + mysVersion + '. ' + CopyID, 128, ' ');
+
+  Assign     (DataFile, Session.TempPath + 'messages.dat');
+  ReWrite    (DataFile, 1);
+  BlockWrite (DataFile, Temp[1], 128);
+  Close      (DataFile);
+
+  Assign  (QwkLRFile, Session.TempPath + 'qlr.dat');
+  ReWrite (QwkLRFile);
+
+  Reset  (MBaseFile);
+  Read   (MBaseFile, MBase); {Skip Email base}
+
+  Session.io.OutFullLn (Session.GetPrompt(230));
+
+  TotalMsgs   := 0;
+  TotalConf   := 0;
+
+  Session.User.IgnoreGroup := Pos('/ALLGROUP', strUpper(Data)) > 0;
+
+  While Not Eof(MBaseFile) Do Begin
+    Read (MBaseFile, MBase);
+
+    If Session.User.Access(MBase.ReadACS) Then Begin
+      Inc (TotalConf);
+
+      GetMessageScan;
+
+      If MScan.QwkScan > 0 Then Begin
+        QwkLR.Base := FilePos(MBaseFile);
+        QwkLR.Pos  := WriteMsgDAT(Extended);
+
+        Write (QwkLRFile, QwkLR);
+      End;
+    End;
+  End;
+
+  Close (QwkLRFile);
+
+  WriteControlDAT (Extended);
+  WriteDOORID     (Extended);
+
+  If Extended Then WriteTOREADEREXT;
+
+  If TotalMsgs > 0 Then Begin
+    Session.io.PromptInfo[1] := strI2S(TotalMsgs);
+    Session.io.PromptInfo[2] := strI2S(TotalConf);
+    Session.io.OutFullLn (Session.GetPrompt(233));
+
+    Temp := Config.qwkBBSID + '.qwk';
+
+    Session.io.OutFullLn (Session.GetPrompt(234));
+
+    Session.io.PromptInfo[1] := Temp;
+
+    If FileExist(Config.QwkWelcome) Then FileCopy(Config.qwkWelcome, Session.TempPath + JustFile(Config.qwkWelcome));
+    If FileExist(Config.QwkNews)    Then FileCopy(Config.qwkNews,    Session.TempPath + JustFile(Config.qwkNews));
+    If FileExist(Config.QwkGoodbye) Then FileCopy(Config.qwkGoodbye, Session.TempPath + JustFile(Config.qwkGoodbye));
+
+    If Session.LocalMode Then Begin
+      Session.FileBase.ExecuteArchive (Config.QWKPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
+      Session.io.OutFullLn (Session.GetPrompt(235));
+    End Else Begin
+      Session.FileBase.ExecuteArchive (Session.TempPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
+      Session.FileBase.SendFile (Session.TempPath + Temp);
+    End;
+
+    If Session.io.GetYN (Session.GetPrompt(236), True) Then Begin
+      Reset (MBaseFile);
+      Reset (QwkLRFile);
+
+      While Not Eof(QwkLRFile) Do Begin
+        Read (QwkLRFile, QwkLR);
+        Seek (MBaseFile, QwkLR.Base - 1);
+        Read (MBaseFile, MBase);
+
+        Case MBase.BaseType of
+          0 : MsgBase := New(PMsgBaseJAM, Init);
+          1 : MsgBase := New(PMsgBaseSquish, Init);
+        End;
+
+        MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
+
+        If MsgBase^.OpenMsgBase Then Begin
+          MsgBase^.SetLastRead (Session.User.UserNum, QwkLR.Pos);
+          MsgBase^.CloseMsgBase;
+        End;
+
+        Dispose(MsgBase, Done);
+      End;
+      Close (QwkLRFile);
+    End;
+  End Else
+    Session.io.OutFullLn (Session.GetPrompt(228));
+
+  Session.User.IgnoreGroup := False;
+
+  Close (MBaseFile);
+
+  MBase := Old;
+
+  DirClean (Session.TempPath, '');
+End;
+
+Procedure TMsgBase.UploadREP;
+Var
+  DataFile   : File;
+  TempBase   : RecMessageBase;
+  OldBase    : RecMessageBase;
+  QwkHeader  : QwkDATHdr;
+  QwkBlock   : String[128];
+  Line       : String;
+  A          : SmallInt;
+  B          : SmallInt;
+  Chunks     : SmallInt;
+  LineCount  : SmallInt;
+  IsControl  : Boolean;
+  GotControl : Boolean;
+  ExtFile    : Text;
+
+  Procedure QwkControl (Idx: LongInt; Mode: Byte);
+  Begin
+    OldBase := MBase;
+
+    If GetBaseByIndex(Idx, MBase) Then Begin
+      GetMessageScan;
+
+      MScan.QwkScan := Mode;
+
+      SetMessageScan;
+    End;
+
+    MBase := OldBase;
+  End;
+
+Begin
+  If Session.LocalMode Then
+    Session.FileBase.ExecuteArchive (Config.QWKPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
+  Else Begin
+    If Session.FileBase.SelectProtocol(True, False) = 'Q' Then Exit;
+
+    Session.FileBase.ExecuteProtocol(1, Session.TempPath + Config.qwkBBSID + '.rep');
+
+    If Not Session.FileBase.DszSearch(Config.qwkBBSID + '.rep') Then Begin
+      Session.io.PromptInfo[1] := Config.qwkBBSID + '.rep';
+      Session.io.OutFullLn (Session.GetPrompt(84));
+      Exit;
+    End;
+
+    Session.FileBase.ExecuteArchive (Session.TempPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
+  End;
+
+  Assign (DataFile, Session.TempPath + Config.qwkBBSID + '.msg');
+  {$I-} Reset (DataFile, 1); {$I+}
+  If IoResult <> 0 Then Begin
+    Session.io.OutFull (Session.GetPrompt(238));
+    DirClean(Session.TempPath, '');
+    Exit;
+  End;
+
+  BlockRead (DataFile, QwkBlock[1], 128);
+  QwkBlock[0] := #128;
+
+  If Pos(strUpper(Config.qwkBBSID), strUpper(QwkBlock)) = 0 Then Begin
+    Session.io.OutFullLn (Session.GetPrompt(239));
+    Close (DataFile);
+    DirClean(Session.TempPath, '');
+    Exit;
+  End;
+
+  Session.io.OutFullLn (Session.GetPrompt(240));
+
+  While Not Eof(DataFile) Do Begin
+    BlockRead (DataFile, QwkHeader, SizeOf(QwkHeader));
+    Move (QwkHeader.MsgNum, QwkBlock[1], 7);
+    QwkBlock[0] := #7;
+
+    If GetBaseByIndex(strS2I(QwkBlock), TempBase) Then Begin
+
+      If OpenCreateBase(MsgBase, TempBase) Then Begin
+
+        AssignMessageData(MsgBase);
+
+        QwkBlock[0] := #25;
+        Move (QwkHeader.UpTo, QwkBlock[1], 25);
+        MsgBase^.SetTo(strStripR(QwkBlock, ' '));
+
+        Move (QwkHeader.Subject, QwkBlock[1], 25);
+        MsgBase^.SetSubj(strStripR(QwkBlock, ' '));
+
+        Move (QwkHeader.ReferNum, QwkBlock[1], 6);
+        QwkBlock[0] := #6;
+        MsgBase^.SetRefer(strS2I(strStripR(QwkBlock, ' ')));
+
+        Move(QwkHeader.NumChunk, QwkBlock[1], 6);
+
+        Chunks     := strS2I(QwkBlock) - 1;
+        Line       := '';
+        LineCount  := 0;
+        IsControl  := MsgBase^.GetTo = qwkControlName;
+        GotControl := False;
+
+        If IsControl And ((MsgBase^.GetSubj = 'ADD') or (MsgBase^.GetSubj = 'DROP')) Then
+          QwkControl (TempBase.Index, Ord(MsgBase^.GetSubj = 'ADD'));
+
+        For A := 1 to Chunks Do Begin
+          BlockRead (DataFile, QwkBlock[1], 128);
+
+          QwkBlock[0] := #128;
+          QwkBlock    := strStripR(QwkBlock, ' ');
+
+          For B := 1 to Length(QwkBlock) Do Begin
+            If QwkBlock[B] = #227 Then Begin
+              Inc (LineCount);
+
+              If (LineCount < 4) and (Copy(Line, 1, 5) = 'From:') Then
+                GotControl := True
+                // Mystic uses the username of the person who uploaded the
+                // reply package, based on the alias/realname setting of the
+                // base itself.  This prevents people from spoofing "From"
+                // fields.
+              Else
+              If (LineCount < 4) and (Copy(Line, 1, 3) = 'To:') Then Begin
+                MsgBase^.SetTo(strStripB(Copy(Line, 4, Length(Line)), ' '));
+                GotControl := True;
+              End Else
+              If (LineCount < 4) and (Copy(Line, 1, 8) = 'Subject:') Then Begin
+                MsgBase^.SetSubj(strStripB(Copy(Line, 9, Length(Line)), ' '));
+                GotControl := True;
+              End Else
+                If GotControl And (Line = '') Then
+                  GotControl := False
+                Else
+                  MsgBase^.DoStringLn(Line);
+
+              Line := '';
+            End Else
+              Line := Line + QwkBlock[B];
+          End;
+        End;
+
+        If Line <> '' Then MsgBase^.DoStringLn(Line);
+
+        If TempBase.NetType > 0 Then Begin
+          MsgBase^.DoStringLn (#13 + '--- ' + mysSoftwareID + '/QWK v' + mysVersion + ' (' + OSID + ')');
+          MsgBase^.DoStringLn (' * Origin: ' + ResolveOrigin(TempBase) + ' (' + strAddr2Str(Config.NetAddress[TempBase.NetAddr]) + ')');
+        End;
+
+        If Not IsControl Then MsgBase^.WriteMsg;
+
+        MsgBase^.CloseMsgBase;
+
+        If Not IsControl Then Begin
+          Inc (Session.User.ThisUser.Posts);
+          Inc (Session.HistoryPosts);
+        End;
+
+        Dispose (MsgBase, Done);
+      End;
+    End;
+  End;
+
+  Close (DataFile);
+
+  Assign (ExtFile, Session.TempPath + 'todoor.ext');
+  {$I-} Reset (ExtFile); {$I+}
+
+  If IoResult = 0 Then Begin
+    While Not Eof(ExtFile) Do Begin
+      ReadLn (ExtFile, Line);
+
+      If strWordGet(1, Line, ' ') = 'AREA' Then Begin
+        QwkBlock := strWordGet(3, Line, ' ');
+
+        If Pos('a', QwkBlock) > 0 Then QwkControl(strS2I(strWordGet(2, Line, ' ')), 1);
+        If Pos('D', QwkBlock) > 0 Then QwkControl(strS2I(strWordGet(2, Line, ' ')), 0);
+      End;
+    End;
+
+    Close (ExtFile);
+  End;
+
+  DirClean (Session.TempPath, '');
 End;
 
 End.
