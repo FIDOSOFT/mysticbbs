@@ -659,6 +659,7 @@ Var
   Done : Boolean;
   Mode : Byte;
 Begin
+  Result   := False;
   Box      := TMenuBox.Create(Console);
   DirList  := TMenuList.Create(Console);
   FileList := TMenuList.Create(Console);
