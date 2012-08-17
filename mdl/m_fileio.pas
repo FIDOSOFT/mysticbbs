@@ -38,6 +38,7 @@ Function  DirChange       (Dir: String) : Boolean;
 Procedure DirClean        (Path: String; Exempt: String);
 Function  FileRename      (OldFN, NewFN: String) : Boolean;
 Function  FileCopy        (Source, Target: String) : Boolean;
+Function  FileFind        (FN: String) : String;
 
 { GLOBAL FILEIO VARIABLES AND CONSTANTS }
 
@@ -723,6 +724,26 @@ Begin
   FillBuffer;
 
   FreeMem (TempBuf, RecordSize);
+End;
+
+Function FileFind (FN: String) : String;
+Var
+  Dir : SearchRec;
+Begin
+  Result := FN;
+
+  FindFirst (JustPath(FN) + '*', AnyFile, Dir);
+
+  While DosError = 0 Do Begin
+    If strUpper(Dir.Name) = strUpper(JustFile(FN)) Then Begin
+      Result := JustPath(FN) + Dir.Name;
+      Break;
+    End;
+
+    FindNext(Dir);
+  End;
+
+  FindClose(Dir);
 End;
 
 End.
