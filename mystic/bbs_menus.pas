@@ -966,14 +966,8 @@ Begin
 
               Found := Data.Item[Count]^.HotKey = TempStr + UpCase(Ch);
 
-              session.systemlog('comparing cmd: ' + data.item[count]^.hotkey + ' to ' + tempstr + upcase(ch));
-
               If Not ValidKey Then
                 ValidKey := TempStr + UpCase(Ch) = Copy(Data.Item[Count]^.HotKey, 1, Length(TempStr + Ch));
-
-              session.systemlog('valid key is: ' + stri2s(ord(validkey)));
-              session.systemlog('found is: ' + stri2s(ord(found)));
-
             Until Found or (Count >= Data.NumItems);
 
             If Found And (TBBSCore(Owner).User.Access(Data.Item[Count]^.Access)) Then Begin

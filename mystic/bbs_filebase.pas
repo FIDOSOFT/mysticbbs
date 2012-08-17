@@ -311,18 +311,20 @@ Var
       Session.LocalMode := SavedL;
     {$ENDIF}
 
-    Assign  (T, Session.TempPath + 'xfer.log');
-    ReWrite (T);
+    If Queue.QSize > 0 Then Begin
+      Assign  (T, Session.TempPath + 'xfer.log');
+      ReWrite (T);
 
-    For Count := 1 to Queue.QSize Do Begin
-      Res[1] := 'E';
+      For Count := 1 to Queue.QSize Do Begin
+        Res[1] := 'E';
 
-      If Queue.QData[Count]^.Status = QueueSuccess Then Res[1] := 'Z';
+        If Queue.QData[Count]^.Status = QueueSuccess Then Res[1] := 'Z';
 
-      WriteLn(T, Res[1] + ' 0 0 0 0 0 0 0 0 0 ' + Queue.QData[Count]^.FileName + ' -1');
+        WriteLn(T, Res[1] + ' 0 0 0 0 0 0 0 0 0 ' + Queue.QData[Count]^.FileName + ' -1');
+      End;
+
+      Close (T);
     End;
-
-    Close (T);
 
     Protocol.Free;
     Queue.Free;
@@ -1239,8 +1241,6 @@ Begin
 
     Inc(A);
   End;
-
-  Session.SystemLog('DEBUG Exec Archive: ' + Temp);
 
   ShellDOS ('', Temp);
 End;
@@ -2792,9 +2792,11 @@ Begin
 
   Assign (LogFile, Session.TempPath + 'xfer.log');
   {$I-} Reset(LogFile); {$I+}
+
   If IoResult = 0 Then Begin
+
     While Not Eof(LogFile) Do Begin
-      dszGetFile (LogFile, FileName, FileStatus);
+      DszGetFile (LogFile, FileName, FileStatus);
 
       If FileName = '' Then Continue;
 

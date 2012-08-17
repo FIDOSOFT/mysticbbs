@@ -998,8 +998,6 @@ Begin
       Ext := Copy(Ext, 1, 3) + Code;
     End;
 
-  Session.SystemLog('DEBUG Display:' + FName + Ext);
-
   Assign (dFile, FName + Ext);
 
   {$I-} Reset(dFile, 1); {$I+}
@@ -1919,7 +1917,9 @@ End;
 
 Procedure TBBSIO.PurgeInputBuffer;
 Begin
+  {$IFDEF UNIX}
   While Input.KeyPressed Do Input.ReadKey;
+  {$ENDIF}
   {$IFDEF WINDOWS}
   If Not TBBSCore(Core).LocalMode Then TBBSCore(Core).Client.PurgeInputData;
   {$ENDIF}
