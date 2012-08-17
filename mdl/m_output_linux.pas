@@ -312,7 +312,7 @@ Var
 Begin
   BufAddStr(#27 + '[K');
 
-  Fill.Attributes := 7;
+  Fill.Attributes := FTextAttr;
   Fill.UnicodeChar := ' ';
 
   FillWord (Buffer[CursorY][CursorX], (80 - CursorX) * 2, Word(Fill));
