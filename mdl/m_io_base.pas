@@ -57,14 +57,14 @@ Begin
 End;
 
 Procedure TIOBase.PurgeInputData;
-Var
-  Buf : Array[1..2048] of Char;
+//Var
+//  Buf : Array[1..2048] of Char;
 Begin
   FInBufPos := 0;
   FInBufEnd := 0;
 
-  While DataWaiting Do
-    ReadBuf(Buf, SizeOf(Buf));
+//  While DataWaiting Do
+//    ReadBuf(Buf, SizeOf(Buf));
 End;
 
 Function TIOBase.DataWaiting : Boolean;
