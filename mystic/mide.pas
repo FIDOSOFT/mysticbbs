@@ -60,14 +60,8 @@ Const
   colEditPosBar  = 9 + 1 * 16;
 
 Const
-  Keywords = 29;
+  Keywords = 23;
   Keyword : Array[1..Keywords] of String[9] = (
-    ( '='         ),
-    ( ':='        ),
-    ( '+'         ),
-    ( '-'         ),
-    ( '/'         ),
-    ( '*'         ),
     ( 'AND'       ),
     ( 'BEGIN'     ),
     ( 'CASE'      ),
@@ -106,6 +100,8 @@ Var
   cfg_TextComment : Byte;
   cfg_TextNormal  : Byte;
   cfg_TextNumber  : Byte;
+  cfg_TextHex     : Byte;
+  cfg_TextCharStr : Byte;
 
 Type
   PEditorWindow = ^TEditorWindow;
@@ -300,116 +296,217 @@ Begin
   Load := True;
 End;
 
-Procedure DrawLine (Y: Byte; S: String);
-Var
-  sPos : Byte;
+Procedure DrawLineHighlight (Y: Byte; S: String);
+Const
+  chNumber = ['0'..'9','.'];
+  chIdent  = ['a'..'z','A'..'Z','_'];
+  chIdent2 = ['a'..'z','A'..'Z','_','0'..'9'];
+  chOpChar = ['+', '-', '/', '*', ':', '='];
+  chHexNum = ['a'..'f', 'A'..'F', '0'..'9'];
+  chOther  = ['(', ')', ',', '.', '[', ']'];
 
-  Procedure pWrite (Str : String);
+Type
+  Tokens = (
+    tSTRING,
+    tCOMMENT,
+    tTEXT,
+    tNUMBER,
+    tKEYWORD,
+    tOPCHAR,
+    tCHARNUM,
+    tHEXNUM,
+    tEOL
+  );
+
+Var
+  ResStr    : String = '';
+  StrPos    : Byte = 0;
+  ScrollPos : Byte = 1;
+  Done      : Boolean = False;
+
+  Function GetChar : Char;
+  Begin
+    Result := #00;
+
+    While StrPos < Length(S) Do Begin
+      Inc (StrPos);
+
+      Result := S[StrPos];
+      ResStr := ResStr + Result;
+
+      Break;
+    End;
+  End;
+
+  Function NextToken : Tokens;
+  Var
+    Ch    : Char;
+    Key   : String;
+    Count : Byte;
+  Begin
+    Result := tEOL;
+    ResStr := '';
+    Key    := '';
+
+    Repeat
+      Ch := GetChar;
+
+      If Ch = #00 Then Break;
+
+      If Ch <> #32 Then Key := Key + Ch;
+
+      If Ch in chIdent Then Begin
+        Result := tTEXT;
+
+        While Ch in chIdent2 Do Begin
+          Ch  := GetChar;
+
+          If Ch = #00 Then Break;
+
+          Key := Key + Ch;
+        End;
+
+        If Ch <> #00 Then Begin
+          Dec(StrPos);
+          Dec(Key[0]);
+          Dec(ResStr[0]);
+        End;
+
+        For Count := 1 to Keywords Do
+          If Keyword[Count] = strUpper(Key) Then Begin
+            Result := tKEYWORD;
+            Exit;
+          End;
+
+        Exit;
+      End Else
+      If Ch = '''' Then Begin
+        Result := tSTRING;
+
+        Repeat
+          Ch := GetChar;
+
+          Case Ch of
+            #00  : Exit;
+            '''' : If S[StrPos + 1] = '''' Then GetChar Else Exit;
+          End;
+        Until False;
+      End Else
+      If (Ch = '/') and (S[StrPos + 1] = '/') Then Begin
+        Result := tCOMMENT;
+
+        Repeat Until GetChar = #00;
+
+        Exit;
+      End Else
+      If Ch in chNumber Then Begin
+        Result := tNUMBER;
+
+        While Ch in chNumber Do Begin
+          Ch := GetChar;
+
+          If Ch = #00 Then Exit;
+        End;
+
+        Dec(StrPos);
+        Dec(ResStr[0]);
+
+        Exit;
+      End Else
+      If Ch in chOpChar Then Begin
+        Result := tOPCHAR;
+
+        While Ch in chOpChar Do Begin
+          Ch  := GetChar;
+
+          If Ch = #00 Then Break;
+
+          Key := Key + Ch;
+        End;
+
+        If Ch <> #00 Then Begin
+          Dec(StrPos);
+          Dec(Key[0]);
+          Dec(ResStr[0]);
+        End;
+
+        Exit;
+      End Else
+      If Ch = '#' Then Begin
+        Result := tCHARNUM;
+
+        Repeat
+          Ch := GetChar;
+
+          If Ch = #00 Then Exit;
+        Until Not (Ch in chNumber);
+
+        Dec(StrPos);
+        Dec(ResStr[0]);
+
+        Exit;
+      End Else
+      If Ch = '$' Then Begin
+        Result := tHEXNUM;
+
+        Repeat
+          Ch := GetChar;
+
+          If Ch = #00 Then Exit;
+        Until Not (Ch in chNumber);
+
+        Dec(StrPos);
+        Dec(ResStr[0]);
+
+        Exit;
+      End Else Begin
+        Result := tTEXT;
+        Exit;
+      End;
+    Until False;
+  End;
+
+  Procedure WritePart (Str: String);
   Var
     A : Byte;
   Begin
-    If Console.CursorX >= 79 Then Exit;
-
     For A := 1 to Length(Str) Do Begin
-      If sPos < CurWin[CurWinNum]^.ScrlX + 1 Then
-        Inc (sPos)
+      If ScrollPos < CurWin[CurWinNum]^.ScrlX + 1 Then
+        Inc (ScrollPos)
       Else
         If Console.CursorX < 79 Then Console.WriteChar (Str[A]);
     End;
   End;
 
-Var
-  InString : Boolean;
-  A, B     : Byte;
-  W        : String;
-  LC       : Char;
 Begin
-  If cfg_Highlight Then Begin
-    InString := False;
-    W        := '';
-    Console.TextAttr := cfg_TextNormal;
-    sPos     := 1;
+  Console.CursorXY(2, Y);
 
-    Console.CursorXY (2, Y);
-
-    For A := 1 to Length(S) Do Begin
-(*
-      If (S[A] in [';', '.']) and not InString Then Begin
-        For B := 1 to Keywords Do
-          If strUpper(W) = Keyword[B] Then Console.TextAttr := colTextKeyword;
-        pWrite(W);
-        Console.TextAttr := colTextNormal;
-        pWrite(S[A]);
-        W := '';
-        Continue;
-      End Else
-*)
-      If S[A] = '''' Then Begin
-        pWrite (W);
-
-        InString := Not InString;
-
-        If InString Then Begin
-          Console.TextAttr := cfg_TextString;
-          pWrite('''');
-        End Else Begin
-          pWrite('''');
-          Console.TextAttr := cfg_TextNormal;
-        End;
-
-        W := '';
-      End Else
-      If (S[A] = '/') And (S[A+1] = '/') And (Not InString) Then Begin
-        pWrite (W);
-
-        Console.TextAttr := cfg_TextComment;
-
-        pWrite (Copy(S, A, 255));
-
-        While Console.CursorX < 79 Do Console.WriteChar(' ');
-
-        Exit;
-      End Else
-      If ((S[A] = ' ') or (A = Length(S))) and (Not InString) Then Begin
-        For B := 1 to Keywords Do
-          If (A = Length(S)) and (S[A] <> ';') Then Begin
-            If Keyword[B] = strUpper(W + S[A]) Then
-              Console.TextAttr := cfg_TextKeyword;
-          End Else
-            If Keyword[B] = strUpper(W) Then
-              Console.TextAttr := cfg_TextKeyword;
-
-          pWrite (W + S[A]);
-          W := '';
-          Console.TextAttr := cfg_TextNormal;
-      End Else Begin
-        If Not InString Then
-          If (LC in ['0'..'9', '#', ' ', '[', '(', ',', '-', '.']) and (S[A] in ['#', '$', '0'..'9']) Then Begin
-            If Console.TextAttr = cfg_TextNormal Then Begin
-              pWrite(W);
-              W := '';
-            End;
-
-            Console.TextAttr := cfg_TextNumber;
-          End Else Begin
-            If Console.TextAttr = cfg_TextNumber Then Begin
-              pWrite(W);
-              W := '';
-            End;
-
-            Console.TextAttr := cfg_TextNormal;
-          End;
-
-        W := W + S[A];
-      End;
-
-      LC := S[A];
+  Repeat
+    Case NextToken of
+      tEOL     : Break;
+      tNUMBER  : Console.TextAttr := cfg_TextNumber;
+      tCOMMENT : Console.TextAttr := cfg_TextComment;
+      tKEYWORD : Console.TextAttr := cfg_TextKeyword;
+      tOPCHAR  : Console.TextAttr := cfg_TextKeyword;
+      tSTRING,
+      tCHARNUM : Console.TextAttr := cfg_TextCharStr;
+      tHEXNUM  : Console.TextAttr := cfg_TextHex;
+    Else
+      Console.TextAttr := cfg_TextNormal;
     End;
 
-    If W <> '' Then pWrite (W);
+    WritePart(ResStr);
+  Until Done;
 
-    Console.WriteStr(strRep(' ', 79 - Console.CursorX));
-  End Else
+  Console.ClearEOL;
+  Console.WriteXY (80, Y, colEditStatus, '°');
+End;
+
+Procedure DrawLine (Y: Byte; S: String);
+Begin
+  If cfg_Highlight Then
+    DrawLineHighlight (Y, S)
+  Else
     Console.WriteXY (2, Y, cfg_TextNormal, strPadR(Copy(S, CurWin[CurWinNum]^.ScrlX + 1, 255), 77, ' '));
 End;
 
@@ -1750,6 +1847,8 @@ Begin
   cfg_TextString  := INI.ReadInteger('Colors', 'syn_string', 27);
   cfg_TextNumber  := INI.ReadInteger('Colors', 'syn_number', 19);
   cfg_TextComment := INI.ReadInteger('Colors', 'syn_comment', 23);
+  cfg_TextHex     := INI.ReadInteger('Colors', 'syn_hex', 28);
+  cfg_TextCharStr := INI.ReadInteger('Colors', 'syn_charstr', 27);
 
   INI.Free;
 
@@ -1793,8 +1892,7 @@ Begin
         Else
           BarPos := Round(CurLine / TotalLines * (mideWinSize - 4)) + 3;
 
-        Console.WriteXY (80, BarPos, colEditPosBar, 'Û');
-
+        Console.WriteXY  (80, BarPos, colEditPosBar, 'Û');
         Console.CursorXY (CurX + 1, CurY + 1);
       End;
     End;
