@@ -54,23 +54,58 @@ Const
   mideWinSize      : Byte = 24;
   mideExecOpts     : String[100] = '';
 
-  colTextString  = 27;  { 27 }
-  colTextKeyword = 31;  { 31 }
-  colTextComment = 23;  { 23 }
-  colTextNormal  = 23;  { 30 }
-
   colEditBorder  = 25;  { 31 }
   colEditHeader  = 31;  { 31 }
   colEditStatus  = 9 + 1 * 16;
   colEditPosBar  = 9 + 1 * 16;
 
+Const
+  Keywords = 29;
+  Keyword : Array[1..Keywords] of String[9] = (
+    ( '='         ),
+    ( ':='        ),
+    ( '+'         ),
+    ( '-'         ),
+    ( '/'         ),
+    ( '*'         ),
+    ( 'AND'       ),
+    ( 'BEGIN'     ),
+    ( 'CASE'      ),
+    ( 'CONST'     ),
+    ( 'DO'        ),
+    ( 'DOWNTO'    ),
+    ( 'ELSE'      ),
+    ( 'END'       ),
+    ( 'FOR'       ),
+    ( 'FUNCTION'  ),
+    ( 'IF'        ),
+    ( 'NOT'       ),
+    ( 'OF'        ),
+    ( 'OR'        ),
+    ( 'PROCEDURE' ),
+    ( 'REPEAT'    ),
+    ( 'THEN'      ),
+    ( 'TO'        ),
+    ( 'TYPE'      ),
+    ( 'UNTIL'     ),
+    ( 'USES'      ),
+    ( 'VAR'       ),
+    ( 'WHILE'     )
+  );
+
 Var
-  cfg_TabSpaces  : Byte;
-  cfg_Screen50   : Boolean;
-  cfg_AutoIndent : Boolean;
-  cfg_ExecPath   : String[160];
-  cfg_ExecUser   : String[35];
-  cfg_ExecPW     : String[20];
+  cfg_TabSpaces   : Byte;
+  cfg_Screen50    : Boolean;
+  cfg_AutoIndent  : Boolean;
+  cfg_Highlight   : Boolean;
+  cfg_ExecPath    : String[160];
+  cfg_ExecUser    : String[35];
+  cfg_ExecPW      : String[20];
+  cfg_TextString  : Byte;
+  cfg_TextKeyword : Byte;
+  cfg_TextComment : Byte;
+  cfg_TextNormal  : Byte;
+  cfg_TextNumber  : Byte;
 
 Type
   PEditorWindow = ^TEditorWindow;
@@ -282,8 +317,100 @@ Var
         If Console.CursorX < 79 Then Console.WriteChar (Str[A]);
     End;
   End;
+
+Var
+  InString : Boolean;
+  A, B     : Byte;
+  W        : String;
+  LC       : Char;
 Begin
-  Console.WriteXY (2, Y, colTextNormal, strPadR(Copy(S, CurWin[CurWinNum]^.ScrlX + 1, 255), 77, ' '));
+  If cfg_Highlight Then Begin
+    InString := False;
+    W        := '';
+    Console.TextAttr := cfg_TextNormal;
+    sPos     := 1;
+
+    Console.CursorXY (2, Y);
+
+    For A := 1 to Length(S) Do Begin
+(*
+      If (S[A] in [';', '.']) and not InString Then Begin
+        For B := 1 to Keywords Do
+          If strUpper(W) = Keyword[B] Then Console.TextAttr := colTextKeyword;
+        pWrite(W);
+        Console.TextAttr := colTextNormal;
+        pWrite(S[A]);
+        W := '';
+        Continue;
+      End Else
+*)
+      If S[A] = '''' Then Begin
+        pWrite (W);
+
+        InString := Not InString;
+
+        If InString Then Begin
+          Console.TextAttr := cfg_TextString;
+          pWrite('''');
+        End Else Begin
+          pWrite('''');
+          Console.TextAttr := cfg_TextNormal;
+        End;
+
+        W := '';
+      End Else
+      If (S[A] = '/') And (S[A+1] = '/') And (Not InString) Then Begin
+        pWrite (W);
+
+        Console.TextAttr := cfg_TextComment;
+
+        pWrite (Copy(S, A, 255));
+
+        While Console.CursorX < 79 Do Console.WriteChar(' ');
+
+        Exit;
+      End Else
+      If ((S[A] = ' ') or (A = Length(S))) and (Not InString) Then Begin
+        For B := 1 to Keywords Do
+          If (A = Length(S)) and (S[A] <> ';') Then Begin
+            If Keyword[B] = strUpper(W + S[A]) Then
+              Console.TextAttr := cfg_TextKeyword;
+          End Else
+            If Keyword[B] = strUpper(W) Then
+              Console.TextAttr := cfg_TextKeyword;
+
+          pWrite (W + S[A]);
+          W := '';
+          Console.TextAttr := cfg_TextNormal;
+      End Else Begin
+        If Not InString Then
+          If (LC in ['0'..'9', '#', ' ', '[', '(', ',', '-', '.']) and (S[A] in ['#', '$', '0'..'9']) Then Begin
+            If Console.TextAttr = cfg_TextNormal Then Begin
+              pWrite(W);
+              W := '';
+            End;
+
+            Console.TextAttr := cfg_TextNumber;
+          End Else Begin
+            If Console.TextAttr = cfg_TextNumber Then Begin
+              pWrite(W);
+              W := '';
+            End;
+
+            Console.TextAttr := cfg_TextNormal;
+          End;
+
+        W := W + S[A];
+      End;
+
+      LC := S[A];
+    End;
+
+    If W <> '' Then pWrite (W);
+
+    Console.WriteStr(strRep(' ', 79 - Console.CursorX));
+  End Else
+    Console.WriteXY (2, Y, cfg_TextNormal, strPadR(Copy(S, CurWin[CurWinNum]^.ScrlX + 1, 255), 77, ' '));
 End;
 
 Procedure DrawPage;
@@ -870,9 +997,13 @@ Begin
   With CurWin[CurWinNum]^ Do Begin
     If CurX + ScrlX > Length(TextData[CurLine]^) Then Begin
       CurX := Length(TextData[CurLine]^) + 1;
-      If CurX > 77 Then ScrlX := CurX - 77 Else ScrlX := 0;
-      If ScrlX > 0 Then CurX := 77;
-      DrawPage;
+
+      If ScrlX > 0 Then Begin
+        If CurX > 77 Then ScrlX := CurX - 77 Else ScrlX := 0;
+        If ScrlX > 0 Then CurX := 77;
+        DrawPage;
+      End Else
+        If ReDraw Then DrawPage;
     End Else
       If ReDraw Then DrawPage;
   End;
@@ -1112,13 +1243,19 @@ Begin
         TopPage := 1;
         CurY    := CurLine - TopPage + 1;
       End;
-    End Else Begin
+
+      Relocate(True);
+    End Else
+    If TopPage > 1 Then Begin
       CurLine := 1;
       CurY    := 1;
       TopPage := 1;
-    End;
 
-    Relocate(True);
+      Relocate(True);
+    End Else Begin
+      CurY    := 1;
+      CurLine := 1;
+    End;
   End;
 End;
 
@@ -1130,12 +1267,14 @@ Begin
     If CurLine + (mideWinSize - 4) <= TotalLines Then Begin
       Inc (TopPage, (mideWinSize - 4));
       Inc (CurLine, (mideWinSize - 4));
-    End Else Begin
+
+      Relocate(True);
+    End Else If TopPage <> TotalLines - CurY + 1 Then Begin
       TopPage := TotalLines - CurY + 1;
       CurLine := TotalLines;
-    End;
 
-    Relocate(True);
+      Relocate(True);
+    End;
   End;
 End;
 
@@ -1599,12 +1738,18 @@ Begin
 
   INI := TINIReader.Create('mide.ini');
 
-  cfg_Screen50   := (INI.ReadInteger('General', 'screenmode', 25) = 50);
-  cfg_TabSpaces  := INI.ReadInteger('General', 'tab_spaces', 2);
-  cfg_AutoIndent := strUpper(INI.ReadString('General', 'auto_indent', 'true')) = 'TRUE';
-  cfg_ExecPath   := DirSlash(INI.ReadString('Execute', 'rootpath', ''));
-  cfg_ExecUser   := INI.ReadString('Execute', 'username', 'Guest');
-  cfg_ExecPW     := INI.ReadString('Execute', 'password', 'Guest');
+  cfg_Screen50    := (INI.ReadInteger('General', 'screenmode', 25) = 50);
+  cfg_TabSpaces   := INI.ReadInteger('General', 'tab_spaces', 2);
+  cfg_AutoIndent  := strUpper(INI.ReadString('General', 'auto_indent', 'true')) = 'TRUE';
+  cfg_Highlight   := strUpper(INI.ReadString('General', 'syntax_highlight', 'true')) = 'TRUE';
+  cfg_ExecPath    := DirSlash(INI.ReadString('Execute', 'rootpath', ''));
+  cfg_ExecUser    := INI.ReadString('Execute', 'username', 'Guest');
+  cfg_ExecPW      := INI.ReadString('Execute', 'password', 'Guest');
+  cfg_TextNormal  := INI.ReadInteger('Colors', 'syn_normal', 30);
+  cfg_TextKeyword := INI.ReadInteger('Colors', 'syn_keyword', 31);
+  cfg_TextString  := INI.ReadInteger('Colors', 'syn_string', 27);
+  cfg_TextNumber  := INI.ReadInteger('Colors', 'syn_number', 19);
+  cfg_TextComment := INI.ReadInteger('Colors', 'syn_comment', 23);
 
   INI.Free;
 
