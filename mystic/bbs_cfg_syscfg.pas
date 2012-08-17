@@ -646,7 +646,7 @@ Begin
 
   Form.AddTog  ('D', ' Date Type',      47,  7, 60,  7, 11, 8, 1, 4, 'MM/DD/YY DD/MM/YY YY/DD/MM Ask', @Config.UserDateType, Topic);
   Form.AddTog  ('O', ' Hot Keys',       48,  8, 60,  8, 10, 3, 0, 2, 'No Yes Ask', @Config.UserHotKeys, Topic);
-  Form.AddBol  ('P', ' Ask Protocol',   48,  9, 60,  9, 10, 3, @Config.UserProtocol, Topic);
+  Form.AddBol  ('P', ' Ask Protocol',   44,  9, 60,  9, 14, 3, @Config.UserProtocol, Topic);
   Form.AddTog  ('N', ' Node Chat',      47, 10, 60, 10, 11, 6, 0, 2, 'Normal ANSI Ask', @Config.UserFullChat, Topic);
   Form.AddTog  ('F', ' File List',      47, 11, 60, 11, 11, 6, 0, 2, 'Normal ANSI Ask', @Config.UserFileList, Topic);
   Form.AddTog  ('1', ' Message Reader', 42, 12, 60, 12, 16, 6, 0, 2, 'Normal ANSI Ask', @Config.UserReadType, Topic);
