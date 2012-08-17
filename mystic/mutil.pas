@@ -47,7 +47,8 @@ Uses
   mutil_ImportNA,
   mutil_FileBone,
   mutil_Upload,
-  mutil_TopLists;
+  mutil_TopLists,
+  mutil_FilesBBS;
 
 {$I MUTIL_ANSI.PAS}
 
@@ -149,6 +150,7 @@ End;
 
 Var
   DoImportNA   : Boolean;
+  DoFilesBBS   : Boolean;
   DoFileBone   : Boolean;
   DoMassUpload : Boolean;
   DoTopLists   : Boolean;
@@ -161,6 +163,7 @@ Begin
   DoFileBone   := CheckProcess(Header_FILEBONE);
   DoMassUpload := CheckProcess(Header_UPLOAD);
   DoTopLists   := CheckProcess(Header_TOPLISTS);
+  DoFilesBBS   := CheckProcess(Header_FILESBBS);
 
   // Exit with an error if nothing is configured
 
@@ -176,6 +179,7 @@ Begin
 
   If DoImportNA   Then uImportNA;
   If DoFileBone   Then uImportFileBone;
+  If DoFilesBBS   Then uImportFilesBBS;
   If DoMassUpload Then uMassUpload;
   If DoTopLists   Then uTopLists;
 End.

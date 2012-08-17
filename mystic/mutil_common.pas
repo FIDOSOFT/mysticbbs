@@ -26,6 +26,7 @@ Const
   Header_GENERAL  = 'General';
   Header_IMPORTNA = 'Import_FIDONET.NA';
   Header_FILEBONE = 'Import_FILEBONE.NA';
+  Header_FILESBBS = 'Import_FILES.BBS';
   Header_UPLOAD   = 'MassUpload';
   Header_TOPLISTS = 'GenerateTopLists';
 
