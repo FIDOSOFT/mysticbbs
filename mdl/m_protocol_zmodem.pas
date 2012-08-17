@@ -3,6 +3,7 @@ Unit m_Protocol_Zmodem;
 {$I M_OPS.PAS}
 
 {.$DEFINE ZDEBUG}
+{.$DEFINE ZCHARLOG}
 
 Interface
 
@@ -271,6 +272,8 @@ Begin
       XON,
       XOFF : Continue;
     Else
+      {$IFDEF ZCHARLOG} Zlog('ZGetByte -> ' + strI2S(Result)); {$ENDIF}
+
       Exit;
     End;
   End;
@@ -282,7 +285,10 @@ Function TProtocolZmodem.ZDLRead : SmallInt;
 Begin
   Result := ReadByteTimeOut(RxTimeOut);
 
-  If Result <> ZDLE Then Exit;
+  If Result <> ZDLE Then Begin
+    {$IFDEF ZCHARLOG} ZLog('ZDLRead -> Did not get ZDLE: ' + strI2S(Result)); {$ENDIF}
+    Exit;
+  End;
 
   Result := ReadByteTimeOut(RxTimeOut);
 
@@ -311,6 +317,8 @@ Begin
       {$IFDEF ZDEBUG} ZLog('ZDLRead -> Got ZERROR'); {$ENDIF}
     End;
   End;
+
+  {$IFDEF ZCHARLOG} ZLog('ZDLRead -> ' + strI2S(Result)); {$ENDIF}
 End;
 
 (*
@@ -1283,6 +1291,7 @@ Again:
                 End;
       RCDO,
       ZCAN    : Begin
+                  {$IFDEF ZDEBUG} ZLog('ZInitSender -> Got RCDO/ZCAN'); {$ENDIF}
                   ZInitSender := ZERROR;
                   Exit;
                 End;
@@ -1722,6 +1731,8 @@ Procedure TProtocolZmodem.DoAbortSequence;
 Begin
   If Not Connected Then Exit;
 
+  {$IFDEF ZDEBUG} ZLog('DoAbortSequence -> begin'); {$ENDIF}
+
   Client.PurgeInputData;
   Client.PurgeOutputData;
 
@@ -1747,7 +1758,9 @@ Begin
 
   If AbortTransfer Then DoAbortSequence;
 
-  StatusUpdate(False, True);
+  {$IFDEF ZDEBUG} Zlog('QueueReceive -> Final status update'); {$ENDIF}
+
+//  StatusUpdate(False, True);
 End;
 
 Procedure TProtocolZmodem.QueueSend;
