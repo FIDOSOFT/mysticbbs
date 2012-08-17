@@ -4633,3 +4633,34 @@
  - Menu passwords have been removed from the menu flags.  If you want to
    password protect your menus you can do the same thing by using the -P
    and FIRSTCMD options on your menus.
+
+ + Mystic should now be able to recognize FILE_ID.DIZ on Unix platforms
+   regardless of the casing, just as long as the archive program is able to
+   extract it.  MUTIL mass upload should also work like this now.
+
+ + Mystic should now be able to recognize TODOOR.EXT files from QWKE packets
+   regardless of their file casing, just as long as the archive utility is
+   able to extract it.
+
+ + Added the poorly done syntax highlighting from the old MIDE into the new
+   MIDE.  It does not support block comments, so just use // if you like that
+   highlighting.  The highlighting can be turned on/off via mide.ini by
+   adding this option under "[General]":
+
+      ; do syntax highlighting (note does not support block comments)
+      ; and is substancially slower in screen updates
+      syntax_highlight = true
+
+   In addition, colors can be configured for the source code editor text:
+
+      [Colors]
+
+      ; syntax highlighting colors (text attributes 0-255)
+      ; attribute = foreground_color + background_color * 16
+      ; foreground is 0-15 and background is 0-7
+
+      syn_normal  = 30
+      syn_keyword = 31
+      syn_string  = 27
+      syn_number  = 19
+      syn_comment = 23
