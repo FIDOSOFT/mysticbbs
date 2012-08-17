@@ -916,14 +916,20 @@ Begin
       'R' : ArchiveList(FName);
       'V' : Begin
               Session.io.OutFull (Session.GetPrompt(384));
+
               Mask := Session.io.GetInput (70, 70, 11, '');
+
               If Mask <> '' Then Begin
                 ExecuteArchive (FName, '', Mask, 2);
 
                 Session.io.PromptInfo[1] := Mask;
+
                 Session.io.OutFullLn(Session.GetPrompt(306));
+
                 Session.io.AllowMCI := False;
+
                 Session.io.OutFile (Session.TempPath + Mask, True, 0);
+
                 Session.io.AllowMCI := True;
 
                 If Session.io.NoFile Then
@@ -1233,6 +1239,8 @@ Begin
 
     Inc(A);
   End;
+
+  Session.SystemLog('DEBUG Exec Archive: ' + Temp);
 
   ShellDOS ('', Temp);
 End;
@@ -1914,6 +1922,7 @@ Var
         TopDesc := 0;
       End Else Begin
         Inc (Count, FDir.DescLines + 1);
+
         If FBase.Flags And FBShowUpload <> 0 Then Inc(Count);
       End;
     End;
@@ -2062,6 +2071,7 @@ Var
     SizeStr  := Session.GetPrompt(491);
 
     Seek (FDirFile, TopPage);
+
     If TopDesc <> 0 Then Read (FDirFile, FDir);
 
     BotDesc   := TopDesc;
@@ -2343,8 +2353,8 @@ Var
               '?' : Begin
                       Session.io.OutFile ('flisthlp', True, 0);
                       If Not Session.io.NoFile Then Begin
-                        fullReDraw;
-                        drawPage;
+                        FullReDraw;
+                        DrawPage;
                       End;
                     End;
               'E' : If Session.User.Access(FBase.SysopACS) Then Begin
@@ -2363,6 +2373,7 @@ Var
                     End;
               'V' : Begin
                       Session.io.AnsiGotoXY (1, 23);
+
                       If ArchiveView(FBase.Path + List[CurPos].FileName) Then Begin
                         FullRedraw;
                         DrawPage;
@@ -2412,10 +2423,7 @@ Var
       Case Session.io.OneKey(Keys, True) of
         'E' : Begin
                 DoEditor;
-
                 DrawPage;
-
-                If CurPos > ListSize Then CurPos := ListSize;
               End;
         #13,
         'N' : If LastPage Then
@@ -2681,7 +2689,6 @@ Var
   Temp     : String;
   FullName : String;
   DataFile : File;
-  TempFile : File;
   Found    : Boolean;
   LogFile  : Text;
   FileStatus : Boolean;
@@ -2879,13 +2886,9 @@ Begin
         For A := 1 to FDir.DescLines Do
           BlockWrite (DataFile, Session.Msgs.MsgText[A][0], Length(Session.Msgs.MsgText[A]) + 1);
 
-        Assign (TempFile, FBase.Path + FileName);
-        {$I-} Reset (TempFile, 1); {$I+}
+        FDir.Size := FileByteSize(FBase.Path + FileName);
 
-        If IoResult = 0 Then Begin
-          FDir.Size := FileSize(TempFile);
-          Close (TempFile);
-        End Else Begin
+        If FDir.Size = -1 Then Begin
           FDir.Flags := FDir.Flags Or FDirOffline;
           FDir.Size  := 0;
         End;

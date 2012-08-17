@@ -918,7 +918,7 @@ Var
   BufPos     : LongInt;
   BufSize    : LongInt;
   dFile      : File;
-  Ext        : String[4];
+  Ext        : String[4] = '';
   Code       : String[2];
   SavedPause : Boolean;
   SavedAbort : Boolean;
@@ -997,6 +997,8 @@ Begin
 
       Ext := Copy(Ext, 1, 3) + Code;
     End;
+
+  Session.SystemLog('DEBUG Display:' + FName + Ext);
 
   Assign (dFile, FName + Ext);
 
