@@ -269,7 +269,7 @@
 143 |09 |$D77Ä|CR|PA
 ; Message from another node:
 ; &1 = Message from     &2 = Node user is logged in to.
-144 |CL|09|17 ° |15Message from |14|&1 |15on node |14|&2|$X79 |03|16|CR
+144 |16|CL|09|17 ° |15Message from |14|&1 |15on node |14|&2|$X79 |03|16|CR
 ; Message from another node footer
 145 |CR|09Node Message: |01[|10R|01]|09eply or |01[|10ENTER|01/|10Continue|01]|09: |15
 146 |CR|09Send message to which node |01[|10?|01/|10List|01]|09: |XX
@@ -324,7 +324,7 @@
 ; 179-180 are System broadcast messages header/footer
 ; &1 = User who sent system broadcast
 ; &2 = Node Number
-179 |CL|09|17 ° |15System Notification|$X79 |03|16|CR|CR
+179 |16|CL|09|17 ° |15System Notification|$X79 |03|16|CR|CR
 180 |CR|PA
 ; nodechat text: &1 = user name
 181 |07<|15|&1|07> |07
