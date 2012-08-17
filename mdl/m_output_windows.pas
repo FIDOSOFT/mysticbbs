@@ -11,15 +11,15 @@ Uses
 Type
   TOutputWindows = Class
   Private
-    ConOut      : THandle;
-    Cursor      : TCoord;
+    ConOut : THandle;
+    Cursor : TCoord;
   Public
     ScreenSize : Byte;
-    Active   : Boolean;
-    TextAttr : Byte;
-    Buffer   : TConsoleScreenRec;
-    LineBuf  : TConsoleLineRec;
-    Window   : TSmallRect;
+    Active     : Boolean;
+    TextAttr   : Byte;
+    Buffer     : TConsoleScreenRec;
+    LineBuf    : TConsoleLineRec;
+    Window     : TSmallRect;
 
     Constructor Create (A: Boolean);
     Destructor  Destroy; Override;
@@ -181,7 +181,7 @@ Begin
     Buf[Count].UnicodeChar := ' ';
   End;
 
-  Move(Buf[1], Buffer[Cursor.Y + 1][Cursor.X + 1], Count);
+  Move(Buf[1], Buffer[Cursor.Y + 1][Cursor.X + 1], SizeOf(TCharInfo) * Count);
 
   If Active Then Begin
     BufSize.X     := Count;
