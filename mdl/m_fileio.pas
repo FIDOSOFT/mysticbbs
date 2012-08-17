@@ -39,6 +39,7 @@ Procedure DirClean        (Path: String; Exempt: String);
 Function  FileRename      (OldFN, NewFN: String) : Boolean;
 Function  FileCopy        (Source, Target: String) : Boolean;
 Function  FileFind        (FN: String) : String;
+Function  FileByteSize    (FN: String) : Int64;
 
 { GLOBAL FILEIO VARIABLES AND CONSTANTS }
 
@@ -742,6 +743,19 @@ Begin
 
     FindNext(Dir);
   End;
+
+  FindClose(Dir);
+End;
+
+Function FileByteSize (FN: String) : Int64;
+Var
+  Dir : SearchRec;
+Begin
+  Result := -1;
+
+  FindFirst (FN, AnyFile, Dir);
+
+  If DosError = 0 Then Result := Dir.Size;
 
   FindClose(Dir);
 End;
