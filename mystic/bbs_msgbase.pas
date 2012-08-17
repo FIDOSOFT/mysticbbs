@@ -3555,7 +3555,7 @@ Begin
 
   MsgAdded := 0;
 
-  If Not OpenCreateBase(MsgBase, MBase) THen Exit;
+  If Not OpenCreateBase(MsgBase, MBase) Then Exit;
 
   Session.io.OutFull (Session.GetPrompt(231));
 
@@ -3966,7 +3966,7 @@ Begin
 
   Close (DataFile);
 
-  Assign (ExtFile, Session.TempPath + 'todoor.ext');
+  Assign (ExtFile, FileFind(Session.TempPath + 'todoor.ext'));
   {$I-} Reset (ExtFile); {$I+}
 
   If IoResult = 0 Then Begin

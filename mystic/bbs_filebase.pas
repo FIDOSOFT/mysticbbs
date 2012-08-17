@@ -428,13 +428,16 @@ Function TFileBase.ImportDIZ (FN: String) : Boolean;
   End;
 
 Var
-  tFile : Text;
+  tFile   : Text;
+  DizName : String;
 Begin
   Result := False;
 
   ExecuteArchive (FBase.Path + FN, '', 'file_id.diz', 2);
 
-  Assign (tFile, Session.TempPath + 'file_id.diz');
+  DizName := FileFind(Session.TempPath + 'file_id.diz');
+
+  Assign (tFile, DizName);
   {$I-} Reset (tFile); {$I+}
 
   If IoResult = 0 Then Begin
@@ -454,7 +457,7 @@ Begin
 
     Close (tFile);
 
-    FileErase(Session.TempPath + 'file_id.diz');
+    FileErase(DizName);
 
     While (Session.Msgs.MsgText[1] = '') and (FDir.DescLines > 0) Do
       RemoveLine(1);

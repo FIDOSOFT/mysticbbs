@@ -20,6 +20,7 @@ Var
   ListFile   : File of RecFileList;
   DescFile   : File;
   DizFile    : Text;
+  DizName    : String;
   Base       : RecFileBase;
   List       : RecFileList;
   DirInfo    : SearchRec;
@@ -104,7 +105,9 @@ Begin
 
             ExecuteArchive (Base.Path + List.FileName, '', 'file_id.diz', 2);
 
-            Assign (DizFile, TempPath + 'file_id.diz');
+            DizName := FileFind(TempPath + 'file_id.diz');
+
+            Assign (DizFile, DizName);
             {$I-} Reset (DizFile); {$I+}
 
             If IoResult = 0 Then Begin
@@ -133,7 +136,7 @@ Begin
               Desc[1]        := INI.ReadString(Header_UPLOAD, 'no_description', 'No Description');
             End;
 
-            FileErase (TempPath + 'file_id.diz');
+            FileErase (DizName);
           End Else Begin
             List.DescLines := 1;
             Desc[1]        := INI.ReadString(Header_UPLOAD, 'no_description', 'No Description');
