@@ -498,7 +498,7 @@ Const
 Type
   RecFileList = Record
     FileName  : String[70];
-    Size      : Cardinal;
+    Size      : LongInt;
     DateTime  : LongInt;
     Uploader  : String[30];
     Flags     : Byte;
