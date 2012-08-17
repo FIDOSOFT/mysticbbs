@@ -4642,10 +4642,10 @@
    regardless of their file casing, just as long as the archive utility is
    able to extract it.
 
- + Added the poorly done syntax highlighting from the old MIDE into the new
-   MIDE.  It does not support block comments, so just use // if you like that
-   highlighting.  The highlighting can be turned on/off via mide.ini by
-   adding this option under "[General]":
+ + Added syntax highlighting back into MIDE, however it does not and probably
+   will not support block comment highlighting.  Just use the single line
+   // comments if you like syntax highlighting.  The highlighting can be
+   turned on/off via mide.ini by adding this option under "[General]":
 
       ; do syntax highlighting (note does not support block comments)
       ; and is substancially slower in screen updates
@@ -4664,3 +4664,11 @@
       syn_string  = 27
       syn_number  = 19
       syn_comment = 23
+      syn_hex     = 28
+      syn_charnum = 27
+
+ ! Fixed a bug that could cause viewing files from within an archive to
+   fail.
+
+ + MUTIL now has the ability to import FILES.BBS files automatically.  See
+   the MUTIL.CFG file for more information.
