@@ -18,10 +18,7 @@ BUGS AND POSSIBLE ISSUES
   the makewin script.  Something is out of whack with compiler options?  OR
   FPC BUG?  DirAttr is suspect in MPL is it 1 byte or 4 in size?
 ! View archive not working if its external view? [Griffin]
-! Message header does not ackknowledge user's date format.
 ! Test MIS blocking features or just rewrite MIS completely.
-! AllFiles/NewFiles not properly prompting to zip and download.
-! Check multiple BBS list functionality.
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
