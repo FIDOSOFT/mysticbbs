@@ -305,7 +305,7 @@
 ; Line editor "command" prompt help
 167 |CR|03(|11A|03)bort Message    (|11C|03)ontinue Message     (|11U|03)pload Message|CR(|11Q|03)uote Message    (|11S|03)ave Message         (|11H|03)elp|CR(|11T|03)itle Change
 168 |CR|12Abort message? |11
-169 |CR|12There are no available archivers!
+169 |CR|12There are no available archivers!|CR|CR|PA
 ; Archive list format:
 ; &1 = archive number    &2 = archive name       &3 = archive extension
 170 |15|$R02|&1  |10|$R22|&2 |11|&3
