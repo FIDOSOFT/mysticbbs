@@ -4685,6 +4685,8 @@
    an Amiga, for example).  Mystic will now properly internally view LHA
    extensions, as well as properly look for LHA in the archive configuration.
 
- ! Fixed a bug when viewing an archive that is not supported with the
-   internal view that could cause the lightbar file list display to get
-   messed up.
+ ! Fixed a bug when viewing an archive that could cause the lightbar file
+   list display to not get redrawn after.
+
+ ! Duplicate IP check in MIS was not working properly.  It is now.
+ 

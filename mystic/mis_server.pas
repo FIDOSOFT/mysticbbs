@@ -137,6 +137,7 @@ Begin
   If IoResult = 0 Then Begin
     While Not Eof(TF) Do Begin
       ReadLn (TF, Str);
+
       If CheckIP (Client.PeerIP, Str) Then Begin
         Result := True;
         Break;
@@ -152,19 +153,10 @@ Var
   Count : Byte;
 Begin
   Result := 0;
-(*
-  For Count := 0 to ClientMax - 1 Do
-    If ClientList[Count] <> NIL Then  // use Assigned?
-      If Client.PeerIP = TIOSocket(ClientList[Count]).PeerIP Then
-        Inc(Result);*)
 
   For Count := 0 to ClientMax - 1 Do
     If Assigned(ClientList[Count]) Then Begin
-//    writeln('client ip:', client.peerip);
-//    writeln('comp ip  :', TIOSocket(clientlist[count]).fpeerip);
-//    waitms(3000);
-
-      If Client.PeerIP = TIOSocket(ClientList[Count]).PeerIP Then
+      If Client.PeerIP = TServerClient(ClientList[Count]).Client.FPeerIP Then
         Inc(Result);
     End;
 End;
@@ -227,18 +219,21 @@ Begin
       Inc (ClientRefused);
       Status ('BUSY: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
       If Not NewClient.WriteFile(TextPath + 'busy.txt') Then NewClient.WriteLine('BUSY');
+      WaitMS(3000);
       NewClient.Free;
     End Else
     If IsBlockedIP(NewClient) Then Begin
       Inc (ClientBlocked);
       Status('BLOCK: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
       If Not NewClient.WriteFile(TextPath + 'blocked.txt') Then NewClient.WriteLine('BLOCKED');
+      WaitMS(3000);
       NewClient.Free;
     End Else
     If (ClientMaxIPs > 0) and (DuplicateIPs(NewClient) >= ClientMaxIPs) Then Begin
       Inc (ClientRefused);
       Status('MULTI: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
       If Not NewClient.WriteFile(TextPath + 'dupeip.txt') Then NewClient.WriteLine('Only ' + strI2S(ClientMaxIPs) + ' connection(s) per user');
+      WaitMS(3000);
       NewClient.Free;
     End Else Begin
       Inc (ClientTotal);
