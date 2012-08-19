@@ -4670,5 +4670,21 @@
  ! Fixed a bug that could cause viewing files from within an archive to
    fail.
 
- + MUTIL now has the ability to import FILES.BBS files automatically.  See
-   the MUTIL.CFG file for more information.
+ + MUTIL now has the ability to import FILES.BBS files automatically.  In
+   addition, if MUTIL detects that a file already exists, but has a
+   different file size, it will update the existing record and description.
+   This is for people who are using it for networked file bases and TIC.
+   See MUTIL.CFG file for more information.
+
+ + When importing FILE_ID.DIZ, Mystic will attempt to use its internal
+   archive viewing capabilities to find the "casing" of the FILE_ID.DIZ file.
+   If it finds one it will pass the exact casing to the configured archive.
+
+ ! Fixed a bug where Mystic would not detect and use its internal archive
+   viewing for LZH files with a different file extension (ie .LHA files from
+   an Amiga, for example).  Mystic will now properly internally view LHA
+   extensions, as well as properly look for LHA in the archive configuration.
+
+ ! Fixed a bug when viewing an archive that is not supported with the
+   internal view that could cause the lightbar file list display to get
+   messed up.

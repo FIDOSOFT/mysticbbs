@@ -419,10 +419,10 @@ Function TFileBase.ImportDIZ (FN: String) : Boolean;
 
   Procedure RemoveLine (Num: Byte);
   Var
-    A : Byte;
+    Count : Byte;
   Begin
-    For A := Num To FDir.DescLines - 1 Do
-      Session.Msgs.Msgtext[A] := Session.Msgs.MsgText[A + 1];
+    For Count := Num To FDir.DescLines - 1 Do
+      Session.Msgs.Msgtext[Count] := Session.Msgs.MsgText[Count + 1];
 
     Session.Msgs.MsgText[FDir.DescLines] := '';
 
@@ -430,25 +430,49 @@ Function TFileBase.ImportDIZ (FN: String) : Boolean;
   End;
 
 Var
-  tFile   : Text;
+  DizFile : Text;
   DizName : String;
+  {$IFDEF FS_SENSITIVE}
+    Arc : PArchive;
+    SR  : ArcSearchRec;
+  {$ENDIF}
 Begin
-  Result := False;
+  Result  := False;
+  DizName := 'file_id.diz';
 
-  ExecuteArchive (FBase.Path + FN, '', 'file_id.diz', 2);
+  {$IFDEF FS_SENSITIVE}
+    Arc := New(PArchive, Init);
+
+    If Arc^.Name(FN) Then Begin
+      Arc^.FindFirst(SR);
+
+      While SR.Name <> '' Do Begin
+        If (strUpper(SR.Name) = 'FILE_ID.DIZ') Then Begin
+          DizName := SR.Name;
+          Break;
+        End;
+
+        Arc^.FindNext(SR);
+      End;
+
+      Dispose (Arc, Done);
+    End;
+  {$ENDIF}
+
+  ExecuteArchive (FBase.Path + FN, '', DizName, 2);
 
   DizName := FileFind(Session.TempPath + 'file_id.diz');
 
-  Assign (tFile, DizName);
-  {$I-} Reset (tFile); {$I+}
+  Assign (DizFile, DizName);
+  {$I-} Reset (DizFile); {$I+}
 
   If IoResult = 0 Then Begin
     Result         := True;
     FDir.DescLines := 0;
 
-    While Not Eof(tFile) Do Begin
+    While Not Eof(DizFile) Do Begin
       Inc    (FDir.DescLines);
-      ReadLn (tFile, Session.Msgs.MsgText[FDir.DescLines]);
+      ReadLn (DizFile, Session.Msgs.MsgText[FDir.DescLines]);
 
       Session.Msgs.MsgText[FDir.DescLines] := strStripLOW(Session.Msgs.MsgText[FDir.DescLines]);
 
@@ -457,7 +481,7 @@ Begin
       If FDir.DescLines = Config.MaxFileDesc Then Break;
     End;
 
-    Close (tFile);
+    Close (DizFile);
 
     FileErase(DizName);
 
@@ -765,9 +789,6 @@ Function TFileBase.ArchiveList (FName : String) : Boolean;
 Var
   Arc : PArchive;
   SR  : ArcSearchRec;
-  D   : DirStr;
-  N   : NameStr;
-  E   : ExtStr;
 Begin
   Result := False;
   Arc    := New(PArchive, Init);
@@ -776,19 +797,20 @@ Begin
     Dispose (Arc,  Done);
 
     If FileExist(FName) Then Begin
-      ExecuteArchive (FName, '', '_view_.tmp', 3);
-      Session.io.OutFile      (Session.TempPath + '_view_.tmp', True, 0);
-      FileErase    (Session.TempPath + '_view_.tmp');
+      ExecuteArchive     (FName, '', '_view_.tmp', 3);
+      Session.io.OutFile (Session.TempPath + '_view_.tmp', True, 0);
+      FileErase          (Session.TempPath + '_view_.tmp');
     End;
+
+    Result := True;
+
     Exit;
   End;
 
   Session.io.AllowPause := True;
   Session.io.PausePtr   := 1;
 
-  FSplit (FName, D, N, E);  {make getpath and getfname functions???}
-
-  Session.io.PromptInfo[1] := N + E;
+  Session.io.PromptInfo[1] := JustFile(FName);
 
   Session.io.OutFullLn (Session.GetPrompt(192));
 
@@ -884,6 +906,7 @@ Begin
 
   Repeat
     Session.io.OutFull (Session.GetPrompt(304));
+
     Case Session.io.OneKey('DQRV', True) of
       'D' : Begin
               Session.io.OutFull (Session.GetPrompt(384));
@@ -1064,39 +1087,54 @@ End;
 
 Function TFileBase.SelectArchive : Boolean;
 Var
-  A : SmallInt;
+  NewArc : SmallInt;
+  Count  : SmallInt;
 Begin
   Result := False;
-
-  Session.io.OutRawLn ('');
+  Count  := 0;
 
   Reset (ArcFile);
-
-  If Eof(ArcFile) Then Begin
-    Session.io.OutFullLn (Session.GetPrompt(169));
-    Close (ArcFile);
-    Exit;
-  End;
-
-  Session.io.OutFullLn (Session.GetPrompt(73));
 
   While Not Eof(ArcFile) Do Begin
     Read (ArcFile, Arc);
 
-    Session.io.PromptInfo[1] := strI2S(FilePos(ArcFile));
-    Session.io.PromptInfo[2] := Arc.Desc;
-    Session.io.PromptInfo[3] := Arc.Ext;
+    If Arc.Active and ((Arc.OSType = OSType) or (Arc.OSType = 3)) Then Begin
+      Inc (Count);
 
-    Session.io.OutFullLn (Session.GetPrompt(170));
+      If Count = 1 Then
+        Session.io.OutFullLn (Session.GetPrompt(73));
+
+      Session.io.PromptInfo[1] := strI2S(Count);
+      Session.io.PromptInfo[2] := Arc.Desc;
+      Session.io.PromptInfo[3] := Arc.Ext;
+
+      Session.io.OutFullLn (Session.GetPrompt(170));
+    End;
+  End;
+
+  If Count = 0 Then Begin
+    Session.io.OutFullLn (Session.GetPrompt(169));
+
+    Close (ArcFile);
+
+    Exit;
   End;
 
   Session.io.OutFull (Session.GetPrompt(171));
 
-  A := strS2I(Session.io.GetInput(2, 2, 12, ''));
+  NewArc := strS2I(Session.io.GetInput(2, 2, 12, ''));
 
-  If (A > 0) and (A <= FileSize(ArcFile)) Then Begin
-    Seek (ArcFile, A - 1);
-    Read (ArcFile, Arc);
+  If (NewArc > 0) and (NewArc <= Count) Then Begin
+    Reset (ArcFile);
+
+    Count := 0;
+
+    While Not Eof(ArcFile) And (Count <> NewArc) Do Begin
+      Read (ArcFile, Arc);
+
+      If (Arc.Active) and ((Arc.OSType = OSType) or (Arc.OSType = 3)) Then
+        Inc (Count);
+    End;
   End Else Begin
     Close (ArcFile);
     Exit;
@@ -1194,9 +1232,13 @@ Var
   Temp2 : String[60];
 Begin
   If Temp = '' Then
-    Case Get_Arc_Type(FName) of
+    Case GetArchiveType(FName) of
       'A' : Temp := 'ARJ';
-      'L' : Temp := 'LZH';
+      'L' : Begin
+              Temp := 'LZH';
+
+              If strUpper(JustFileExt(FName)) = 'LHA' Then Temp := 'LHA';
+            End;
       'R' : Temp := 'RAR';
       'Z' : Temp := 'ZIP';
       '?' : Temp := strUpper(JustFileExt(FName));
@@ -1212,7 +1254,8 @@ Begin
 
     Read (ArcFile, Arc);
 
-    If (Not Arc.Active) or (Arc.OSType <> OSType) Then Continue;
+    If (Not Arc.Active) or ((Arc.OSType <> OSType) and (Arc.OSType <> 3)) Then
+      Continue;
 
     If strUpper(Arc.Ext) = Temp Then Break;
   Until False;

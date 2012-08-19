@@ -34,7 +34,7 @@ Begin
 
   Form.AddBol  ('A', ' Active '         , 20,  7, 30,  7,  8, 3, @Arc.Active, '');
   Form.AddStr  ('X', ' Extension '      , 17,  8, 30,  8, 11, 4, 4, @Arc.Ext, '');
-  Form.AddTog  ('O', ' OS '             , 24,  9, 30,  9,  4, 7, 0, 2, 'Windows Linux OSX', @Arc.OSType, '');
+  Form.AddTog  ('O', ' OS '             , 24,  9, 30,  9,  4, 7, 0, 3, 'Windows Linux OSX All', @Arc.OSType, '');
   Form.AddStr  ('D', ' Description '    , 15, 10, 30, 10, 13, 30, 30, @Arc.Desc, '');
   Form.AddStr  ('P', ' Pack Cmd '       , 18, 11, 30, 11, 10, 35, 80, @Arc.Pack, '');
   Form.AddStr  ('U', ' Unpack Cmd '     , 16, 12, 30, 12, 12, 35, 80, @Arc.Unpack, '');
@@ -70,6 +70,7 @@ Var
         0 : OS := 'Windows';
         1 : OS := 'Linux  ';
         2 : OS := 'OSX    ';
+        3 : OS := 'All    ';
       End;
 
       List.Add (strPadR(YesNoStr[Arc.Active], 5, ' ') + strPadR(Arc.Ext, 7, ' ') + OS + '   ' + Arc.Desc, 0);

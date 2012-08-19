@@ -29,7 +29,7 @@ Type
   TArchive = Object
     Constructor Init;
     Destructor  Done;
-    Function    Name      (n:string) : Boolean;
+    Function    Name      (N: String) : Boolean;
     Procedure   FindFirst (Var SR: ArcSearchRec);
     Procedure   FindNext  (Var SR: ArcSearchRec);
   Private
@@ -37,7 +37,7 @@ Type
     _Archive : PGeneralArchive;
   End;
 
-Function Get_Arc_Type (Name: String) : Char;
+Function GetArchiveType (Name: String) : Char;
 
 Implementation
 
@@ -47,13 +47,14 @@ Uses
   AViewLZH,
   AViewRAR;
 
-Function Get_Arc_Type (Name: String) : Char;
+Function GetArchiveType (Name: String) : Char;
 Var
   ArcFile : File;
-  Buf     : Array[1..3] of Char;
+  Buf     : Array[1..5] of Char;
   Res     : LongInt;
 Begin
-  Get_Arc_Type := '?';
+  Result := '?';
+
   If Name = '' Then Exit;
 
   Assign (ArcFile, Name);
@@ -66,19 +67,16 @@ Begin
   If Res = 0 Then Exit;
 
   If (Buf[1] = 'R') and (Buf[2] = 'a') and (Buf[3] = 'r') Then
-    Get_Arc_Type := 'R'
+    Result := 'R'
   Else
-
   If (Buf[1] = #$60) And (Buf[2] = #$EA) Then
-    Get_Arc_Type := 'A'
+    Result := 'A'
   Else
-
   If (Buf[1] = 'P') And (Buf[2] = 'K') Then
-    Get_Arc_Type := 'Z'
+    Result := 'Z'
   Else
-
-  If Pos('.LZH', Name) > 0 Then
-    Get_Arc_Type := 'L';
+  If (Buf[3] = '-') and (Buf[4] = 'l') and (Buf[5] in ['h', 'z']) Then
+    Result := 'L';
 End;
 
 Constructor TGeneralArchive.Init;
@@ -129,7 +127,7 @@ Begin
 
   If DosError <> 0 Then Exit;
 
-  Case Get_Arc_Type(_Name) of
+  Case GetArchiveType(_Name) of
     '?' : Exit;
     'A' : _Archive := New(PArjArchive, Init);
     'Z' : _Archive := New(PZipArchive, Init);

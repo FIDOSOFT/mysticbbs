@@ -1,81 +1,80 @@
-Unit aviewlzh;
+Unit AViewLZH;
 
 {$I M_OPS.PAS}
 
 Interface
 
-Uses      Dos,aview;
+Uses
+  Dos,
+  AView;
 
-Type      LFHeader=Record
-                     Headsize,Headchk          :byte;
-                     HeadID                    :packed Array[1..5] of char;
-                     Packsize,Origsize,Filetime:longint;
-                     Attr                      :word;
-                     Filename                  :string[12];
-                     f32                       :pathstr;
-                     dt                        :DateTime;
-                   end;
+Type
+  LFHeader = Record
+    HeadSize,
+    HeadChk   : Byte;
+    HeadID    : Packed Array[1..5] of Char;
+    PackSize,
+    OrigSize,
+    FileTime  : LongInt;
+    Attr      : Word;
+    FileName  : String[12];
+    F32       : PathStr;
+    DT        : DateTime;
+  End;
 
-
-type      PLzhArchive=^TLzhArchive;
-          TLzhArchive=object(TGeneralArchive)
-                        constructor Init;
-                        procedure FindFirst(var sr:ArcSearchRec);virtual;
-                        procedure FindNext(var sr:ArcSearchRec);virtual;
-                      private
-                        _FHdr:LFHeader;
-                        _SL:longint;
-                        procedure GetHeader(var sr:ArcSearchRec);
-                      end;
-
+  PLzhArchive = ^TLzhArchive;
+  TLzhArchive = Object(TGeneralArchive)
+    Constructor Init;
+    Procedure FindFirst (Var SR: ArcSearchRec); Virtual;
+    Procedure FindNext  (Var SR: ArcSearchRec); Virtual;
+  Private
+    _FHdr : LFHeader;
+    _SL   : LongInt;
+    Procedure GetHeader (Var SR: ArcSearchRec);
+  End;
 
 Implementation
 
+Constructor TLzhArchive.Init;
+Begin
+  _SL := 0;
+  FillChar (_FHdr,sizeof(_FHdr), 0);
+End;
 
-constructor TLzhArchive.Init;
-begin
-  _SL:=0;
-  FillChar(_FHdr,sizeof(_FHdr),0);
-end;
-
-
-procedure TLzhArchive.GetHeader(var sr:ArcSearchRec);
+Procedure TLzhArchive.GetHeader (Var SR: ArcSearchRec);
 Var
-  {$IFDEF MSDOS}
-  NR : Word;
-  {$ELSE}
   NR : LongInt;
-  {$ENDIF}
-begin
-  fillchar(sr,sizeof(sr),0);
-  seek(ArcFile,_SL);
-  if eof(ArcFile) then Exit;
-  blockread(ArcFile,_FHdr,sizeof(LFHeader),nr);
-  if _FHdr.headsize=0 then exit;
-  inc(_SL,_FHdr.headsize);
-  inc(_SL,2);
-  inc(_SL,_FHdr.packsize);
-  if _FHdr.headsize<>0 then
-    UnPackTime(_FHdr.FileTime,_FHdr.DT);
-  sr.Name:=_FHdr.FileName;
-  sr.Size:=_FHdr.OrigSize;
-  sr.Time:=_FHdr.FileTime;
-end;
+Begin
+  FillChar (SR, SizeOf(SR), 0);
+  Seek     (ArcFile, _SL);
 
+  If Eof(ArcFile) Then Exit;
 
-procedure TLzhArchive.FindFirst(var sr:ArcSearchRec);
-begin
-  _SL:=0;
-  GetHeader(sr);
-end;
+  BlockRead (ArcFile, _FHdr, SizeOf(LFHeader), NR);
 
+  If _FHdr.HeadSize = 0 Then Exit;
 
-procedure TLzhArchive.FindNext(var sr:ArcSearchRec);
-begin
-  GetHeader(sr);
-end;
+  Inc (_SL, _FHdr.HeadSize);
+  Inc (_SL, 2);
+  Inc (_SL, _FHdr.PackSize);
 
+  If _FHdr.HeadSize <> 0 Then
+    UnPackTime (_FHdr.FileTime, _FHdr.DT);
 
-end.
+  SR.Name := _FHdr.FileName;
+  SR.Size := _FHdr.OrigSize;
+  SR.Time := _FHdr.FileTime;
+End;
 
-{ CUT ----------------------------------------------------------- }
+Procedure TLzhArchive.FindFirst (Var SR: ArcSearchRec);
+Begin
+  _SL := 0;
+  GetHeader(SR);
+End;
+
+Procedure TLzhArchive.FindNext (Var SR: ArcSearchRec);
+Begin
+  GetHeader(SR);
+End;
+
+End.
