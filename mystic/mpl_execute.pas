@@ -1633,7 +1633,7 @@ Begin
             Store (TempStr, 256);
           End;
     57  : Begin
-            TempByte := DayOfWeek(CurDateDos);
+            TempByte := DayOfWeek(Param[1].L);
             Store (TempByte, 1);
           End;
     58  : Begin
@@ -1902,7 +1902,7 @@ Begin
             Store (TempBool, 1);
           End;
     542 : WriteXY (Param[1].B, Param[2].B, Param[3].B, Param[4].S);
-    543 : WriteXYPipe (Param[1].B, Param[2].B, Param[3].B, Param[4].B, Param[5].S);
+    543 : WriteXYPipe (Param[1].B, Param[2].B, Param[3].B, Param[4].I, Param[5].S);
   End;
 End;
 

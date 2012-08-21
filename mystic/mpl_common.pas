@@ -209,7 +209,7 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'datej2g',        {$ENDIF} 'liii',   iNone);    // 54
           AddProc    ({$IFDEF MPLPARSER} 'datevalid',      {$ENDIF} 's',      iString);  // 55
           AddProc    ({$IFDEF MPLPARSER} 'timestr',        {$ENDIF} 'lo',     iString);  // 56
-          AddProc    ({$IFDEF MPLPARSER} 'dayofweek',      {$ENDIF} '',       iByte);    // 57
+          AddProc    ({$IFDEF MPLPARSER} 'dayofweek',      {$ENDIF} 'l',      iByte);    // 57
           AddProc    ({$IFDEF MPLPARSER} 'daysago',        {$ENDIF} 'l',      iLongInt); // 58
           AddProc    ({$IFDEF MPLPARSER} 'justfile',       {$ENDIF} 's',      iString);  // 59
           AddProc    ({$IFDEF MPLPARSER} 'justfilename',   {$ENDIF} 's',      iString);  // 60
@@ -291,7 +291,7 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'isuser',         {$ENDIF} 's',      iBool);    // 540
           AddProc    ({$IFDEF MPLPARSER} 'getmbasestats',  {$ENDIF} 'lLLL',   iBool);    // 541
           AddProc    ({$IFDEF MPLPARSER} 'writexy',        {$ENDIF} 'bbbs',   iNone);    // 542
-          AddProc    ({$IFDEF MPLPARSER} 'writexypipe',    {$ENDIF} 'bbbbs',  iNone);    // 543
+          AddProc    ({$IFDEF MPLPARSER} 'writexypipe',    {$ENDIF} 'bbbis',  iNone);    // 543
 
 { END OF PROCEDURE DEFINITIONS }
 
