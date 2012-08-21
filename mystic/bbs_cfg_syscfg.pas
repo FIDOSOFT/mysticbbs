@@ -426,14 +426,15 @@ Begin
 
   Box.Header := ' Telnet Server ';
 
-  Box.Open (26, 9, 54, 16);
+  Box.Open (26, 9, 54, 17);
 
-  VerticalLine (46, 11, 14);
+  VerticalLine (46, 11, 15);
 
   Form.AddBol  ('U', ' Use Telnet Server',  27, 11, 48, 11, 19, 3, @Config.inetTNUse, Topic + 'Enable Telnet server');
   Form.AddByte ('N', ' Telnet Nodes',       32, 12, 48, 12, 14, 3, 1, 255, @Config.inetTNNodes, Topic + 'Max telnet nodes to allow');
   Form.AddWord ('P', ' Server Port',        33, 13, 48, 13, 13, 5, 0, 65535, @Config.inetTNPort, Topic + 'Telnet Server port');
   Form.AddByte ('D', ' Dupe IP Limit',      31, 14, 48, 14, 15, 3, 1, 255,   @Config.inetTNDupes, Topic + 'Max connections with same IP');
+  Form.AddBol  ('S', ' Start Hidden',       32, 15, 48, 15, 14, 3, @Config.inetTNHidden, Topic + 'Hide node windows (Windows)');
 
   Form.Execute;
   Form.Free;
