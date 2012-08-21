@@ -29,7 +29,7 @@ Begin
 
     Str := Session.io.GetInput(3, 3, 12, '');
 
-    If Str = '?' Then Show_Whos_Online Else
+    If Str = '?' Then WhosOnline Else
     If Str = 'Q' Then Exit Else Break;
   Until False;
 

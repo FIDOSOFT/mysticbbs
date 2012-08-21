@@ -13,18 +13,9 @@ Uses
   bbs_Common,
   bbs_Core;
 
-Procedure Print (S: String);
-Begin
-  {$IFNDEF UNIX}
-  If Not Session.LocalMode Then Session.io.BufAddStr(S);
-  {$ENDIF}
-
-  Screen.WriteStr(S);
-End;
-
 Procedure PrintLn (S: String);
 Begin
-  Print (S + #13#10);
+  Session.io.BufAddStr(S + #13#10);
 End;
 
 Function AnsiEditor (Var Lines: Integer; WrapPos: Byte; MaxLines: Integer; TEdit, Forced: Boolean; Var Subj: String) : Boolean;
@@ -70,7 +61,7 @@ Begin
   B := CurLine;
 
   Repeat
-    If B <= TotalLine Then Print(Session.Msgs.MsgText[B]);
+    If B <= TotalLine Then Session.io.BufAddStr(Session.Msgs.MsgText[B]);
     If B <= TotalLine + 1 Then Begin
       Session.io.AnsiClrEOL;
       PrintLn('');
@@ -101,7 +92,7 @@ Begin
   A := WinStart;
 
   Repeat
-    If B <= TotalLine Then Print(Session.Msgs.MsgText[B]);
+    If B <= TotalLine Then Session.io.BufAddStr(Session.Msgs.MsgText[B]);
     Session.io.AnsiClrEOL;
     PrintLn('');
     Inc (A);
@@ -208,7 +199,7 @@ Begin
 
     Repeat
       If (CurY + (A - CurLine) <= WinEnd) and (A <= TotalLine) Then Begin
-        Print(Session.Msgs.MsgText[A]);
+        Session.io.BufAddStr(Session.Msgs.MsgText[A]);
         Session.io.AnsiClrEOL;
         PrintLn('');
       End Else
@@ -291,7 +282,7 @@ Begin
     Delete (Session.Msgs.MsgText[CurLine], CurX, 1);
 
     If CurX < Length(Session.Msgs.MsgText[CurLine]) + 1 Then Begin
-      Print (Copy(Session.Msgs.MsgText[CurLine], CurX, Length(Session.Msgs.MsgText[CurLine])) + ' ');
+      Session.io.BufAddStr (Copy(Session.Msgs.MsgText[CurLine], CurX, Length(Session.Msgs.MsgText[CurLine])) + ' ');
       UpdatePosition;
     End;
   End Else
@@ -391,13 +382,13 @@ Procedure AddChar (Ch: Char);
 Begin
   If InsertMode Then Begin
     Insert (Ch, Session.Msgs.MsgText[Curline], CurX);
-    Print  (Copy(Session.Msgs.MsgText[CurLine], CurX, Length(Session.Msgs.MsgText[CurLine])));
+    Session.io.BufAddStr  (Copy(Session.Msgs.MsgText[CurLine], CurX, Length(Session.Msgs.MsgText[CurLine])));
   End Else Begin
     If CurX > Length(Session.Msgs.MsgText[CurLine]) Then
       Inc(Session.Msgs.MsgText[CurLine][0]);
 
     Session.Msgs.MsgText[CurLine][CurX] := Ch;
-    Print (Ch);
+    Session.io.BufAddStr (Ch);
   End;
 
   Inc (CurX);
@@ -412,7 +403,7 @@ Begin
   Session.io.AnsiColor  (Session.io.ScreenInfo[3].A);
   Session.io.AnsiGotoXY (Session.io.ScreenInfo[3].X, Session.io.ScreenInfo[3].Y);
 
-  If InsertMode Then Print('INS') else Print('OVR'); { ++lang }
+  If InsertMode Then Session.io.BufAddStr('INS') else Session.io.BufAddStr('OVR'); { ++lang }
 
   Session.io.AnsiGotoXY (CurX, CurY);
   Session.io.AnsiColor  (WinText);
@@ -520,7 +511,7 @@ Var
     Else
       Session.io.AnsiColor (Session.io.ScreenInfo[2].A);
 
-    Print (strPadR(QText[QuoteTopPage + QuoteCurLine], 79, ' '));
+    Session.io.BufAddStr (strPadR(QText[QuoteTopPage + QuoteCurLine], 79, ' '));
   End;
 
   Procedure UpdateWindow;
@@ -531,7 +522,7 @@ Var
     Session.io.AnsiColor  (Session.io.ScreenInfo[2].A);
 
     For Count := QuoteTopPage to QuoteTopPage + 5 Do Begin
-      If Count <= QuoteLines Then Print (QText[Count]);
+      If Count <= QuoteLines Then Session.io.BufAddStr (QText[Count]);
 
       Session.io.AnsiClrEOL;
 
@@ -805,7 +796,7 @@ Begin
         #82 : ToggleInsert(True);
         #83 : If CurX <= Length(Session.Msgs.MsgText[CurLine]) Then Begin
                 Delete (Session.Msgs.MsgText[CurLine], CurX, 1);
-                Print (Copy(Session.Msgs.MsgText[CurLine], CurX, Length(Session.Msgs.MsgText[CurLine])) + ' ');
+                Session.io.BufAddStr (Copy(Session.Msgs.MsgText[CurLine], CurX, Length(Session.Msgs.MsgText[CurLine])) + ' ');
                 UpdatePosition;
               End Else
               If CurLine < TotalLine Then

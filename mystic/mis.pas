@@ -419,6 +419,7 @@ Begin
 End;
 
 {$IFDEF UNIX}
+(*
 Procedure Snoop;
 Begin
   If FocusCurrent <> FocusTelnet Then Exit;
@@ -453,7 +454,7 @@ Begin
     SwitchFocus;
   End;
 End;
-
+*)
 Procedure DaemonEventSignal (Sig : LongInt); cdecl;
 Begin
   Case Sig of
@@ -592,7 +593,7 @@ Begin
                       End;
               End;
         #09 : SwitchFocus;
-        #13 : {$IFDEF UNIX}Snoop{$ENDIF};
+//        #13 : {$IFDEF UNIX}Snoop{$ENDIF};
         #27 : Break;
       	#32 : LocalLogin;
       End;

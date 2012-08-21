@@ -40,6 +40,7 @@ Uses
   m_DateTime,
   m_Output,
   m_Input,
+  m_Pipe_Disk,
   bbs_Common,
   bbs_Core,
   bbs_NodeInfo,
@@ -232,6 +233,8 @@ Begin
   Randomize;
 
   Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
+
+  Session.Pipe := TPipeDisk.Create(Config.DataPath, False, Session.NodeNum);
 
   {$I-}
   MkDir (Config.SystemPath + 'temp' + strI2S(Session.NodeNum));

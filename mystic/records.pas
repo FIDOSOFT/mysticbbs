@@ -11,6 +11,13 @@
 
 {$PACKRECORDS 1}
 
+// Add minutes to history
+// Change file listing size to Int64
+// Extend msg and file base names to 70 chars?
+// local qwk download/upload?
+// rewrite event system...
+//   event types, exec commands, weekly/monthly option?
+
 Const
   mysSoftwareID  = 'Mystic';                                    // no idea
   mysCopyYear    = '1997-2012';                                 // its been a long time!
@@ -259,7 +266,8 @@ Type
     inetNNTPDupes   : Byte;
     inetNNTPTimeOut : Word;
  // UNSORTED
-    Reserved        : Array[1..846] of Char;
+    inetTNHidden    : Boolean;
+    Reserved        : Array[1..845] of Char;
   End;
 
 Const
@@ -769,5 +777,8 @@ Type
     { 8  = user 2 user page }
     { 9  = user 2 user forced }
     { 10 = chat accepted }
+    { 11 = start pipe session }
+    { 12 = end pipe session }
+    { 13 = terminte node }
     Room     : Byte;  { Chat room number. 0 = chat broadcast }
   End;

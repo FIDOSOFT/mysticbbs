@@ -450,7 +450,7 @@ Begin
       End Else
       If Str2 = '/WHO' Then Begin
         Session.io.AnsiClear;
-        Show_Whos_Online;
+        WhosOnline;
         Chat_Template;
         FullReDraw;
       End Else

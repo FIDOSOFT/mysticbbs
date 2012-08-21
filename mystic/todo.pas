@@ -19,6 +19,8 @@ BUGS AND POSSIBLE ISSUES
   FPC BUG?  DirAttr is suspect in MPL is it 1 byte or 4 in size?
 ! View archive not working if its external view? [Griffin]
 ! Test MIS blocking features or just rewrite MIS completely.
+! Test midnight rollovers for time (flag for user to be immune to timecheck)
+! Elasped time will need to be recalculated based on flag above ^^
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================

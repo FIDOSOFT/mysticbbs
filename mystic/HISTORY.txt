@@ -4689,4 +4689,9 @@
    list display to not get redrawn after.
 
  ! Duplicate IP check in MIS was not working properly.  It is now.
- 
+
+ + MIS telnet in Windows now has an option to hide node windows.
+
+ + Added a new utility called NodeSpy.  This utility will allow you to see
+   who is online from the command line.  It will also allow you to snoop/spy
+   on a node, kick people from a node, and engage in chat with the user.

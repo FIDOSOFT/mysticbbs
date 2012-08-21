@@ -1,5 +1,12 @@
 Program NodeSpy;
 
+// page chat
+// user editor
+// split chat
+// auto snoop
+// local login
+// terminal mode
+
 {$I M_OPS.PAS}
 
 Uses
@@ -22,9 +29,21 @@ Uses
 
 Const
   HiddenNode  = 255;
-  UpdateTimer = 500;
+  UpdateNode  = 500;
+  UpdateStats = 6000 * 10;
+
+  AutoSnoop : Boolean = True;
+
+Type
+  PNodeInfo = ^TNodeInfo;
+  TNodeInfo = Record
+    Node   : Byte;
+    User   : String[30];
+    Action : String[50];
+  End;
 
 Var
+  NodeInfo   : Array[1..255] of PNodeInfo;
   ChatFile   : File of ChatRec;
   Chat       : ChatRec;
   ConfigFile : File of RecConfig;
@@ -34,6 +53,75 @@ Var
   BasePath   : String;
   Screen     : TOutput;
   Keyboard   : TInput;
+
+{$I NODESPY_ANSI.PAS}
+
+Procedure ApplicationShutdown;
+Var
+  Count : Byte;
+Begin
+  For Count := Config.inetTNNodes DownTo 1 Do
+    If Assigned(NodeInfo[Count]) Then
+      Dispose(NodeInfo[Count]);
+
+  Keyboard.Free;
+  Screen.Free;
+End;
+
+Procedure ApplicationInit;
+Var
+{$IFDEF UNIX}
+  Info : Stat;
+{$ENDIF}
+  Count : Byte;
+Begin
+  {$IFDEF UNIX}
+  If fpStat('nodespy', Info) = 0 Then Begin
+    fpSetGID (Info.st_GID);
+    fpSetUID (Info.st_UID);
+  End;
+  {$ENDIF}
+
+  ExitProc := @ApplicationShutdown;
+  Screen   := TOutput.Create(True);
+  Keyboard := TInput.Create;
+
+  Assign (ConfigFile, 'mystic.dat');
+  Reset  (ConfigFile);
+
+  If IoResult <> 0 Then Begin
+    BasePath := GetENV('mysticbbs');
+
+    If BasePath <> '' Then BasePath := DirSlash(BasePath);
+
+    Assign (ConfigFile, BasePath + 'mystic.dat');
+    Reset  (ConfigFile);
+
+    If IoResult <> 0 Then Begin
+      Screen.WriteLine ('ERROR: Unable to read MYSTIC.DAT' + #13#10);
+      Screen.WriteLine ('MYSTIC.DAT must exist in the same directory as NodeSpy, or in the');
+      Screen.WriteLine ('path defined by the MYSTICBBS environment variable.');
+
+      Halt (1);
+    End;
+  End;
+
+  Read  (ConfigFile, Config);
+  Close (ConfigFile);
+
+  If Config.DataChanged <> mysDataChanged Then Begin
+    Screen.WriteLine ('ERROR: NodeSpy has detected a version mismatch' + #13#10);
+    Screen.WriteLine ('NodeSpy or another BBS utility is an older incompatible version.  Make');
+    Screen.WriteLine ('sure you have upgraded properly!');
+
+    Halt (1);
+  End;
+
+  DirCreate(Config.SystemPath + 'temp' + strI2S(HiddenNode));
+
+  For Count := 1 to Config.inetTNNodes Do
+    New (NodeInfo[Count]);
+End;
 
 Function ShowMsgBox (BoxType: Byte; Str: String) : Boolean;
 Var
@@ -119,6 +207,7 @@ Begin
   MsgBox.Free;
 
   Screen.CursorXY (SavedX, SavedY);
+
   Screen.TextAttr := SavedA;
 End;
 
@@ -277,8 +366,8 @@ Begin
   Screen.TextAttr := 7;
   Screen.ClearScreen;
 
-  Screen.WriteXY  (1, 1, 31, strRep(' ', 79));
-  Screen.WriteXY  (2, 1, 31, 'Chat mode engaged');
+  Screen.WriteXY  ( 1, 1, 31, strRep(' ', 79));
+  Screen.WriteXY  ( 2, 1, 31, 'Chat mode engaged');
   Screen.WriteXY  (71, 1, 31, 'ESC/Quit');
   Screen.CursorXY (1, 3);
 
@@ -355,6 +444,7 @@ Begin
   Erase(fIn);
 
   Screen.TextAttr := 7;
+
   Screen.ClearScreen;
 End;
 
@@ -378,43 +468,42 @@ Var
       Screen.WriteXY   ( 1, 25, Config.StatusColor1, strRep(' ', 79));
       Screen.WriteXY   ( 2, 25, Config.StatusColor1, 'User');
       Screen.WriteXY   ( 7, 25, Config.StatusColor2, Chat.Name);
-      Screen.WriteXY   (56, 25, Config.StatusColor3, 'ALT: C)hat K)ick e(X)it');
+      Screen.WriteXY   (54, 25, Config.StatusColor3, 'ALT (C)hat (K)ick e(X)it');
       Screen.SetWindow ( 1,  1, 80, 24, True);
 
       Screen.CursorXY (SX, SY);
+
       Screen.TextAttr := SA;
     End;
   End;
 
 Begin
-  WriteLn;
-  WriteLn('Requesting snoop session for node ', Node, '...');
-  WriteLn;
+  GetChatRecord(Node, Chat);
+
+  If Not Chat.Active Then Begin
+    ShowMsgBox(0, 'Node ' + strI2S(Node) + ' is not in use');
+    Exit;
+  End;
+
+  ShowMsgBox (3, 'Requesting snoop session for node ' + strI2S(Node));
 
   SendNodeMessage(Node, 11);
 
   Pipe := TPipeDisk.Create(Config.DataPath, True, Node);
 
   If Not Pipe.ConnectPipe(1500) Then Begin
-    WriteLn('NodeSpy was not able to establish a snoop session.  Sessions');
-    WriteLn('cannot be created if a user is in a door or a file transfer.');
-
+    ShowMsgBox (0, 'Unable to establish a session.  Try again');
     Pipe.Free;
-
     Exit;
   End;
 
-  WriteLn('Connection established');
+  Term := TTermAnsi.Create(Screen);
 
-  Keyboard := TInput.Create;
-  Screen   := TOutput.Create(True);
-  Term     := TTermAnsi.Create(Screen);
-
-  Screen.SetWindowTitle('Snooping node ' + strI2S(Node));
+  Screen.SetWindowTitle('[NodeSpy] Snooping ' + strI2S(Node));
 
   DrawStatus;
 
-  Update := TimerSet(UpdateTimer);
+  Update := TimerSet(UpdateNode);
 
   While Pipe.Connected Do Begin
     Pipe.ReadFromPipe(Buffer, SizeOf(Buffer), BufRead);
@@ -443,7 +532,7 @@ Begin
 
       DrawStatus;
 
-      Update := TimerSet(UpdateTimer);
+      Update := TimerSet(UpdateNode);
     End;
   End;
 
@@ -457,88 +546,219 @@ Begin
   Pipe.Disconnect;
   Pipe.Free;
   Term.Free;
-  Screen.Free;
-
-  WriteLn;
-  WriteLn;
-  WriteLn ('Session closed');
 End;
 
-Procedure ShowWhosOnline;
+Procedure UpdateOnlineStatus;
 Var
-  Count : Word;
+  Count : LongInt;
 Begin
-  WriteLn;
-  WriteLn('###   UserName                   Action');
-  WriteLn(strRep('=', 79));
-
-  For Count := 1 to Config.INetTNNodes Do Begin
-    If GetChatRecord(Count, Chat) Then Begin
-      WriteLn (strPadL(strI2S(Count), 3, '0') + '   ' +
-               strPadR(Chat.Name, 25, ' ') + '  ' +
-               strPadR(Chat.Action, 45, ' '));
-    End Else
-      WriteLn (strPadL(strI2S(Count), 3, '0') + '   ' +
-               strPadR('Waiting', 25, ' ') + '  ' +
-               strPadR('Waiting', 45, ' '));
-  End;
-
-  WriteLn (strRep('=', 79));
-  WriteLn ('Execute NodeSpy [node number] to spy on a node');
+  For Count := 1 to Config.inetTNNodes Do
+    If GetChatRecord(Count, Chat) and (Chat.Active) Then Begin
+      NodeInfo[Count]^.Node   := Count;
+      NodeInfo[Count]^.User   := Chat.Name;
+      NodeInfo[Count]^.Action := Chat.Action;
+    End Else Begin
+      NodeInfo[Count]^.Node   := Count;
+      NodeInfo[Count]^.User   := 'Waiting';
+      NodeInfo[Count]^.Action := 'Waiting';
+    End;
 End;
 
+Procedure MainMenu;
 Var
-  NodeNum : Byte;
-  {$IFDEF UNIX}
-  Info    : Stat;
-  {$ENDIF}
-Begin
-  {$IFDEF UNIX}
-  If fpStat('nodespy', Info) = 0 Then Begin
-    fpSetGID (Info.st_GID);
-    fpSetUID (Info.st_UID);
+  StatTotalDays      : LongInt = 0;
+  StatTodayCalls     : LongInt = 0;
+  StatTotalCalls     : LongInt = 0;
+  StatTodayNewUsers  : LongInt = 0;
+  StatTotalNewUsers  : LongInt = 0;
+  StatTodayPosts     : LongInt = 0;
+  StatTotalPosts     : LongInt = 0;
+  StatTodayEmail     : LongInt = 0;
+  StatTotalEmail     : LongInt = 0;
+  StatTodayDownloads : LongInt = 0;
+  StatTotalDownloads : LongInt = 0;
+  StatTodayUploads   : LongInt = 0;
+  StatTotalUploads   : LongInt = 0;
+
+  NodeTimer : LongInt;
+  TopPage   : SmallInt = 1;
+  CurNode   : SmallInt = 1;
+
+  Procedure DrawStats;
+  Begin
+    Screen.WriteXY (12, 18, 9, strPadL(strI2S(StatTodayCalls), 6, ' '));
+    Screen.WriteXY (12, 19, 9, strPadL(strI2S(StatTodayNewUsers), 6, ' '));
+    Screen.WriteXY (12, 20, 9, strPadL(strI2S(StatTodayPosts), 6, ' '));
+    Screen.WriteXY (12, 21, 9, strPadL(strI2S(StatTodayEmail), 6, ' '));
+    Screen.WriteXY (12, 22, 9, strPadL(strI2S(StatTodayDownloads), 6, ' '));
+    Screen.WriteXY (12, 23, 9, strPadL(strI2S(StatTodayUploads), 6, ' '));
+
+    Screen.WriteXY (19, 18, 9, strPadL(strComma(StatTotalCalls), 12, ' '));
+    Screen.WriteXY (19, 19, 9, strPadL(strComma(StatTotalNewUsers), 12, ' '));
+    Screen.WriteXY (19, 20, 9, strPadL(strComma(StatTotalPosts), 12, ' '));
+    Screen.WriteXY (19, 21, 9, strPadL(strComma(StatTotalEmail), 12, ' '));
+    Screen.WriteXY (19, 22, 9, strPadL(strComma(StatTotalDownloads), 12, ' '));
+    Screen.WriteXY (19, 23, 9, strPadL(strComma(StatTotalUploads), 12, ' '));
   End;
-  {$ENDIF}
 
-  Assign (ConfigFile, 'mystic.dat');
-  Reset  (ConfigFile);
+  Procedure UpdateStats;
+  Var
+    HistFile : File of RecHistory;
+    Hist     : RecHistory;
+  Begin
+    FileMode := 66;
 
-  If IoResult <> 0 Then Begin
-    BasePath := GetENV('mysticbbs');
+    Assign (HistFile, Config.DataPath + 'history.dat');
+    Reset  (HistFile);
 
-    If BasePath <> '' Then BasePath := DirSlash(BasePath);
+    If IoResult <> 0 Then Exit;
 
-    Assign (ConfigFile, BasePath + 'mystic.dat');
-    Reset  (ConfigFile);
+    StatTotalDays := 0;
 
-    If IoResult <> 0 Then Begin
-      WriteLn ('ERROR: Unable to read MYSTIC.DAT');
-      WriteLn;
-      WriteLn ('MYSTIC.DAT must exist in the same directory as NodeSpy, or in the');
-      WriteLn ('path defined by the MYSTICBBS environment variable.');
-      Halt    (1);
+    While Not Eof(HistFile) Do Begin
+      Read (HistFile, Hist);
+
+      Inc (StatTotalDays);
+
+      Inc (StatTotalCalls, Hist.Calls);
+      Inc (StatTotalNewUsers, Hist.NewUsers);
+      Inc (StatTotalDownloads, Hist.Downloads);
+      Inc (StatTotalPosts, Hist.Posts);
+      Inc (StatTotalEmail, Hist.Emails);
+      Inc (StatTotalUploads, Hist.Uploads);
+
+      If DateDos2Str(Hist.Date, 1) = DateDos2Str(CurDateDos, 1) Then Begin
+        Inc (StatTodayCalls, Hist.Calls);
+        Inc (StatTodayNewUsers, Hist.NewUsers);
+        Inc (StatTodayDownloads, Hist.Downloads);
+        Inc (StatTodayPosts, Hist.Posts);
+        Inc (StatTodayEmail, Hist.Emails);
+        Inc (StatTodayUploads, Hist.Uploads);
+      End;
+    End;
+
+    Close (HistFile);
+
+    DrawStats;
+  End;
+
+  Procedure DrawNodes;
+  Var
+    CN    : Byte;
+    Count : Byte;
+    Attr  : Byte;
+  Begin
+    For Count := 1 to 5 Do Begin
+      CN := Count + TopPage - 1;
+
+      If CN > Config.inetTNNodes Then Break;
+
+      If CurNode = CN Then Attr := 31 Else Attr := 7;
+
+      Screen.WriteXY (1, 10 + Count, Attr,
+                       '  ' +
+                       strPadL(strI2S(NodeInfo[CN]^.Node), 3, ' ') + '    ' +
+                       strPadR(NodeInfo[CN]^.User, 25, ' ') + ' ' +
+                       strPadR(NodeInfo[CN]^.Action, 43, ' ') + ' '
+                     );
+
     End;
   End;
 
-  Read  (ConfigFile, Config);
-  Close (ConfigFile);
+Var
+  Count : Byte;
+Begin
+  DrawNodeSpyScreen;
+  UpdateStats;
+  UpdateOnlineStatus;
 
-  If Config.DataChanged <> mysDataChanged Then Begin
-    WriteLn ('ERROR: NodeSpy has detected a version mismatch');
-    WriteLn;
-    WriteLn ('NodeSpy or another BBS utility is an older incompatible version.  Make');
-    WriteLn ('sure you have upgraded properly!');
-    Halt (1);
-  End;
+  DrawNodes;
 
-  DirCreate(Config.SystemPath + 'temp' + strI2S(HiddenNode));
+  NodeTimer := TimerSet(UpdateNode);
 
-  If ParamCount < 1 Then
-    ShowWhosOnline
-  Else Begin
-    NodeNum := strS2I(ParamStr(1));
+  Repeat
+    If Keyboard.KeyWait(1000) Then
+      Case Keyboard.ReadKey of
+        #00 : Case Keyboard.ReadKey of
+                #71 : Begin
+                        TopPage := 1;
+                        CurNode := 1;
 
-    If (NodeNum > 0) and (NodeNum <= Config.INetTNNodes) Then
-      SnoopNode(NodeNum);
-  End;
+                        DrawNodes;
+                      End;
+                #72 : If CurNode > 1 Then Begin
+                        Dec (CurNode);
+
+                        If CurNode < TopPage Then Dec(TopPage);
+
+                        DrawNodes;
+                      End;
+                #73,
+                #75 : Begin
+                        Dec (TopPage, 5);
+                        Dec (CurNode, 5);
+
+                        If TopPage < 1 Then TopPage := 1;
+                        If CurNode < 1 Then CurNode := 1;
+
+                        DrawNodes;
+                      End;
+                #77,
+                #81 : Begin
+                        Inc (TopPage, 5);
+                        Inc (CurNode, 5);
+
+                        If TopPage + 4 > Config.inetTNNodes Then TopPage := Config.inetTNNodes - 4;
+                        If CurNode > Config.inetTNNodes Then CurNode := Config.inetTNNodes;
+
+                        If TopPage < 1 Then TopPage := 1;
+
+                        DrawNodes;
+                      End;
+                #79 : Begin
+                        TopPage := Config.inetTNNodes - 4;
+                        CurNode := Config.inetTNNodes;
+
+                        If Toppage < 1 Then TopPage := 1;
+
+                        DrawNodes;
+                      End;
+                #80 : If CurNode < Config.inetTNNodes Then Begin
+                        Inc (CurNode);
+                        If TopPage + 4 < CurNode Then Inc(TopPage);
+                        DrawNodes;
+                      End;
+              End;
+        #13 : Begin
+                SnoopNode(NodeInfo[CurNode]^.Node);
+                DrawNodeSpyScreen;
+                UpdateOnlineStatus;
+                DrawNodes;
+                DrawStats;
+              End;
+        #27 : Break;
+      End;
+
+    If TimerUp(NodeTimer) Then Begin
+      UpdateOnlineStatus;
+      DrawNodes;
+
+      NodeTimer := TimerSet(UpdateNode);
+
+      For Count := 1 to Config.inetTNNodes Do
+        If NodeInfo[Count]^.User <> 'Waiting' Then Begin
+          SnoopNode(NodeInfo[Count]^.Node);
+          DrawNodeSpyScreen;
+          UpdateOnlineStatus;
+          DrawNodes;
+          DrawStats;
+        End;
+    End;
+  Until False;
+End;
+
+Begin
+  ApplicationInit;
+
+  MainMenu;
 End.

@@ -31,7 +31,7 @@ Const
      #1,'³',#25,'K','³', #8,'°',#24,'°', #1,'³',#25,'K','³', #8,'°',#24,
     '°', #1,'À',#26,'K','Ä','Ù', #8,'°',#24,#26,'O','°',#24,#23,' ', #1,
     'T','A','B','/','S','w','i','t','c','h',' ','W','i','n','d','o','w',
-    #25, #2,'E','N','T','E','R','/','S','n','o','o','p',#25, #2,'S','P',
+    #25, #2,' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',#25, #2,'S','P',
     'A','C','E','/','L','o','c','a','l',#25, #2,'A','L','T','-','K','/',
     'K','i','l','l',' ','U','s','e','r',#25, #2,'E','S','C','/','S','h',
     'u','t','d','o','w','n',' ',#24);
@@ -39,10 +39,6 @@ Begin
   Console.LoadScreenImage(ImageData, ImageData_Length, ImageData_Width, 1, 1);
 
   //Console.WriteXY (25, 1, 113, strPadC(mysVersionText, 30, ' '));
-  
-  {$IFDEF UNIX}
-    Console.WriteXY (1, 25, 113, strPadC('ENTER/Snoop      SPACE/Local TELNET     TAB/Switch     ESC/Shutdown', 79, ' '));
-  {$ELSE}
-    Console.WriteXY (1, 25, 113, strPadC('SPACE/Local TELNET     TAB/Switch     ESC/Shutdown', 79, ' '));
-  {$ENDIF}
+
+  Console.WriteXY (1, 25, 113, strPadC('SPACE/Local TELNET     TAB/Switch     ESC/Shutdown', 79, ' '));
 End;

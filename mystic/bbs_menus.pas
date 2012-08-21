@@ -275,7 +275,7 @@ Begin
             'C' : Node_Chat;
             'P' : PageUserForChat;
             'S' : Send_Node_Message (3, CmdData, 0);
-            'W' : Show_Whos_Online;
+            'W' : WhosOnline;
           End;
     'O' : Case Cmd[2] of
             'S' : Session.Msgs.ToggleNewScan(True);

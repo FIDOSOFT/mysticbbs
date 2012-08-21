@@ -28,7 +28,7 @@ Function CreateTelnet (Owner: TServerManager; Config: RecConfig; ND: TNodeData; 
 Type
   TTelnetServer = Class(TServerClient)
     ND       : TNodeData;
-    Snooping : Boolean;
+//    Snooping : Boolean;
     Constructor Create (Owner: TServerManager; ND: TNodeData; CliSock: TIOSocket);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
@@ -46,7 +46,7 @@ Begin
   Inherited Create(Owner, CliSock);
 
   Self.ND  := ND;
-  Snooping := False;
+//  Snooping := False;
 End;
 
 {$IFDEF WINDOWS}
@@ -84,8 +84,12 @@ Begin
   FillChar(SI, SizeOf(SI), 0);
   FillChar(PI, SizeOf(PI), 0);
 
-  SI.dwFlags     := STARTF_USESHOWWINDOW;
-  SI.wShowWindow := SW_SHOWMINNOACTIVE;
+  SI.dwFlags := STARTF_USESHOWWINDOW;
+
+  If bbsConfig.inetTNHidden Then
+    SI.wShowWindow := SW_HIDE
+  Else
+    SI.wShowWindow := SW_SHOWMINNOACTIVE;
 
   If CreateProcess(NIL, PChar(@Cmd[1]),
     NIL, NIL, True, Create_New_Console + Normal_Priority_Class, NIL, NIL, SI, PI) Then
@@ -140,8 +144,8 @@ Begin
         bRead := Proc.Output.Read(Buffer, BufferSize);
         Client.WriteBufEscaped (Buffer, bRead);
 
-        If Snooping Then
-          Term.ProcessBuf(Buffer[0], bRead);
+//        If Snooping Then
+//          Term.ProcessBuf(Buffer[0], bRead);
       End;
     End Else
     If Client.DataWaiting Then Begin

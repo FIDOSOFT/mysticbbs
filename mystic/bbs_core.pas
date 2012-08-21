@@ -11,6 +11,7 @@ Uses
   {$ENDIF}
   m_FileIO,
   m_Strings,
+  m_Pipe_Disk,
   m_DateTime,
   BBS_Common,
   BBS_IO,
@@ -26,13 +27,14 @@ Const
 Type
   TBBSCore = Class
     {$IFNDEF UNIX}
-      Client        : TIOBase;
+      Client      : TIOBase;
     {$ENDIF}
     User          : TBBSUser;
     Msgs          : TMsgBase;
     FileBase      : TFileBase;
     Menu          : TMenuEngine;
     IO            : TBBSIO;
+    Pipe          : TPipeDisk;
     EventFile     : File of EventRec;
     ThemeFile     : File of RecTheme;
     VoteFile      : File of VoteRec;
@@ -142,6 +144,7 @@ End;
 
 Destructor TBBSCore.Destroy;
 Begin
+  Pipe.Free;
   Msgs.Free;
   FileBase.Free;
   Menu.Free;
@@ -161,7 +164,7 @@ Procedure TBBSCore.UpdateHistory;
 Var
   History : RecHistory;
 Begin
-  If User.ThisUser.Flags AND UserNoHistory = 0 Then Exit;
+  If User.ThisUser.Flags AND UserNoHistory <> 0 Then Exit;
 
   Assign  (HistoryFile, Config.DataPath + 'history.dat');
   ioReset (HistoryFile, SizeOf(RecHistory), fmRWDN);

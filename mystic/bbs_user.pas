@@ -1081,7 +1081,7 @@ Begin
     ThisUser.CallsToday := 0;
     ThisUser.DLsToday   := 0;
     ThisUser.DLkToday   := 0;
-    ThisUser.TimeLeft   := Security.Time
+    ThisUser.TimeLeft   := Security.Time;
   End;
 
   If Not Session.LocalMode And (ThisUser.Flags AND UserNoLastCall = 0) Then Begin
@@ -1138,8 +1138,6 @@ Begin
   If (Session.TimeOffset = 0) or (Session.TimeOffset > ThisUser.TimeLeft) Then
     Session.SetTimeLeft (ThisUser.TimeLeft);
 
-    // check account expired -- DONE
-    // check password change -- DONE
     // check auto-upgrades posts/calls/downloads/uploads/etc
 
   If DateValid(Session.User.ThisUser.Expires) Then

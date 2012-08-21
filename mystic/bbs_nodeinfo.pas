@@ -9,7 +9,7 @@ Uses
 
 Function  GetChatRecord     (Node: Byte; Var Chat: ChatRec) : Boolean;
 Function  IsUserOnline      (UserName: String) : Word;
-Procedure Show_Whos_Online;
+Procedure WhosOnline;
 Procedure Send_Node_Message (MsgType: Byte; Data: String; Room: Byte);
 Function  CheckNodeMessages : Boolean;
 Procedure Set_Node_Action   (Action: String);
@@ -87,7 +87,7 @@ Begin
   {$ENDIF}
 End;
 
-Procedure Show_Whos_Online;
+Procedure WhosOnline;
 Var
   TChat : ChatRec;
   Count : Word;
@@ -97,18 +97,11 @@ Begin
   For Count := 1 to Config.INetTNNodes Do Begin
     Session.io.PromptInfo[1] := strI2S(Count);
 
-    Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Count) + '.dat');
-
-    {$I-} Reset(ChatFile); {$I+}
-
-    If IoResult <> 0 Then Begin
+    If Not GetChatRecord (Count, TChat) Then Begin
       Session.io.OutFullLn (Session.GetPrompt(268));
 
       Continue;
     End;
-
-    Read  (ChatFile, TChat);
-    Close (ChatFile);
 
     If TChat.Active and ((Not TChat.Invisible) or (TChat.Invisible and Session.User.Access(Config.AcsSeeInvis))) Then Begin
       Session.io.PromptInfo[2] := TChat.Name;
@@ -141,7 +134,7 @@ Begin
     Repeat
       Session.io.OutFull (Session.GetPrompt(146));
       Str := Session.io.GetInput(3, 3, 12, '');
-      If Str = '?' Then Show_Whos_Online Else Break;
+      If Str = '?' Then WhosOnline Else Break;
     Until False;
 
     ToNode := strS2I(Str);
@@ -230,8 +223,7 @@ Var
   MsgFile   : File of NodeMsgRec;
   SplitChat : Boolean;
 Begin
-  Result   := False;
-  FileMode := 66;
+  Result := False;
 
   Assign (MsgFile, Session.TempPath + 'chat.tmp');
 
@@ -276,6 +268,12 @@ Begin
           OpenUserChat(SplitChat, True, Msg.FromNode);
         End;
     10: OpenUserChat(SplitChat, False, Msg.FromNode);
+    11: Begin
+          Session.Pipe.CreatePipe;
+          Session.Pipe.WaitForPipe(300);
+        End;
+    12: If Session.Pipe.Connected Then Session.Pipe.Disconnect;
+    13: Halt(0);
   End;
 
   If Result And (Msg.MsgType = 3) Then

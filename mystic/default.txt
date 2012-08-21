@@ -373,7 +373,7 @@
 ; &1 = File base name
 203 |CR |11|&1 will NOT be scanned in new file scan!|CR
 ; &1 = File base name
-204 |CR| 11|&1 will be scanned in new file scan!|CR
+204 |CR |11|&1 will be scanned in new file scan!|CR
 ; Displayed if file already exists when user trys to upload.
 205 File already exists.
 ; Displayed before running uploads processor
@@ -938,11 +938,11 @@
 ; User2User sending chat request &1=User &2=Node
 482 |CR|15Sending chat request to |&1...|DE|DE|CR
 ; User2User chat mode starting
-483 |CL|09|17 ° |15Chat mode engaged.|$X70 ESC/Quit |16|CR
+483 |16|CL|09|17 ° |15Chat mode engaged.|$X70 ESC/Quit |16|CR
 ; User2User chat mode ended
-484 |CL|09|17 ° |15Chat mode end.|$X79 |16|DE|DE
+484 |16|CL|09|17 ° |15Chat mode end.|$X79 |16|DE|DE
 ; User2User accept chat page request? &1=user &2=Node
-485 |CL|15|&1 is requesting private user chat.  Accept? |11
+485 |16|CL|15|&1 is requesting private user chat.  Accept? |11
 ; MsgBase quickscan header prompt
 486 |CR|12Starting Quick Scan|CR
 ; MsgBase quickscan Scanning prompt

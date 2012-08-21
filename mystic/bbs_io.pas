@@ -56,11 +56,11 @@ Type
     InputPos       : Byte;
     GetKeyCallBack : TGetKeyCallBack;
     LastSecond     : LongInt;
+    OutBuffer      : Array[0..TBBSIOBufferSize] of Char;
+    OutBufPos      : SmallInt;
 
     {$IFDEF WINDOWS}
-    OutBuffer    : Array[0..TBBSIOBufferSize] of Char;
-    OutBufPos    : SmallInt;
-    SocketEvent  : THandle;
+      SocketEvent : THandle;
     {$ENDIF}
 
     Constructor Create (Var Owner: Pointer);
@@ -143,11 +143,11 @@ Begin
   LastMCIValue  := '';
   InputPos      := 0;
 
+  FillChar(OutBuffer, SizeOf(OutBuffer), 0);
+
+  OutBufPos := 0;
+
   {$IFDEF WINDOWS}
-    FillChar(OutBuffer, SizeOf(OutBuffer), 0);
-
-    OutBufPos := 0;
-
     If Not TBBSCore(Core).LocalMode Then
       SocketEvent := WSACreateEvent;
   {$ENDIF}
@@ -168,13 +168,11 @@ End;
 
 Procedure TBBSIO.BufAddChar (Ch: Char);
 Begin
-  {$IFDEF WINDOWS}
   OutBuffer[OutBufPos] := Ch;
 
   Inc (OutBufPos);
 
   If OutBufPos = TBBSIOBufferSize Then BufFlush;
-  {$ENDIF}
 
   Term.Process(Ch);
 End;
@@ -194,11 +192,19 @@ Begin
     If Not TBBSCore(Core).LocalMode Then
       TBBSCore(Core).Client.WriteBuf(OutBuffer, OutBufPos);
 
+    If Session.Pipe.Connected Then
+      Session.Pipe.SendToPipe(OutBuffer, OutBufPos);
+
     OutBufPos := 0;
   End;
   {$ENDIF}
 
   {$IFDEF UNIX}
+    If Session.Pipe.Connected Then
+      Session.Pipe.SendToPipe(OutBuffer, OutBufPos);
+
+    OutBufPos := 0;
+
     Screen.BufFlush;
   {$ENDIF}
 End;
