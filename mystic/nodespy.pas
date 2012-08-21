@@ -1,10 +1,29 @@
+// ====================================================================
+// Mystic BBS Software               Copyright 1997-2012 By James Coyle
+// ====================================================================
+//
+// This file is part of Mystic BBS.
+//
+// Mystic BBS is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Mystic BBS is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Mystic BBS.  If not, see <http://www.gnu.org/licenses/>.
+//
+// ====================================================================
+
 Program NodeSpy;
 
-// page chat
+// page chat notification
 // user editor
 // split chat
-// auto snoop
-// local login
 // terminal mode
 
 {$I M_OPS.PAS}
@@ -21,6 +40,8 @@ Uses
   m_Pipe_Disk,
   m_Input,
   m_Output,
+  m_io_Base,
+  m_io_Sockets,
   m_Term_Ansi,
   m_MenuBox,
   m_MenuInput;
@@ -32,17 +53,39 @@ Const
   UpdateNode  = 500;
   UpdateStats = 6000 * 10;
 
-  AutoSnoop : Boolean = True;
+  AutoSnoop   : Boolean = True;
+  AutoSnoopID : LongInt = 0;
 
 Type
+  StatsRec = Record
+    TotalDays      : LongInt;
+    TodayCalls     : LongInt;
+    TotalCalls     : LongInt;
+    TodayNewUsers  : LongInt;
+    TotalNewUsers  : LongInt;
+    TodayPosts     : LongInt;
+    TotalPosts     : LongInt;
+    TodayEmail     : LongInt;
+    TotalEmail     : LongInt;
+    TodayDownloads : LongInt;
+    TotalDownloads : LongInt;
+    TodayUploads   : LongInt;
+    TotalUploads   : LongInt;
+    Weekly         : Array[0..6] of LongInt;
+    Monthly        : Array[1..12] of LongInt;
+    Hourly         : Array[0..23] of LongInt;
+  End;
+
   PNodeInfo = ^TNodeInfo;
   TNodeInfo = Record
+    ID     : LongInt;
     Node   : Byte;
     User   : String[30];
     Action : String[50];
   End;
 
 Var
+  Stats      : StatsRec;
   NodeInfo   : Array[1..255] of PNodeInfo;
   ChatFile   : File of ChatRec;
   Chat       : ChatRec;
@@ -53,6 +96,7 @@ Var
   BasePath   : String;
   Screen     : TOutput;
   Keyboard   : TInput;
+  Term       : TTermAnsi;
 
 {$I NODESPY_ANSI.PAS}
 
@@ -451,7 +495,6 @@ End;
 Procedure SnoopNode (Node: Byte);
 Var
   Pipe    : TPipeDisk;
-  Term    : TTermAnsi;
   Buffer  : Array[1..4 * 1024] of Char;
   BufRead : LongInt;
   Update  : LongInt;
@@ -499,7 +542,7 @@ Begin
 
   Term := TTermAnsi.Create(Screen);
 
-  Screen.SetWindowTitle('[NodeSpy] Snooping ' + strI2S(Node));
+  Screen.SetWindowTitle('NodeSpy/Snoop ' + strI2S(Node));
 
   DrawStatus;
 
@@ -546,6 +589,84 @@ Begin
   Pipe.Disconnect;
   Pipe.Free;
   Term.Free;
+
+  AutoSnoopID := NodeInfo[Node]^.ID;
+End;
+
+Procedure LocalLogin;
+Const
+  BufferSize = 1024 * 4;
+Var
+  Client : TIOSocket;
+  Res    : LongInt;
+  Buffer : Array[1..BufferSize] of Char;
+  Done   : Boolean;
+  Ch     : Char;
+Begin
+  Screen.SetWindowTitle('NodeSpy/Local login');
+
+  Screen.TextAttr := 7;
+  Screen.ClearScreen;
+  Screen.WriteStr ('Connecting to 127.0.0.1... ');
+
+  Client := TIOSocket.Create;
+
+  If Not Client.Connect('127.0.0.1', Config.InetTNPort) Then
+    ShowMsgBox (0, 'Unable to connect')
+  Else Begin
+    Done := False;
+    Term := TTermAnsi.Create(Screen);
+
+    If Config.UseStatusBar Then Begin
+      Screen.SetWindow (1, 1, 80, 24, True);
+      Screen.WriteXY   (1, 25, Config.StatusColor3, strPadC('Local TELNET: ALT-X to Quit', 80, ' '));
+    End;
+
+    Term.SetReplyClient(TIOBase(Client));
+
+    Repeat
+      If Client.WaitForData(0) > 0 Then Begin
+        Repeat
+          Res := Client.ReadBuf (Buffer, BufferSize);
+
+          If Res < 0 Then Begin
+            Done := True;
+            Break;
+          End;
+
+          Term.ProcessBuf(Buffer, Res);
+        Until Res <> BufferSize;
+      End Else
+      If Keyboard.KeyPressed Then Begin
+        Ch := Keyboard.ReadKey;
+        Case Ch of
+          #00 : Case Keyboard.ReadKey of
+                  #45 : Break;
+                  #71 : Client.WriteStr(#27 + '[H');
+                  #72 : Client.WriteStr(#27 + '[A');
+                  #73 : Client.WriteStr(#27 + '[V');
+                  #75 : Client.WriteStr(#27 + '[D');
+                  #77 : Client.WriteStr(#27 + '[C');
+                  #79 : Client.WriteStr(#27 + '[K');
+                  #80 : Client.WriteStr(#27 + '[B');
+                  #81 : Client.WriteStr(#27 + '[U');
+                  #83 : Client.WriteStr(#127);
+                End;
+        Else
+          Client.WriteBuf(Ch, 1);
+          If Client.FTelnetEcho Then Term.Process(Ch);
+        End;
+      End Else
+        WaitMS(5);
+    Until Done;
+
+    Term.Free;
+  End;
+
+  Client.Free;
+
+  Screen.TextAttr := 7;
+  Screen.SetWindow (1, 1, 80, 25, True);
 End;
 
 Procedure UpdateOnlineStatus;
@@ -557,7 +678,11 @@ Begin
       NodeInfo[Count]^.Node   := Count;
       NodeInfo[Count]^.User   := Chat.Name;
       NodeInfo[Count]^.Action := Chat.Action;
+
+      If NodeInfo[Count]^.ID = 0 Then
+        NodeInfo[Count]^.ID := CurDateDos + Count;
     End Else Begin
+      NodeInfo[Count]^.ID     := 0;
       NodeInfo[Count]^.Node   := Count;
       NodeInfo[Count]^.User   := 'Waiting';
       NodeInfo[Count]^.Action := 'Waiting';
@@ -566,46 +691,60 @@ End;
 
 Procedure MainMenu;
 Var
-  StatTotalDays      : LongInt = 0;
-  StatTodayCalls     : LongInt = 0;
-  StatTotalCalls     : LongInt = 0;
-  StatTodayNewUsers  : LongInt = 0;
-  StatTotalNewUsers  : LongInt = 0;
-  StatTodayPosts     : LongInt = 0;
-  StatTotalPosts     : LongInt = 0;
-  StatTodayEmail     : LongInt = 0;
-  StatTotalEmail     : LongInt = 0;
-  StatTodayDownloads : LongInt = 0;
-  StatTotalDownloads : LongInt = 0;
-  StatTodayUploads   : LongInt = 0;
-  StatTotalUploads   : LongInt = 0;
-
   NodeTimer : LongInt;
   TopPage   : SmallInt = 1;
   CurNode   : SmallInt = 1;
 
   Procedure DrawStats;
-  Begin
-    Screen.WriteXY (12, 18, 9, strPadL(strI2S(StatTodayCalls), 6, ' '));
-    Screen.WriteXY (12, 19, 9, strPadL(strI2S(StatTodayNewUsers), 6, ' '));
-    Screen.WriteXY (12, 20, 9, strPadL(strI2S(StatTodayPosts), 6, ' '));
-    Screen.WriteXY (12, 21, 9, strPadL(strI2S(StatTodayEmail), 6, ' '));
-    Screen.WriteXY (12, 22, 9, strPadL(strI2S(StatTodayDownloads), 6, ' '));
-    Screen.WriteXY (12, 23, 9, strPadL(strI2S(StatTodayUploads), 6, ' '));
 
-    Screen.WriteXY (19, 18, 9, strPadL(strComma(StatTotalCalls), 12, ' '));
-    Screen.WriteXY (19, 19, 9, strPadL(strComma(StatTotalNewUsers), 12, ' '));
-    Screen.WriteXY (19, 20, 9, strPadL(strComma(StatTotalPosts), 12, ' '));
-    Screen.WriteXY (19, 21, 9, strPadL(strComma(StatTotalEmail), 12, ' '));
-    Screen.WriteXY (19, 22, 9, strPadL(strComma(StatTotalDownloads), 12, ' '));
-    Screen.WriteXY (19, 23, 9, strPadL(strComma(StatTotalUploads), 12, ' '));
+    Procedure DrawBar (PosX: Byte; Value: Byte);
+    Var
+      Count : Byte;
+    Begin
+      For Count := 1 to 5 Do
+        Screen.WriteXY (PosX, 23 - Count, 1, ' ');
+
+      For Count := 1 to Value Do
+        Screen.WriteXY (PosX, 23 - Count, 1, #219);
+    End;
+
+  Var
+    Count : Byte;
+  Begin
+    Screen.WriteXY (12, 18, 9, strPadL(strI2S(Stats.TodayCalls), 6, ' '));
+    Screen.WriteXY (12, 19, 9, strPadL(strI2S(Stats.TodayNewUsers), 6, ' '));
+    Screen.WriteXY (12, 20, 9, strPadL(strI2S(Stats.TodayPosts), 6, ' '));
+    Screen.WriteXY (12, 21, 9, strPadL(strI2S(Stats.TodayEmail), 6, ' '));
+    Screen.WriteXY (12, 22, 9, strPadL(strI2S(Stats.TodayDownloads), 6, ' '));
+    Screen.WriteXY (12, 23, 9, strPadL(strI2S(Stats.TodayUploads), 6, ' '));
+
+    Screen.WriteXY (19, 18, 9, strPadL(strComma(Stats.TotalCalls), 12, ' '));
+    Screen.WriteXY (19, 19, 9, strPadL(strComma(Stats.TotalNewUsers), 12, ' '));
+    Screen.WriteXY (19, 20, 9, strPadL(strComma(Stats.TotalPosts), 12, ' '));
+    Screen.WriteXY (19, 21, 9, strPadL(strComma(Stats.TotalEmail), 12, ' '));
+    Screen.WriteXY (19, 22, 9, strPadL(strComma(Stats.TotalDownloads), 12, ' '));
+    Screen.WriteXY (19, 23, 9, strPadL(strComma(Stats.TotalUploads), 12, ' '));
+
+    For Count := 0 to 6 Do
+      DrawBar (59 + Count, Stats.Weekly[Count]);
+
+    For Count := 1 to 12 Do
+      DrawBar (67 + Count, Stats.Monthly[Count]);
+
+    For Count := 0 to 23 Do
+      DrawBar (33 + Count, Stats.Hourly[Count]);
   End;
 
   Procedure UpdateStats;
   Var
     HistFile : File of RecHistory;
     Hist     : RecHistory;
+    Count    : LongInt;
+    Highest  : LongInt;
+    Temp     : Real;
   Begin
+    ShowMsgBox(3, 'Calculating statistics');
+
     FileMode := 66;
 
     Assign (HistFile, Config.DataPath + 'history.dat');
@@ -613,33 +752,70 @@ Var
 
     If IoResult <> 0 Then Exit;
 
-    StatTotalDays := 0;
+    FillChar (Stats, SizeOf(Stats), 0);
 
     While Not Eof(HistFile) Do Begin
       Read (HistFile, Hist);
 
-      Inc (StatTotalDays);
+      Inc (Stats.TotalDays);
 
-      Inc (StatTotalCalls, Hist.Calls);
-      Inc (StatTotalNewUsers, Hist.NewUsers);
-      Inc (StatTotalDownloads, Hist.Downloads);
-      Inc (StatTotalPosts, Hist.Posts);
-      Inc (StatTotalEmail, Hist.Emails);
-      Inc (StatTotalUploads, Hist.Uploads);
+      Inc (Stats.TotalCalls, Hist.Calls);
+      Inc (Stats.TotalNewUsers, Hist.NewUsers);
+      Inc (Stats.TotalDownloads, Hist.Downloads);
+      Inc (Stats.TotalPosts, Hist.Posts);
+      Inc (Stats.TotalEmail, Hist.Emails);
+      Inc (Stats.TotalUploads, Hist.Uploads);
 
       If DateDos2Str(Hist.Date, 1) = DateDos2Str(CurDateDos, 1) Then Begin
-        Inc (StatTodayCalls, Hist.Calls);
-        Inc (StatTodayNewUsers, Hist.NewUsers);
-        Inc (StatTodayDownloads, Hist.Downloads);
-        Inc (StatTodayPosts, Hist.Posts);
-        Inc (StatTodayEmail, Hist.Emails);
-        Inc (StatTodayUploads, Hist.Uploads);
+        Inc (Stats.TodayCalls, Hist.Calls);
+        Inc (Stats.TodayNewUsers, Hist.NewUsers);
+        Inc (Stats.TodayDownloads, Hist.Downloads);
+        Inc (Stats.TodayPosts, Hist.Posts);
+        Inc (Stats.TodayEmail, Hist.Emails);
+        Inc (Stats.TodayUploads, Hist.Uploads);
       End;
+
+      Inc (Stats.Monthly[strS2I(Copy(DateDos2Str(Hist.Date, 1), 1, 2))], Hist.Calls);
+      Inc (Stats.Weekly[DayOfWeek(Hist.Date)], Hist.Calls);
+
+      For Count := 0 to 23 Do
+        Inc (Stats.Hourly[Count], Hist.Hourly[Count]);
     End;
 
-    Close (HistFile);
+    Highest := 0;
 
-    DrawStats;
+    For Count := 1 to 12 Do
+      If Stats.Monthly[Count] > Highest Then Highest := Stats.Monthly[Count];
+
+    For Count := 1 to 12 Do
+      If Stats.Monthly[Count] > 0 Then Begin
+        Temp := Stats.Monthly[Count] / Highest * 100;
+        Stats.Monthly[Count] := Trunc(Temp) DIV 20;
+      End;
+
+    Highest := 0;
+
+    For Count := 0 to 6 Do
+      If Stats.Weekly[Count] > Highest Then Highest := Stats.Weekly[Count];
+
+    For Count := 0 to 6 Do
+      If Stats.Weekly[Count] > 0 Then Begin
+        Temp := Stats.Weekly[Count] / Highest * 100;
+        Stats.Weekly[Count] := Trunc(Temp) DIV 20;
+      End;
+
+    Highest := 0;
+
+    For Count := 0 to 23 Do
+      If Stats.Hourly[Count] > Highest Then Highest := Stats.Hourly[Count];
+
+    For Count := 0 to 23 Do
+      If Stats.Hourly[Count] > 0 Then Begin
+        Temp := Stats.Hourly[Count] / Highest * 100;
+        Stats.Hourly[Count] := Trunc(Temp) DIV 20;
+      End;
+
+    Close (HistFile);
   End;
 
   Procedure DrawNodes;
@@ -665,14 +841,21 @@ Var
     End;
   End;
 
+  Procedure FullReDraw;
+  Begin
+    UpdateStats;
+    UpdateOnlineStatus;
+    DrawNodeSpyScreen;
+    DrawNodes;
+    DrawStats;
+
+    Screen.SetWindowTitle('NodeSpy/Main');
+  End;
+
 Var
   Count : Byte;
 Begin
-  DrawNodeSpyScreen;
-  UpdateStats;
-  UpdateOnlineStatus;
-
-  DrawNodes;
+  FullReDraw;
 
   NodeTimer := TimerSet(UpdateNode);
 
@@ -731,10 +914,11 @@ Begin
               End;
         #13 : Begin
                 SnoopNode(NodeInfo[CurNode]^.Node);
-                DrawNodeSpyScreen;
-                UpdateOnlineStatus;
-                DrawNodes;
-                DrawStats;
+                FullReDraw;
+              End;
+        #32 : Begin
+                LocalLogin;
+                FullReDraw;
               End;
         #27 : Break;
       End;
@@ -745,16 +929,19 @@ Begin
 
       NodeTimer := TimerSet(UpdateNode);
 
-      For Count := 1 to Config.inetTNNodes Do
-        If NodeInfo[Count]^.User <> 'Waiting' Then Begin
-          SnoopNode(NodeInfo[Count]^.Node);
-          DrawNodeSpyScreen;
-          UpdateOnlineStatus;
-          DrawNodes;
-          DrawStats;
-        End;
+      If AutoSnoop Then
+        For Count := 1 to Config.inetTNNodes Do
+          If (NodeInfo[Count]^.User <> 'Waiting') and
+             (NodeInfo[Count]^.ID <> AutoSnoopID) Then Begin
+            SnoopNode(NodeInfo[Count]^.Node);
+            FullReDraw;
+          End;
     End;
   Until False;
+
+  Screen.TextAttr := 7;
+  Screen.ClearScreen;
+  Screen.WriteLine('NodeSpy Shutdown');
 End;
 
 Begin
