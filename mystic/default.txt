@@ -766,7 +766,7 @@
 ; &1 = msg #   &2 = subject   &3 = from   &4 = to   &5 = new?
 401 |12|&5|07|$L04|&1
 ; Ansi msg read: delete msg
-402 |CR|12Delete this mail?
+402 |CR|12Delete this mail? |11
 ; Ansi msg read: jump to msg: &1 = cur msg num  &2 = high msg num
 403 |CR|09Jump to which message? (1-|&2): |XX
 ; Ansi msg read: scan toggle  &1 = message base name
