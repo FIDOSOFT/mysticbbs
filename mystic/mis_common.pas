@@ -104,7 +104,7 @@ Var
       'S' : Res := User.Security >= strS2I(Data);
       'T' : Res := True;
       'U' : Res := User.PermIdx = strS2I(Data);
-      'W' : Res := strS2I(Data) = m_DateTime.DayOfWeek;
+      'W' : Res := strS2I(Data) = m_DateTime.DayOfWeek(CurDateDos);
       'Z' : If IgnoreGroup Then Begin
               Check := False;
               First := True;
