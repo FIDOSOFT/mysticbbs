@@ -1633,7 +1633,7 @@ Begin
             Store (TempStr, 256);
           End;
     57  : Begin
-            TempByte := DayOfWeek;
+            TempByte := DayOfWeek(CurDateDos);
             Store (TempByte, 1);
           End;
     58  : Begin

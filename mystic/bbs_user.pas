@@ -178,7 +178,7 @@ Var
       'S' : Res := ThisUser.Security >= strS2I(Data);
       'T' : Res := Session.TimeLeft > strS2I(Data);
       'U' : Res := ThisUser.PermIdx = strS2I(Data);
-      'W' : Res := strS2I(Data) = DayOfWeek;
+      'W' : Res := strS2I(Data) = DayOfWeek(CurDateDos);
       'Z' : If IgnoreGroup Then Begin
               Check := False;
               First := True;
