@@ -75,6 +75,7 @@ Type
     HistoryDLKB   : LongInt;
     HistoryULs    : Word;
     HistoryULKB   : LongInt;
+    HistoryHour   : SmallInt;
     PromptFile    : File of RecPrompt;
     Prompt        : RecPrompt;
 
@@ -107,6 +108,7 @@ Begin
   HistoryDLKB   := 0;
   HistoryULs    := 0;
   HistoryULKB   := 0;
+  HistoryHour   := 0;
   ShutDown      := False;
   CommHandle    := -1;
   LocalMode     := False;
@@ -166,10 +168,10 @@ Var
 Begin
   If User.ThisUser.Flags AND UserNoHistory <> 0 Then Exit;
 
-  Assign  (HistoryFile, Config.DataPath + 'history.dat');
-  ioReset (HistoryFile, SizeOf(RecHistory), fmRWDN);
+  Assign (HistoryFile, Config.DataPath + 'history.dat');
 
-  If IoResult <> 0 Then ioReWrite(HistoryFile, SizeOf(RecHistory), fmRWDW);
+  If Not ioReset (HistoryFile, SizeOf(RecHistory), fmRWDN) Then
+    ioReWrite(HistoryFile, SizeOf(RecHistory), fmRWDW);
 
   History.Date := CurDateDos;
 
@@ -198,6 +200,8 @@ Begin
     Inc (History.Calls, 1);
 
   If User.ThisUser.Calls = 1 Then Inc (History.NewUsers, 1);
+
+  Inc (History.Hourly[HistoryHour]);
 
   ioWrite (HistoryFile, History);
   Close   (HistoryFile);

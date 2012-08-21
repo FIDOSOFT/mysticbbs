@@ -1184,6 +1184,8 @@ Begin
   Session.systemLog ('-');
   Session.SystemLog ('Connect from ' + Session.UserIPInfo + ' (' + Session.UserHostInfo + ')');
 
+  Session.HistoryHour := strS2I(Copy(TimeDos2Str(CurDateDos, False), 1, 2));
+
   If Config.SystemPW <> '' Then
     If Not Session.io.GetPW(Session.GetPrompt(4), Session.GetPrompt(417), Config.SystemPW) Then Begin
       Session.io.OutFile ('closed', True, 0);
