@@ -19,7 +19,7 @@ Procedure DateG2J           (Year, Month, Day: LongInt; Var Julian: LongInt);
 Procedure DateJ2G           (Julian: LongInt; Var Year, Month, Day: SmallInt);
 Function  DateValid         (Str: String) : Boolean;
 Function  TimeDos2Str       (Date: LongInt; Twelve: Boolean) : String;
-Function  DayOfWeek         : Byte;
+Function  DayOfWeek         (Date: LongInt) : Byte;
 Function  DaysAgo           (Date: LongInt) : LongInt;
 Function  TimeSecToStr      (Secs: LongInt) : String;
 
@@ -290,13 +290,27 @@ Begin
     Result := strZero(DT.Hour) + ':' + strZero(DT.Min);
 End;
 
-Function DayOfWeek : Byte;
+Function DayOfWeek (Date: LongInt) : Byte;
 Var
-  Temp : Word;
-  DOW  : Word;
+  Offset : Byte;
+  DT     : DateTime;
 Begin
-  GetDate (Temp, Temp, Temp, DOW);
-  Result := DOW;
+  UnpackTime (Date, DT);
+
+  If DT.Month > 2 Then Offset := 0 Else Offset := 1;
+
+  Result := (((3 * (DT.Year) - (7 * ((DT.Year) + ((DT.Month) + 9) DIV 12))
+            DIV 4 + (23 * (DT.Month)) DIV 9 + (DT.Day) + 2 + (((DT.Year) -
+            Offset) DIV 100 + 1) * 3 DIV 4 - 16) MOD 7));
+(*
+    IF m < 3 THEN
+      F := 365 * y + d + 31 * (m - 1) + trunc ((y - 1) / 4) -
+           trunc (0.75 * trunc ((y - 1) / 100) + 1)
+    ELSE
+    f := 365 * y + d + 31 * (m - 1) - trunc (0.4 * m + 2.3) +
+         trunc (y / 4) - trunc (0.75 * trunc (y / 100) + 1);
+    tot := f MOD 7;
+*)
 End;
 
 Function DaysAgo (Date: LongInt) : LongInt;
