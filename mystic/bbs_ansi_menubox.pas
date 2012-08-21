@@ -8,7 +8,7 @@ Uses
   m_Types;
 
 Procedure WriteXY          (X, Y, A: Byte; S: String);
-Procedure WriteXYPipe      (X, Y, A, SZ : Byte; S: String);
+Procedure WriteXYPipe      (X, Y, A: Byte; SZ: SmallInt; S: String);
 Function  InXY             (X, Y, Field, Max, Mode: Byte; Default: String) : String;
 Function  InBox            (Header, Text, Def: String; Len, MaxLen: Byte) : String;
 Procedure VerticalLine     (X, Y1, Y2 : Byte);
@@ -122,7 +122,7 @@ Begin
   Session.io.OutRaw     (S);
 End;
 
-Procedure WriteXYPipe (X, Y, A, SZ: Byte; S: String);
+Procedure WriteXYPipe (X, Y, A: Byte; SZ: SmallInt; S: String);
 Var
   Count : Byte;
   Code  : String[2];
