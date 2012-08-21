@@ -932,10 +932,11 @@ Begin
     Else
       ThisUser.ScreenSize := Config.DefScreenSize;
 
-    If Config.UserProtocol > 0 Then
-      ThisUser.Protocol := Session.FileBase.SelectProtocol(False, True)
-    Else
-      ThisUser.Protocol := Config.FProtocol;
+    Case Config.UserProtocol of
+      0 : ThisUser.Protocol := #0;
+      1 : ThisUser.Protocol := Config.FProtocol;
+      2 : ThisUser.Protocol := Session.FileBase.SelectProtocol(False, True);
+    End;
 
     GetPassword(False);
   End;
