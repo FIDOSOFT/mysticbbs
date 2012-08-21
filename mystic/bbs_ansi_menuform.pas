@@ -203,7 +203,7 @@ Begin
   Form.AddTog  ('F', ' Bar Format'  , 11,  8, 25,  8, 12, 10, 0, 1, 'Horizontal Vertical', @Bar.Format, '');
   Form.AddChar ('B', ' BG Character',  9,  9, 25,  9, 14, 32, 255, @Bar.LoChar, '');
   Form.AddAttr ('G', ' BG Color',     13, 10, 25, 10, 10, @Bar.LoAttr, '');
-  Form.AddByte ('X', ' Start X',      14, 11, 25, 11,  9,  2, 1, 50, @Bar.StartX, '');
+  Form.AddByte ('X', ' Start X',      14, 11, 25, 11,  9,  2, 1, 80, @Bar.StartX, '');
   Form.AddByte ('A', ' Bar Length',   49,  8, 63,  8, 12,  2, 1, 50, @Bar.BarLength, '');
   Form.AddChar ('C', ' FG Character', 47,  9, 63,  9, 14, 32, 255, @Bar.Hichar, '');
   Form.AddAttr ('O', ' FG Color',     51, 10, 63, 10, 10, @Bar.HiAttr, '');
