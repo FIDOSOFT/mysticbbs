@@ -887,12 +887,12 @@ Begin
 
   Set_Node_Action (Session.GetPrompt(349));
 
-  If ListMode = 0 Then
-    Session.io.OutFull (Session.GetPrompt(407))
-  Else
-    Session.io.OutFull (Session.GetPrompt(408));
-
   Repeat
+    If ListMode = 0 Then
+      Session.io.OutFull (Session.GetPrompt(407))
+    Else
+      Session.io.OutFull (Session.GetPrompt(408));
+
     ToWho := Session.io.GetInput(30, 30, 18, MsgBase^.GetFrom);
 
     If ToWho = '' Then Exit;
