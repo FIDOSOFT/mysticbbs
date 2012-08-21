@@ -127,6 +127,18 @@ Type
     Procedure   ReDrawFull;
   End;
 
+Const
+  MaxCutText = 200;
+
+Type
+  CutTextPtr = ^CutTextRec;
+  CutTextRec = String[255];
+
+Var
+  CutPasted    : Boolean = False;
+  CutTextPos   : Word    = 0;
+  CutText      : Array[1..MaxCutText] of CutTextPTR;
+
 Var
   Console     : TOutput;
   Input       : TInput;
@@ -940,7 +952,7 @@ Begin
   ReDrawScreen;
 End;
 
-Procedure RelocatePos (X : Byte; Line : Word);
+Procedure RelocatePos (X: Byte; Line: Word);
 Begin
   With CurWin[CurWinNum]^ Do Begin
     TopPage := Line;
@@ -1037,7 +1049,6 @@ Begin
 
   Console.PutScreenImage(Image);
 End;
-
 
 Procedure CloseFile;
 Var
@@ -1642,10 +1653,8 @@ Begin
           End;
       2 : Begin
             CoolBoxOpen (14, 'Edit');
-            BoxOpen (15, 4, 30, 9);
+            BoxOpen (15, 4, 30, 7);
 
-            Form.AddNone('M', '  Mark Text  ' , 16,  5, 14, 'Begin marking a block of text');
-            Form.AddNone('P', '  Paste Text  ', 16,  6, 14, 'Paste marked text at current location');
             Form.AddNone('F', '  Find  '      , 16,  7, 14, 'Search for text');
             Form.AddNone('R', '  Replace  '   , 16,  8, 14, 'Search and replace text');
 
@@ -1966,6 +1975,36 @@ Begin
                       End;
               End;
             End;
+      ^K  : Begin
+              If CutPasted Then Begin
+                For A := CutTextPos DownTo 1 Do
+                  Dispose (CutText[A]);
+
+                CutTextPos := 0;
+                CutPasted  := False;
+              End;
+
+              If CutTextPos < MaxCutText Then Begin
+                Inc (CutTextPos);
+
+                New (CutText[CutTextPos]);
+
+                CutText[CutTextPos]^ := CurWin[CurWinNum]^.TextData[CurWin[CurWinNum]^.CurLine]^;
+
+                DeleteLine(True);
+              End;
+            End;
+      ^U  : If CutTextPos > 0 Then Begin
+              CutPasted := True;
+
+              For A := CutTextPos DownTo 1 Do
+                If CurWin[CurWinNum]^.TotalLines < mideMaxFileLines Then Begin
+                  InsertLine(CurWin[CurWinNum]^.CurLine);
+                  CurWin[CurWinNum]^.TextData[CurWin[CurWinNum]^.CurLine]^ := CutText[A]^;
+                End;
+
+              DrawPage;
+            End;
       ^Y  : DeleteLine(True);
       #08 : BackSpace;
       #09 : InsertTab;
@@ -1977,6 +2016,9 @@ Begin
   Until False;
 
   While TotalWinNum > 0 Do CloseFile;
+
+  For A := CutTextPos DownTo 1 Do
+    Dispose (CutText[A]);
 
   Console.TextAttr := 7;
   Console.ClearScreen;
