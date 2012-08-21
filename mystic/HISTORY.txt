@@ -4692,6 +4692,16 @@
 
  + MIS telnet in Windows now has an option to hide node windows.
 
- + Added a new utility called NodeSpy.  This utility will allow you to see
-   who is online from the command line.  It will also allow you to snoop/spy
-   on a node, kick people from a node, and engage in chat with the user.
+ + Added a new utility called NodeSpy.  This utility will allow you to
+   monitor active nodes, snoop, kick, chat with users, etc.
+
+ ! Mystic was not properly creating BBS history database if it did not
+   already exist.
+
+ + MIDE now uses CTRL+K and CTRL+U to cut and paste text, similar to
+   Pico/Nano-like Unix text editors.
+
+ + Mystic now tracks calls by the hour in its BBS history database.
+
+ + Added USAGE.MPS to the default installation.  This currently shows a
+   weekly and monthly usage graph calculated based on the number of calls.
