@@ -69,10 +69,10 @@ Type
     Procedure   GetFileScan;
     Function    SelectProtocol        (UseDefault, Batch: Boolean) : Char;
     Function    WildcardMatch         (Wildcard, FName: String) : Boolean;
-    Procedure   CheckFileNameLength   (FPath : String; Var FName : String);
+    Procedure   CheckFileNameLength   (FPath : String; Var FName: String);
     Procedure   GetFileDescription    (FN: String);
     Function    CheckFileLimits       (DL: Byte; DLK: Integer) : Byte;
-    Function    ArchiveList           (FName : String) : Boolean; { was string }
+    Function    ArchiveList           (FName: String) : Boolean; { was string }
     Function    ImportDIZ             (FN: String) : Boolean;
     Function    IsDupeFile            (FileName : String; Global : Boolean) : Boolean;
     Function    ListFiles             (Mode : Byte; Data : String) : Byte;
@@ -2821,9 +2821,10 @@ Begin
     Exit;
   End;
 
-  ExecuteProtocol(0, FBase.Path);
-
-{ ++lang ADD: update node status to transferring file? }
+  If Blind Then
+    ExecuteProtocol(0, FBase.Path)
+  Else
+    ExecuteProtocol(0, FileName);
 
   Session.io.OutFull (Session.GetPrompt(376));
 
