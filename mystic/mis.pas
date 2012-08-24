@@ -81,17 +81,22 @@ Var
   FileConfig : TBufFile;
   DatLoc     : String;
 Begin
-  DatLoc := GetEnv('mysticbbs');
-
-  If DatLoc <> '' Then DatLoc := DirSlash(DatLoc);
-
   FileConfig := TBufFile.Create(SizeOf(RecConfig));
 
-  If Not FileConfig.Open(DatLoc + 'mystic.dat', fmOpen, fmReadWrite + fmDenyNone, SizeOf(RecConfig)) Then Begin
-    WriteLn;
-    WriteLn ('ERROR: Unable to read MYSTIC.DAT.  This file must exist in the same');
-    WriteLn ('directory as MIS');
-    Halt (1);
+  If Not FileConfig.Open('mystic.dat', fmOpen, fmReadWrite + fmDenyNone, SizeOf(RecConfig)) Then Begin
+    DatLoc := GetEnv('mysticbbs');
+
+    If DatLoc <> '' Then DatLoc := DirSlash(DatLoc);
+
+    If Not FileConfig.Open(DatLoc + 'mystic.dat', fmOpen, fmReadWrite + fmDenyNone, SizeOf(RecConfig)) Then Begin
+      WriteLn;
+      WriteLn ('ERROR: Unable to read MYSTIC.DAT.  This file must exist in the same');
+      WriteLn ('directory as MIS');
+
+      FileConfig.Free;
+
+      Halt (1);
+    End;
   End;
 
   FileConfig.Read(bbsConfig);
