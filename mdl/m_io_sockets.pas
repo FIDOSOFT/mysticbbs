@@ -394,7 +394,12 @@ End;
 Function TIOSocket.ReadBuf (Var Buf; Len: LongInt) : LongInt;
 Begin
   If FInBufPos = FInBufEnd Then Begin
-    FInBufEnd := fpRecv(FSocketHandle, @FInBuf, TIOBufferSize, FPRECVOPT);
+    {$IFDEF OS2}
+      FInBufEnd := Winsock.Recv(FSocketHandle, @FInBuf, TIOBufferSize, FPRECVOPT);
+    {$ELSE}
+      FInBufEnd := fpRecv(FSocketHandle, @FInBuf, TIOBufferSize, FPRECVOPT);
+    {$ENDIF}
+
     FInBufPos := 0;
 
     If FInBufEnd <= 0 Then Begin
@@ -444,7 +449,7 @@ Begin
     Exit;
   End;
 
-//  Data   := Ord(Not Block);
+// Data   := Ord(Not Block);
 //  Result := ioctlSocket(FSocketHandle, FIONBIO, Data);
 End;
 
@@ -541,7 +546,12 @@ Begin
   If fpListen(FSocketHandle, 5) = -1 Then Exit;
 
   Temp := SizeOf(SIN);
-  Sock := fpAccept(FSocketHandle, @SIN, @Temp);
+
+  {$IFDEF OS2}
+    Sock := Winsock.Accept(FSocketHandle, @SIN, @Temp);
+  {$ELSE}
+    Sock := fpAccept(FSocketHandle, @SIN, @Temp);
+  {$ENDIF}
 
   If Sock = -1 Then Exit;
 
