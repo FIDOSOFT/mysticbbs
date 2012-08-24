@@ -170,8 +170,10 @@ Begin
     GOTCRCW : Result := 'GOTCRCW';
     ZCRC    : Result := 'ZCRC';
   Else
-    Result := 'UNKNOWN:' + strI2S(Ord(B));
+    Result := 'UNKNOWN';
   End;
+
+  Result := Result + ' Ord:' + strI2S(Ord(B));
 End;
 {$ENDIF}
 
@@ -197,7 +199,7 @@ Begin
 
   Status.Protocol := 'Zmodem';
   LastSent        := 0;
-  EscapeAll       := True;
+  EscapeAll       := False;
   Attn            := '';
 End;
 
@@ -318,7 +320,7 @@ Begin
     End;
   End;
 
-  {$IFDEF ZCHARLOG} ZLog('ZDLRead -> ' + strI2S(Result)); {$ENDIF}
+  {$IFDEF ZCHARLOG} ZLog('ZDLRead -> ' + HeaderType(Result)); {$ENDIF}
 End;
 
 (*
@@ -461,6 +463,45 @@ Begin
 
   ZReceiveBinaryHeader32 := RxType;
 End;
+
+(*
+//XON, XOFF, DLE, CTRLX, CR@CR...
+//ALSO translate TELNET_IAC... optional?
+Procedure TProtocolZmodem.SendEscaped (B: SmallInt);
+Begin
+  Case B of
+    DLE,
+    DLEHI,
+    XON,
+    XONHI,
+    XOFF,
+    XOFFHI,
+    ZDLE : Begin
+              Client.BufWriteChar(Char(ZDLE));
+              LastSent := B XOR $40;
+            End;
+    13,
+    13 OR $80 : If (LastSent AND $7F = Ord('@')) Then Begin
+                  Client.BufWriteChar(Char(ZDLE));
+                  LastSent := B XOR $40;
+                End Else
+                  LastSent := B;
+    255     : Begin
+                Client.BufWriteChar(Char(ZDLE));
+                LastSent := ZRUB1;
+              End;
+
+  Else
+    If (EscapeAll) and ((B AND $60) = 0) Then Begin
+      Client.BufWriteChar(Char(ZDLE));
+      LastSent := B XOR $40;
+    End Else
+      LastSent := B;
+  End;
+
+  Client.BufWriteChar(Char(LastSent));
+End;
+*)
 
 Procedure TProtocolZmodem.SendEscaped (B: SmallInt);
 Begin

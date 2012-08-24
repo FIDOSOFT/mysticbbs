@@ -140,6 +140,7 @@ Begin
   BlockRead (PipeInput, Buffer[0], Len, bRead);
 
   If IsClient And TimerUp(ResetTimer) Then Begin
+
     Ch := #1;
 
     SendToPipe(Ch, 1);
