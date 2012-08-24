@@ -29,7 +29,7 @@ Type
     Core           : Pointer;
     Term           : TTermAnsi;
     ScreenInfo     : Array[0..9] of Record X, Y, A : Byte; End;
-    PromptInfo     : Array[1..MaxPromptInfo] of String[89];
+    PromptInfo     : Array[1..MaxPromptInfo] of String[160];
     FmtString      : Boolean;
     FmtLen         : Byte;
     FmtType        : Byte;
@@ -1813,7 +1813,7 @@ Begin
   InXY := GetInput (Field, Max, Mode, Default);
 End;
 
-Function TBBSIO.DrawPercent (Bar: RecPercent; Part, Whole: SmallInt; Var Percent : SmallInt) : String;
+Function TBBSIO.DrawPercent (Bar: RecPercent; Part, Whole: SmallInt; Var Percent: SmallInt) : String;
 Var
   FillSize : Byte;
   Attr     : Byte;
@@ -1822,12 +1822,11 @@ Begin
 
   Screen.TextAttr := 0;  // kludge to force it to return full ansi codes
 
-  If (Part = 0) or (Whole = 0) or (Part > Whole) Then Begin
+  If Part > Whole Then Part := Whole;
+
+  If (Part = 0) or (Whole = 0) Then Begin
     FillSize := 0;
     Percent  := 0;
-//    FillSize := Bar.BarLen;
-//    Percent  := 100;
-// this needs work...
   End Else Begin
     FillSize := Round(Part / Whole * Bar.BarLength);
     Percent  := Round(Part / Whole * 100);
