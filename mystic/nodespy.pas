@@ -551,10 +551,12 @@ Begin
   While Pipe.Connected Do Begin
     Pipe.ReadFromPipe(Buffer, SizeOf(Buffer), BufRead);
 
-    If BufRead = 0 Then
-      WaitMS(200)
+    Case BufRead of
+      -1 : Break;
+       0 : WaitMS(200);
     Else
       Term.ProcessBuf(Buffer, BufRead);
+    End;
 
     If Keyboard.KeyPressed Then
       Case Keyboard.ReadKey of
@@ -611,7 +613,7 @@ Begin
 
   Client := TIOSocket.Create;
 
-  If Not Client.Connect('127.0.0.1', Config.InetTNPort) Then
+  If Not Client.Connect('127.0.0.1', Config.INetTNPort) Then
     ShowMsgBox (0, 'Unable to connect')
   Else Begin
     Done := False;
