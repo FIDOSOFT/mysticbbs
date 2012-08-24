@@ -2918,6 +2918,7 @@ Begin
   Case Mode of
     '1' : Begin
             Session.io.OutFull (Session.GetPrompt(388));
+
             ACS := Session.io.GetInput(20, 20, 11, '');
 
             If ACS = '' Then Exit;
@@ -2929,9 +2930,9 @@ Begin
             Reset (Session.User.UserFile);
 
             While Not Eof(Session.User.UserFile) Do Begin
-              If (Session.User.ThisUser.Flags AND UserDeleted = 0) and Session.User.Access(ACS) Then Begin
-                Read (Session.User.UserFile, Session.User.ThisUser);
+              Read (Session.User.UserFile, Session.User.ThisUser);
 
+              If (Session.User.ThisUser.Flags AND UserDeleted = 0) and Session.User.Access(ACS) Then Begin
                 Session.io.PromptInfo[1] := Session.User.ThisUser.Handle;
 
                 Session.io.OutFullLn (Session.GetPrompt(392));
