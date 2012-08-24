@@ -11,12 +11,14 @@
 
 {$PACKRECORDS 1}
 
-// Add minutes to history
+// TODOs:
 // Change file listing size to Int64
 // Extend msg and file base names to 70 chars?
-// local qwk download/upload?
+// local qwk download/upload dirs
 // rewrite event system...
 //   event types, exec commands, weekly/monthly option?
+// change protocol/archives to use a flag longint
+//     protocol: active, no 4gig limitation, can batch, etc
 
 Const
   mysSoftwareID  = 'Mystic';                                    // no idea
@@ -161,7 +163,7 @@ Type
     UserMailIndex   : Byte;                                     // 0=normal 1=ansi 2=ask
     UserReadIndex   : Byte;                                     // 0=normal 1=ansi 2=ask
     UserQuoteWin    : Byte;                                     // 0=line 1=window 2=ask
-    UserProtocol    : Byte;
+    UserProtocol    : Byte;                                     // 0=no 1=yes 2=ask
     AskTheme        : Boolean;
     AskRealName     : Boolean;
     AskAlias        : Boolean;
@@ -746,7 +748,8 @@ Type
     SMTP       : Word;
     NNTP       : Word;
     HTTP       : Word;
-    Reserved   : Array[1..26] of Byte;
+    Hourly     : Array[0..23] of Byte;
+    Reserved   : Array[1..2] of Byte;
   End;
 
   RecProtocol = Record
