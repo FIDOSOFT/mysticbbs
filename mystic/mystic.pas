@@ -232,9 +232,9 @@ Var
 Begin
   Randomize;
 
+  FileMode         := 66;
   Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
-
-  Session.Pipe := TPipeDisk.Create(Config.DataPath, False, Session.NodeNum);
+  Session.Pipe     := TPipeDisk.Create(Config.DataPath, False, Session.NodeNum);
 
   {$I-}
   MkDir (Config.SystemPath + 'temp' + strI2S(Session.NodeNum));

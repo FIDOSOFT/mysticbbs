@@ -51,7 +51,7 @@ Uses
 Const
   HiddenNode  = 255;
   UpdateNode  = 500;
-  UpdateStats = 6000 * 10;
+  UpdateStats = 6000 * 10;  // 10 minutes
 
   AutoSnoop   : Boolean = True;
   AutoSnoopID : LongInt = 0;

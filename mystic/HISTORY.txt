@@ -4705,3 +4705,6 @@
 
  + Added USAGE.MPS to the default installation.  This currently shows a
    weekly and monthly usage graph calculated based on the number of calls.
+
+ ! Fixed a bug which could sometimes cause a node to get disconnected just
+   after MIS answered the all in Windows.

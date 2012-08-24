@@ -1488,8 +1488,8 @@ Var
     Begin
       PageEnd := PageStart;
 
-      Session.io.AnsiGotoXY   (1, Session.io.ScreenInfo[1].Y);
-      Session.io.AnsiColor (MBase.ColText);
+      Session.io.AnsiGotoXY (1, Session.io.ScreenInfo[1].Y);
+      Session.io.AnsiColor  (MBase.ColText);
 
       For A := 1 to PageSize Do
         If PageEnd <= Lines Then Begin
