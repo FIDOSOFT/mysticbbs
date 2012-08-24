@@ -260,6 +260,8 @@ Begin
 End;
 
 Procedure TParserEngine.Error (ErrNum: Byte; Str: String);
+Var
+  LastLineCol : SmallInt;
 Begin
   If UpdateInfo.ErrorType > 0 Then Exit;
 
@@ -275,6 +277,8 @@ Begin
       Case InFile[CurFile].DataFile.Read of
         #10 : Begin
                 Inc (UpdateInfo.ErrorLine);
+
+                LastLineCol         := UpdateInfo.ErrorCol;
                 UpdateInfo.ErrorCol := 0;
               End;
         #09,
@@ -283,6 +287,12 @@ Begin
         Inc (UpdateInfo.ErrorCol);
       End;
     End;
+  End;
+
+  If (UpdateInfo.ErrorCol = 0) and (UpdateInfo.ErrorLine > 1) Then Begin
+    Dec (UpdateInfo.ErrorLine);
+
+    UpdateInfo.ErrorCol := LastLineCol + 1;
   End;
 End;
 
