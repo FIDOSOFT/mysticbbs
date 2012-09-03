@@ -28,7 +28,7 @@ Begin
 
   VerticalLine (24, 12, 14);
 
-  Form.AddStr ('N', ' Name'  , 18, 12, 26, 12, 6, 40, 40, @Group.Name, Topic + 'Description of group');
+  Form.AddStr ('N', ' Name'  , 18, 12, 26, 12, 6, 30, 30, @Group.Name, Topic + 'Description of group');
   Form.AddStr ('A', ' Access', 16, 13, 26, 13, 8, 30, 30, @Group.ACS, Topic + 'Access level to access this group');
   Form.AddBol ('H', ' Hidden', 16, 14, 26, 14, 8,  3, @Group.Hidden, Topic + 'Group is hidden from group listing?');
 
