@@ -532,7 +532,7 @@ Begin
     Case List.ExitCode of
       '/' : Case GetCommandOption(10, 'F-Flags|I-Insert|D-Delete|C-Copy|P-Paste|V-View|') of
               'I' : Begin
-                      Menu.InsertItem(List.Picked);
+                      Menu.InsertItem(List.Picked, True);
                       Changed := True;
                     End;
               'C' : If List.Picked <> List.ListMax Then

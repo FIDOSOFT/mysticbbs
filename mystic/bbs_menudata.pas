@@ -22,7 +22,7 @@ Type
     Function    Load          (Append: Boolean; FN: String) : Boolean;
     Function    Save          (FN: String) : Boolean;
     Procedure   Unload;
-    Procedure   InsertItem    (Num: Word);
+    Procedure   InsertItem    (Num: Word; Cmd: Boolean);
     Procedure   DeleteItem    (Num: Word);
     Procedure   CopyItem      (Source, Dest: Word);
     Procedure   InsertCommand (Num, CmdNum: Word);
@@ -291,7 +291,7 @@ Begin
   End;
 End;
 
-Procedure TMenuData.InsertItem (Num: Word);
+Procedure TMenuData.InsertItem (Num: Word; Cmd: Boolean);
 Var
   Count : Word;
 Begin
@@ -314,7 +314,7 @@ Begin
     Redraw     := 1;
   End;
 
-  InsertCommand(Num, 1);
+  If Cmd Then InsertCommand(Num, 1);
 End;
 
 Function TMenuData.CreateNewMenu (FN: String) : Boolean;
@@ -324,31 +324,29 @@ Begin
   Info.Footer      := '|CR|09Selection|03: |11';
   Info.DispCols    := 3;
 
-  InsertItem(1);
+  InsertItem(1, True);
 
   Result := Save(FN);
 End;
 
 Procedure TMenuData.CopyItem (Source, Dest: Word);
 Var
-  Count : Word;
+  MI    : RecMenuItem;
+  Count : SmallInt;
 Begin
   If NumItems = mysMaxMenuItems Then Exit;
 
-  Inc (NumItems);
+  MI := Item[Source]^;
 
-  For Count := NumItems DownTo Dest + 1 Do
-    Item[Count] := Item[Count - 1];
+  For Count := 1 to MI.Commands Do Begin
+    New (MI.CmdData[Count]);
 
-  New (Item[Dest]);
-
-  Item[Dest]^ := Item[Source]^;
-
-  For Count := 1 to Item[Source]^.Commands Do Begin
-    New (Item[Dest]^.CmdData[Count]);
-
-    Item[Dest]^.CmdData[Count]^ := Item[Source]^.CmdData[Count]^;
+    MI.CmdData[Count]^ := Item[Source]^.CmdData[Count]^;
   End;
+
+  InsertItem(Dest, False);
+
+  Item[Dest]^ := MI;
 End;
 
 End.
