@@ -870,7 +870,7 @@ Begin
     Exit;
   End;
 
-  If Session.User.Security.DLRatio > 0 Then
+  If (Session.User.Security.DLRatio > 0) and ((Session.User.ThisUser.DLs <> 0) or (Session.User.ThisUser.ULs <> 0)) Then
     If (Session.User.ThisUser.ULs * Session.User.Security.DLRatio) <= (Session.User.ThisUser.DLs + BatchNum + DL) Then Begin
       Result := 3;
       Exit;
@@ -880,7 +880,7 @@ Begin
     For A := 1 to BatchNum Do
       Inc (DLK, Batch[A].Size DIV 1024);
 
-  If Session.User.Security.DLKRatio > 0 Then
+  If (Session.User.Security.DLKRatio > 0) and ((Session.User.ThisUser.DLs <> 0) or (Session.User.ThisUser.ULs <> 0)) Then
     If (Session.User.ThisUser.ULk * Session.User.Security.DLkRatio) <= (Session.User.ThisUser.DLk + DLk) Then Begin
       Result := 3;
       Exit;
@@ -3500,6 +3500,7 @@ Begin
         'E' : Session.Menu.ExecuteCommand ('MW', '/TO:' + strReplace(FDir.Uploader, ' ', '_'));
         'I' : Begin
                 Session.io.OutFullLn ('|CR|14Importing file_id.diz...');
+
                 If ImportDIZ(FDir.FileName) Then Begin
                   FDir.DescPtr := FileSize(DataFile);
                   Seek (DataFile, FDir.DescPtr);
