@@ -1390,7 +1390,7 @@ Var
   Temp  : String;
   Count : Integer;
 Begin
-  If Forced or ((TimerMinutes >= Config.ChatStart) and (TimerMinutes <= Config.ChatEnd)) Then Begin
+  If Forced or ((TimerMinutes DIV 60 >= Config.ChatStart) and (TimerMinutes DIV 60 <= Config.ChatEnd)) Then Begin
     Session.io.OutFull (Session.GetPrompt(23));
 
     Temp := Session.io.GetInput(50, 50, 11, '');
