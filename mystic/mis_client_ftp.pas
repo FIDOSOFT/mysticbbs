@@ -224,13 +224,13 @@ Begin
     Exit;
   End;
 
-  If SecLevel.DLRatio > 0 Then
+  If (SecLevel.DLRatio > 0) and ((User.DLs <> 0) or (User.ULs <> 0)) Then
     If (User.ULs * SecLevel.DLRatio) <= (User.DLs + 1) Then Begin
       Result := 3;
       Exit;
     End;
 
-  If SecLevel.DLKRatio > 0 Then
+  If (SecLevel.DLKRatio > 0) and ((User.DLs <> 0) or (User.ULs <> 0)) Then
     If (User.ULk * SecLevel.DLkRatio) <= (User.DLk + (FDir.Size DIV 1024)) Then Begin
       Result := 3;
       Exit;
