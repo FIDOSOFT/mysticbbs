@@ -155,6 +155,33 @@ Begin
   End;
 End;
 
+Procedure CalculateNodeNumber;
+Var
+  Count : Word;
+  TChat : ChatRec;
+Begin
+  Session.NodeNum := 0;
+
+  For Count := 1 to Config.INetTNNodes Do Begin
+    Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Count) + '.dat');
+
+    If Not ioReset (ChatFile, Sizeof(ChatRec), fmRWDN) Then Begin
+      Session.NodeNum := Count;
+
+      Break;
+    End Else Begin
+      ioRead (ChatFile, TChat);
+      Close  (ChatFile);
+
+      If Not TChat.Active Then Begin
+        Session.NodeNum := Count;
+
+        Break;
+      End;
+    End;
+  End;
+End;
+
 {$IFDEF UNIX}
 Procedure LinuxEventSignal (Sig : LongInt); cdecl;
 Begin
@@ -179,44 +206,14 @@ Begin
   End;
 End;
 
-Procedure Linux_Init;
+Procedure InitializeUnix;
 Var
   Count : Word;
-  TChat : ChatRec;
   Info  : Stat;
 Begin
   If fpStat('mystic', Info) = 0 Then Begin
     fpSetGID (Info.st_GID);
     fpSetUID (Info.st_UID);
-  End;
-
-  Session.NodeNum := 0;
-
-  For Count := 1 to Config.INetTNNodes Do Begin
-    Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Count) + '.dat');
-
-    {$I-} Reset(ChatFile); {$I+}
-
-    If IoResult <> 0 Then Begin
-      Session.NodeNum := Count;
-      Break;
-    End;
-
-    Read  (ChatFile, TChat);
-    Close (ChatFile);
-
-    If Not TChat.Active Then Begin
-      Session.NodeNum := Count;
-      Break;
-    End;
-  End;
-
-  If Session.NodeNum = 0 Then Begin
-    WriteLn ('BUSY'); {++lang}
-
-    DisposeClasses;
-
-    Halt;
   End;
 
   fpSignal (SIGTERM, LinuxEventSignal);
@@ -371,14 +368,12 @@ Begin
   For Count := 1 to ParamCount Do Begin
     Temp := strUpper(ParamStr(Count));
 
-    If Copy(Temp, 1, 4) = '-TID' Then Begin
-      Session.CommHandle := strS2I(Copy(Temp, 5, Length(Temp)));
-      Session.Baud       := 38400;
-    End Else
-    If Copy(Temp, 1, 2) = '-B' Then Begin
-      Session.Baud := strS2I(Copy(Temp, 3, Length(Temp)));
-      If Session.Baud = 0 Then Session.LocalMode := True;
-    End Else
+    If Copy(Temp, 1, 4) = '-TID' Then
+      Session.CommHandle := strS2I(Copy(Temp, 5, Length(Temp)))
+    Else
+    If Copy(Temp, 1, 2) = '-B' Then
+      Session.Baud := strS2I(Copy(Temp, 3, Length(Temp)))
+    Else
     If Copy(Temp, 1, 2) = '-T' Then
       Session.TimeOffset := strS2I(Copy(Temp, 3, Length(Temp)))
     Else
@@ -411,12 +406,19 @@ Begin
     If Temp = '-L' Then Session.LocalMode := True;
   End;
 
-  FileMode := 66;
-
   {$IFDEF UNIX}
-    Linux_Init;
-    Session.Baud := 38400;
+    InitializeUnix;
   {$ENDIF}
+
+  If Session.NodeNum = 0 Then CalculateNodeNumber;
+
+  If Session.NodeNum = 0 Then Begin
+    WriteLn ('BUSY');
+
+    DisposeClasses;
+
+    Halt;
+  End;
 
   CheckPathsAndDataFiles;
 
@@ -449,8 +451,6 @@ Begin
     Session.SetTimeLeft(Session.TimeOffset)
   Else
     Session.SetTimeLeft(Config.LoginTime);
-
-  If Session.Baud = -1 Then Session.Baud := 0;
 
   {$IFNDEF UNIX}
     Screen.TextAttr := 7;

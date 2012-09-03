@@ -1203,7 +1203,7 @@ Var
     Addr     : RecEchoMailAddr;
   Begin
     Result := False;
-    Session.User.IgnoreGroup  := True;
+    Session.User.IgnoreGroup := True;
 
     Repeat
       If IsCopy Then

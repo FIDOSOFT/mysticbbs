@@ -4708,3 +4708,18 @@
 
  ! Fixed a bug which could sometimes cause a node to get disconnected just
    after MIS answered the all in Windows.
+
+ + If the user has zero downloads and uploads, Mystic will now allow them to
+   transfer one file for "free" (either a download or an upload) before the
+   ratio tracking comes into play.
+
+ ! Sysop chat hours now function as expected.  This was broken somewhere
+   around the 1.09 era.
+
+ ! Fixed bugs with MIS calculating the wrong node number if a user was
+   logged in locally in Windows.
+
+ + Mystic in non-Unix will not assign an available node number automatically
+   similar to how it works in a Unix environment.  This will help prevent
+   a person from accidentally logging into a node that is being used during
+   a local login.

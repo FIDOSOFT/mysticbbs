@@ -25,6 +25,8 @@ Type
 
     Constructor Create (Nodes: Byte);
     Destructor  Destroy; Override;
+
+    Procedure   SynchronizeNodeData;
     Function    GetNodeTotal : LongInt;
     Function    GetNodeInfo (Num: Byte; Var NI: TNodeInfoRec): Boolean;
     Procedure   SetNodeInfo (Num: Byte; NI: TNodeInfoRec);
@@ -36,6 +38,32 @@ Implementation
 Uses
   m_FileIO,
   m_Strings;
+
+Procedure TNodeData.SynchronizeNodeData;
+Var
+  ChatFile : File of ChatRec;
+  Chat     : ChatRec;
+  Count    : LongInt;
+  NI       : TNodeInfoRec;
+Begin
+  For Count := 1 to NodeTotal Do Begin
+    GetNodeInfo(Count, NI);
+
+    Assign (ChatFile, bbsConfig.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
+
+    If ioReset(ChatFile, SizeOf(ChatRec), fmRWDN) Then Begin
+      ioRead (ChatFile, Chat);
+      Close  (ChatFile);
+
+      NI.Busy   := Chat.Active;
+      NI.User   := Chat.Name;
+      NI.Action := Chat.Action;
+    End Else
+      NI.Busy := False;
+
+    SetNodeInfo(NI.Num, NI);
+  End;
+End;
 
 Function TNodeData.GetFreeNode : LongInt;
 Var
@@ -103,6 +131,8 @@ Begin
 
   For Count := 1 to NodeTotal Do
     NodeInfo[Count].Num := Count;
+
+  SynchronizeNodeData;
 End;
 
 Destructor TNodeData.Destroy;

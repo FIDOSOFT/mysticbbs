@@ -21,10 +21,12 @@ BUGS AND POSSIBLE ISSUES
 ! Test MIS blocking features or just rewrite MIS completely.
 ! Test midnight rollovers for time (flag for user to be immune to timecheck)
 ! Elasped time will need to be recalculated based on flag above ^^
+! Validate that "groupX.ans" and "fgroupX.ans" actually work.
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- Add better MIS logging per server (connect, refuse, blocked, etc)
 - BBS email autoforwarded to Internet email
 - Ability to send internet email to people from within the BBS.
 - ANSI post-processor for message uploads via FSE

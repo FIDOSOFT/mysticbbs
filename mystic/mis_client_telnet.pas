@@ -106,14 +106,11 @@ End;
 
 {$IFDEF UNIX}
 Procedure TTelnetServer.Execute;
-Const
-  BufferSize = 4096;
 Var
   Cmd    : String;
   Num    : LongInt;
   NI     : TNodeInfoRec;
   Proc   : TProcess;
-//  Buffer : Array[1..BufferSize] of Char;
   Buffer : TIOBuffer;
   bRead  : LongInt;
   bWrite : LongInt;
@@ -141,15 +138,12 @@ Begin
   While Proc.Running Do Begin
     If Proc.Output.NumBytesAvailable > 0 Then Begin
       While Proc.Output.NumBytesAvailable > 0 Do Begin
-        bRead := Proc.Output.Read(Buffer, BufferSize);
+        bRead := Proc.Output.Read(Buffer, TIOBufferSize);
         Client.WriteBufEscaped (Buffer, bRead);
-
-//        If Snooping Then
-//          Term.ProcessBuf(Buffer[0], bRead);
       End;
     End Else
     If Client.DataWaiting Then Begin
-      bWrite := Client.ReadBuf(Buffer, BufferSize);
+      bWrite := Client.ReadBuf(Buffer, TIOBufferSize);
 
       If bWrite < 0 Then Break;
 

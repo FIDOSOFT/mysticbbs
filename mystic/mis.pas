@@ -110,6 +110,7 @@ Begin
   DirChange(bbsConfig.SystemPath);
 End;
 
+(*
 Procedure ReadChatData;
 Var
   ChatFile : File of ChatRec;
@@ -137,6 +138,7 @@ Begin
       End;
     End;
 End;
+*)
 
 Function GetFocusPtr : TServerManager;
 Begin
@@ -160,7 +162,7 @@ Var
 Begin
   If FocusPtr = NIL Then Exit;
 
-  ReadChatData;
+  NodeData.SynchronizeNodeData;
 
   PosY := 0;
 
@@ -172,7 +174,7 @@ Begin
     If Count = BarPos Then Attr := 31 Else Attr := 7;
 
     Case FocusCurrent of
-        0 : If (Count <= FocusPtr.ClientList.Count) And (FocusPtr.ClientList[Count - 1] <> NIL) Then Begin
+        0 : If NI.Busy Then Begin
               Console.WriteXY (3, 3 + PosY, Attr,
       	        strPadL(strI2S(NI.Num), 3, '0') + ' ' +
                 strPadR(NI.User, 12, ' ') + ' ' +

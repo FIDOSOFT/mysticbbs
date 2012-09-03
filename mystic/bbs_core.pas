@@ -112,12 +112,12 @@ Begin
   ShutDown      := False;
   CommHandle    := -1;
   LocalMode     := False;
-  Baud          := -1;
+  Baud          := 38400;
   ExitLevel     := 0;
   EventWarn     := False;
   EventExit     := False;
   EventRunAfter := False;
-  NodeNum       := 1;
+  NodeNum       := 0;
   UserHostInfo  := '';
   UserIPInfo    := '';
   CheckTimeOut  := True;
