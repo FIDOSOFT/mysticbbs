@@ -1655,8 +1655,8 @@ Begin
             CoolBoxOpen (14, 'Edit');
             BoxOpen (15, 4, 30, 7);
 
-            Form.AddNone('F', '  Find  '      , 16,  7, 14, 'Search for text');
-            Form.AddNone('R', '  Replace  '   , 16,  8, 14, 'Search and replace text');
+            Form.AddNone('F', '  Find  '      , 16,  5, 14, 'Search for text');
+            Form.AddNone('R', '  Replace  '   , 16,  6, 14, 'Search and replace text');
 
             Res := Form.Execute;
 
