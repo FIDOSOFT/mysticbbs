@@ -436,6 +436,8 @@ Begin
   ExitProc := @ExitHandle;
 
   If Session.ConfigMode Then Begin
+    Session.NodeNum := 0;
+
     Configuration_MainMenu;
 
     Screen.TextAttr := 7;
