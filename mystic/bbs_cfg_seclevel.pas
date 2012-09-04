@@ -32,7 +32,7 @@ Begin
   VerticalLine (35, 6, 20);
 
   Form.AddStr  ('D', ' Description '        , 22,  6, 37,  6, 13, 30, 30, @Sec.Desc, Topic + 'Description of security level');
-  Form.AddWord ('T', ' Time Per Day '       , 21,  7, 37,  7, 14,  4,  0, 1440, @Sec.Time, Topic + 'Minutes per day');
+  Form.AddWord ('T', ' Time Per Day '       , 21,  7, 37,  7, 14,  4,  0, 9999, @Sec.Time, Topic + 'Minutes per day');
   Form.AddWord ('C', ' Calls Per Day '      , 20,  8, 37,  8, 15,  5,  0, 65000, @Sec.MaxCalls, Topic + 'Maximum calls allowed per day');
   Form.AddWord ('P', ' Post/Call Ratio '    , 18,  9, 37,  9, 17,  5,  0, 65000, @Sec.PCRatio, Topic + 'Must post X messages per 100 calls');
   Form.AddWord ('E', ' Download Per Day '   , 17, 10, 37, 10, 18,  5,  0, 65000, @Sec.MaxDLs, Topic + 'Maximum downloads allowed per day');
