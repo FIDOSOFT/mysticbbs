@@ -791,18 +791,21 @@ Var
   SR  : ArcSearchRec;
 Begin
   Result := False;
-  Arc    := New(PArchive, Init);
+
+  If Not FileExist(FName) Then Exit;
+
+  Arc := New(PArchive, Init);
 
   If Not Arc^.Name(FName) Then Begin
-    Dispose (Arc,  Done);
+    Dispose (Arc, Done);
 
     If FileExist(FName) Then Begin
-      ExecuteArchive     (FName, '', '_view_.tmp', 3);
-      Session.io.OutFile (Session.TempPath + '_view_.tmp', True, 0);
-      FileErase          (Session.TempPath + '_view_.tmp');
-    End;
+      ExecuteArchive (FName, '', '_view_.tmp', 3);
 
-    Result := True;
+      Result := Session.io.OutFile (Session.TempPath + '_view_.tmp', True, 0);
+
+      FileErase (Session.TempPath + '_view_.tmp');
+    End;
 
     Exit;
   End;
@@ -894,15 +897,13 @@ Begin
   Result := 0;
 End;
 
-Function TFileBase.ArchiveView (FName : String) : Boolean;
+Function TFileBase.ArchiveView (FName: String) : Boolean;
 Var
   Mask : String[70];
 Begin
-  Result := False;
+  Result := ArchiveList(FName);
 
-  If Not ArchiveList(FName) Then Exit;
-
-  Result := True;
+  If Not Result Then Exit;
 
   Repeat
     Session.io.OutFull (Session.GetPrompt(304));
