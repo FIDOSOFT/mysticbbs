@@ -4723,3 +4723,13 @@
    similar to how it works in a Unix environment.  This will help prevent
    a person from accidentally logging into a node that is being used during
    a local login.
+
+ + Mystic now sends IAC_DO_BINARY as part of the starting telnet negotiations
+   done by MIS.  This will help fix some weird issues with Linux/OSX default
+   telnet command line client.
+
+ + In MPL including a file has been changed to its own keyword as opposed to
+   minicing a compile directive:
+
+      Old: {$include myfile.mps}
+      New: include myfile.mps

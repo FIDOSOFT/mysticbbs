@@ -167,7 +167,7 @@ Type
                    wCaseOf,       wNumRange,    wType,        wConst,
                    wBreak,        wContinue,    wUses,        wExit,
                    wHexPrefix,    wExpAnd,      wExpOr,       wExpXor,
-                   wExpShl,       wExpShr);
+                   wExpShl,       wExpShr,      wInclude);
 {$ENDIF}
 
 
@@ -200,7 +200,7 @@ Const
              'of',              '..',             'type',       'const',
              'break',           'continue',       'uses',       'exit',
              '$',               'and',            'or',         'xor',
-             'shl',             'shr'
+             'shl',             'shr',            'include'
            );
 
      wTokensIPLC : TTokenWordType = (
@@ -220,7 +220,7 @@ Const
              'of',              '..',             'type',       'const',
              'break',           'continue',       'uses',       'exit',
              '$',               '&',              '|',          'xor',
-             '<<',              '>>'
+             '<<',              '>>',             'include'
            );
 
   {$ENDIF}

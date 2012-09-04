@@ -84,6 +84,7 @@ Type
     LastCharPos : LongInt;
     IdentStr    : String;
     AllowOutput : Boolean;
+    GotBlock    : Boolean;
     UpdateProc  : TParserUpdateProc;
     UpdateInfo  : TParserUpdateInfo;
     VarData     : VarDataRec;
@@ -109,6 +110,7 @@ Type
     Procedure PrevChar;
     Function  GetStr            (Str: String; Forced, CheckSpace: Boolean) : Boolean;
     Function  GetIdent          (Forced: Boolean) : Boolean;
+    Function  GetDirective      : String;
     Function  IsEndOfLine       : Boolean;
     Function  CurFilePos        : LongInt;
     Procedure SavePosition;
@@ -439,7 +441,7 @@ Begin
     CloseSourceFile;
     UpdateInfo := InFile[CurFile].SavedInfo;
     LoadPosition;
-    GetChar; // read the } of the include ?
+//    GetChar; // read the } of the include ?
   End Else
     Error (mpsEndOfFile, '');
 
@@ -462,21 +464,22 @@ Begin
   Result := Ch in [#10, #13];
 End;
 
+Function TParserEngine.GetDirective : String;
+Begin
+  Result := '';
+
+  Repeat
+    GetChar;
+
+    If Ch in [#10, #13, '}'] Then Break;
+
+    Result := Result + LoCase(Ch);
+  Until UpdateInfo.ErrorType <> 0;
+
+  Result := strStripB(Result, ' ');
+End;
+
 Procedure TParserEngine.NextChar;
-
-  Function GetDirective : String;
-  Begin
-    Result := '';
-
-    Repeat
-      GetChar;
-      If Ch = '}' Then Break;
-      Result := Result + LoCase(Ch);
-    Until UpdateInfo.ErrorType <> 0;
-
-    Result := strStripB(Result, ' ');
-  End;
-
 Var
   BlockCount : Byte;
   BlockStart : Char;
@@ -537,13 +540,6 @@ Begin
 
                      If Ch = '$' Then Begin
                        If GetIdent(False) Then Begin
-                         If IdentStr = 'include' Then Begin
-                           Str := GetDirective;
-                           SavePosition;
-                           InFile[CurFile].SavedInfo := UpdateInfo;
-                           OpenSourceFile(Str);
-                           If UpdateInfo.ErrorType <> 0 Then Exit;
-                         End Else
                          If IdentStr = 'syntax' Then Begin
                            Str := GetDirective;
                            If Str = 'pascal' Then Begin
@@ -581,14 +577,6 @@ Begin
 
                        Case Ch of
                          '$' : If (BlockCount = 1) And GetIdent(False) Then Begin
-                                 If IdentStr = 'include' Then Begin
-                                   Str := GetDirective;
-                                   SavePosition;
-                                   InFile[CurFile].SavedInfo := UpdateInfo;
-                                   OpenSourceFile(Str);
-                                   If UpdateInfo.ErrorType <> 0 Then Exit;
-                                   Break;
-                                 End Else
                                  If IdentStr = 'syntax' Then Begin
                                    Str := GetDirective;
                                    If Str = 'pascal' Then Begin
@@ -1785,11 +1773,6 @@ Begin
   End;
 End;
 
-// problem w const is if include file is right after last const.. ie:
-// const
-//  blah = 'hi';
-// {$include blah.mps}
-
 Procedure TParserEngine.DefineConst;
 Begin
   If CurConstNum = mplMaxConsts Then
@@ -2657,6 +2640,7 @@ Var
   GotOpen    : Boolean;  // make parsemode var to replace all these bools
   GotVar     : Boolean;
   GotConst   : Boolean;
+  IncName    : String;
 Begin
   GotOpen  := CheckBlock;
   GotVar   := False;
@@ -2683,6 +2667,15 @@ Begin
     // being lazy and not rewriting all the token parsing...  that would
     // speed up parsing... but meh its only the compiler who cares lol
 
+    If GetStr(tkw[wInclude], False, False) Then Begin
+      IncName := GetDirective;
+
+      SavePosition;
+
+      InFile[CurFile].SavedInfo := UpdateInfo;
+
+      OpenSourceFile(IncName);
+    End Else
     If GetStr(tkw[wBlockOpen], False, False) Then Begin
       If GotOpen And Not OneLine Then Begin
         PrevChar;
@@ -2745,9 +2738,15 @@ Begin
     If GetStr(tkw[wExit], False, False) Then
       OutString (Char(opExit))
     Else
-    If GetStr(tkw[wUses], False, False) Then
-      StatementUses
-    Else Begin
+    If GetStr(tkw[wUses], False, False) Then Begin
+      If GotBlock Then
+        Error(mpsSyntaxError, 'USES must be first statement')
+      Else Begin
+        StatementUses;
+        GotBlock := False;
+        Continue;
+      End;
+    End Else Begin
       NextChar;
 
       If Ch in chIdent1 Then Begin
@@ -2766,6 +2765,8 @@ Begin
       End Else
         Error (mpsSyntaxError, '');
     End;
+
+    GotBlock := True;
   Until (UpdateInfo.ErrorType <> 0) or OneLine;
 
   For Count := CurVarNum DownTo SavedVar + 1 Do
@@ -2859,6 +2860,7 @@ Begin
   UsesMGROUP := False;
   UsesFBASE  := False;
   UsesFGROUP := False;
+  GotBlock   := False;
 
   Assign  (OutFile, JustFileName(FN) + mplExtExecute);
   ReWrite (OutFile, 1);

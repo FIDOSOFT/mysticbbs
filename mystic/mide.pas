@@ -60,7 +60,7 @@ Const
   colEditPosBar  = 9 + 1 * 16;
 
 Const
-  Keywords = 23;
+  Keywords = 24;
   Keyword : Array[1..Keywords] of String[9] = (
     ( 'AND'       ),
     ( 'BEGIN'     ),
@@ -73,6 +73,7 @@ Const
     ( 'FOR'       ),
     ( 'FUNCTION'  ),
     ( 'IF'        ),
+    ( 'INCLUDE'   ),
     ( 'NOT'       ),
     ( 'OF'        ),
     ( 'OR'        ),
