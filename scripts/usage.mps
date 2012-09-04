@@ -5,12 +5,23 @@
 //   License : Part of with Mystic BBS distribution / GPL repository
 // --------------------------------------------------------------------------
 //
-// This MPL calculates a monthly usage graph based on the BBS history data
-// file.  Simply copy it to the scripts directory, compile it and execute it
-// from your menu with the GX menu command (optional data 'usage').
+// This MPL calculates a monthly, weekly and hourly usage graph based on the
+// BBS history datafile.  Simply copy it to the scripts directory, compile it
+// and execute it from your menu with the GX menu command (optional data
+// 'usage').
 //
-// I may continue to add different types of graphs in the future.  The latest
-// version can be found on Mystic BBS sourceforge page.
+// If the MPL program is executed without any optional data, it will allow
+// the user to tab through the different graphs.  Additionally, the following
+// optional command data options can be used:
+//
+//    MONTHLY - Display monthly graph and exit immediately
+//    WEEKLY  - Display weekly graph and exit immediately
+//    HOURLY  - Display hourly graph and exit immediately
+//
+// Example:
+//
+//     Menu Command: GX (Execute MPL Program)
+//    Optional Data: usage weekly
 //
 // ==========================================================================
 
@@ -47,12 +58,12 @@ Var
   Week  : Array[0..6] of Cardinal;
   Hour  : Array[0..23] of Cardinal;
 
-Procedure DrawBar (XPos, Value: Byte);
+Procedure DrawBar (XPos, bSize, Value: Byte);
 Var
   Temp : Byte;
 Begin
   For Temp := 1 to Value Do
-    WriteXY (XPos, 18 - Temp, 1, #219 + #219 + #219);
+    WriteXY (XPos, 18 - Temp, 1, strRep(#219, bSize));
 End;
 
 Procedure DisplayMonthly;
@@ -77,7 +88,7 @@ Begin
     End;
 
   For Count := 1 to 12 Do
-    DrawBar (6 * Count, Month[Count]);
+    DrawBar (6 * Count, 3, Month[Count]);
 End;
 
 Procedure DisplayWeekly;
@@ -88,21 +99,48 @@ Begin
   WriteLn ('|CL|09|17 ' + #176 + ' |15Weekly Usage Graph ' + PadLT(strComma(Days) + '|07 days, |15' + strComma(Calls) + ' |07calls ', 64, ' ') + '|09' + #176 + ' |16');
 
   For Count := 0 to 6 Do Begin
-    GotoXY (10 * (Count + 1), 18);
-    Write ('|08' + #196 + #196 + #196);
+    GotoXY (4 + (Count * 11), 18);
+    Write ('|08' + strRep(#196, 8));
   End;
 
-  WriteXY (10, 19, 14, 'Sun       Mon       Tue       Wed       Thu       Fri       Sat');
+  WriteXY ( 4, 19, 14, ' Sunday     Monday    Tuesday    Wednesday  Thursday    Friday    Saturday');
   WriteXY ( 2, 21, 08, strRep(#196, 78));
 
   For Count := 0 to 6 Do
     For Count2 := 15 DownTo 1 Do Begin
-      GotoXY (10 * (Count + 1), 2 + Count2);
-      Write  (#250 + #250 + #250);
+      GotoXY (4 + (Count * 11), 2 + Count2);
+      Write  (strRep(#250, 8));
     End;
 
   For Count := 0 to 6 Do
-    DrawBar (10 * (Count + 1), Week[Count]);
+    DrawBar (4 + (Count * 11), 8, Week[Count]);
+End;
+
+Procedure DisplayHourly;
+Var
+  Count  : Integer;
+  Count2 : Integer;
+Begin
+  WriteLn ('|CL|09|17 ' + #176 + ' |15Hourly Usage Graph ' + PadLT(strComma(Days) + '|07 days, |15' + strComma(Calls) + ' |07calls ', 64, ' ') + '|09' + #176 + ' |16');
+
+  GotoXY (5, 18);
+
+  For Count := 1 to 24 Do
+    Write ('|08' + #196 + #196 + ' ');
+
+  WriteXY ( 5, 19, 14, '12 01 02 03 04 05 06 07 08 09 10 11 12 01 02 03 04 05 06 07 08 09 10 11');
+  WriteXY ( 5, 20, 09, 'AM');
+  WriteXY (41, 20, 09, 'PM');
+  WriteXY ( 2, 21, 08, strRep(#196, 78));
+
+  For Count := 1 to 24 Do
+    For Count2 := 15 DownTo 1 Do Begin
+      GotoXY (5 + ((Count - 1) * 3), Count2 + 2);
+      Write  ('|08' + #250 + #250);
+    End;
+
+  For Count := 0 to 23 Do
+    DrawBar (5 + (Count * 3), 2, Hour[Count]);
 End;
 
 Procedure CalculateHistory;
@@ -120,7 +158,10 @@ Begin
   If IoResult <> 0 Then Exit;
 
   If fSize(HistFile) = 0 Then Begin
+    fClose (HistFile);
+
     WriteLn ('|CRNo BBS history to calculate|CR|CR|PA');
+
     Halt;
   End;
 
@@ -140,6 +181,8 @@ Begin
     For Count := 0 to 23 Do
       Hour[Count] := Hour[Count] + OneDay.Hourly[Count];
   End;
+
+  fClose (HistFile);
 
   Highest := 0;
 
@@ -176,8 +219,6 @@ Begin
       TempReal    := (Hour[Count] / Highest * 100);
       Hour[Count] := TempReal / 7 + 1;
     End;
-
-  fClose (HistFile);
 End;
 
 Var
@@ -194,7 +235,7 @@ Begin
     Case Upper(ParamStr(1)) of
       'MONTHLY' : DisplayMonthly;
       'WEEKLY'  : DisplayWeekly;
-//      'HOURLY'  : DisplayHourly;
+      'HOURLY'  : DisplayHourly;
     Else
       WriteLn ('USAGE.MPS: Invalid command line option.|PN');
     End;
@@ -203,15 +244,15 @@ Begin
 
     Repeat
       Case ShowMode of
-        1 : DisplayMonthly;
+        1 : DisplayHourly;
         2 : DisplayWeekly;
-//        3 : DisplayHourly;
+        3 : DisplayMonthly;
       End;
 
       WriteXYPipe (22, 23, 7, 0, 'Press |08[|15TAB|08] |07for more or |08[|15ENTER|08] |07to Quit');
 
       Case OneKey(#09 + #13, False) of
-        #09 : If ShowMode < 2 Then ShowMode := ShowMode + 1 Else ShowMode := 1;
+        #09 : If ShowMode < 3 Then ShowMode := ShowMode + 1 Else ShowMode := 1;
         #13 : Break;
       End;
     Until False;
