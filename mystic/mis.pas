@@ -110,36 +110,6 @@ Begin
   DirChange(bbsConfig.SystemPath);
 End;
 
-(*
-Procedure ReadChatData;
-Var
-  ChatFile : File of ChatRec;
-  Chat     : ChatRec;
-  Nodes    : LongInt;
-  Count    : LongInt;
-  NI       : TNodeInfoRec;
-Begin
-  Nodes := NodeData.GetNodeTotal;
-
-  For Count := 1 to Nodes Do
-    If NodeData.GetNodeInfo(Count, NI) Then Begin
-      Assign (ChatFile, bbsConfig.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
-
-      If ioReset(ChatFile, SizeOf(ChatRec), fmReadWrite + fmDenyNone) Then Begin
-        If ioRead(ChatFile, Chat) Then Begin
-          If Chat.Active Then Begin
-            NI.User   := Chat.Name;
-            NI.Action := Chat.Action;
-
-            NodeData.SetNodeInfo(NI.Num, NI);
-          End;
-        End;
-      	Close (ChatFile);
-      End;
-    End;
-End;
-*)
-
 Function GetFocusPtr : TServerManager;
 Begin
   Result := NIL;
