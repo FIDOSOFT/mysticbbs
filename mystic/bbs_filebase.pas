@@ -447,7 +447,7 @@ Begin
       Arc^.FindFirst(SR);
 
       While SR.Name <> '' Do Begin
-        If (Pos('FILE_ID.DIZ', strUpper(SR.Name)) > 0 Then Begin
+        If Pos('FILE_ID.DIZ', strUpper(SR.Name)) > 0 Then Begin
           DizName := strStripLow(SR.Name);
           Break;
         End;
@@ -607,7 +607,7 @@ Begin
   End Else
     Session.io.OutFullLn (Session.GetPrompt(386));
 
-  DirClean(Session.TempPath, '');
+  FileErase (Session.TempPath + 'xfer.log');
 End;
 
 Procedure TFileBase.DownloadFileList (Data: String);
