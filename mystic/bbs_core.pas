@@ -11,7 +11,7 @@ Uses
   {$ENDIF}
   m_FileIO,
   m_Strings,
-  m_Pipe_Disk,
+  m_Pipe,
   m_DateTime,
   BBS_Common,
   BBS_IO,
@@ -34,7 +34,7 @@ Type
     FileBase      : TFileBase;
     Menu          : TMenuEngine;
     IO            : TBBSIO;
-    Pipe          : TPipeDisk;
+    Pipe          : TPipe;
     EventFile     : File of EventRec;
     ThemeFile     : File of RecTheme;
     VoteFile      : File of VoteRec;
@@ -331,6 +331,8 @@ Begin
   If TimerStart > TimerMinutes Then Begin
     Dec (TimerStart, 1440);
     Dec (TimerEnd,   1440);
+
+    SetTimeLeft (User.Security.Time);
   End;
 
   ElapsedTime := TimerMinutes - TimerStart;

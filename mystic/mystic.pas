@@ -40,7 +40,7 @@ Uses
   m_DateTime,
   m_Output,
   m_Input,
-  m_Pipe_Disk,
+  m_Pipe,
   bbs_Common,
   bbs_Core,
   bbs_NodeInfo,
@@ -231,7 +231,7 @@ Begin
 
   FileMode         := 66;
   Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
-  Session.Pipe     := TPipeDisk.Create(Config.DataPath, False, Session.NodeNum);
+  Session.Pipe     := TPipe.Create(Config.DataPath, False, Session.NodeNum);
 
   {$I-}
   MkDir (Config.SystemPath + 'temp' + strI2S(Session.NodeNum));

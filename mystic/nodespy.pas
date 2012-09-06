@@ -37,7 +37,7 @@ Uses
   m_FileIO,
   m_DateTime,
   m_Strings,
-  m_Pipe_Disk,
+  m_Pipe,
   m_Input,
   m_Output,
   m_io_Base,
@@ -494,7 +494,7 @@ End;
 
 Procedure SnoopNode (Node: Byte);
 Var
-  Pipe    : TPipeDisk;
+  Pipe    : TPipe;
   Buffer  : Array[1..4 * 1024] of Char;
   BufRead : LongInt;
   Update  : LongInt;
@@ -532,7 +532,7 @@ Begin
 
   SendNodeMessage(Node, 11);
 
-  Pipe := TPipeDisk.Create(Config.DataPath, True, Node);
+  Pipe := TPipe.Create(Config.DataPath, True, Node);
 
   If Not Pipe.ConnectPipe(1500) Then Begin
     ShowMsgBox (0, 'Unable to establish a session.  Try again');

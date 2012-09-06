@@ -990,11 +990,11 @@ Begin
             MsgNew^.SetOrig (Addr);
           End;
     Else
-      MsgNew^.SetTo(ToWho);
+      MsgNew^.SetTo (ToWho);
     End;
 
-    MsgNew^.SetSubj(Subj);
-    MsgNew^.SetRefer(MsgBase^.GetMsgNum);
+    MsgNew^.SetSubj (Subj);
+    MsgNew^.SetRefer (MsgBase^.GetMsgNum);
 
     AppendMessageText (MsgNew, Lines, ReplyID);
 
