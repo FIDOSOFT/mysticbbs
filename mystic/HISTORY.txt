@@ -4729,9 +4729,13 @@
    telnet command line client.
 
  + In MPL including a file has been changed to its own keyword as opposed to
-   minicing a compile directive:
+   mimicing a compile directive.  All MPL programs for 1.10 must be updated
+   if INCLUDE files are used:
 
       Old: {$include myfile.mps}
       New: include myfile.mps
 
  + Added an hourly usage graph to usage.mps.
+
+ ! MUTIL FILEBONE import was not adding the trailing slash when generating a
+   file path.

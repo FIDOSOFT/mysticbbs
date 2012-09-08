@@ -42,13 +42,16 @@ Uses
   m_Strings,
   m_FileIO,
   m_IniReader,
-  mutil_Common,
-  mutil_Status,
-  mutil_ImportNA,
-  mutil_FileBone,
-  mutil_Upload,
-  mutil_TopLists,
-  mutil_FilesBBS;
+  mUtil_Common,
+  mUtil_Status,
+  mUtil_ImportNA,
+  mUtil_FileBone,
+  mUtil_Upload,
+  mUtil_TopLists,
+  mUtil_FilesBBS,
+  mUtil_AllFiles,
+  mUtil_MsgPurge,
+  mUtil_MsgPack;
 
 {$I MUTIL_ANSI.PAS}
 
@@ -154,6 +157,9 @@ Var
   DoFileBone   : Boolean;
   DoMassUpload : Boolean;
   DoTopLists   : Boolean;
+  DoAllFiles   : Boolean;
+  DoMsgPurge   : Boolean;
+  DoMsgPack    : Boolean;
 Begin
   ApplicationStartup;
 
@@ -164,6 +170,9 @@ Begin
   DoMassUpload := CheckProcess(Header_UPLOAD);
   DoTopLists   := CheckProcess(Header_TOPLISTS);
   DoFilesBBS   := CheckProcess(Header_FILESBBS);
+  DoAllFiles   := CheckProcess(Header_ALLFILES);
+  DoMsgPurge   := CheckProcess(Header_MSGPURGE);
+  DoMsgPack    := CheckProcess(Header_MSGPACK);
 
   // Exit with an error if nothing is configured
 
@@ -182,4 +191,7 @@ Begin
   If DoFilesBBS   Then uImportFilesBBS;
   If DoMassUpload Then uMassUpload;
   If DoTopLists   Then uTopLists;
+  If DoAllFiles   Then uAllFilesList;
+  If DoMsgPurge   Then uPurgeMessageBases;
+  If DoMsgPack    Then uPackMessageBases;
 End.
