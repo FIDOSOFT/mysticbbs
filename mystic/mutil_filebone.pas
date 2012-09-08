@@ -85,7 +85,7 @@ Begin
       FBase.Name       := BaseName;
       FBase.FTPName    := strReplace(BaseName, ' ', '_');
       FBase.FileName   := BaseTag;
-      FBase.Path       := RootDir + BaseTag;
+      FBase.Path       := DirSlash(RootDir + BaseTag);
       FBase.DefScan    := strS2I(INI.ReadString(Header_FILEBONE, 'new_scan', '1'));
       FBase.DispFile   := INI.ReadString(Header_FILEBONE, 'dispfile', '');
       FBase.Template   := INI.ReadString(Header_FILEBONE, 'template', 'ansiflst');
