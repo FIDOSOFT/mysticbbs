@@ -29,6 +29,9 @@ Const
   Header_FILESBBS = 'Import_FILES.BBS';
   Header_UPLOAD   = 'MassUpload';
   Header_TOPLISTS = 'GenerateTopLists';
+  Header_ALLFILES = 'GenerateAllFiles';
+  Header_MSGPURGE = 'PurgeMessageBases';
+  Header_MSGPACK  = 'PackMessageBases';
 
 Function  strAddr2Str        (Addr : RecEchoMailAddr) : String;
 Function  GenerateMBaseIndex : LongInt;
