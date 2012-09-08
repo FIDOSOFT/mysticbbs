@@ -540,6 +540,8 @@ Var
   UserFile  : File of RecUser;
   User      : RecUser;
 Begin
+  FileMode := 66;
+
   Write ('Killing User File    :');
 
   If FileRename (Config.DataPath + 'users.dat', Config.DataPath + 'users.dab') Then Begin
