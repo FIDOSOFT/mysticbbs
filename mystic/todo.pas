@@ -14,18 +14,16 @@ BUGS AND POSSIBLE ISSUES
 ! After data file review, add missing variables to various MPL Get/Put
   functions.
 ! RAR internal viewer does not work with files that have embedded comments
-! Investigate strange crashing when Mystic is built in the FPC editor vs
-  the makewin script.  Something is out of whack with compiler options?  OR
-  FPC BUG?  DirAttr is suspect in MPL is it 1 byte or 4 in size?
-! View archive not working if its external view? [Griffin]
-! Test MIS blocking features or just rewrite MIS completely.
 ! Test midnight rollovers for time (flag for user to be immune to timecheck)
-! Elasped time will need to be recalculated based on flag above ^^
 ! Validate that "groupX.ans" and "fgroupX.ans" actually work.
+! Test NNTP with Thunderbird specifically FUBAR dates on messages.
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- Auto wrapping of quotes before the FS editor gets to it.
+- Finish Threaded message reader
+- Add "high roller Smack talk" into BlackJack
 - Add better MIS logging per server (connect, refuse, blocked, etc)
 - BBS email autoforwarded to Internet email
 - Ability to send internet email to people from within the BBS.
@@ -74,6 +72,8 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Template system similar to Mystic 2 (ansiedit.ans ansiedit.ans.cfg)
 - Rename Template filenames to allow more than 8 characters (for clarity)
 - Does anyone use Version 7 compiled nodelists?  Worth supporting?
+  How do other softwares leverage nodelists?  Reference TG, RG, RA,
+  SearchLight, PCBoard, etc, and come up with the best solution.
 - ANSI message upload post processor option: Auto/Disabled/Ask
 - Prompt for disconect after UL or DL (and add option to filebase settings)
 - Finish optional user prompts
@@ -92,6 +92,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 -    ^^ AREAFIX
 -    ^^ TIC processing
 -    ^^ Needs to be powerful enough to HUB an entire FTN network
+- QWK Networking support internally WHO CAN HELP THIS HAPPEN?
 - MPL trunc/round?
 - Internal Zmodem and TN/Link protocols or at least MBBSPROT executable
      ^^ driver that ships with Mystic and can be used by others.
@@ -119,6 +120,7 @@ Disconnect while posting design:
           Line 5: Network address (or blank if none)
           Line 6: MsgText
              overwrite if exists
+          NOTE WHAT ABOUT QUOTE TEXT
 5. During LOGIN, check for msg_<UID>.txt or have menu command to do it?
 6. If exists, process and prompt user:
 
@@ -163,9 +165,9 @@ mode library updates and screensave/restore changes)
 1. terminal "screen length" is no longer an option of lines but a
    selection:
 
-     80x25
-     80x50
-     132x50
+     80x24
+     80x49
+     132x49
 
 2. all display files and templates will have this logic added:
 
@@ -193,7 +195,7 @@ ansiflst.50.an1 = ansiflist.50.an1.cfg
 
 FILE rating / comments system
 
-1. what type? 4 or 5 start or 0-100 rating system?
+1. what type? 4 or 5 stars, or 1-10, or 0-100 rating system?
 2. records already updated to allow for either
 
 -----------------------------------------------------------------------

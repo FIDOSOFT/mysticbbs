@@ -4719,7 +4719,7 @@
  ! Fixed bugs with MIS calculating the wrong node number if a user was
    logged in locally in Windows.
 
- + Mystic in non-Unix will not assign an available node number automatically
+ + Mystic in non-Unix will now assign an available node number automatically
    similar to how it works in a Unix environment.  This will help prevent
    a person from accidentally logging into a node that is being used during
    a local login.
@@ -4739,3 +4739,70 @@
 
  ! MUTIL FILEBONE import was not adding the trailing slash when generating a
    file path.
+
+ + MUTIL now has an option to generate an allfiles list which contains a
+   listing of all files from each filebase in one text file.
+
+   The functionality if there, but its not very configurable yet.  If
+   anyone has suggestions please let me know.
+
+ + Added 3 new MPL functions: MsgEditor, MsgEditSet, MsgEditGet.  These allow
+   access to the internal Mystic msg editor (line and/or full) from within
+   MPL.  It even allows you to define wrap position and template to completely
+   make it look like its not the Mystic editor!
+
+   As a little hint the MsgEditSet and MsgEditGet stuff could be used to post
+   process message text on posts.  Like say for example you wanted to write
+   a MPL that allows users to add Tag lines, you could do that by replacing
+   the "Saving message..." prompt and using those two in order to modify the
+   text before it is saved by Mystic!
+
+   Rather than trying to explain it all, here is an example of all 3:
+
+     Var
+       Lines    : Integer = 0;
+       WrapPos  : Integer = 79;
+       MaxLines : Integer = 200;
+       Forced   : Boolean = False;
+       Template : String  = 'ansiedit';
+       Subject  : String  = 'My subject';
+       Count    : Integer;
+     Begin
+       MsgEditSet (1, 'this is line 1');
+       MsgEditSet (2, 'this is line 2!');
+
+       Lines := 2;
+
+       SetPromptInfo(1, 'MsgTo');  // if template uses &1 for "To:" display
+
+       If MsgEditor(0, Lines, WrapPos, MaxLines, Forced, Template, Subject) Then Begin
+         WriteLn('User selected to save.');
+         WriteLn('There are ' + Int2Str(Lines) + ' of text in buffer:');
+
+         For Count := 1 to Lines Do
+           WriteLn(MsgEditGet(Count));
+
+         Pause;
+       End Else Begin
+         WriteLn('User aborted the edit.');
+
+         Pause;
+       End
+     End
+
+ ! Fixed a bug in the internal LHA archive viewing that could cause the last
+   file in the archive to get corrupted during the view, if the file had
+   comments (and was created on an Amiga?)
+
+ + CTRL-Z and [ESCAPE] now both bring up the full screen editor prompt to
+   save, etc.
+
+ + Revampped message quoting a little bit.  Quoted text will now be auto
+   reformatted if adding the initials would cut off text in the original
+   message EXCEPT when quoting quoted text.
+
+   Quote initials will always be 2 characters now.  If the User handle is a
+   single word handle, it will use the first two letters of their name.
+
+ ! Fixed a bug that could corrupt a message and/or crash when editing a
+   message with a lot of lines.

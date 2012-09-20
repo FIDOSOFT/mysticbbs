@@ -256,6 +256,8 @@ Begin
 
   Client := TIOSocket.Create;
 
+  Client.FTelnetClient := True;
+
   If Not Client.Connect('127.0.0.1', bbsConfig.InetTNPort) Then
     Console.WriteLine('Unable to connect')
   Else Begin

@@ -135,7 +135,6 @@ Type
   End;
 
 Type
-
   PMsgBaseSquish = ^TMsgBaseSquish;
   TMsgBaseSquish = Object(TMsgBaseAbs)
     SqInfo    : ^SqInfoType;
@@ -247,13 +246,13 @@ Type
         Procedure MsgStartUp; Virtual; {Set up message}
         Procedure MsgTxtStartUp; Virtual; {Set up for msg text}
         Procedure SetMailType(MT: MsgMailType); Virtual; {Set message base type}
-        Function        GetSubArea: Word; Virtual; {Get sub area number}
+//        Function        GetSubArea: Word; Virtual; {Get sub area number}
         Procedure ReWriteHdr; Virtual; {Rewrite msg header after changes}
         Procedure DeleteMsg; Virtual; {Delete current message}
         Procedure LoadFree; Virtual; {Load freelist into memory}
         Function        NumberOfMsgs: LongInt; Virtual; {Number of messages}
         Procedure SetEcho(ES: Boolean); Virtual; {Set echo status}
-        Function        IsEchoed: Boolean; Virtual; {Is current msg unmoved echomail msg}
+//        Function        IsEchoed: Boolean; Virtual; {Is current msg unmoved echomail msg}
         Function        GetLastRead(UNum: LongInt): LongInt; Virtual; {Get last read for user num}
         Procedure SetLastRead(UNum: LongInt; LR: LongInt); Virtual; {Set last read}
         Function        GetMsgLoc: LongInt; Virtual; {To allow reseeking to message}
@@ -329,48 +328,53 @@ End;
 
 Procedure TMsgBaseSquish.SetMsgPath(FN: String);
 Begin
-        SqInfo^.FN := FExpand(FN);
-        If Pos('.', SqInfo^.FN) > 0 Then
-                SqInfo^.FN := Copy(SqInfo^.FN,1,Pos('.', SqInfo^.FN) - 1);
+  SqInfo^.FN := FExpand(FN);
+
+  If Pos('.', SqInfo^.FN) > 0 Then
+    SqInfo^.FN := Copy(SqInfo^.FN,1,Pos('.', SqInfo^.FN) - 1);
 End;
 
 Function TMsgBaseSquish.OpenMsgBase: Boolean;
 Begin
-        If SqiOpen Then Begin
-                OpenMsgBase := SqdOpen;
-                ReadIdx;
-        End Else
-                OpenMsgBase := False;
+  If SqiOpen Then Begin
+    OpenMsgBase := SqdOpen;
+
+    ReadIdx;
+  End Else
+    OpenMsgBase := False;
 End;
 
 Function TMsgBaseSquish.SqdOpen: Boolean;
 Var
-        NumRead: LongInt;
+  NumRead: LongInt;
 Begin
-        If Not SqInfo^.SqdOpened Then Begin
-                Assign(SqInfo^.SqdFile, SqInfo^.FN + '.sqd');
-                FileMode := 66; {ReadWrite + DenyNone}
-                If Not ioReset(SqInfo^.SqdFile, 1, fmreadwrite + fmdenynone) Then
-                        SqdOpen := False
-                Else Begin
-                        SqInfo^.SqdOpened := True;
-                        SqdOpen := True;
-                        If Not ioBlockRead(SqInfo^.SqdFile, SqInfo^.SqBase, 2, NumRead) Then
-                                SqdOpen := False
-                        Else Begin
-                                If SqInfo^.SqBase.Len = 0 Then
-                                        SqInfo^.SqBase.Len := SqBSize;
-                                If SqInfo^.SqBase.Len > (SizeOf(SqBaseType) + 100) Then
-                                        SqdOpen := False
-                                Else Begin
-                                        SqBSize := SqInfo^.SqBase.Len;
-                                        ReadBase;
-                                End;
-                        End;
-                End;
-        End Else
-                SqdOpen := True;
-        End;
+  If Not SqInfo^.SqdOpened Then Begin
+
+    Assign(SqInfo^.SqdFile, SqInfo^.FN + '.sqd');
+
+    FileMode := 66; {ReadWrite + DenyNone}
+
+    If Not ioReset(SqInfo^.SqdFile, 1, fmreadwrite + fmdenynone) Then
+      SqdOpen := False
+    Else Begin
+      SqInfo^.SqdOpened := True;
+      SqdOpen := True;
+      If Not ioBlockRead(SqInfo^.SqdFile, SqInfo^.SqBase, 2, NumRead) Then
+        SqdOpen := False
+      Else Begin
+        If SqInfo^.SqBase.Len = 0 Then
+          SqInfo^.SqBase.Len := SqBSize;
+          If SqInfo^.SqBase.Len > (SizeOf(SqBaseType) + 100) Then
+            SqdOpen := False
+          Else Begin
+            SqBSize := SqInfo^.SqBase.Len;
+            ReadBase;
+          End;
+      End;
+    End;
+  End Else
+    SqdOpen := True;
+End;
 
 Function TMsgBaseSquish.SqiOpen: Boolean;
 Begin
@@ -391,18 +395,21 @@ Procedure TMsgBaseSquish.CloseMsgBase;
 Begin
   SqdClose;
   SqiClose;
-  FileMode := fmReadWrite + fmDenyNone; { shouldn't be needed... }
+
+  FileMode := fmRWDN; { shouldn't be needed... }
 End;
 
 Function TMsgBaseSquish.CreateMsgBase(MaxMsg: Word; MaxDays: Word): Boolean;
 Begin
   If Not SqInfo^.SqdOpened Then Begin
     FillChar(SqInfo^.SqBase, SizeOf(SqInfo^.SqBase), 0);
+
     SqInfo^.SqBase.Len       := 256;
     SqInfo^.SqBase.SqHdrSize := SqFSize;
     SqInfo^.SqBase.UID       := 1;
     SqInfo^.SqBase.NumMsg    := 0;
     SqInfo^.SqBase.Base      := SqInfo^.FN;
+
     Str2Az(SqInfo^.FN, 78, SqInfo^.SqBase.Base);
 
     SqInfo^.SqBase.MaxMsg   := MaxMsg;
@@ -410,8 +417,9 @@ Begin
     SqInfo^.SqBase.EndFrame := SqInfo^.SqBase.Len;
 
     CreateMsgBase := (SaveFile(SqInfo^.FN + '.sqd', SqInfo^.SqBase, SqInfo^.SqBase.Len) = 0);
-    If SaveFile(SqInfo^.FN + '.sqi', SqInfo^.SqBase, 0) = 0 Then;
-    If SaveFile(SqInfo^.FN + '.sql', SqInfo^.SqBase, 0) = 0 Then;
+
+    SaveFile (SqInfo^.FN + '.sqi', SqInfo^.SqBase, 0);
+    SaveFile (SqInfo^.FN + '.sql', SqInfo^.SqBase, 0);
   End Else
     CreateMsgBase := False;
 End;
@@ -424,7 +432,9 @@ End;
 Procedure TMsgBaseSquish.SqdClose;
 Begin
   If SqInfo^.SqdOpened Then Close(SqInfo^.SqdFile);
+
   If IOResult <> 0 Then;
+
   SqInfo^.SqdOpened := False;
 End;
 
@@ -494,153 +504,165 @@ End;
 
 Function TMsgBaseSquish.GetFrom: String; {Get message from}
 Begin
-        GetFrom := strWide2Str(SqInfo^.MsgHdr.MsgFrom, 35);
+  GetFrom := strWide2Str(SqInfo^.MsgHdr.MsgFrom, 35);
 End;
 
 Function TMsgBaseSquish.GetTo: String; {Get message to}
 Begin
-        GetTo := strWide2Str(SqInfo^.MsgHdr.MsgTo, 35);
+  GetTo := strWide2Str(SqInfo^.MsgHdr.MsgTo, 35);
 End;
 
 Function TMsgBaseSquish.GetSubj: String; {Get message subject}
 Begin
-        GetSubj := strWide2Str(SqInfo^.MsgHdr.Subj, 72);
+  GetSubj := strWide2Str(SqInfo^.MsgHdr.Subj, 72);
 End;
 
 Function TMsgBaseSquish.GetTextLen: LongInt; {Get text length}
 Begin
 {       GetTextLen := SqInfo^.TxtCtr;}
-        GetTextLen := SqInfo^.Frame.MsgLength - 320;
+  GetTextLen := SqInfo^.Frame.MsgLength - 320;
 End;
 
 Procedure TMsgBaseSquish.SetFrom(Str: String); {Set message from}
 Begin
-        Str2Az(Str, 35, SqInfo^.MsgHdr.MsgFrom);
+  Str2Az(Str, 35, SqInfo^.MsgHdr.MsgFrom);
 End;
 
 Procedure TMsgBaseSquish.SetTo(Str: String); {Set message to}
 Begin
-        Str2Az(Str,35, SqInfo^.MsgHdr.MsgTo);
+  Str2Az(Str,35, SqInfo^.MsgHdr.MsgTo);
 End;
 
 Procedure TMsgBaseSquish.SetSubj(Str: String); {Set message subject}
 Begin
-        Str2Az(Str,72, SqInfo^.MSgHdr.Subj);
+  Str2Az(Str,72, SqInfo^.MSgHdr.Subj);
 End;
 
 Function TMsgBaseSquish.GetDate: String; {Get message date mm-dd-yy}
 Var
-        TmpDate: LongInt;
+  TmpDate: LongInt;
 Begin
-        TmpDate := (SqInfo^.MsgHdr.DateWritten shr 16) +
-         ((SqInfo^.MsgHdr.DateWritten and $ffff) shl 16);
-        GetDate := DateDos2Str(TmpDate, 1);
+  TmpDate := (SqInfo^.MsgHdr.DateWritten shr 16) + ((SqInfo^.MsgHdr.DateWritten and $ffff) shl 16);
+  GetDate := DateDos2Str(TmpDate, 1);
 End;
 
 Function TMsgBaseSquish.GetTime: String; {Get message time hh:mm}
 Var
-        TmpDate: LongInt;
+  TmpDate: LongInt;
 Begin
-        TmpDate := (SqInfo^.MsgHdr.DateWritten shr 16) +
-         ((SqInfo^.MsgHdr.DateWritten and $ffff) shl 16);
-        GetTime := TimeDos2Str(TmpDate, False);
+  TmpDate := (SqInfo^.MsgHdr.DateWritten shr 16) + ((SqInfo^.MsgHdr.DateWritten and $ffff) shl 16);
+  GetTime := TimeDos2Str(TmpDate, False);
 End;
 
 Procedure TMsgBaseSquish.SetDate(Str: String);
 Begin
-        SqInfo^.StrDate := Copy(Str,1,8);
+  SqInfo^.StrDate := Copy(Str,1,8);
 End;
 
 Procedure TMsgBaseSquish.SetTime(Str: String);
 Begin
-        SqInfo^.StrTime := Copy(Str,1,8);
+  SqInfo^.StrTime := Copy(Str,1,8);
 End;
 
 Procedure TMsgBaseSquish.GetOrig(Var Addr: RecEchoMailAddr);
 Begin
-        Addr := SqInfo^.MsgHdr.Orig;
+  Addr := SqInfo^.MsgHdr.Orig;
 End;
 
 Procedure TMsgBaseSquish.SetOrig(Var Addr: RecEchoMailAddr);
 Begin
-        SqInfo^.MsgHdr.Orig := Addr;
+  SqInfo^.MsgHdr.Orig := Addr;
 End;
 
 Procedure TMsgBaseSquish.GetDest(Var Addr: RecEchoMailAddr);
 Begin
-        Addr := SqInfo^.MsgHdr.Dest;
+  Addr := SqInfo^.MsgHdr.Dest;
 End;
 
 Procedure TMsgBaseSquish.SetDest(Var Addr: RecEchoMailAddr);
 Begin
-        SqInfo^.MsgHdr.Dest := Addr;
+  SqInfo^.MsgHdr.Dest := Addr;
 End;
 
 Function TMsgBaseSquish.SqHashName(Name: String): LongInt;
 Var
-        Hash            : LongInt;
-        Tmp             : LongInt;
-        Counter : Word;
+  Hash    : LongInt;
+  Tmp     : LongInt;
+  Counter : Word;
 Begin
-        Hash            := 0;
-        Counter := 1;
-        While Counter <= Length(Name) Do Begin
-                Hash := (Hash shl 4) + Ord(LoCase(Name[Counter]));
-                Tmp := Hash and $F0000000;
-                If (Tmp <> 0) Then Hash := (Hash or (Tmp shr 24)) or Tmp;
-                Inc(Counter);
-        End;
-        SqHashName := Hash and $7fffffff;
+  Hash    := 0;
+  Counter := 1;
+
+  While Counter <= Length(Name) Do Begin
+
+    Hash := (Hash shl 4) + Ord(LoCase(Name[Counter]));
+    Tmp  := Hash and $F0000000;
+
+    If (Tmp <> 0) Then Hash := (Hash or (Tmp shr 24)) or Tmp;
+
+    Inc (Counter);
+  End;
+
+  SqHashName := Hash and $7fffffff;
 End;
 
 Procedure TMsgBaseSquish.ReadFrame(FPos: LongInt); {Read frame at FPos}
 Begin
-        ReadVarFrame(SqInfo^.Frame, FPos);
+  ReadVarFrame (SqInfo^.Frame, FPos);
 End;
 
 Procedure TMsgBaseSquish.ReadVarFrame(Var Frame: SqFrameHdrType; FPos: LongInt); {Read frame at FPos}
 Var
-        NumRead : LongInt;
+  NumRead : LongInt;
 Begin
-        Seek(SqInfo^.SqdFile, FPos);
-        SqInfo^.Error := IoResult;
-        If SqInfo^.Error = 0 Then Begin
-                If Not ioBlockRead(SqInfo^.SqdFile, Frame, SizeOf(SqFrameHdrType), NumRead) Then
-                        SqInfo^.Error := ioCode;
-        End;
+  Seek (SqInfo^.SqdFile, FPos);
+
+  SqInfo^.Error := IoResult;
+
+  If SqInfo^.Error = 0 Then Begin
+    If Not ioBlockRead (SqInfo^.SqdFile, Frame, SizeOf(SqFrameHdrType), NumRead) Then
+      SqInfo^.Error := ioCode;
+  End;
 End;
 
 Procedure TMsgBaseSquish.WriteFrame(FPos: LongInt); {Read frame at FPos}
 Begin
-        WriteVarFrame(SqInfo^.Frame, FPos);
+  WriteVarFrame(SqInfo^.Frame, FPos);
 End;
 
 Procedure TMsgBaseSquish.WriteVarFrame(Var Frame: SqFrameHdrType; FPos: LongInt); {Write frame at FPos}
 Var
   Res : LongInt;
 Begin
-        Seek(SqInfo^.SqdFile, FPos);
-        SqInfo^.Error := IoResult;
-        If SqInfo^.Error = 0 Then Begin
-                If Not ioBlockWrite(SqInfo^.SqdFile, Frame, SizeOf(SqFrameHdrType), Res) Then
-                        SqInfo^.Error := ioCode;
-        End;
+  Seek (SqInfo^.SqdFile, FPos);
+
+  SqInfo^.Error := IoResult;
+
+  If SqInfo^.Error = 0 Then Begin
+    If Not ioBlockWrite(SqInfo^.SqdFile, Frame, SizeOf(SqFrameHdrType), Res) Then
+      SqInfo^.Error := ioCode;
+  End;
 End;
 
 Procedure TMsgBaseSquish.UnlinkFrame(Var Frame: SqFrameHdrType);
 Var
-        TmpFrame: SqFrameHdrType;
+  TmpFrame: SqFrameHdrType;
 Begin
-        If Frame.PrevFrame <> 0 Then Begin
-                ReadVarFrame(TmpFrame, Frame.PrevFrame);
-                TmpFrame.NextFrame := Frame.NextFrame;
-                WriteVarFrame(TmpFrame, Frame.PrevFrame);
-        End;
-        If Frame.NextFrame <> 0 Then Begin
-                ReadVarFrame(TmpFrame, Frame.NextFrame);
-                TmpFrame.PrevFrame := Frame.PrevFrame;
-                WriteVarFrame(TmpFrame, Frame.NextFrame);
-        End;
+  If Frame.PrevFrame <> 0 Then Begin
+    ReadVarFrame(TmpFrame, Frame.PrevFrame);
+
+    TmpFrame.NextFrame := Frame.NextFrame;
+
+    WriteVarFrame(TmpFrame, Frame.PrevFrame);
+  End;
+
+  If Frame.NextFrame <> 0 Then Begin
+    ReadVarFrame(TmpFrame, Frame.NextFrame);
+
+    TmpFrame.PrevFrame := Frame.PrevFrame;
+
+    WriteVarFrame(TmpFrame, Frame.NextFrame);
+  End;
 End;
 
 Procedure TMsgBaseSquish.LoadFree;
@@ -649,91 +671,95 @@ Var
   TmpFrame : SqFrameHdrType;
   TmpPos   : LongInt;
 Begin
-        For i := 1 to MaxFree Do Begin
-                FreeArray^[i].FreePos  := 0;
-                FreeArray^[i].FreeSize := 0;
-        End;
-        SqInfo^.FreeLoaded := True;
-        i := 0;
-        TmpPos := SqInfo^.SqBase.FirstFree;
-        While ((TmpPos <> 0) and (i < MaxFree)) Do Begin
-                ReadVarFrame(TmpFrame, TmpPos);
-                Inc(i);
-                FreeArray^[i].FreeSize := TmpFrame.FrameLength;
-                FreeArray^[i].FreePos  := TmpPos;
-                TmpPos                                                           := TmpFrame.NextFrame;
-        End;
-        SqInfo^.HighestFree := i;
+  For i := 1 to MaxFree Do Begin
+    FreeArray^[i].FreePos  := 0;
+    FreeArray^[i].FreeSize := 0;
+  End;
+
+  SqInfo^.FreeLoaded := True;
+  i := 0;
+  TmpPos := SqInfo^.SqBase.FirstFree;
+
+  While ((TmpPos <> 0) and (i < MaxFree)) Do Begin
+    ReadVarFrame(TmpFrame, TmpPos);
+    Inc(i);
+    FreeArray^[i].FreeSize := TmpFrame.FrameLength;
+    FreeArray^[i].FreePos  := TmpPos;
+    TmpPos                 := TmpFrame.NextFrame;
+  End;
+
+  SqInfo^.HighestFree := i;
 End;
 
-Procedure TMsgBaseSquish.FindFrame(Var FL: LongInt; Var FramePos: LongInt);
+Procedure TMsgBaseSquish.FindFrame (Var FL: LongInt; Var FramePos: LongInt);
 Var
-        TmpFrame                        : SqFrameHdrType;
-        BestFoundPos    : LongInt;
-        BestFoundSize : LongInt;
-        BestIdx                         : Word;
-        i                                               : Word;
+  TmpFrame      : SqFrameHdrType;
+  BestFoundPos  : LongInt;
+  BestFoundSize : LongInt;
+  BestIdx       : Word;
+  i             : Word;
 Begin
-        If Not SqInfo^.FreeLoaded Then LoadFree;
+  If Not SqInfo^.FreeLoaded Then LoadFree;
 
-        BestFoundPos    := 0;
-        BestFoundSize := 0;
+  BestFoundPos  := 0;
+  BestFoundSize := 0;
 
-        For i := 1 to SqInfo^.HighestFree Do Begin
-                If (FreeArray^[i].FreeSize > FL) Then Begin
-                        If ((BestFoundSize = 0) or (FreeArray^[i].FreeSize < BestFoundSize)) Then Begin
-                                BestFoundSize := FreeArray^[i].FreeSize;
-                                BestFoundPos    := FreeArray^[i].FreePos;
-                                BestIdx                         := i;
-                        End;
-                End
-        End;
+  For i := 1 to SqInfo^.HighestFree Do Begin
+    If (FreeArray^[i].FreeSize > FL) Then Begin
+      If ((BestFoundSize = 0) or (FreeArray^[i].FreeSize < BestFoundSize)) Then Begin
+        BestFoundSize := FreeArray^[i].FreeSize;
+        BestFoundPos  := FreeArray^[i].FreePos;
+        BestIdx       := i;
+      End;
+    End
+  End;
 
-        FramePos := BestFoundPos;
+  FramePos := BestFoundPos;
 
-        If FramePos <> 0 Then Begin
-                ReadVarFrame(TmpFrame, FramePos);
-                FreeArray^[BestIdx].FreePos  := 0;
-                FreeArray^[BestIdx].FreeSize := 0;
-        End;
+  If FramePos <> 0 Then Begin
+    ReadVarFrame(TmpFrame, FramePos);
 
-        If FramePos = 0 Then Begin
-                FL       := 0;
-                FramePos := SqInfo^.SqBase.EndFrame;
-        End Else Begin
-                UnLinkFrame(TmpFrame);
+    FreeArray^[BestIdx].FreePos  := 0;
+    FreeArray^[BestIdx].FreeSize := 0;
+  End;
 
-                If TmpFrame.PrevFrame = 0 Then SqInfo^.SqBase.FirstFree := TmpFrame.NextFrame;
-                If TmpFrame.NextFrame = 0 Then SqInfo^.SqBase.LastFree  := TmpFrame.PrevFrame;
+  If FramePos = 0 Then Begin
+    FL       := 0;
+    FramePos := SqInfo^.SqBase.EndFrame;
+  End Else Begin
+    UnLinkFrame(TmpFrame);
 
-                FL := TmpFrame.FrameLength;
-        End;
+    If TmpFrame.PrevFrame = 0 Then SqInfo^.SqBase.FirstFree := TmpFrame.NextFrame;
+    If TmpFrame.NextFrame = 0 Then SqInfo^.SqBase.LastFree  := TmpFrame.PrevFrame;
+
+    FL := TmpFrame.FrameLength;
+  End;
 End;
 
 Procedure TMsgBaseSquish.LinkFrameNext(Var Frame: SqFrameHdrType; OtherFrame: LongInt; FramePos: LongInt);
 Var
-        TmpFrame: SqFrameHdrType;
+  TmpFrame: SqFrameHdrType;
 Begin
-        If OtherFrame <> 0 Then Begin
-                ReadVarFrame(TmpFrame, OtherFrame);
+  If OtherFrame <> 0 Then Begin
+    ReadVarFrame (TmpFrame, OtherFrame);
 
-                TmpFrame.NextFrame := FramePos;
-                Frame.PrevFrame          := OtherFrame;
+    TmpFrame.NextFrame := FramePos;
+    Frame.PrevFrame    := OtherFrame;
 
-                WriteVarFrame(TmpFrame, OtherFrame);
-        End;
+    WriteVarFrame (TmpFrame, OtherFrame);
+  End;
 End;
 
 Procedure TMsgBaseSquish.KillMsg(MsgNum: LongInt);
 Var
-        i: Word;
-        KillPos: LongInt;
-        IndexPos: LongInt;
-        KillFrame: SqFrameHdrType;
-        TmpFrame: SqFrameHdrType;
-        CurrMove: LongInt;
-        AlreadyLocked: Boolean;
-        FreeCtr: Word;
+  i: Word;
+  KillPos: LongInt;
+  IndexPos: LongInt;
+  KillFrame: SqFrameHdrType;
+  TmpFrame: SqFrameHdrType;
+  CurrMove: LongInt;
+  AlreadyLocked: Boolean;
+  FreeCtr: Word;
 Begin
         AlreadyLocked := SqInfo^.Locked;
         If Not AlreadyLocked Then
@@ -1301,10 +1327,10 @@ Begin
         IsPriv := ((SqInfo^.MsgHdr.Attr and SqMsgPriv) <> 0);
 End;
 
-Function TMsgBaseSquish.IsEchoed: Boolean;
-Begin
-        IsEchoed := ((SqInfo^.MsgHdr.Attr and SqMsgScanned) = 0);
-End;
+//Function TMsgBaseSquish.IsEchoed: Boolean;
+//Begin
+//        IsEchoed := ((SqInfo^.MsgHdr.Attr and SqMsgScanned) = 0);
+//End;
 
 Function TMsgBaseSquish.IsDeleted: Boolean; {Is current msg deleted}
 Begin
@@ -1423,10 +1449,10 @@ Procedure TMsgBaseSquish.SetMailType(MT: MsgMailType);
 Begin
 End;
 
-Function TMsgBaseSquish.GetSubArea: Word;
-Begin
-        GetSubArea := 0;
-End;
+//Function TMsgBaseSquish.GetSubArea: Word;
+//Begin
+//        GetSubArea := 0;
+//End;
 
 Procedure TMsgBaseSquish.ReWriteHdr;
 Var

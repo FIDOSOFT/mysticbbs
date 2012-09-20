@@ -837,7 +837,17 @@ Begin
       If RecData[VarData[VN]^.RecID]^.Fields[Count].ArrDem > 0 Then Begin
         GetStr(tkw[wOpenArray], True, False);
 
+        // output if zero based here asdf asdf
+
         For X := 1 to RecData[VarData[VN]^.RecID]^.Fields[Count].ArrDem Do Begin
+
+          OutWord(RecData[VarData[VN]^.RecID]^.Fields[Count].ArrStart[X]);
+
+//          If RecData[VarData[VN]^.RecID]^.Fields[Count].ArrStart[X] = 0 Then
+//            OutWord(0)
+//          Else
+//            OutWord(1);
+
           ParseVarNumber(True);
 
           If X < RecData[VarData[VN]^.RecID]^.Fields[Count].ArrDem Then

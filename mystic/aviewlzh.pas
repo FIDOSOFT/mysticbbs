@@ -18,7 +18,7 @@ Type
     FileTime  : LongInt;
     Attr      : Word;
     FileName  : String[12];
-    F32       : PathStr;
+    F32       : String[255];
     DT        : DateTime;
   End;
 
@@ -61,14 +61,17 @@ Begin
   If _FHdr.HeadSize <> 0 Then
     UnPackTime (_FHdr.FileTime, _FHdr.DT);
 
-  SR.Name := _FHdr.FileName;
+  If Pos(#0, _FHdr.FileName) > 0 Then
+    SR.Name := Copy(_FHdr.FileName, 1, Pos(#0, _FHdr.FileName) - 1)
+  Else
+    SR.Name := _FHdr.FileName;
+
   SR.Size := _FHdr.OrigSize;
   SR.Time := _FHdr.FileTime;
 End;
 
 Procedure TLzhArchive.FindFirst (Var SR: ArcSearchRec);
 Begin
-  _SL := 0;
   GetHeader(SR);
 End;
 

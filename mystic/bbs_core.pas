@@ -201,7 +201,7 @@ Begin
 
   If User.ThisUser.Calls = 1 Then Inc (History.NewUsers, 1);
 
-  Inc (History.Hourly[HistoryHour]);
+  If Not LocalMode Then Inc (History.Hourly[HistoryHour]);
 
   ioWrite (HistoryFile, History);
   Close   (HistoryFile);

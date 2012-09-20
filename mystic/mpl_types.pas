@@ -77,7 +77,7 @@ Type
   );
 
 Const
-  mplVer           = '11B';
+  mplVer           = '11C';
   mplVersion       = '[MPX ' + mplVer +']' + #26;
   mplVerLength     = 10;
   mplExtSource     = '.mps';

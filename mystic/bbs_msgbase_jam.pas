@@ -189,57 +189,57 @@ Type
     Procedure   SeekNext;      Virtual; {Find next matching msg}
     Procedure   SeekPrior;     Virtual; {Seek prior matching msg}
     Function    GetFrom        : String; Virtual; {Get from name on current msg}
-    Function  GetTo: String; Virtual; {Get to name on current msg}
-    Function  GetSubj: String; Virtual; {Get subject on current msg}
-    Function  GetCost: Word; Virtual; {Get cost of current msg}
-    Function  GetDate: String; Virtual; {Get date of current msg}
-    Function  GetTime: String; Virtual; {Get time of current msg}
-    Function  GetRefer: LongInt; Virtual; {Get reply to of current msg}
-    Function  GetSeeAlso: LongInt; Virtual; {Get see also of current msg}
-    Function  GetMsgNum: LongInt; Virtual; {Get message number}
-    Procedure GetOrig(Var Addr: RecEchoMailAddr); Virtual; {Get origin address}
-    Procedure GetDest(Var Addr: RecEchoMailAddr); Virtual; {Get destination address}
-    Function  GetTextLen : LongInt; Virtual; {returns length of text in msg}
-    Function  IsLocal: Boolean; Virtual; {Is current msg local}
-    Function  IsCrash: Boolean; Virtual; {Is current msg crash}
-    Function  IsKillSent: Boolean; Virtual; {Is current msg kill sent}
-    Function  IsSent: Boolean; Virtual; {Is current msg sent}
-    Function  IsFAttach: Boolean; Virtual; {Is current msg file attach}
+    Function    GetTo          : String; Virtual; {Get to name on current msg}
+    Function    GetSubj        : String; Virtual; {Get subject on current msg}
+    Function    GetCost        : Word; Virtual; {Get cost of current msg}
+    Function    GetDate        : String; Virtual; {Get date of current msg}
+    Function    GetTime        : String; Virtual; {Get time of current msg}
+    Function    GetRefer       : LongInt; Virtual; {Get reply to of current msg}
+    Function    GetSeeAlso     : LongInt; Virtual; {Get see also of current msg}
+    Function    GetMsgNum      : LongInt; Virtual; {Get message number}
+    Procedure   GetOrig        (Var Addr: RecEchoMailAddr); Virtual; {Get origin address}
+    Procedure   GetDest        (Var Addr: RecEchoMailAddr); Virtual; {Get destination address}
+    Function    GetTextLen     : LongInt; Virtual; {returns length of text in msg}
+    Function    IsLocal        : Boolean; Virtual; {Is current msg local}
+    Function    IsCrash        : Boolean; Virtual; {Is current msg crash}
+    Function    IsKillSent     : Boolean; Virtual; {Is current msg kill sent}
+    Function    IsSent         : Boolean; Virtual; {Is current msg sent}
+    Function    IsFAttach      : Boolean; Virtual; {Is current msg file attach}
 //    Function  IsReqRct: Boolean; Virtual; {Is current msg request receipt}
 //    Function  IsReqAud: Boolean; Virtual; {Is current msg request audit}
 //    Function  IsRetRct: Boolean; Virtual; {Is current msg a return receipt}
-    Function  IsFileReq: Boolean; Virtual; {Is current msg a file request}
-    Function  IsRcvd: Boolean; Virtual; {Is current msg received}
-    Function  IsPriv: Boolean; Virtual; {Is current msg priviledged/private}
-    Function  IsDeleted: Boolean; Virtual; {Is current msg deleted}
-    Function  IsEchoed: Boolean; Virtual; {Msg should be echoed}
-    Function  GetMsgLoc: LongInt; Virtual; {Msg location}
-    Procedure SetMsgLoc(ML: LongInt); Virtual; {Msg location}
-    Procedure YoursFirst(Name: String; Handle: String); Virtual; {Seek your mail}
-    Procedure YoursNext; Virtual; {Seek next your mail}
-    Function  YoursFound: Boolean; Virtual; {Message found}
-    Procedure StartNewMsg; Virtual;
-    Function  OpenMsgBase : Boolean; Virtual;
-    Procedure CloseMsgBase; Virtual;
-    Function  MsgBaseExists: Boolean; Virtual; {Does msg base exist}
-    Function  CreateMsgBase(MaxMsg: Word; MaxDays: Word): Boolean; Virtual;
-    Function  SeekFound: Boolean; Virtual;
-    Procedure SetMailType(MT: MsgMailType); Virtual; {Set message base type}
-    Function  GetSubArea: Word; Virtual; {Get sub area number}
-    Procedure ReWriteHdr; Virtual; {Rewrite msg header after changes}
-    Procedure DeleteMsg; Virtual; {Delete current message}
-    Function  NumberOfMsgs: LongInt; Virtual; {Number of messages}
-    Function  GetLastRead(UNum: LongInt): LongInt; Virtual; {Get last read for user num}
-    Procedure SetLastRead(UNum: LongInt; LR: LongInt); Virtual; {Set last read}
-    Procedure MsgTxtStartUp; Virtual; {Do message text start up tasks}
-    Function  GetTxtPos: LongInt; Virtual; {Get indicator of msg text position}
-    Procedure SetTxtPos(TP: LongInt); Virtual; {Set text position}
-    Procedure SetAttr1(Mask: LongInt; St: Boolean); {Set attribute 1}
-    Function  ReadIdx: Word;
-    Function  WriteIdx: Word;
-    Procedure AddSubField(id: Word; Data: String);
-    Function  FindLastRead(Var LastFile: File; UNum: LongInt): LongInt;
-    Function  ReReadIdx(Var IdxLoc : LongInt) : Word;
+    Function    IsFileReq      : Boolean; Virtual; {Is current msg a file request}
+    Function    IsRcvd         : Boolean; Virtual; {Is current msg received}
+    Function    IsPriv         : Boolean; Virtual; {Is current msg priviledged/private}
+    Function    IsDeleted      : Boolean; Virtual; {Is current msg deleted}
+//    Function    IsEchoed       : Boolean; Virtual; {Msg should be echoed}
+    Function    GetMsgLoc      : LongInt; Virtual; {Msg location}
+    Procedure   SetMsgLoc      (ML: LongInt); Virtual; {Msg location}
+    Procedure   YoursFirst     (Name: String; Handle: String); Virtual; {Seek your mail}
+    Procedure   YoursNext;     Virtual; {Seek next your mail}
+    Function    YoursFound     : Boolean; Virtual; {Message found}
+    Procedure   StartNewMsg;   Virtual;
+    Function    OpenMsgBase    : Boolean; Virtual;
+    Procedure   CloseMsgBase;  Virtual;
+//    Function    MsgBaseExists  : Boolean; Virtual; {Does msg base exist}
+    Function    CreateMsgBase  (MaxMsg: Word; MaxDays: Word): Boolean; Virtual;
+    Function    SeekFound      : Boolean; Virtual;
+    Procedure   SetMailType    (MT: MsgMailType); Virtual; {Set message base type}
+//    Function    GetSubArea     : Word; Virtual; {Get sub area number}
+    Procedure   ReWriteHdr;    Virtual; {Rewrite msg header after changes}
+    Procedure   DeleteMsg;     Virtual; {Delete current message}
+    Function    NumberOfMsgs   : LongInt; Virtual; {Number of messages}
+    Function    GetLastRead    (UNum: LongInt): LongInt; Virtual; {Get last read for user num}
+    Procedure   SetLastRead    (UNum: LongInt; LR: LongInt); Virtual; {Set last read}
+    Procedure   MsgTxtStartUp; Virtual; {Do message text start up tasks}
+    Function    GetTxtPos      : LongInt; Virtual; {Get indicator of msg text position}
+    Procedure   SetTxtPos      (TP: LongInt); Virtual; {Set text position}
+    Procedure   SetAttr1       (Mask: LongInt; St: Boolean); {Set attribute 1}
+    Function    ReadIdx        : Word;
+    Function    WriteIdx       : Word;
+    Procedure   AddSubField    (id: Word; Data: String);
+    Function    FindLastRead   (Var LastFile: File; UNum: LongInt): LongInt;
+    Function    ReReadIdx      (Var IdxLoc : LongInt) : Word;
   End;
 
 Function JamStrCrc(St: String): LongInt;
@@ -1320,37 +1320,37 @@ Function TMsgBaseJAM.IsPriv: Boolean; {Is current msg priviledged/private}
 
 
 Function TMsgBaseJAM.IsDeleted: Boolean; {Is current msg deleted}
-  Begin
+Begin
   IsDeleted := (MsgHdr^.JamHdr.Attr1 and Jam_Deleted) <> 0;
-  End;
+End;
 
-
-Function TMsgBaseJAM.IsEchoed: Boolean; {Is current msg echoed}
-  Begin
-  IsEchoed := True;
-  End;
-
+//Function TMsgBaseJAM.IsEchoed: Boolean; {Is current msg echoed}
+//Begin
+//  IsEchoed := True;
+//End;
 
 Procedure TMsgBaseJAM.SeekFirst(MsgNum: LongInt); {Start msg seek}
-  Begin
+Begin
   JM^.CurrMsgNum := MsgNum - 1;
+
   If JM^.CurrMsgNum < (JM^.BaseHdr.BaseMsgNum - 1) Then
     JM^.CurrMsgNum := JM^.BaseHdr.BaseMsgNum - 1;
-  SeekNext;
-  End;
 
+  SeekNext;
+End;
 
 Procedure TMsgBaseJAM.SeekNext; {Find next matching msg}
 Var
   IdxLoc: LongInt;
 Begin
   If JM^.CurrMsgNum <= GetHighMsgNum Then
-    Inc(JM^.CurrMsgNum);
+    Inc (JM^.CurrMsgNum);
 
   Error := ReReadIdx(IdxLoc);
 
   While (((JamIdx^[IdxLoc - JM^.IdxStart].HdrLoc < 0) or (JamIdx^[IdxLoc - JM^.IdxStart].MsgToCrc = -1)) And (JM^.CurrMsgNum <= GetHighMsgNum)) Do Begin
-    Inc(JM^.CurrMsgNum);
+    Inc (JM^.CurrMsgNum);
+
     Error := ReReadIdx(IdxLoc);
   End;
 End;
@@ -1366,7 +1366,7 @@ Begin
 
   If JM^.CurrMsgNum >= JM^.BaseHdr.BaseMsgNum Then
     While (IdxLoc >= 0) And (((JamIdx^[IdxLoc - JM^.IdxStart].HdrLoc < 0) or (JamIdx^[IdxLoc - JM^.IdxStart].MsgToCrc = -1)) And (JM^.CurrMsgNum >= JM^.BaseHdr.BaseMsgNum)) Do Begin
-      Dec(JM^.CurrMsgNum);
+      Dec (JM^.CurrMsgNum);
       Error := ReReadIdx(IdxLoc);
     End;
 End;
@@ -1376,29 +1376,26 @@ Begin
   SeekFound := ((JM^.CurrMsgNum >= JM^.BaseHdr.BaseMsgNum) and (JM^.CurrMsgNum <= GetHighMsgNum));
 End;
 
-
 Function TMsgBaseJAM.GetMsgLoc: LongInt; {Msg location}
 Begin
   GetMsgLoc := GetMsgNum;
 End;
-
 
 Procedure TMsgBaseJAM.SetMsgLoc(ML: LongInt); {Msg location}
   Begin
   JM^.CurrMsgNum := ML;
   End;
 
-
-Procedure TMsgBaseJAM.YoursFirst(Name: String; Handle: String);
+Procedure TMsgBaseJAM.YoursFirst (Name: String; Handle: String);
 Begin
   JM^.YourName   := Name;
   JM^.YourHdl    := Handle;
   JM^.NameCrc    := JamStrCrc(Name);
   JM^.HdlCrc     := JamStrCrc(Handle);
   JM^.CurrMsgNum := JM^.BaseHdr.BaseMsgNum - 1;
+
   YoursNext;
 End;
-
 
 Procedure TMsgBaseJAM.YoursNext;
 Var
@@ -1412,8 +1409,10 @@ Begin
   Found := False;
 
   Inc(JM^.CurrMsgNum);
+
   While ((Not Found) and (JM^.CurrMsgNum <= GetHighMsgNum) And (Error = 0)) Do Begin
     Error := ReReadIdx(IdxLoc);
+
     If Error = 0 Then Begin                     {Check CRC values}
       If ((JamIdx^[IdxLoc - JM^.IdxStart].MsgToCrc = JM^.NameCrc) or
       (JamIdx^[IdxLoc - JM^.IdxStart].MsgToCrc = JM^.HdlCrc)) Then Begin
@@ -1450,56 +1449,58 @@ Begin
     End;
   End;
 
-
 Function TMsgBaseJAM.YoursFound: Boolean;
-  Begin
-  YoursFound := ((JM^.CurrMsgNum >= JM^.BaseHdr.BaseMsgNum) and
-    (JM^.CurrMsgNum <= GetHighMsgNum));
-  End;
-
+Begin
+  YoursFound := ((JM^.CurrMsgNum >= JM^.BaseHdr.BaseMsgNum) and (JM^.CurrMsgNum <= GetHighMsgNum));
+End;
 
 Procedure TMsgBaseJAM.StartNewMsg;
-  Begin
+Begin
   JM^.TxtBufStart := 0;
-  JM^.TxtPos := 0;
+  JM^.TxtPos      := 0;
+
   FillChar(MsgHdr^, SizeOf(MsgHdr^), #0);
-  MsgHdr^.JamHdr.SubFieldLen := 0;
-  MsgHdr^.JamHdr.MsgIdCrc := -1;
-  MsgHdr^.JamHdr.ReplyCrc := -1;
-  MsgHdr^.JamHdr.PwdCrc := -1;
-  JM^.MsgTo := '';
+
+//  MsgHdr^.JamHdr.SubFieldLen := 0;
+  MsgHdr^.JamHdr.MsgIdCrc    := -1;
+  MsgHdr^.JamHdr.ReplyCrc    := -1;
+  MsgHdr^.JamHdr.PwdCrc      := -1;
+
+  JM^.MsgTo   := '';
   JM^.MsgFrom := '';
   JM^.MsgSubj := '';
+
   FillChar(JM^.Orig, SizeOf(JM^.Orig), #0);
   FillChar(JM^.Dest, SizeOf(JM^.Dest), #0);
+
   JM^.MsgDate := DateDos2Str(CurDateDos, 1);
   JM^.MsgTime := TimeDos2Str(CurDateDos, False);
-//  writeln(jm^.msgdate);
-  End;
+End;
 
 
-Function TMsgBaseJAM.MsgBaseExists: Boolean;
-  Begin
-  MsgBaseExists := (FileExist(JM^.MsgPath + '.jhr'));
-  End;
+//Function TMsgBaseJAM.MsgBaseExists: Boolean;
+//  Begin
+//  MsgBaseExists := (FileExist(JM^.MsgPath + '.jhr'));
+//  End;
 
 
 Function TMsgBaseJAM.ReadIdx: Word;
-  Begin
+Begin
   If JM^.IdxStart < 0 Then JM^.IdxStart := 0;
-  Seek(JM^.IdxFile, JM^.IdxStart);
-  BlockRead(JM^.IdxFile, JamIdx^, JamIdxBufSize, JM^.IdxRead);
-  ReadIdx := IoResult;
-  End;
 
+  Seek      (JM^.IdxFile, JM^.IdxStart);
+  BlockRead (JM^.IdxFile, JamIdx^, JamIdxBufSize, JM^.IdxRead);
+
+  ReadIdx := IoResult;
+End;
 
 Function TMsgBaseJAM.WriteIdx: Word;
-  Begin
-  Seek(JM^.IdxFile, JM^.IdxStart);
-  BlockWrite(JM^.IdxFile, JamIdx^, JM^.IdxRead);
-  WriteIdx := IoResult;
-  End;
+Begin
+  Seek       (JM^.IdxFile, JM^.IdxStart);
+  BlockWrite (JM^.IdxFile, JamIdx^, JM^.IdxRead);
 
+  WriteIdx := IoResult;
+End;
 
 Function TMsgBaseJAM.OpenMsgBase: Boolean;
 Var
@@ -1545,78 +1546,83 @@ End;
 
 Procedure TMsgBaseJAM.CloseMsgBase;
 Begin
-  Close(JM^.HdrFile);
-  Close(JM^.TxtFile);
-  Close(JM^.IdxFile);
+  Close (JM^.HdrFile);
+  Close (JM^.TxtFile);
+  Close (JM^.IdxFile);
 End;
 
-Function TMsgBaseJAM.CreateMsgBase(MaxMsg: Word; MaxDays: Word): Boolean;
+Function TMsgBaseJAM.CreateMsgBase (MaxMsg: Word; MaxDays: Word): Boolean;
 Var
-  TmpHdr: ^JamHdrType;
-  CreateError: Word;
-//  i: Word;
-
+  TmpHdr      : ^JamHdrType;
+  CreateError : Word;
 Begin
   CreateError := 0;
 
   New(TmpHdr);
+
   If TmpHdr = Nil Then
     CreateError := 500
   Else Begin;
     FillChar(TmpHdr^, SizeOf(TmpHdr^), #0);
+
     TmpHdr^.Signature[1] :=  'J';
     TmpHdr^.Signature[2] :=  'A';
     TmpHdr^.Signature[3] :=  'M';
-    TmpHdr^.BaseMsgNum := 1;
-    TmpHdr^.Created := ToUnixDate(CurDateDos);
-    TmpHdr^.PwdCrc := -1;
-    CreateError := SaveFile(JM^.MsgPath + '.jhr', TmpHdr^, SizeOf(TmpHdr^));
+    TmpHdr^.BaseMsgNum   := 1;
+    TmpHdr^.Created      := ToUnixDate(CurDateDos);
+    TmpHdr^.PwdCrc       := -1;
+    CreateError          := SaveFile(JM^.MsgPath + '.jhr', TmpHdr^, SizeOf(TmpHdr^));
+
     Dispose(TmpHdr);
+
     If CreateError = 0 Then
       CreateError := SaveFile(JM^.MsgPath + '.jlr', CreateError, 0);
+
     If CreateError = 0 Then
       CreateError := SaveFile(JM^.MsgPath + '.jdt', CreateError, 0);
+
     If CreateError = 0 Then
       CreateError := SaveFile(JM^.MsgPath + '.jdx', CreateError , 0);
+
     If IoResult <> 0 Then;
   End;
+
   CreateMsgBase := CreateError = 0;
 End;
 
-
 Procedure TMsgBaseJAM.SetMailType(MT: MsgMailType);
-  Begin
+Begin
   JM^.MailType := MT;
-  End;
+End;
 
-
-Function TMsgBaseJAM.GetSubArea: Word;
-  Begin
-  GetSubArea := 0;
-  End;
-
+//Function TMsgBaseJAM.GetSubArea: Word;
+//Begin
+//  GetSubArea := 0;
+//End;
 
 Procedure TMsgBaseJAM.ReWriteHdr;
 Var
-  IdxLoc: LongInt;
-
+  IdxLoc : LongInt;
 Begin
   If LockMsgBase Then
     Error := 0
   Else
     Error := 5;
-  Error := ReReadIdx(IdxLoc);
-  If Error = 0 Then Begin
-    Seek(JM^.HdrFile, JamIdx^[IdxLoc - JM^.IdxStart].HdrLoc);
-    Error := IoResult;
-  End;
-  If Error = 0 Then Begin
-    BlockWrite(JM^.HdrFile, MsgHdr^.JamHdr, SizeOf(MsgHdr^.JamHdr));
-    Error := IoResult;
-  End;
-  If UnLockMsgBase Then;
-End;
 
+  Error := ReReadIdx(IdxLoc);
+
+  If Error = 0 Then Begin
+    Seek (JM^.HdrFile, JamIdx^[IdxLoc - JM^.IdxStart].HdrLoc);
+    Error := IoResult;
+  End;
+
+  If Error = 0 Then Begin
+    BlockWrite (JM^.HdrFile, MsgHdr^.JamHdr, SizeOf(MsgHdr^.JamHdr));
+    Error := IoResult;
+  End;
+
+  UnLockMsgBase;
+End;
 
 Procedure TMsgBaseJAM.DeleteMsg;
 Var
@@ -1628,20 +1634,25 @@ Begin
       DelError := 0
     Else
       DelError := 5;
+
     If DelError = 0 Then Begin
-      SetAttr1(Jam_Deleted, True);
-      Dec(JM^.BaseHdr.ActiveMsgs);
+      SetAttr1 (Jam_Deleted, True);
+      Dec (JM^.BaseHdr.ActiveMsgs);
       DelError := ReReadIdx(IdxLoc);
     End;
+
     If DelError = 0 Then ReWriteHdr;
+
     If DelError = 0 Then Begin
       Inc(JM^.BaseHdr.ModCounter);
-{these three were commented out for some reason }
+
       JamIdx^[IdxLoc - JM^.IdxStart].MsgToCrc := -1;
       JamIdx^[IdxLoc - JM^.IdxStart].HdrLoc := -1;
-      If WriteIdx = 0 Then;
+
+      WriteIdx;
     End;
-    If UnLockMsgBase Then;
+
+    UnLockMsgBase;
   End;
 End;
 
@@ -1650,122 +1661,145 @@ Begin
   NumberOfMsgs := JM^.BaseHdr.ActiveMsgs;
 End;
 
-
-Function TMsgBaseJAM.FindLastRead(Var LastFile: File; UNum: LongInt): LongInt;
-  Const
-    LastSize = 100;
-
-  Type LastArray = Array[1..LastSize] of JamLastType;
-
-  Var
-    LastBuf: ^LastArray;
-    LastError: Word;
-    NumRead: LongInt;
-    Found: Boolean;
-    i: Word;
-    LastStart: LongInt;
-
-  Begin
+Function TMsgBaseJAM.FindLastRead (Var LastFile: File; UNum: LongInt): LongInt;
+Const
+  LastSize = 100;
+Type
+  LastArray = Array[1..LastSize] of JamLastType;
+Var
+  LastBuf   : ^LastArray;
+  LastError : Word;
+  NumRead   : LongInt;
+  Found     : Boolean;
+  Count     : Word;
+  LastStart : LongInt;
+Begin
   FindLastRead := -1;
-  Found := False;
-  New(LastBuf);
-  Seek(LastFile, 0);
+  Found        := False;
+
+  New (LastBuf);
+
+  Seek (LastFile, 0);
+
   LastError := IoResult;
-  While ((Not Eof(LastFile)) and (LastError = 0) And (Not Found)) Do
-    Begin
+
+  While ((Not Eof(LastFile)) and (LastError = 0) And (Not Found)) Do Begin
     LastStart := FilePos(LastFile);
-    BlockRead(LastFile, LastBuf^, LastSize, NumRead);
+
+    BlockRead (LastFile, LastBuf^, LastSize, NumRead);
+
     LastError := IoResult;
-    For i := 1 to NumRead Do Begin
-      If LastBuf^[i].UserNum = UNum Then
-        Begin
-        Found := True;
-        FindLastRead := LastStart + i - 1;
-        End;
+
+    For Count := 1 to NumRead Do Begin
+      If LastBuf^[Count].UserNum = UNum Then Begin
+        Found        := True;
+        FindLastRead := LastStart + Count - 1;
       End;
     End;
-  Dispose(LastBuf);
   End;
 
+  Dispose (LastBuf);
+End;
 
-Function TMsgBaseJAM.GetLastRead(UNum: LongInt): LongInt;
+Function TMsgBaseJAM.GetLastRead (UNum: LongInt) : LongInt;
 Var
-  RecNum: LongInt;
-  LastFile: File;
-  TmpLast: JamLastType;
+  RecNum   : LongInt;
+  LastFile : File;
+  TmpLast  : JamLastType;
 Begin
-  Assign(LastFile, JM^.MsgPath + '.jlr');
+  Assign (LastFile, JM^.MsgPath + '.jlr');
+
   FileMode := fmReadWrite + fmDenyNone;
-  Reset(LastFile, SizeOf(JamLastType));
-  Error := IoResult;
+
+  Reset (LastFile, SizeOf(JamLastType));
+
+  Error  := IoResult;
   RecNum := FindLastRead(LastFile, UNum);
+
   If RecNum >= 0 Then Begin
-    Seek(LastFile, RecNum);
+    Seek (LastFile, RecNum);
+
     If Error = 0 Then Begin
-      BlockRead(LastFile, TmpLast, 1);
-      Error := IoResult;
+      BlockRead (LastFile, TmpLast, 1);
+
+      Error       := IoResult;
       GetLastRead := TmpLast.HighRead;
     End;
   End Else
     GetLastRead := 0;
 
-  Close(LastFile);
+  Close (LastFile);
+
   Error := IoResult;
 End;
 
-Procedure TMsgBaseJAM.SetLastRead(UNum: LongInt; LR: LongInt);
-  Var
-    RecNum: LongInt;
-    LastFile: File;
-    TmpLast: JamLastType;
+Procedure TMsgBaseJAM.SetLastRead (UNum: LongInt; LR: LongInt);
+Var
+  RecNum   : LongInt;
+  LastFile : File;
+  TmpLast  : JamLastType;
+Begin
+  Assign (LastFile, JM^.MsgPath + '.jlr');
 
-  Begin
-  Assign(LastFile, JM^.MsgPath + '.jlr');
   FileMode := fmReadWrite + fmDenyNone;
-  Reset(LastFile, SizeOf(JamLastType));
+
+  Reset (LastFile, SizeOf(JamLastType));
+
   Error := IoResult;
+
   If Error <> 0 Then ReWrite(LastFile, SizeOf(JamLastType));
-  Error := IoResult;
+
+  Error  := IoResult;
   RecNum := FindLastRead(LastFile, UNum);
+
   If RecNum >= 0 Then Begin
-    Seek(LastFile, RecNum);
+    Seek (LastFile, RecNum);
+
     If Error = 0 Then Begin
-      BlockRead(LastFile, TmpLast, 1);
+      BlockRead (LastFile, TmpLast, 1);
+
       Error := IoResult;
+
       TmpLast.HighRead := LR;
       TmpLast.LastRead := LR;
+
       If Error = 0 Then Begin
-        Seek(LastFile, RecNum);
+        Seek (LastFile, RecNum);
         Error := IoResult;
       End;
+
       If Error = 0 Then Begin
-        BlockWrite(LastFile, TmpLast, 1);
+        BlockWrite (LastFile, TmpLast, 1);
         Error := IoResult;
       End;
     End;
   End Else Begin
-    TmpLast.UserNum := UNum;
+    TmpLast.UserNum  := UNum;
     TmpLast.HighRead := Lr;
-    TmpLast.NameCrc := UNum;
+    TmpLast.NameCrc  := UNum;
     TmpLast.LastRead := Lr;
-    Seek(LastFile, FileSize(LastFile));
+
+    Seek (LastFile, FileSize(LastFile));
+
     Error := IoResult;
+
     If Error = 0 Then Begin
-      BlockWrite(LastFile, TmpLast, 1);
+      BlockWrite (LastFile, TmpLast, 1);
       Error := IoResult;
     End;
   End;
-  Close(LastFile);
+
+  Close (LastFile);
+
   Error := IoResult;
 End;
 
-
-Function TMsgBaseJAM.GetTxtPos: LongInt;
+Function TMsgBaseJAM.GetTxtPos : LongInt;
 Begin
   GetTxtPos := JM^.TxtPos;
 End;
 
-Procedure TMsgBaseJAM.SetTxtPos(TP: LongInt);
+Procedure TMsgBaseJAM.SetTxtPos (TP: LongInt);
 Begin
   JM^.TxtPos := TP;
 End;
@@ -1797,7 +1831,9 @@ Var
   LockError: Word;
 Begin
   LockError := 0;
+
   If JM^.LockCount > 0 Then Dec(JM^.LockCount);
+
   If JM^.LockCount = 0 Then Begin
     If LockError = 0 Then Begin
 //      LockError := UnLockFile(JM^.HdrFile, 0, 1);
@@ -1811,6 +1847,7 @@ Begin
       LockError := IoResult;
     End;
   End;
+
   UnLockMsgBase := (LockError = 0);
 End;
 
@@ -1829,10 +1866,13 @@ End;
 Function TMsgBaseJAM.ReReadIdx(Var IdxLoc : LongInt) : Word;
 Begin
   ReReadIdx := 0;
-  IdxLoc := JM^.CurrMsgNum - JM^.BaseHdr.BaseMsgNum;
-  If ((IdxLoc < JM^.IdxStart) OR (IdxLoc >= (JM^.IdxStart+JM^.IdxRead))) Then Begin
+  IdxLoc    := JM^.CurrMsgNum - JM^.BaseHdr.BaseMsgNum;
+
+  If ((IdxLoc < JM^.IdxStart) OR (IdxLoc >= (JM^.IdxStart + JM^.IdxRead))) Then Begin
     JM^.IdxStart := IdxLoc - 30;
+
     If JM^.IdxStart < 0 Then JM^.IdxStart := 0;
+
     ReReadIdx := ReadIdx;
   End;
 End;

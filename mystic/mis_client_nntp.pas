@@ -104,7 +104,7 @@ Var
   NewCmd  : String;
   NewData : String;
 Begin
-  NewCmd  := strWordGet(1, Data, ' ');
+  NewCmd  := strUpper(strWordGet(1, Data, ' '));
   NewData := Copy(Data, Pos(' ', Data) + 1, 255);
 
   If NewCmd = 'USER' Then Begin

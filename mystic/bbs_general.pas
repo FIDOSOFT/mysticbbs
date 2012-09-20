@@ -15,7 +15,7 @@ Uses
   bbs_Edit_Full,
   bbs_Edit_Line;
 
-Function  Editor (Var Lines: SmallInt; MaxLen, MaxLine: SmallInt; TEdit, Forced : Boolean; Var Subj: String) : Boolean;
+Function  Editor (Var Lines: SmallInt; MaxLen, MaxLine: SmallInt; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
 Procedure Upgrade_User_Level (Now : Boolean; Var U : RecUser; Sec: Byte);
 Procedure View_BBS_List (Long: Boolean; Data: String);
 Procedure Add_BBS_List (Name : String);
@@ -50,12 +50,12 @@ Uses
   bbs_Core,
   bbs_NodeInfo;
 
-Function Editor (Var Lines: SmallInt; MaxLen, MaxLine: SmallInt; TEdit, Forced : Boolean; Var Subj: String) : Boolean;
+Function Editor (Var Lines: SmallInt; MaxLen, MaxLine: SmallInt; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
 Begin
   If (Session.io.Graphics > 0) and ((Session.User.ThisUser.EditType = 1) or ((Session.User.ThisUser.EditType = 2) and Session.io.GetYN(Session.GetPrompt(106), True))) Then
-    Editor := AnsiEditor(Lines, MaxLen, MaxLine, TEdit, Forced, Subj)
+    Editor := AnsiEditor(Lines, MaxLen, MaxLine, Forced, Template, Subj)
   Else
-    Editor := LineEditor(Lines, MaxLen, MaxLine, TEdit, Forced, Subj);
+    Editor := LineEditor(Lines, MaxLen, MaxLine, False, Forced, Subj);
 End;
 
 Procedure Upgrade_User_Level (Now: Boolean; Var U: RecUser; Sec: Byte);
@@ -120,7 +120,7 @@ Begin
 
   Str := 'Signature Editor'; {++lang}
 
-  If Editor (Lines, 78, Config.MaxAutoSig, True, False, Str) Then Begin
+  If Editor (Lines, 78, Config.MaxAutoSig, False, fn_tplMsgEdit, Str) Then Begin
     {$I-} Reset (DF, 1); {$I+}
 
     If IoResult <> 0 Then ReWrite (DF, 1);

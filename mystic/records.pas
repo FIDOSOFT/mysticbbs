@@ -64,6 +64,8 @@ Const
   fn_SemFileEcho = 'echomail.now';
   fn_SemFileNews = 'newsmail.now';
   fn_SemFileNet  = 'netmail.now';
+  fn_tplMsgEdit  = 'ansiedit';
+  fn_tplTextEdit = 'ansitext';
 
 Type
   SmallWord = System.Word;

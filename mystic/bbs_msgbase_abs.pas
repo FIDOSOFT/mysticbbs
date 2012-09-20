@@ -100,7 +100,7 @@ Type
     Function  YoursFound: Boolean; Virtual; {Message found}
     Function  GetHighMsgNum: LongInt; Virtual; {Get highest msg number}
     Procedure SetMailType(MT: MsgMailType); Virtual; {Set message base type}
-    Function  GetSubArea: Word; Virtual; {Get sub area number}
+//    Function  GetSubArea: Word; Virtual; {Get sub area number}
     Procedure ReWriteHdr; Virtual; {Rewrite msg header after changes}
     Procedure DeleteMsg; Virtual; {Delete current message}
     Procedure SetEcho(ES: Boolean); Virtual; {Set echo status}
@@ -521,10 +521,10 @@ Procedure TMsgBaseABS.SetMailType(MT: MsgMailType);
 Begin
 End;
 
-Function TMsgBaseABS.GetSubArea: Word;
-Begin
-  GetSubArea := 0;
-End;
+//Function TMsgBaseABS.GetSubArea: Word;
+//Begin
+//  GetSubArea := 0;
+//End;
 
 Procedure TMsgBaseABS.ReWriteHdr;
 Begin

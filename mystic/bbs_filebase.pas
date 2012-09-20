@@ -3629,7 +3629,7 @@ Begin
                 Temp := 'Description Editor';
                 B    := FDir.DescLines;
 
-                If Editor(B, mysMaxFileDescLen, Config.MaxFileDesc, True, False, Temp) Then Begin
+                If Editor(B, mysMaxFileDescLen, Config.MaxFileDesc, False, fn_tplTextEdit, Temp) Then Begin
                   FDir.DescLines   := B;
                   FDir.DescPtr     := FileSize(DataFile);
 

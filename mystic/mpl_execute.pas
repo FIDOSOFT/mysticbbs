@@ -449,9 +449,10 @@ End;
 
 Procedure TInterpEngine.CheckArray (VN: Word; Var A: TArrayInfo; Var R: TRecInfo);
 Var
-  Count  : Word;
-  Temp   : TArrayInfo;
-  Offset : Word;
+  Count    : Word;
+  Temp     : TArrayInfo;
+  Offset   : Word;
+  ArrStart : Word;
 Begin
   For Count := 1 to mplMaxArrayDem Do A[Count] := 1;
 
@@ -484,13 +485,17 @@ Begin
     R.ArrDem := W;
 
     If R.ArrDem > 0 Then Begin
-      For Count := 1 to R.ArrDem Do
-        Temp[Count] := Trunc(EvaluateNumber);
-
       Offset := 0;
 
-      For Count := 1 to R.ArrDem Do
-        Offset := Offset + ((Temp[Count] - 1) * R.OneSize);
+      For Count := 1 to R.ArrDem Do Begin
+        NextWord;
+
+        ArrStart := W;
+
+        Temp[Count] := Trunc(EvaluateNumber);
+
+        Offset := Offset + ((Temp[Count] - ArrStart) * R.OneSize);
+      End;
 
       R.Offset := R.Offset + Offset;
     End;
@@ -1018,16 +1023,8 @@ Begin
                   RecID := FindVariable(W);
 
                   CheckArray (RecID, AD, RI);
-//asdf DEBUG DEBUG
-// how do we get the real size of the shit here?
-// i added Checkarray here and ParseElement in ParseVarRecord for compiler
-//session.io.outfullln('datasize=' + stri2s(vardata[recid]^.datasize));
-//session.io.outfullln('varsize=' + stri2s(vardata[recid]^.varsize));
-//session.io.outfullln('|PN');
 
                   Move (GetDataPtr(RecID, AD, RI)^, GetDataPtr(VarNum, ArrayData, RecInfo)^, RecInfo.OneSize {VarData[RecID]^.VarSize});
-
-//                  Move (VarData[RecID]^.Data^, GetDataPtr(VarNum, ArrayData, RecInfo)^, VarData[RecID]^.DataSize);
                 End;
   End;
 End;
@@ -1144,7 +1141,7 @@ Begin
           Result := DataSize;
 
           GetMem   (Data, DataSize);
-          FillChar (Data^, DataSize, 0);
+          FillChar (Data^, DataSize, #0);
 
           Kill := True;
         End;
@@ -1389,7 +1386,7 @@ Begin
       VarData[VarNum]^.Kill     := False;
 
       GetMem   (VarData[VarNum]^.Data,  VarData[VarNum]^.DataSize);
-      FillChar (VarData[VarNum]^.Data^, VarData[VarNum]^.DataSize, 0);
+      FillChar (VarData[VarNum]^.Data^, VarData[VarNum]^.DataSize, #0);
     End;
 
     ExecuteBlock (SavedVar);
@@ -1903,6 +1900,25 @@ Begin
           End;
     542 : WriteXY (Param[1].B, Param[2].B, Param[3].B, Param[4].S);
     543 : WriteXYPipe (Param[1].B, Param[2].B, Param[3].B, Param[4].I, Param[5].S);
+    544 : Begin
+            TempBool := Editor(SmallInt(Pointer(Param[2].vData)^),
+                               Param[3].I,
+                               Param[4].I,
+                               Param[5].O,
+                               Param[6].S,
+                               String(Pointer(Param[7].vData)^));
+            Store (TempBool, 1);
+          End;
+    545 : Begin
+            If (Param[1].I > 0) and (Param[1].I <= mysMaxMsgLines) Then
+              TempStr := Session.Msgs.MsgText[Param[1].I]
+            Else
+              TempStr := '';
+
+            Store (TempStr, 255);
+          End;
+    546 : If (Param[1].I > 0) and (Param[1].I <= mysMaxMsgLines) Then
+             Session.Msgs.MsgText[Param[1].I] := Param[2].S;
   End;
 End;
 

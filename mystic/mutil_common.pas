@@ -228,7 +228,7 @@ Begin
 
     Read (ArcFile, Arc);
 
-    If (Not Arc.Active) or (Arc.OSType <> OSType) Then Continue;
+    If (Not Arc.Active) or ((Arc.OSType <> OSType) and (Arc.OSType <> 3)) Then Continue;
 
     If strUpper(Arc.Ext) = Temp Then Break;
   Until False;

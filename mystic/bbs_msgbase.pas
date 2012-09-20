@@ -15,22 +15,24 @@ Uses
 
 Type
   TMsgBase = Class
-    MBaseFile : File of RecMessageBase;
-    MScanFile : File of MScanRec;
-    GroupFile : File of RecGroup;
-    TotalMsgs : Integer;
-    TotalConf : Integer;
-    MsgBase   : PMsgBaseABS;
-    MBase     : RecMessageBase;
-    MScan     : MScanRec;
-    Group     : RecGroup;
-    MsgText   : RecMessageText;
-    WereMsgs  : Boolean;
-    Reading   : Boolean;
+    MBaseFile   : File of RecMessageBase;
+    MScanFile   : File of MScanRec;
+    GroupFile   : File of RecGroup;
+    TotalMsgs   : Integer;
+    TotalConf   : Integer;
+    MsgBase     : PMsgBaseABS;
+    MBase       : RecMessageBase;
+    MScan       : MScanRec;
+    Group       : RecGroup;
+    MsgText     : RecMessageText;
+    MsgTextSize : SmallInt;
+    WereMsgs    : Boolean;
+    Reading     : Boolean;
 
     Constructor Create   (Var Owner: Pointer);
     Destructor  Destroy; Override;
 
+    Function    IsQuotedText        (Str: String) : Boolean;
     Function    OpenCreateBase      (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
     Procedure   AppendMessageText   (Var Msg: PMsgBaseABS; Lines: Integer; ReplyID: String);
     Procedure   AssignMessageData   (Var Msg: PMsgBaseABS);
@@ -109,15 +111,24 @@ Constructor TMsgBase.Create (Var Owner: Pointer);
 Begin
   Inherited Create;
 
-  MBase.Name := 'None';
-  Group.Name := 'None';
-  WereMsgs   := False;
-  Reading    := False;
+  MBase.Name  := 'None';
+  Group.Name  := 'None';
+  WereMsgs    := False;
+  Reading     := False;
+  MsgTextSize := 0;
 End;
 
 Destructor TMsgBase.Destroy;
 Begin
   Inherited Destroy;
+End;
+
+Function TMsgBase.IsQuotedText (Str: String) : Boolean;
+Var
+  Temp : Byte;
+Begin
+  Temp   := Pos('>', strStripL(Str, ' '));
+  Result := (Temp > 0) and (Temp < 5);
 End;
 
 Function TMsgBase.OpenCreateBase (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
@@ -870,15 +881,16 @@ End;
 
 Procedure TMsgBase.ReplyMessage (Email: Boolean; ListMode: Byte; ReplyID: String);
 Var
-  ToWho  : String[30];
-  Subj   : String[60];
-  Addr   : RecEchomailAddr;
-  MsgNew : PMsgBaseABS;
-  Temp1  : String;
-  Temp2  : String[2];
-  Temp3  : String[80];
-  tFile  : Text;
-  Lines  : SmallInt;
+  ToWho     : String[30];
+  Subj      : String[60];
+  Addr      : RecEchomailAddr;
+  MsgNew    : PMsgBaseABS;
+  TempStr   : String;
+  Initials  : String[4];
+  WrapData  : String;
+  DoWrap    : Boolean = True;
+  QuoteFile : Text;
+  Lines     : SmallInt;
 Begin
   If Not Session.User.Access(MBase.PostACS) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(105));
@@ -914,9 +926,9 @@ Begin
 
     MsgBase^.GetOrig(Addr);
 
-    Temp3 := Session.io.GetInput(20, 20, 12, strAddr2Str(Addr));
+    TempStr := Session.io.GetInput(20, 20, 12, strAddr2Str(Addr));
 
-    If Not strStr2Addr (Temp3, Addr) Then Exit;
+    If Not strStr2Addr (TempStr, Addr) Then Exit;
   End;
 
   Subj := MsgBase^.GetSubj;
@@ -929,47 +941,60 @@ Begin
 
   If Subj = '' Then Exit;
 
-  Assign (tFile, Session.TempPath + 'msgtmp');
-  {$I-} ReWrite (tFile); {$I+}
+  Assign (QuoteFile, Session.TempPath + 'msgtmp');
+  {$I-} ReWrite (QuoteFile); {$I+}
 
   If IoResult = 0 Then Begin
-    Temp3 := MsgBase^.GetFrom;
-    Temp2 := Temp3[1];
+    Initials := strInitials(MsgBase^.GetFrom) + '> ';
+    TempStr  := Session.GetPrompt(464);
 
-    If Pos(' ', Temp3) > 0 Then
-      Temp2 := Temp2 + Temp3[Succ(Pos(' ', Temp3))];
+    TempStr := strReplace(TempStr, '|&1', MsgBase^.GetDate);
+    TempStr := strReplace(TempStr, '|&2', MsgBase^.GetFrom);
+    TempStr := strReplace(TempStr, '|&3', Initials);
 
-    Temp1 := Session.GetPrompt(464);
-
-    Temp1 := strReplace(Temp1, '|&1', MsgBase^.GetDate);
-    Temp1 := strReplace(Temp1, '|&2', MsgBase^.GetFrom);
-    Temp1 := strReplace(Temp1, '|&3', Temp2);
-
-    WriteLn (tFile, Temp1);
-    WriteLn (tFile, ' ');
-
-    Lines := 0;
+    WriteLn (QuoteFile, TempStr);
+    WriteLn (QuoteFile, ' ');
 
     MsgBase^.MsgTxtStartUp;
 
-    While Not MsgBase^.EOM and (Lines < mysMaxMsgLines - 2) Do Begin
-      Inc (Lines);
+    WrapData := '';
 
-      Temp3 := MsgBase^.GetString(79);
+    While Not MsgBase^.EOM Do Begin
+      TempStr := MsgBase^.GetString(79);
 
-      If Temp3[1] <> #1 Then
-        WriteLn (tFile, Temp2 + '> ' + Copy(Temp3, 1, 74));
+      If TempStr[1] = #1 Then Continue;
+
+      DoWrap := Not IsQuotedText(TempStr);
+
+      If DoWrap Then Begin
+        If WrapData <> '' Then Begin
+          If TempStr = '' Then Begin
+            WriteLn (QuoteFile, Initials + WrapData);
+            WriteLn (QuoteFile, Initials);
+
+            WrapData := '';
+
+            Continue;
+          End;
+
+          TempStr := WrapData + ' ' + TempStr;
+        End;
+
+        strWrap (TempStr, WrapData, 74);
+
+        WriteLn (QuoteFile, Initials + Copy(TempStr, 1, 74));
+      End Else
+        WriteLn (QuoteFile, Initials + Copy(TempStr, 1, 74));
     End;
 
-    Close (tFile);
+    Close (QuoteFile);
   End;
 
   Lines := 0;
 
   Session.io.PromptInfo[1] := ToWho;
-  Session.io.PromptInfo[2] := Subj;
 
-  If Editor(Lines, 78, mysMaxMsgLines, False, False, Subj) Then Begin
+  If Editor(Lines, 78, mysMaxMsgLines, False, fn_tplMsgEdit, Subj) Then Begin
 
     Session.io.OutFull (Session.GetPrompt(107));
 
@@ -1043,11 +1068,13 @@ Var
 
     While Not MsgBase^.EOM and (Lines < mysMaxMsgLines) Do Begin
       Inc (Lines);
+
       MsgText[Lines] := MsgBase^.GetString(79);
     End;
 
     If Lines < mysMaxMsgLines Then Begin
       Inc (Lines);
+
       MsgText[Lines] := '';
     End;
   End;
@@ -1096,7 +1123,7 @@ Begin
       '!' : Begin
               Temp1 := MsgBase^.GetSubj;
 
-              If Editor(Lines, 78, mysMaxMsgLines, False, False, Temp1) Then
+              If Editor(Lines, 78, mysMaxMsgLines, False, fn_tplMsgEdit, Temp1) Then
                 MsgBase^.SetSubj(Temp1)
               Else
                 ReadText;
@@ -1440,9 +1467,8 @@ Var
   Var
     B : Byte;
   Begin
-    B := Pos('>', strStripL(Str, ' '));
 
-    If (B > 0) and (B < 5) Then Begin
+    If IsQuotedText(Str) Then Begin
       Session.io.AnsiColor(MBase.ColQuote);
       Session.io.OutPipe (Str);
       Session.io.AnsiColor(MBase.ColText);
@@ -2351,7 +2377,8 @@ Begin
     1 : MsgBase := New(PMsgbaseSquish, Init);
   End;
 
-  MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
+  MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
+  MsgBase^.SetTempFile (Session.TempPath + 'msgbuf.');
 
   If Not MsgBase^.OpenMsgBase Then Begin
     If Mode = 'E' Then
@@ -2555,9 +2582,9 @@ Begin
   Lines := 0;
 
   Session.io.PromptInfo[1] := MsgTo;
-  Session.io.PromptInfo[2] := MsgSubj;
+//  Session.io.PromptInfo[2] := MsgSubj;
 
-  If Editor(Lines, 78, mysMaxMsgLines, False, Forced, MsgSubj) Then Begin
+  If Editor(Lines, 78, mysMaxMsgLines, Forced, fn_tplMsgEdit, MsgSubj) Then Begin
     Session.io.OutFull (Session.GetPrompt(107));
 
     { all of this below should be replaced with a SaveMessage function   }
@@ -2997,7 +3024,7 @@ Begin
 
   Lines := 0;
 
-  If Editor(Lines, 78, mysMaxMsgLines, False, False, MsgSubj) Then Begin
+  If Editor(Lines, 78, mysMaxMsgLines, False, fn_tplMsgEdit, MsgSubj) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(394));
 
     OLD := MBase;

@@ -4,7 +4,7 @@ Unit bbs_Edit_Full;
 
 Interface
 
-Function AnsiEditor (Var Lines: SmallInt; WrapPos: Byte; MaxLines: SmallInt; TEdit, Forced: Boolean; Var Subj: String) : Boolean;
+Function AnsiEditor (Var Lines: SmallInt; WrapPos: Byte; MaxLines: SmallInt; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
 
 Implementation
 
@@ -18,7 +18,7 @@ Begin
   Session.io.BufAddStr(S + #13#10);
 End;
 
-Function AnsiEditor (Var Lines: Integer; WrapPos: Byte; MaxLines: Integer; TEdit, Forced: Boolean; Var Subj: String) : Boolean;
+Function AnsiEditor (Var Lines: Integer; WrapPos: Byte; MaxLines: Integer; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
 Const
   MaxCutText = 100;
 Type
@@ -411,7 +411,9 @@ End;
 
 Procedure FullReDraw;
 Begin
-  If TEdit Then Session.io.OutFile ('ansitext', True, 0) Else Session.io.OutFile ('ansiedit', True, 0);
+  Session.io.PromptInfo[2] := Subj;
+
+  Session.io.OutFile (Template, True, 0);
 
   WinStart := Session.io.ScreenInfo[1].Y;
   WinEnd   := Session.io.ScreenInfo[2].Y;
@@ -933,6 +935,7 @@ Begin
               DeleteLine (CurLine);
               TextRefreshPart;
             End;
+      ^Z,
       ^[  : Begin
               Commands;
 

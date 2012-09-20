@@ -53,7 +53,7 @@ Const
   UpdateNode  = 500;
   UpdateStats = 6000 * 10;  // 10 minutes
 
-  AutoSnoop   : Boolean = True;
+  AutoSnoop   : Boolean = False;
   AutoSnoopID : LongInt = 0;
 
 Type
@@ -612,6 +612,8 @@ Begin
   Screen.WriteStr ('Connecting to 127.0.0.1... ');
 
   Client := TIOSocket.Create;
+
+  Client.FTelnetClient := True;
 
   If Not Client.Connect('127.0.0.1', Config.INetTNPort) Then
     ShowMsgBox (0, 'Unable to connect')
