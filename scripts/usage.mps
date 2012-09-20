@@ -47,7 +47,7 @@ Type
     SMTP       : Word;
     NNTP       : Word;
     HTTP       : Word;
-    Hourly     : Array[0..23] of Byte;
+    Hourly     : Array[1..24] of Byte;
     Reserved   : Array[1..2] of Byte;
   End;
 
@@ -55,8 +55,8 @@ Var
   Days  : LongInt;
   Calls : LongInt;
   Month : Array[1..12] of Cardinal;
-  Week  : Array[0..6] of Cardinal;
-  Hour  : Array[0..23] of Cardinal;
+  Week  : Array[1..7] of Cardinal;
+  Hour  : Array[1..24] of Cardinal;
 
 Procedure DrawBar (XPos, bSize, Value: Byte);
 Var
@@ -112,8 +112,8 @@ Begin
       Write  (strRep(#250, 8));
     End;
 
-  For Count := 0 to 6 Do
-    DrawBar (4 + (Count * 11), 8, Week[Count]);
+  For Count := 1 to 7 Do
+    DrawBar (4 + ((Count - 1) * 11), 8, Week[Count]);
 End;
 
 Procedure DisplayHourly;
@@ -139,8 +139,8 @@ Begin
       Write  ('|08' + #250 + #250);
     End;
 
-  For Count := 0 to 23 Do
-    DrawBar (5 + (Count * 3), 2, Hour[Count]);
+  For Count := 1 to 24 Do
+    DrawBar (5 + ((Count - 1) * 3), 2, Hour[Count]);
 End;
 
 Procedure CalculateHistory;
@@ -175,10 +175,10 @@ Begin
     Calls           := Calls + OneDay.Calls;
     TempLong        := Str2Int(Copy(DateStr(OneDay.Date, 1), 1, 2));
     Month[TempLong] := Month[TempLong] + OneDay.Calls;
-    TempLong        := DayOfWeek(OneDay.Date);
+    TempLong        := DayOfWeek(OneDay.Date) + 1;
     Week[TempLong]  := Week[TempLong] + OneDay.Calls;
 
-    For Count := 0 to 23 Do
+    For Count := 1 to 24 Do
       Hour[Count] := Hour[Count] + OneDay.Hourly[Count];
   End;
 
@@ -198,11 +198,11 @@ Begin
 
   Highest := 0;
 
-  For Count := 0 to 6 Do
+  For Count := 1 to 7 Do
     If Week[Count] > Highest Then
       Highest := Week[Count];
 
-  For Count := 0 to 6 Do
+  For Count := 1 to 7 Do
     If Week[Count] > 0 Then Begin
       TempReal    := (Week[Count] / Highest * 100);
       Week[Count] := TempReal / 7 + 1;
@@ -210,11 +210,11 @@ Begin
 
   Highest := 0;
 
-  For Count := 0 to 23 Do
+  For Count := 1 to 24 Do
     If Hour[Count] > Highest Then
       Highest := Hour[Count];
 
-  For Count := 0 to 23 Do
+  For Count := 1 to 24 Do
     If Hour[Count] > 0 Then Begin
       TempReal    := (Hour[Count] / Highest * 100);
       Hour[Count] := TempReal / 7 + 1;
