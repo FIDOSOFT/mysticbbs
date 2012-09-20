@@ -154,7 +154,7 @@ Begin
   FInBufEnd     := 0;
   FOutBufPos    := 0;
   FTelnetState  := 0;
-  FTelnetEcho   := False;
+  FTelnetEcho   := True;
   FTelnetClient := False;
   FTelnetServer := False;
   FDisconnect   := True;
@@ -395,7 +395,7 @@ Begin
                               End;
 
                               If Buf[Count] = Telnet_Echo Then
-                                FTelnetEcho := True;
+                                FTelnetEcho := False;
                             End;
             End;
           End;

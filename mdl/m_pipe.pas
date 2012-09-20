@@ -5,8 +5,8 @@ Unit m_Pipe;
 Interface
 
 {$IFDEF UNIX}
-  Uses m_Pipe_Unix;
-  Type TPipe = Class(TPipeUnix);
+  Uses m_Pipe_Disk;
+  Type TPipe = Class(TPipeDisk);
 {$ENDIF}
 
 {$IFDEF WINDOWS}

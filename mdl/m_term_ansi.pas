@@ -91,10 +91,15 @@ Var
   Y : Byte;
 Begin
   Y := ParseNumber;
+
   If Y = 0 Then Y := 1;
+
   X := ParseNumber;
+
   If X = 0 Then X := 1;
+
   Screen.CursorXY (X, Y);
+
   ResetState;
 End;
 
@@ -201,10 +206,12 @@ Begin
     'm'           : Begin
                       If Length(Options) = 0 Then Begin
                         Screen.TextAttr := 7;
+
                         ResetState;
                       End Else
                       While Length(Options) > 0 Do Begin
                         Temp := ParseNumber;
+
                         Case Temp of
                           0 : Screen.TextAttr := 7;
                           1 : Screen.TextAttr := Screen.TextAttr OR $08;
@@ -219,20 +226,24 @@ Begin
                           47: Screen.TextAttr := (Screen.TextAttr AND $F + ColorTable[Temp]);
                         End;
                       End;
+
                       ResetState;
                     End;
     'n'           : Begin
                       If Client <> NIL Then
                         Client.WriteStr(#27 + '[' + strI2S(Screen.CursorY) + ';' + strI2S(Screen.CursorX) + 'R');
+
                       ResetState;
                     End;
     's'           : Begin
                       SavedX := Screen.CursorX;
                       SavedY := Screen.CursorY;
+
                       ResetState;
                     End;
     'u'           : Begin
                       Screen.CursorXY (SavedX, SavedY);
+
                       ResetState;
                     End;
   Else
@@ -254,6 +265,7 @@ Begin
             #12 : Screen.ClearScreen;
           Else
             Screen.WriteChar(Ch);
+
             State    := 0;
             WasValid := True;
           End;

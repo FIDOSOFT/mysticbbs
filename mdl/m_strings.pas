@@ -352,7 +352,9 @@ Begin
   Result := Str[1];
 
   If Pos(' ', Str) > 0 Then
-    Result := Result + Str[Succ(Pos(' ', Str))];
+    Result := Result + Str[Succ(Pos(' ', Str))]
+  Else
+    Result := Result + Str[2];
 End;
 
 Function strWrap (Var Str1, Str2: String; WrapPos: Byte) : Byte;

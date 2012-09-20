@@ -292,25 +292,17 @@ End;
 
 Function DayOfWeek (Date: LongInt) : Byte;
 Var
-  Offset : Byte;
-  DT     : DateTime;
+  DT  : DateTime;
+  Res : LongInt;
 Begin
   UnpackTime (Date, DT);
 
-  If DT.Month > 2 Then Offset := 0 Else Offset := 1;
+  If DT.Month < 3 Then
+    Res := 365 * DT.Year + DT.Day + 31 * (DT.Month - 1) + Trunc ((DT.Year - 1) / 4) - Trunc(0.75 * Trunc((DT.Year - 1) / 100) + 1)
+  Else
+    Res := 365 * DT.Year + DT.Day + 31 * (DT.Month - 1) - Trunc (0.4 * DT.Month + 2.3) + Trunc (DT.Year / 4) - Trunc (0.75 * Trunc (DT.Year / 100) + 1);
 
-  Result := (((3 * (DT.Year) - (7 * ((DT.Year) + ((DT.Month) + 9) DIV 12))
-            DIV 4 + (23 * (DT.Month)) DIV 9 + (DT.Day) + 2 + (((DT.Year) -
-            Offset) DIV 100 + 1) * 3 DIV 4 - 16) MOD 7));
-(*
-    IF m < 3 THEN
-      F := 365 * y + d + 31 * (m - 1) + trunc ((y - 1) / 4) -
-           trunc (0.75 * trunc ((y - 1) / 100) + 1)
-    ELSE
-    f := 365 * y + d + 31 * (m - 1) - trunc (0.4 * m + 2.3) +
-         trunc (y / 4) - trunc (0.75 * trunc (y / 100) + 1);
-    tot := f MOD 7;
-*)
+  Result := Res MOD 7;
 End;
 
 Function DaysAgo (Date: LongInt) : LongInt;
