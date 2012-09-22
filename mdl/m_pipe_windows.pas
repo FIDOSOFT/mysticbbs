@@ -85,8 +85,8 @@ Begin
 
   WriteFile (PipeHandle, Buf, Len, Written, NIL);
 
-//  Connected := GetLastError = ERROR_SUCCESS;
-  Connected := Written > 0;
+  If Written <= 0 Then
+    Disconnect;  // was ERROR_SUCCESS check
 End;
 
 Procedure TPipeWindows.ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongWord);
@@ -97,7 +97,8 @@ Begin
 
   ReadFile (PipeHandle, Buf, Len, bRead, NIL);
 
-  Connected := GetLastError = ERROR_SUCCESS;
+  If GetLastError <> ERROR_SUCCESS Then
+    Disconnect;
 End;
 
 Function TPipeWindows.WaitForPipe (Secs: LongInt) : Boolean;
@@ -158,7 +159,7 @@ End;
 
 Procedure TPipeWindows.Disconnect;
 Begin
-  If Not Connected Then Exit;
+  If PipeHandle = -1 Then Exit;
 
   DisconnectNamedPipe (PipeHandle);
   CloseHandle         (PipeHandle);

@@ -5,6 +5,7 @@ Unit m_Pipe_Unix;
 Interface
 
 Uses
+  BaseUnix,
   m_DateTime,
   m_FileIO,
   m_Strings;
@@ -14,7 +15,7 @@ Type
     PipeID     : Word;
     Connected  : Boolean;
     IsClient   : Boolean;
-    PipeDir    : String;
+    PipeHandle : THandle;
 
     Constructor Create       (Dir: String; Client: Boolean; ID: Word);
     Destructor  Destroy;     Override;
@@ -25,7 +26,7 @@ Type
     Function    ConnectPipe  (Secs: LongInt) : Boolean;
     // General functions
     Procedure   SendToPipe   (Var Buf; Len: Longint);
-    Procedure   ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongInt);
+    Procedure   ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongWord);
     Procedure   Disconnect;
   End;
 
@@ -35,8 +36,8 @@ Constructor TPipeUnix.Create (Dir: String; Client: Boolean; ID: Word);
 Begin
   Connected  := False;
   IsClient   := Client;
-  PipeDir    := DirSlash(Dir);
   PipeID     := ID;
+  PipeHandle := -1;
 End;
 
 Destructor TPipeUnix.Destroy;
@@ -47,48 +48,72 @@ Begin
 End;
 
 Function TPipeUnix.CreatePipe : Boolean;
+Var
+  PipeName : String;
 Begin
-  Result   := False;
   IsClient := False;
+  PipeName := '/tmp/mystic_' + strI2S(PipeID);
 
-  Result := True;
+  If Not FileExist(PipeName) Then
+    fpMkFIFO(PipeName, 438);
+
+  PipeHandle := fpOpen(PipeName, O_WRONLY, O_NONBLOCK);
+  Result     := PipeHandle >= 0;
 End;
 
 Procedure TPipeUnix.SendToPipe (Var Buf; Len: LongInt);
 Begin
   If Not Connected Then Exit;
+
+  If fpWrite (PipeHandle, Buf, Len) < 0 Then
+    Disconnect;
 End;
 
-Procedure TPipeUnix.ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongInt);
+Procedure TPipeUnix.ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongWord);
 Begin
   bRead := 0;
 
   If Not Connected Then Exit;
+
+  bRead := fpRead (PipeHandle, Buf, Len);
+
+  If bRead < 0 Then Disconnect;
 End;
 
 Function TPipeUnix.WaitForPipe (Secs: LongInt) : Boolean;
 Begin
-  Result := Connected;
-
-  If Connected Then Exit;
-
-  Result := Connected;
+  Connected := PipeHandle > -1;
+  Result    := Connected;
 End;
 
 Function TPipeUnix.ConnectPipe (Secs: LongInt) : Boolean;
+Var
+  PipeName : String;
+  TimeOut  : LongInt;
 Begin
-  Result    := False;
-  Connected := False;
-  IsClient  := True;
+  IsClient := True;
+
+  Disconnect;
+
+  PipeName := '/tmp/mystic_' + strI2S(PipeID);
+  TimeOut  := TimerSet(Secs);
+
+  Repeat
+    PipeHandle := fpOpen(PipeName, O_RDONLY, O_NONBLOCK);
+    Connected  := PipeHandle >= 0;
+  Until Connected or TimerUp(TimeOut);
 
   Result := Connected;
 End;
 
 Procedure TPipeUnix.Disconnect;
 Begin
-  If Not Connected Then Exit;
+  If PipeHandle = -1 Then Exit;
 
-  Connected := False;
+  fpClose (PipeHandle);
+
+  PipeHandle := -1;
+  Connected  := False;
 End;
 
 End.
