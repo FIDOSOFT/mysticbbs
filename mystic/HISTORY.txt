@@ -4836,3 +4836,5 @@
    in the new menu editor.
 
  + NodeSpy in Windows now uses OS named pipes instead of Disk I/O.
+
+ + NodeSpy in Unix now uses OS named pipes instead of Disk I/O.
