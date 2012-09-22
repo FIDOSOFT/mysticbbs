@@ -17,6 +17,7 @@ Function strH2I       (Str: String) : LongInt;
 Function strI2H       (Num: LongInt) : String;
 Function strS2I       (Str: String) : LongInt;
 Function strI2O       (Num: LongInt) : String;
+Function strR2S       (Num: Real; Deci: Byte) : String;
 Function strWordGet   (Num: Byte; Str: String; Ch: Char) : String;
 Function strWordPos   (Num: Byte; Str: String; Ch: Char) : Byte;
 Function strWordCount (Str: String; Ch: Char) : Byte;
@@ -203,6 +204,11 @@ End;
 Function strI2S (Num: LongInt) : String;
 Begin
   Str(Num, Result);
+End;
+
+Function strR2S (Num: Real; Deci: Byte) : String;
+Begin
+  Str (Num:0:Deci, Result);
 End;
 
 Function strS2I (Str: String) : LongInt;

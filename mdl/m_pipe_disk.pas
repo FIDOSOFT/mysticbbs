@@ -39,7 +39,7 @@ Type
     // General functions
     Procedure   DeleteFiles;
     Procedure   SendToPipe   (Var Buf; Len: Longint);
-    Procedure   ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongInt);
+    Procedure   ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongWord);
     Procedure   Disconnect;
   End;
 
@@ -125,7 +125,7 @@ Begin
   BlockWrite (PipeOutput, Buf, Len, bWrite);
 End;
 
-Procedure TPipeDisk.ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongInt);
+Procedure TPipeDisk.ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongWord);
 Var
   Buffer  : TPipeDiskBuffer Absolute Buf;
   Ch      : Char;

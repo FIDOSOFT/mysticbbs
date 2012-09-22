@@ -10,8 +10,8 @@ Interface
 {$ENDIF}
 
 {$IFDEF WINDOWS}
-  Uses m_Pipe_Disk;
-  Type TPipe = Class(TPipeDisk);
+  Uses m_Pipe_Windows;
+  Type TPipe = Class(TPipeWindows);
 {$ENDIF}
 
 {$IFDEF OS2}

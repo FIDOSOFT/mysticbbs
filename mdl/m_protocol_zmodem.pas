@@ -1774,7 +1774,7 @@ Begin
 
   {$IFDEF ZDEBUG} ZLog('DoAbortSequence -> begin'); {$ENDIF}
 
-  Client.PurgeInputData;
+  Client.PurgeInputData(False);
   Client.PurgeOutputData;
 
   Client.BufWriteStr(Attn);

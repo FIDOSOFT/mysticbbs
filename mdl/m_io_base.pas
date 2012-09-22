@@ -19,7 +19,7 @@ Type
 
     Constructor Create; Virtual;
     Destructor  Destroy; Override;
-    Procedure   PurgeInputData;
+    Procedure   PurgeInputData  (Drain: Boolean);
     Procedure   PurgeOutputData;
     Function    DataWaiting     : Boolean; Virtual;
     Function    WriteBuf        (Var Buf; Len: LongInt) : LongInt; Virtual;
@@ -56,15 +56,16 @@ Begin
   FOutBufPos := 0;
 End;
 
-Procedure TIOBase.PurgeInputData;
-//Var
-//  Buf : Array[1..2048] of Char;
+Procedure TIOBase.PurgeInputData (Drain: Boolean);
+Var
+  Buf : Array[1..2048] of Char;
 Begin
   FInBufPos := 0;
   FInBufEnd := 0;
 
-//  While DataWaiting Do
-//    ReadBuf(Buf, SizeOf(Buf));
+  If Drain Then
+    While DataWaiting Do
+      ReadBuf(Buf, SizeOf(Buf));
 End;
 
 Function TIOBase.DataWaiting : Boolean;
