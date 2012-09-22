@@ -4806,3 +4806,33 @@
 
  ! Fixed a bug that could corrupt a message and/or crash when editing a
    message with a lot of lines.
+
+ + New option: "Ask Theme" in the General Settings.  If this is set to true
+   Mystic will prompt the user to select a theme after the graphics are
+   detected upon each connection.
+
+ + Added new MPL function: Real2Str this takes a string and decimal place
+   value.  Example:
+
+      Var
+        R : Real;
+      Begin
+        R := 1234.1234;
+        WriteLn (Real2Str(R, 2));  // Will print 1234.12
+      End
+
+ + The GE menu command (edit user settings) option 14 (select theme) can now
+   have a section option which specifies the base filename of a theme.  For
+   example, if the theme filename is "english" you can do:
+
+      Menu command: GE
+              Data: 14 english
+
+   This will cause the theme to be selected automatically, without prompting
+   the user for anything.  If a second parameter is not supplied, the user
+   will be prompted to select a theme.
+
+ + Copy/Paste is now added/fixed for menu commands and menu execution lists
+   in the new menu editor.
+
+ + NodeSpy in Windows now uses OS named pipes instead of Disk I/O.

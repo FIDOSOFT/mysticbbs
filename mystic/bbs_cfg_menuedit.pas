@@ -310,10 +310,12 @@ Const
   Status2 = ' (TAB) Switch   (/) Commands ';
   Grid    = '(Grid) Item # to jump to on keypress ';
 Var
-  Box   : TAnsiMenuBox;
-  List  : TAnsiMenuList;
-  Form  : TAnsiMenuForm;
-  Topic : String;
+  Box     : TAnsiMenuBox;
+  List    : TAnsiMenuList;
+  Form    : TAnsiMenuForm;
+  Topic   : String;
+  CopyCmd : RecMenuCmd;
+  HasCopy : Boolean = False;
 
   Procedure MakeList;
   Var
@@ -400,7 +402,18 @@ Begin
                 List.Open (2, 15, 79, 21);
 
                 Case List.ExitCode of
-                  '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|') of
+                  '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
+                          'C' : If List.Picked <> List.ListMax Then Begin
+                                  CopyCmd := Menu.Item[Num]^.CmdData[List.Picked]^;
+                                  HasCopy := True;
+                                End;
+                          'P' : If HasCopy Then Begin
+                                   Menu.InsertCommand(Num, List.Picked);
+
+                                   Menu.Item[Num]^.CmdData[List.Picked]^ := CopyCmd;
+
+                                   Changed := True;
+                                End;
                           'I' : Begin
                                   Menu.InsertCommand(Num, List.Picked);
                                   Changed := True;

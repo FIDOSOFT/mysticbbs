@@ -980,11 +980,11 @@ Begin
           TempStr := WrapData + ' ' + TempStr;
         End;
 
-        strWrap (TempStr, WrapData, 74);
+        strWrap (TempStr, WrapData, 75);
 
-        WriteLn (QuoteFile, Initials + Copy(TempStr, 1, 74));
+        WriteLn (QuoteFile, Initials + Copy(TempStr, 1, 75));
       End Else
-        WriteLn (QuoteFile, Initials + Copy(TempStr, 1, 74));
+        WriteLn (QuoteFile, Initials + Copy(TempStr, 1, 75));
     End;
 
     Close (QuoteFile);

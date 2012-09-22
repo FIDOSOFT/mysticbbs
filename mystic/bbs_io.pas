@@ -1926,7 +1926,7 @@ Begin
   While Input.KeyPressed Do Input.ReadKey;
   {$ENDIF}
   {$IFDEF WINDOWS}
-  If Not TBBSCore(Core).LocalMode Then TBBSCore(Core).Client.PurgeInputData;
+  If Not TBBSCore(Core).LocalMode Then TBBSCore(Core).Client.PurgeInputData(True);
   {$ENDIF}
 End;
 

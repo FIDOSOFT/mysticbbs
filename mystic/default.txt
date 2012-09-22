@@ -328,17 +328,17 @@
 180 |CR|PA
 ; nodechat text: &1 = user name
 181 |07<|15|&1|07> |07
-; Language select header
-182 |CR|14Available languages:|CR
-; Language select format:
-; &1 = language number       &2 = language description
-183 |15|$R03|&1|14|&2
-; Language select footer
-184 |CR|09Select language: |XX
-; Language file does not exist
-185 |CR|12Language file does not exist.
-; Displayed if user's language does not exist.
-186 |CR|12Selected language not available.  Using default language.|CR|PA
+; Theme select header
+182 |CR|14Available themes:|CR
+; Theme select format:
+; &1 = Theme number       &2 = Theme description
+183    |10|&1 |08..... |07|&2
+; Theme select footer
+184 |CR|09Select your theme |01[|10Enter|01/|10Default|01]: |09
+; Theme file does not exist
+185 |CR|12Theme file does not exist.
+; Displayed if user's theme does not exist.
+186 |CR|12Selected theme not available.  Using default theme.|CR|PA
 ; new user: use full screen node chat?
 187 |CR|12Use full screen node chat? |11
 ; One Liner header

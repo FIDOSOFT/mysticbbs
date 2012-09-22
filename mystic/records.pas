@@ -23,7 +23,7 @@
 Const
   mysSoftwareID  = 'Mystic';                                    // no idea
   mysCopyYear    = '1997-2012';                                 // its been a long time!
-  mysVersion     = '1.10 A19';                                  // current version
+  mysVersion     = '1.10 A20';                                  // current version
   mysDataChanged = '1.10 A11';                                  // version of last records change
 
   {$IFDEF WIN32}
@@ -271,7 +271,8 @@ Type
     inetNNTPTimeOut : Word;
  // UNSORTED
     inetTNHidden    : Boolean;
-    Reserved        : Array[1..845] of Char;
+    ThemeOnStart    : Boolean;
+    Reserved        : Array[1..844] of Char;
   End;
 
 Const

@@ -465,7 +465,7 @@ Begin
 
   Set_Node_Action (Session.GetPrompt(345));
 
-  Session.User.User_Logon (UserName, Password, Script);
+  Session.User.UserLogon1 (UserName, Password, Script);
 
   If Session.TimeOffset > 0 Then
     Session.TimeSaved := Session.User.ThisUser.TimeLeft;

@@ -1767,6 +1767,10 @@ Begin
             BlockRead (File(Pointer(Param[1].vData)^), VarData[Param[2].vID]^.Data^, VarData[Param[2].vID]^.DataSize);
             IoError := IoResult;
           End;
+    93  : Begin
+            TempStr := strR2S(Param[1].R, Param[2].B);
+            Store (TempStr, 256);
+          End;
     500 : Begin
             TempStr := Session.io.GetInput(Param[1].B, Param[2].B, Param[3].B, Param[4].S);
             Store (TempStr, 256);

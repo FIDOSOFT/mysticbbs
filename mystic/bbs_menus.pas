@@ -190,7 +190,7 @@ Begin
             '1' : ShowBBSHistory(strS2I(CmdData));
             'A' : View_Directory(CmdData, 0);
             'D' : Session.io.OutFile (CmdData, True, 0);
-            'E' : Session.User.Edit_User_Settings(strS2I(CmdData));
+            'E' : Session.User.EditUserSettings(CmdData);
             'H',
             'I' : Begin
                     If Cmd[2] = 'H' Then Begin
@@ -304,7 +304,7 @@ Begin
                     Session.io.OutFile('newuser', True, 0);
                     If Session.io.GetYN(Session.GetPrompt(269), True) Then Begin
                       Session.User.CreateNewUser('');
-                      Session.User.User_Logon2;
+                      Session.User.UserLogon2;
 
                       MenuName := Config.MatrixMenu;
                       Result   := True;

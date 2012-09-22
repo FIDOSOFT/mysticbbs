@@ -356,26 +356,28 @@ Begin
 End;
 
 Function TBBSCore.LoadThemeData (Str: String) : Boolean;
+Var
+  TempTheme : RecTheme;
 Begin
   Result := False;
 
   Reset (ThemeFile);
 
   While Not Eof(ThemeFile) Do Begin
-    Read (ThemeFile, Theme);
+    Read (ThemeFile, TempTheme);
 
     {$IFDEF FS_SENSITIVE}
-    If Theme.FileName = Str Then Begin
+    If TempTheme.FileName = Str Then Begin
     {$ELSE}
-    If strUpper(Theme.FileName) = strUpper(Str) Then Begin
+    If strUpper(TempTheme.FileName) = strUpper(Str) Then Begin
     {$ENDIF}
-      If Not FileExist(Config.DataPath + Theme.FileName + '.thm') Then Break;
+      If Not FileExist(Config.DataPath + TempTheme.FileName + '.thm') Then Break;
 
       {$I-} Close (PromptFile); {$I+}
 
       If IoResult <> 0 Then;
 
-      Assign (PromptFile, Config.DataPath + Theme.FileName + '.thm');
+      Assign (PromptFile, Config.DataPath + TempTheme.FileName + '.thm');
 
       Result := ioReset(PromptFile, SizeOf(RecPrompt), fmRWDN);
 
@@ -384,6 +386,8 @@ Begin
   End;
 
   Close (ThemeFile);
+
+  If Result Then Theme := TempTheme;
 End;
 
 End.

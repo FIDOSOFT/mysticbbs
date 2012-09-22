@@ -61,12 +61,12 @@ Type
     Procedure   GetOption1         (Edit: Boolean);
     Procedure   GetOption2         (Edit: Boolean);
     Procedure   GetOption3         (Edit: Boolean);
-    Procedure   GetLanguage;
-    Procedure   User_Logon         (Var UN, PW, MPE : String);
-    Procedure   User_Logon2;
-    Procedure   User_Logon3;
+    Procedure   GetTheme;
+    Procedure   UserLogon1         (Var UN, PW, MPE : String);
+    Procedure   UserLogon2;
+    Procedure   UserLogon3;
     Procedure   CreateNewUser      (DefName: String);
-    Procedure   Edit_User_Settings (What: Byte);
+    Procedure   EditUserSettings   (Data: String);
     Function    Check_Trash        (Name: String) : Boolean;
   End;
 
@@ -428,7 +428,7 @@ Begin
   If Session.LocalMode Then
     Session.io.Graphics := 1
   Else Begin
-    Session.Client.PurgeInputData;
+    Session.Client.PurgeInputData(True);
     Session.io.OutRaw (#27 + '[6n');
     Session.io.BufFlush;
 
@@ -440,7 +440,7 @@ Begin
         End;
     End;
 
-    Session.Client.PurgeInputData;
+    Session.Client.PurgeInputData(True);
   End;
 
   Session.io.OutFullLn (Session.GetPrompt(259));
@@ -801,7 +801,7 @@ Begin
   End;
 End;
 
-Procedure TBBSUser.GetLanguage;
+Procedure TBBSUser.GetTheme;
 Var
   Old : RecTheme;
   T   : Byte;
@@ -883,7 +883,7 @@ Begin
     If strUpper(DefName) = 'NEW' Then DefName := '';
 
     With Config Do Begin
-      If AskTheme      Then GetLanguage Else ThisUser.Theme := DefThemeFile;
+      If AskTheme      Then GetTheme Else ThisUser.Theme := DefThemeFile;
       If AskAlias      Then GetAlias(False, DefName);
       If AskRealName   Then GetRealName(False);
       If AskStreet     Then GetAddress(False);
@@ -991,7 +991,7 @@ Begin
     Session.Msgs.PostTextFile('sysletter.txt;0;' + Config.SysopName + ';' + Config.SysopName + ';New account created', True);
 End;
 
-Procedure TBBSUser.User_Logon3;
+Procedure TBBSUser.UserLogon3;
 Var
   Count : Byte;
   Ch    : Char;
@@ -1069,7 +1069,7 @@ Begin
   { END forced voting check }
 End;
 
-Procedure TBBSUser.User_Logon2;
+Procedure TBBSUser.UserLogon2;
 Begin
   {$IFDEF LOGGING} Session.SystemLog('Logon2'); {$ENDIF}
 
@@ -1170,7 +1170,7 @@ Begin
   {$ENDIF}
 End;
 
-Procedure TBBSUser.User_Logon (Var UN, PW, MPE : String);
+Procedure TBBSUser.UserLogon1 (Var UN, PW, MPE : String);
 Var
   A     : Integer;
   Count : Byte;
@@ -1193,7 +1193,11 @@ Begin
       Halt(0);
     End;
 
-  Session.io.OutFullLn ('|CL' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ') Node |ND');
+//  Session.io.AnsiClear;
+//  Session.io.OutFullLn('|CR' + strPadC(mysSoftwareID + ' BBS v' + mysVersion + ' [' + OSID + '] : Node |ND', 79, ' '));
+//  Session.io.OutFullLn(strPadC(CopyID, 79, ' '));
+
+  Session.io.OutFullLn ('|CL' + mysSoftwareID + ' BBS v' + mysVersion + ' [' + OSID + '] : Node |ND');
   Session.io.OutFullLn (CopyID);
 
   If Config.DefTermMode = 0 Then
@@ -1205,6 +1209,8 @@ Begin
     DetectGraphics;
     If (Session.io.Graphics = 0) and (Config.DefTermMode = 2) Then GetGraphics;
   End;
+
+  If Config.ThemeOnStart Then GetTheme;
 
   If FileExist(Config.ScriptPath + 'startup.mpx') Then
     ExecuteMPL(NIL, 'startup');
@@ -1256,8 +1262,8 @@ Begin
 
         If Session.io.GetYN(Session.GetPrompt(1), False) Then Begin
           CreateNewUser(ThisUser.Handle);
-          User_Logon2;
-          User_Logon3;
+          UserLogon2;
+          UserLogon3;
           Exit;
         End;
 
@@ -1291,17 +1297,26 @@ Begin
       ThisUser.Theme := Config.DefThemeFile;
   End;
 
-  User_Logon2;
+  UserLogon2;
 
   If MPE <> '' Then Begin
     ExecuteMPL(NIL, MPE);
     Halt;
   End Else
-    User_Logon3;
+    UserLogon3;
 End;
 
-Procedure TBBSUser.Edit_User_Settings (What: Byte);
+Procedure TBBSUser.EditUserSettings (Data: String);
+Var
+  What : Byte;
 Begin
+  What := strS2I(strWordGet(1, Data, ' '));
+
+  If strWordCount(Data, ' ') > 1 Then
+    Data := strStripB(Copy(Data, strWordPos(2, Data, ' '), 255), ' ')
+  Else
+    Data := '';
+
   Case What of
     1   : GetAddress(True);
     2   : GetCityState(True);
@@ -1322,7 +1337,10 @@ Begin
     11  : GetPassword(True);
     12  : GetRealName(True);
     13  : GetAlias(True, '');
-    14  : GetLanguage;
+    14  : If Data = '' Then
+            GetTheme
+          Else
+            Session.LoadThemeData(Data);
     15  : GetEditor(True);
     16  : If Access(Config.AcsInvisLogin) Then Begin
             Chat.Invisible := Not Chat.Invisible;

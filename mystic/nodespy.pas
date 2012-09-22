@@ -496,7 +496,7 @@ Procedure SnoopNode (Node: Byte);
 Var
   Pipe    : TPipe;
   Buffer  : Array[1..4 * 1024] of Char;
-  BufRead : LongInt;
+  BufRead : LongWord;
   Update  : LongInt;
 
   Procedure DrawStatus;
@@ -534,7 +534,7 @@ Begin
 
   Pipe := TPipe.Create(Config.DataPath, True, Node);
 
-  If Not Pipe.ConnectPipe(1500) Then Begin
+  If Not Pipe.ConnectPipe(800) Then Begin
     ShowMsgBox (0, 'Unable to establish a session.  Try again');
     Pipe.Free;
     Exit;
@@ -546,17 +546,18 @@ Begin
 
   DrawStatus;
 
+  Screen.TextAttr := 7;
+  Screen.ClearScreen;
+
   Update := TimerSet(UpdateNode);
 
   While Pipe.Connected Do Begin
     Pipe.ReadFromPipe(Buffer, SizeOf(Buffer), BufRead);
 
-    Case BufRead of
-      -1 : Break;
-       0 : WaitMS(200);
+    If BufRead = 0 Then
+      WaitMS(200)
     Else
       Term.ProcessBuf(Buffer, BufRead);
-    End;
 
     If Keyboard.KeyPressed Then
       Case Keyboard.ReadKey of
@@ -609,7 +610,8 @@ Begin
 
   Screen.TextAttr := 7;
   Screen.ClearScreen;
-  Screen.WriteStr ('Connecting to 127.0.0.1... ');
+
+  Screen.WriteStr ('Telnet to 127.0.0.1... ');
 
   Client := TIOSocket.Create;
 
@@ -865,7 +867,7 @@ Begin
 
   Repeat
     If Keyboard.KeyWait(1000) Then
-      Case Keyboard.ReadKey of
+      Case UpCase(Keyboard.ReadKey) of
         #00 : Case Keyboard.ReadKey of
                 #71 : Begin
                         TopPage := 1;
@@ -925,6 +927,14 @@ Begin
                 FullReDraw;
               End;
         #27 : Break;
+        'G' : If ShowMsgBox(1, 'Kill Ghost on Node ' + strI2S(NodeInfo[CurNode]^.Node)) Then Begin
+                FileErase(Config.DataPath + 'chat' + strI2S(NodeInfo[CurNode]^.Node) + '.dat');
+
+                UpdateOnlineStatus;
+                DrawNodes;
+
+                NodeTimer := TimerSet(UpdateNode);
+              End;
       End;
 
     If TimerUp(NodeTimer) Then Begin

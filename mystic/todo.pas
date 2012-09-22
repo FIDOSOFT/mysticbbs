@@ -15,15 +15,12 @@ BUGS AND POSSIBLE ISSUES
   functions.
 ! RAR internal viewer does not work with files that have embedded comments
 ! Test midnight rollovers for time (flag for user to be immune to timecheck)
-! Validate that "groupX.ans" and "fgroupX.ans" actually work.
-! Test NNTP with Thunderbird specifically FUBAR dates on messages.
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
-- Auto wrapping of quotes before the FS editor gets to it.
 - Finish Threaded message reader
-- Add "high roller Smack talk" into BlackJack
+- Add "high roller/smack talk" into BlackJack
 - Add better MIS logging per server (connect, refuse, blocked, etc)
 - BBS email autoforwarded to Internet email
 - Ability to send internet email to people from within the BBS.
@@ -36,7 +33,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - MCI code to show how many files are in current filebase
 - Online ANSI file viewer (integrate with art gallery)
 - Online text editor / ansi editor?
-- Better theme selection (menu command option to select theme)
 - Externalize remaining prompt data (msg flags, etc)
 - File comments and rating system
 - Integrate eventual online ANSI help system into configuration utilities
