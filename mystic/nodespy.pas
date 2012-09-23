@@ -126,6 +126,12 @@ Begin
   Screen   := TOutput.Create(True);
   Keyboard := TInput.Create;
 
+  INI := TIniReader.Create('nodespy.ini');
+
+  AutoSnoop := INI.ReadString('General', 'autosnoop', '0') = '1';
+
+  INI.Free;
+
   Assign (ConfigFile, 'mystic.dat');
   Reset  (ConfigFile);
 
