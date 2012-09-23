@@ -215,7 +215,7 @@ Begin
   CASE ch OF
   #27: begin
      State:=1;
-     //WaitMS(10);
+     WaitMS(10);
 
 
      { This has to be sysKeyPressed and not "keyPressed", since after }
@@ -383,7 +383,7 @@ Begin
       255 : ;
         end;
         if State<>0 then
-         {WaitMS(10)};
+         WaitMS(10);
       end;
      if State=1 then
       PushKey(ch);
