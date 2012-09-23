@@ -4801,8 +4801,8 @@
    reformatted if adding the initials would cut off text in the original
    message EXCEPT when quoting quoted text.
 
-   Quote initials will always be 2 characters now.  If the User handle is a
-   single word handle, it will use the first two letters of their name.
+   Quote initials will always be 2 characters now.  If the User handle has a
+   single word handle, Mystic will use the first two letters of their name.
 
  ! Fixed a bug that could corrupt a message and/or crash when editing a
    message with a lot of lines.
@@ -4840,5 +4840,13 @@
  + NodeSpy in Unix now uses OS named pipes instead of Disk I/O.
 
  + NodeSpy now has a full blown telnet client, which replaces the "local
-   login" feature.  Instead, my default the phone book will contain an entry
-   for "local login" which just telnets to localhost.
+   login" feature.  Instead, the default the phone book will contain an entry
+   for "local login" which telnets to localhost.
+
+ + NodeSpy now defaults "Auto Snoop" to OFF.  Auto Snoop will automatically
+   start snooping a node upon connection if it is the only active
+   connection.  To enable this, create an nodespy.ini file in the same
+   directory as the NodeSpy and add this content:
+
+      [General]
+         autosnoop=1
