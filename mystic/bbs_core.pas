@@ -186,6 +186,7 @@ Begin
 
   If Eof(HistoryFile) Then Begin
     FillChar(History, SizeOf(History), 0);
+
     History.Date := CurDateDos;
   End;
 
@@ -199,7 +200,7 @@ Begin
   If Not LocalMode And (User.ThisUser.Flags AND UserNoLastCall = 0) Then
     Inc (History.Calls, 1);
 
-  If User.ThisUser.Calls = 1 Then Inc (History.NewUsers, 1);
+  If User.ThisUser.Calls = 1 Then Inc (History.NewUsers);
 
   If Not LocalMode Then Inc (History.Hourly[HistoryHour]);
 
