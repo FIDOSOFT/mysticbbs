@@ -29,6 +29,10 @@ Program NodeSpy;
 {$I M_OPS.PAS}
 
 Uses
+  {$IFDEF DEBUG}
+    HeapTrc,
+    LineInfo,
+  {$ENDIF}
   {$IFDEF UNIX}
     BaseUnix,
   {$ENDIF}
@@ -39,10 +43,10 @@ Uses
   m_Pipe,
   m_Input,
   m_Output,
-  m_io_Base,
-  m_io_Sockets,
   m_Term_Ansi,
-  NodeSpy_Common;
+  m_IniReader,
+  NodeSpy_Common,
+  NodeSpy_Term;
 
 Const
   HiddenNode  = 255;
@@ -109,6 +113,7 @@ Var
   Info : Stat;
 {$ENDIF}
   Count : Byte;
+  INI   : TIniReader;
 Begin
   {$IFDEF UNIX}
   If fpStat('nodespy', Info) = 0 Then Begin
@@ -460,107 +465,6 @@ Begin
   AutoSnoopID := NodeInfo[Node]^.ID;
 End;
 
-Procedure LocalLogin;
-Const
-  BufferSize = 1024 * 4;
-Var
-  Client : TIOSocket;
-  Res    : LongInt;
-  Buffer : Array[1..BufferSize] of Char;
-  Done   : Boolean;
-  Ch     : Char;
-Begin
-  Screen.SetWindowTitle('NodeSpy/Terminal');
-
-  Screen.TextAttr := 7;
-  Screen.ClearScreen;
-
-  Screen.WriteStr ('Connecting to 127.0.0.1... ');
-
-  Client := TIOSocket.Create;
-
-  Client.FTelnetClient := True;
-
-  If Not Client.Connect('127.0.0.1', Config.INetTNPort) Then
-    ShowMsgBox (0, 'Unable to connect')
-  Else Begin
-    Done := False;
-    Term := TTermAnsi.Create(Screen);
-
-    If Config.UseStatusBar Then Begin
-      Screen.SetWindow (1, 1, 80, 24, True);
-      Screen.WriteXY   (1, 25, Config.StatusColor3, strPadC('Local TELNET: ALT-X to Quit', 80, ' '));
-    End;
-
-    Term.SetReplyClient(TIOBase(Client));
-
-    Repeat
-      If Client.WaitForData(0) > 0 Then Begin
-        Repeat
-          Res := Client.ReadBuf (Buffer, BufferSize);
-
-          If Res < 0 Then Begin
-            Done := True;
-            Break;
-          End;
-
-          Term.ProcessBuf(Buffer, Res);
-        Until Res <> BufferSize;
-      End Else
-      If Keyboard.KeyPressed Then Begin
-        Ch := Keyboard.ReadKey;
-        Case Ch of
-          #00 : Case Keyboard.ReadKey of
-                  #45 : Break;
-                  #71 : Client.WriteStr(#27 + '[H');
-                  #72 : Client.WriteStr(#27 + '[A');
-                  #73 : Client.WriteStr(#27 + '[V');
-                  #75 : Client.WriteStr(#27 + '[D');
-                  #77 : Client.WriteStr(#27 + '[C');
-                  #79 : Client.WriteStr(#27 + '[K');
-                  #80 : Client.WriteStr(#27 + '[B');
-                  #81 : Client.WriteStr(#27 + '[U');
-                  #83 : Client.WriteStr(#127);
-                End;
-        Else
-          Client.WriteBuf(Ch, 1);
-          If Client.FTelnetEcho Then Term.Process(Ch);
-        End;
-      End Else
-        WaitMS(5);
-    Until Done;
-
-    Term.Free;
-  End;
-
-  Client.Free;
-
-  Screen.TextAttr := 7;
-  Screen.SetWindow (1, 1, 80, 25, True);
-End;
-
-Procedure Terminal;
-Type
-  PhoneRec = Record
-    Name      : String[40];
-    Address   : String[60];
-    User      : String[30];
-    Password  : String[20];
-    StatusBar : Boolean;
-  End;
-
-Var
-  Book : Array[1..200] of PhoneRec;
-
-Begin
-  // create phonebook
-  // write phonebook
-  // load phonebook
-  // do directory
-
-  // name, address, user, password, statusbar, sysop, software
-End;
-
 Procedure UpdateOnlineStatus;
 Var
   Count : LongInt;
@@ -809,7 +713,7 @@ Begin
                 FullReDraw;
               End;
         #32 : Begin
-                LocalLogin;
+                Terminal;
                 FullReDraw;
               End;
         #27 : Break;
@@ -845,6 +749,10 @@ Begin
 End;
 
 Begin
+  {$IFDEF DEBUG}
+    SetHeapTraceOutput('nodespy.mem');
+  {$ENDIF}
+
   ApplicationInit;
 
   MainMenu;

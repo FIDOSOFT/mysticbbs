@@ -4838,3 +4838,7 @@
  + NodeSpy in Windows now uses OS named pipes instead of Disk I/O.
 
  + NodeSpy in Unix now uses OS named pipes instead of Disk I/O.
+
+ + NodeSpy now has a full blown telnet client, which replaces the "local
+   login" feature.  Instead, my default the phone book will contain an entry
+   for "local login" which just telnets to localhost.

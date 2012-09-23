@@ -105,8 +105,7 @@ Begin
         Until False;
   End;
 
-  If BoxType < 2 Then MsgBox.Close;
-
+  MsgBox.Close;
   MsgBox.Free;
 
   Screen.CursorXY (SavedX, SavedY);
