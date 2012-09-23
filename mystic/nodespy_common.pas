@@ -10,10 +10,12 @@ Uses
   m_Output,
   m_Term_Ansi,
   m_MenuBox,
+  m_MenuForm,
   m_MenuInput;
 
-Function ShowMsgBox (BoxType: Byte; Str: String) : Boolean;
-Function GetStr     (Header, Text, Def: String; Len, MaxLen: Byte) : String;
+Function ShowMsgBox       (BoxType: Byte; Str: String) : Boolean;
+Function GetStr           (Header, Text, Def: String; Len, MaxLen: Byte) : String;
+Function GetCommandOption (StartY: Byte; CmdStr: String) : Char;
 
 {$I RECORDS.PAS}
 
@@ -151,6 +153,45 @@ Begin
   Box.Free;
 
   Result := Str;
+End;
+
+Function GetCommandOption (StartY: Byte; CmdStr: String) : Char;
+Var
+  Box     : TMenuBox;
+  Form    : TMenuForm;
+  Count   : Byte;
+  Cmds    : Byte;
+  CmdData : Array[1..10] of Record
+              Key  : Char;
+              Desc : String[18];
+            End;
+Begin
+  Cmds := 0;
+
+  While Pos('|', CmdStr) > 0 Do Begin
+    Inc (Cmds);
+
+    CmdData[Cmds].Key  := CmdStr[1];
+    CmdData[Cmds].Desc := Copy(CmdStr, 3, Pos('|', CmdStr) - 3);
+
+    Delete (CmdStr, 1, Pos('|', Cmdstr));
+  End;
+
+  Box  := TMenuBox.Create(Screen);
+  Form := TMenuForm.Create(Screen);
+
+  Form.HelpSize := 0;
+
+  Box.Open (30, StartY, 51, StartY + Cmds + 1);
+
+  For Count := 1 to Cmds Do
+    Form.AddNone (CmdData[Count].Key, ' ' + CmdData[Count].Key + ' ' + CmdData[Count].Desc, 31, StartY + Count, 20, '');
+
+  Result := Form.Execute;
+
+  Form.Free;
+  Box.Close;
+  Box.Free;
 End;
 
 End.

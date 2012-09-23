@@ -396,13 +396,6 @@ Var
   End;
 
 Begin
-  GetChatRecord(Node, Chat);
-
-  If Not Chat.Active Then Begin
-    ShowMsgBox(0, 'Node ' + strI2S(Node) + ' is not in use');
-    Exit;
-  End;
-
   ShowMsgBox (3, 'Requesting snoop session for node ' + strI2S(Node));
 
   SendNodeMessage(Node, 11);
@@ -427,12 +420,14 @@ Begin
   Update := TimerSet(UpdateNode);
 
   While Pipe.Connected Do Begin
-    Pipe.ReadFromPipe(Buffer, SizeOf(Buffer), BufRead);
+    If Pipe.DataWaiting Then Begin
+      Pipe.ReadFromPipe(Buffer, SizeOf(Buffer), BufRead);
 
-    If BufRead = 0 Then
-      WaitMS(200)
-    Else
-      Term.ProcessBuf(Buffer, BufRead);
+      If BufRead <= 0 Then
+        WaitMS(200)
+      Else
+        Term.ProcessBuf(Buffer, BufRead);
+    End;
 
     If Keyboard.KeyPressed Then
       Case Keyboard.ReadKey of
@@ -444,6 +439,7 @@ Begin
                 #45 : Break;
                 #46 : DoUserChat(Node);
               End;
+        #27 : Break;
       End;
 
     If TimerUp(Update) Then Begin
@@ -715,22 +711,39 @@ Begin
                       End;
               End;
         #13 : Begin
-                SnoopNode(NodeInfo[CurNode]^.Node);
-                FullReDraw;
+                GetChatRecord(NodeInfo[CurNode]^.Node, Chat);
+
+                If Not Chat.Active Then Begin
+                  ShowMsgBox(0, 'Node ' + strI2S(NodeInfo[CurNode]^.Node) + ' is not in use');
+                  Continue;
+                End;
+
+                Case GetCommandOption(8, 'S-Snoop|C-User Chat|K-Kick User|G-Kill Ghost|') of
+                  'S' : Begin
+                          SnoopNode(NodeInfo[CurNode]^.Node);
+                          FullReDraw;
+                        End;
+                  'G' : If ShowMsgBox(1, 'Kill Ghost on Node ' + strI2S(NodeInfo[CurNode]^.Node)) Then Begin
+                          FileErase(Config.DataPath + 'chat' + strI2S(NodeInfo[CurNode]^.Node) + '.dat');
+
+                          UpdateOnlineStatus;
+                          DrawNodes;
+
+                          NodeTimer := TimerSet(UpdateNode);
+                        End;
+                  'K' : If ShowMsgBox(1, 'Kick this user?') Then
+                          SendNodeMessage(NodeInfo[CurNode]^.Node, 13);
+                  'C' : Begin
+                          DoUserChat(NodeInfo[CurNode]^.Node);
+                          FullReDraw;
+                        End;
+                End;
               End;
         #32 : Begin
                 Terminal;
                 FullReDraw;
               End;
         #27 : Break;
-        'G' : If ShowMsgBox(1, 'Kill Ghost on Node ' + strI2S(NodeInfo[CurNode]^.Node)) Then Begin
-                FileErase(Config.DataPath + 'chat' + strI2S(NodeInfo[CurNode]^.Node) + '.dat');
-
-                UpdateOnlineStatus;
-                DrawNodes;
-
-                NodeTimer := TimerSet(UpdateNode);
-              End;
       End;
 
     If TimerUp(NodeTimer) Then Begin
