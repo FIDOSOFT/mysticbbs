@@ -62,17 +62,21 @@ Begin
     GetAddressPort := 23;
 End;
 
+Function GetNewRecord : PhoneRec;
+Begin
+  FillChar (Result, SizeOf(PhoneRec), 0);
+
+  Result.StatusBar := True;
+  Result.LastCall  := '00/00/00';
+  Result.Calls     := '0';
+End;
+
 Procedure InitializeBook (Var Book: PhoneBookRec);
 Var
   Count : SmallInt;
 Begin
-  FillChar (Book, SizeOf(Book), 0);
-
-  For Count := 1 to 100 Do Begin
-    Book[Count].StatusBar := True;
-    Book[Count].LastCall  := '00/00/00';
-    Book[Count].Calls     := '0';
-  End;
+  For Count := 1 to 100 Do
+    Book[Count] := GetNewRecord;
 
   Book[1].Name    := 'Local Login';
   Book[1].Address := 'localhost:' + strI2S(Config.INetTNPort);
@@ -84,7 +88,7 @@ Var
   Buffer  : Array[1..4096] of Char;
   Count   : SmallInt;
 Begin
-  ShowMsgBox (2, 'Saving phonebook');
+  //ShowMsgBox (2, 'Saving phonebook');
 
   Assign     (OutFile, 'nodespy.phn');
   SetTextBuf (OutFile, Buffer);
@@ -156,7 +160,7 @@ Begin
 
     If Dial.StatusBar Then Begin
       Screen.SetWindow (1, 1, 80, 24, True);
-      Screen.WriteXY   (1, 25, Config.StatusColor3, strPadC('ALT-X/Quit', 80, ' '));
+      Screen.WriteXY   (1, 25, Config.StatusColor3, strPadC('ALT/L-Send Login Info     ALT-X/Quit', 80, ' '));
     End;
 
     Term.SetReplyClient(TIOBase(Client));
@@ -253,8 +257,11 @@ End;
 
 Function GetTerminalEntry (Var Book: PhoneBookRec; Var Dial: PhoneRec) : Boolean;
 Var
-  Count : SmallInt;
-  List  : TMenuList;
+  Count  : SmallInt;
+  Count2 : SmallInt;
+  List   : TMenuList;
+  Found  : Boolean;
+  Picked : SmallInt;
 Begin
   Result := False;
 
@@ -271,15 +278,21 @@ Begin
 
   DrawTerminalAnsi;
 
-  Repeat
-    List := TMenuList.Create(Screen);
+  Picked := 1;
 
-    List.NoWindow := True;
-    List.AllowTag := False;
-    List.LoAttr   := 7;
-    List.HiAttr   := 9 + 1 * 16;
-    List.LoChars  := #13#27;
-    List.HiChars  := #18;
+  List := TMenuList.Create(Screen);
+
+  List.NoWindow := True;
+  List.AllowTag := False;
+  List.LoAttr   := 7;
+  List.HiAttr   := 9 + 1 * 16;
+  List.LoChars  := #13#27;
+  List.HiChars  := #18#82#83;
+
+  Repeat
+    List.Clear;
+
+    List.Picked := Picked;
 
     For Count := 1 to 100 Do
       List.Add(strPadR(Book[Count].Name, 26, ' ') + '   ' +
@@ -289,6 +302,8 @@ Begin
                2);
 
     List.Open(1, 12, 80, 22);
+
+    Picked := List.Picked;
 
     Case List.ExitCode of
       #13 : If Book[List.Picked].Address = '' Then
@@ -308,10 +323,38 @@ Begin
             End;
       #18 : EditEntry(Book, List.Picked);
       #27 : Break;
-    End;
+      #82 : Begin
+              Found := False;
 
-    List.Free;
+              For Count := List.Picked to 100 Do
+                If (Book[Count].Name = '') and (Book[Count].Address = '') and (Book[Count].Calls = '0') Then Begin
+                  Found := True;
+                  Break;
+                End;
+
+              If Not Found Then
+                ShowMsgBox (0, 'No blank entries available')
+              Else Begin
+                For Count2 := Count DownTo List.Picked + 1 Do
+                  Book[Count2] := Book[Count2 - 1];
+
+                Book[List.Picked] := GetNewRecord;
+
+                WriteBook(Book);
+              End;
+            End;
+      #83 : If ShowMsgBox(1, 'Delete this record?') Then Begin
+              For Count := List.Picked to 100 - 1 Do
+                Book[Count] := Book[Count + 1];
+
+              Book[100] := GetNewRecord;
+
+              WriteBook(Book);
+            End;
+    End;
   Until False;
+
+  List.Free;
 End;
 
 Procedure Terminal;
