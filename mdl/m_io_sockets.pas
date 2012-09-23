@@ -188,6 +188,7 @@ Begin
   Result := fpSend(FSocketHandle, @Buf, Len, FPSENDOPT);
 
   While (Result = -1) and (SocketError = ESOCKEWOULDBLOCK) Do Begin
+
     {$IFDEF SOCKETLOG} sLog('WriteBuf Blocking'); {$ENDIF}
 
     WaitMS(10);
