@@ -31,6 +31,7 @@ Type
     Procedure   SendToPipe   (Var Buf; Len: Longint);
     Procedure   ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongWord);
     Procedure   Disconnect;
+    Function    DataWaiting : Boolean;
   End;
 
 Implementation
@@ -48,6 +49,25 @@ Begin
   If Connected Then Disconnect;
 
   Inherited Destroy;
+End;
+
+Function TPipeWindows.DataWaiting : Boolean;
+Var
+  Temp  : LongWord;
+  Avail : LongWord;
+Begin
+  Result := False;
+
+  If PipeHandle = -1 Then Exit;
+
+  PeekNamedPipe (PipeHandle,
+                 NIL,
+                 Temp,
+                 NIL,
+                 @Avail,
+                 NIL);
+
+  Result := (Avail > 0);
 End;
 
 Function TPipeWindows.CreatePipe : Boolean;

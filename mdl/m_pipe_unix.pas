@@ -28,6 +28,7 @@ Type
     Procedure   SendToPipe   (Var Buf; Len: Longint);
     Procedure   ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongWord);
     Procedure   Disconnect;
+    Function    DataWaiting : Boolean;
   End;
 
 Implementation
@@ -45,6 +46,20 @@ Begin
   If Connected Then Disconnect;
 
   Inherited Destroy;
+End;
+
+Function TPipeUnix.DataWaiting : Boolean;
+Var
+  FDSin : TFDSet;
+Begin
+  Result := False;
+
+  If PipeHandle = -1 Then Exit;
+
+  fpFD_Zero (FDSIN);
+  fpFD_Set  (PipeHandle, FDSIN);
+
+  Result := fpSelect(PipeHandle + 1, @FDSIN, NIL, NIL, 0) > 0;
 End;
 
 Function TPipeUnix.CreatePipe : Boolean;
