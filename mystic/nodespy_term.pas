@@ -166,7 +166,10 @@ Begin
         Res := Client.ReadBuf (Buffer, BufferSize);
 
         If Res < 0 Then Begin
+          ShowMsgBox (0, 'Connection terminated');
+
           Done := True;
+
           Break;
         End;
 
@@ -177,6 +180,10 @@ Begin
 
         Case Ch of
           #00 : Case Keyboard.ReadKey of
+                  #38 : Begin
+                          Client.WriteStr (Dial.User + #13);
+                          Client.WriteStr (Dial.Password + #13);
+                        End;
                   #45 : Break;
                   #71 : Client.WriteStr(#27 + '[H');
                   #72 : Client.WriteStr(#27 + '[A');
@@ -216,12 +223,19 @@ Begin
   Box    := TMenuBox.Create(Screen);
   Form   := TMenuForm.Create(Screen);
 
-  Box.Header := ' Book Editor ';
+  Box.HeadAttr := 1 + 7 * 16;
+  Box.Header   := ' Book Editor ';
 
-  Box.Open (18, 8, 63, 16);
+  Box.Open (17, 8, 63, 16);
 
-  Form.AddStr ('N', ' Name'   , 24, 10, 32, 10, 6, 26, 26, @NewRec.Name, '');
-  Form.AddStr ('A', ' Address', 21, 11, 32, 11, 9, 30, 60, @NewRec.Address, '');
+  Form.HelpSize := 0;
+
+  Form.AddStr  ('N', ' Name'   ,   24, 10, 32, 10,  6, 26, 26, @NewRec.Name, '');
+  Form.AddStr  ('A', ' Address',   21, 11, 32, 11,  9, 30, 60, @NewRec.Address, '');
+  Form.AddStr  ('U', ' User Name', 19, 12, 32, 12, 11, 30, 30, @NewRec.User, '');
+  Form.AddPass ('P', ' Password',  20, 13, 32, 13, 10, 20, 20, @NewRec.Password, '');
+  Form.AddBol  ('S', ' StatusBar', 19, 14, 32, 14, 11,  3, @NewRec.StatusBar, '');
+
 
   Form.Execute;
 
