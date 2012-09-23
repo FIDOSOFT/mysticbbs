@@ -6,10 +6,12 @@ Interface
 
 Type
   TIniReader = Class
-    FileName : String;
-    IniFile  : Text;
-    Buffer   : Array[1..1024*4] of Char;
-    Opened   : Boolean;
+    FileName   : String;
+    IniFile    : Text;
+    Buffer     : Array[1..1024*4] of Char;
+    Opened     : Boolean;
+    Sequential : Boolean;
+    CurrentCat : String;
 
     Constructor Create (FN: String);
     Destructor  Destroy; Override;
@@ -24,8 +26,10 @@ Uses
 
 Constructor TIniReader.Create (FN: String);
 Begin
-  FileName := FN;
-  FileMode := 66;
+  Sequential := False;
+  CurrentCat := '';
+  FileName   := FN;
+  FileMode   := 66;
 
   Assign     (IniFile, FileName);
   SetTextBuf (IniFile, Buffer);
@@ -52,20 +56,25 @@ Begin
   Category := strUpper(Category);
   Value    := strUpper(Value);
 
-  Reset (IniFile);
+  If Not Sequential Then Reset (IniFile);
 
-  While Not GotCat And Not Eof(IniFile) Do Begin
-    ReadLn (IniFile, RawStr);
+  If Sequential and (CurrentCat = Category) Then
+    GotCat := True
+  Else
+    While Not GotCat And Not Eof(IniFile) Do Begin
+      ReadLn (IniFile, RawStr);
 
-    RawStr := strStripB(RawStr, ' ');
-    NewStr := strUpper(strStripLOW(RawStr));
+      RawStr := strStripB(RawStr, ' ');
+      NewStr := strUpper(strStripLOW(RawStr));
 
-    If (RawStr = '') or (RawStr[1] = ';') Then Continue;
+      If (RawStr = '') or (RawStr[1] = ';') Then Continue;
 
-    GotCat := Pos('[' + Category + ']', NewStr) > 0;
-  End;
+      GotCat := Pos('[' + Category + ']', NewStr) > 0;
+    End;
 
   If Not GotCat Then Exit;
+
+  CurrentCat := Category;
 
   While Not Eof(IniFile) Do Begin
     ReadLn (IniFile, RawStr);
