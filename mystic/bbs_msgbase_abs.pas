@@ -62,7 +62,7 @@ Type
     Function  GetFrom: String; Virtual; {Get from name on current msg}
     Function  GetTo: String; Virtual; {Get to name on current msg}
     Function  GetSubj: String; Virtual; {Get subject on current msg}
-    Function  GetCost: Word; Virtual; {Get cost of current msg}
+//    Function  GetCost: Word; Virtual; {Get cost of current msg}
     Function  GetDate: String; Virtual; {Get date of current msg}
     Function  GetTime: String; Virtual; {Get time of current msg}
     Function  GetRefer: LongInt; Virtual; {Get reply to of current msg}
@@ -381,9 +381,9 @@ Function TMsgBaseABS.GetSubj: String;
 Begin
 End;
 
-Function TMsgBaseABS.GetCost: Word;
-Begin
-End;
+//Function TMsgBaseABS.GetCost: Word;
+//Begin
+//End;
 
 Function TMsgBaseABS.GetDate: String;
 Begin

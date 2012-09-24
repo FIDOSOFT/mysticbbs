@@ -1464,10 +1464,7 @@ Var
   End;
 
   Procedure Send_Msg_Text (Str : String);
-  Var
-    B : Byte;
   Begin
-
     If IsQuotedText(Str) Then Begin
       Session.io.AnsiColor(MBase.ColQuote);
       Session.io.OutPipe (Str);

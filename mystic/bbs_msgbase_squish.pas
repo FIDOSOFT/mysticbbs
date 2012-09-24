@@ -16,8 +16,8 @@ Const
   SqNullFrame = 0;
   SqFrameMsg  = 0;
   SqFrameFree = 1;
-  SqFrameRLE  = 2;
-  SqFrameLZW  = 3;
+//  SqFrameRLE  = 2;
+//  SqFrameLZW  = 3;
   SqFromSize  = 36;
   SqToSize    = 36;
   SqSubjSize  = 72;

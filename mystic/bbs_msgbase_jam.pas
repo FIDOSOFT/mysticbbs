@@ -191,7 +191,7 @@ Type
     Function    GetFrom        : String; Virtual; {Get from name on current msg}
     Function    GetTo          : String; Virtual; {Get to name on current msg}
     Function    GetSubj        : String; Virtual; {Get subject on current msg}
-    Function    GetCost        : Word; Virtual; {Get cost of current msg}
+//    Function    GetCost        : Word; Virtual; {Get cost of current msg}
     Function    GetDate        : String; Virtual; {Get date of current msg}
     Function    GetTime        : String; Virtual; {Get time of current msg}
     Function    GetRefer       : LongInt; Virtual; {Get reply to of current msg}
@@ -307,78 +307,65 @@ Begin
   JamStrCrc := Crc;
 End;
 
-
 Procedure TMsgBaseJAM.SetMsgPath(St: String);
 Begin
   JM^.MsgPath := Copy(St, 1, 124);
 End;
-
 
 Function TMsgBaseJAM.GetHighMsgNum: LongInt;
 Begin
   GetHighMsgNum := JM^.BaseHdr.BaseMsgNum + FileSize(JM^.IdxFile) - 1;
 End;
 
-
 Procedure TMsgBaseJAM.SetDest(Var Addr: RecEchoMailAddr);
 Begin
   JM^.Dest := Addr;
 End;
 
-
 Procedure TMsgBaseJAM.SetOrig(Var Addr: RecEchoMailAddr);
-  Begin
+Begin
   JM^.Orig := Addr;
-  End;
-
+End;
 
 Procedure TMsgBaseJAM.SetFrom(Name: String);
-  Begin
+Begin
   JM^.MsgFrom := Name;
-  End;
-
+End;
 
 Procedure TMsgBaseJAM.SetTo(Name: String);
-  Begin
+Begin
   JM^.MsgTo := Name;
-  End;
-
+End;
 
 Procedure TMsgBaseJAM.SetSubj(Str: String);
-  Begin
+Begin
   JM^.MsgSubj := Str;
-  End;
-
+End;
 
 Procedure TMsgBaseJAM.SetCost(SCost: Word);
-  Begin
+Begin
   MsgHdr^.JamHdr.Cost := SCost;
-  End;
-
+End;
 
 Procedure TMsgBaseJAM.SetRefer(SRefer: LongInt);
-  Begin
+Begin
   MsgHdr^.JamHdr.ReplyTo := SRefer;
-  End;
-
+End;
 
 Procedure TMsgBaseJAM.SetSeeAlso(SAlso: LongInt);
-  Begin
+Begin
   MsgHdr^.JamHdr.ReplyFirst := SAlso;
-  End;
-
+End;
 
 Procedure TMsgBaseJAM.SetDate(SDate: String);
-  Begin
+Begin
   JM^.MsgDate := SDate;
-  End;
-
+End;
 
 Procedure TMsgBaseJAM.SetTime(STime: String);
-  Begin
+Begin
   JM^.MsgTime := STime;
-  End;
-
+End;
 
 Procedure TMsgBaseJAM.SetAttr1(Mask: LongInt; St: Boolean);
   Begin
@@ -543,20 +530,21 @@ Type
     Data    : Array[1..256] of Char;
   End;
 
-  Var
-    SubField: SubFieldPTR;
+Var
+  SubField: SubFieldPTR;
 
-  Begin
+Begin
   SubField := SubFieldPTR(@MsgHdr^.SubBuf[MsgHdr^.JamHdr.SubFieldLen + 1]);
-  If (MsgHdr^.JamHdr.SubFieldLen + 8 + Length(Data) < JamSubBufSize) Then
-    Begin
+
+  If (MsgHdr^.JamHdr.SubFieldLen + 8 + Length(Data) < JamSubBufSize) Then Begin
     Inc(MsgHdr^.JamHdr.SubFieldLen, 8 + Length(Data));
+
     SubField^.LoId := Id;
     SubField^.HiId := 0;
     SubField^.DataLen := Length(Data);
     Move(Data[1], SubField^.Data[1], Length(Data));
-    End;
   End;
+End;
 
 Procedure TMsgBaseJAM.EditMsgInit;
 Begin
@@ -735,13 +723,12 @@ Begin
   UnLockMsgBase;
 End;
 
-Function  TMsgBaseJAM.WriteMsg: Word;
-  Var
-    DT: DateTime;
-    WriteError: Word;
-    i: longint;
-    TmpIdx: JamIdxType;
-
+Function TMsgBaseJAM.WriteMsg: Word;
+Var
+  DT: DateTime;
+  WriteError: Word;
+  i: longint;
+  TmpIdx: JamIdxType;
 Begin
   WriteError := 0;
 
@@ -952,8 +939,7 @@ Procedure TMsgBaseJAM.MsgStartUp;
       JM^.MsgTime := strZero(DT.Hour)  + ':' + strZero(DT.Min);
 
       SubCtr := 1;
-      While ((SubCtr <= MsgHdr^.JamHdr.SubFieldLen) and
-      (SubCtr < JamSubBufSize)) Do
+      While ((SubCtr <= MsgHdr^.JamHdr.SubFieldLen) and (SubCtr < JamSubBufSize)) Do
         Begin
         SubPtr := SubFieldPTR(@MsgHdr^.SubBuf[SubCtr]);
         Inc(SubCtr, SubPtr^.DataLen + 8);
@@ -1096,85 +1082,71 @@ Begin
     JM^.TxtPos := MsgHdr^.JamHdr.TextOfs;
 End;
 
-Function TMsgBaseJAM.GetString(MaxLen: Word): String;
-  Var
-    WPos: LongInt;
-    WLen: Byte;
-    StrDone: Boolean;
-//    TxtOver: Boolean;
-    StartSoft: Boolean;
-    CurrLen: Word;
-//    PPos: LongInt;
-    TmpCh: Char;
-
-  Begin
-  StrDone := False;
-  CurrLen := 0;
-//  PPos := JM^.TxtPos;
-  WPos := 0;
-  WLen := 0;
+Function TMsgBaseJAM.GetString (MaxLen: Word) : String;
+Var
+  WPos      : LongInt;
+  WLen      : Byte;
+  StrDone   : Boolean;
+  StartSoft : Boolean;
+  CurrLen   : Word;
+  TmpCh     : Char;
+Begin
+  StrDone   := False;
+  CurrLen   := 0;
+  WPos      := 0;
+  WLen      := 0;
   StartSoft := LastSoft;
-  LastSoft := True;
-  TmpCh := GetChar;
+  LastSoft  := True;
+  TmpCh     := GetChar;
+
   While ((Not StrDone) And (CurrLen <= MaxLen) And (Not EOM)) Do Begin
     Case TmpCh of
-      #$00:;
+      #$00: ;
       #$0d: Begin
-            StrDone := True;
-            LastSoft := False;
+              StrDone  := True;
+              LastSoft := False;
             End;
-      #$8d:;
-      #$0a:;
+      #$8d: ;
+      #$0a: ;
       #$20: Begin
-            If ((CurrLen <> 0) or (Not StartSoft)) Then
-              Begin
-              Inc(CurrLen);
-              WLen := CurrLen;
-              GetString[CurrLen] := TmpCh;
-              WPos := JM^.TxtPos;
-              End
-            Else
-              StartSoft := False;
+              If ((CurrLen <> 0) or (Not StartSoft)) Then Begin
+                Inc(CurrLen);
+                WLen := CurrLen;
+                GetString[CurrLen] := TmpCh;
+                WPos := JM^.TxtPos;
+              End Else
+                StartSoft := False;
             End;
-      Else
-        Begin
-        Inc(CurrLen);
-        GetString[CurrLen] := TmpCh;
-        End;
-      End;
+    Else
+      Inc(CurrLen);
+      GetString[CurrLen] := TmpCh;
+    End;
+
     If Not StrDone Then
       TmpCh := GetChar;
-    End;
-  If StrDone Then
-    Begin
-    GetString[0] := Chr(CurrLen);
-    End
-  Else
-    If EOM Then
-      Begin
-      GetString[0] := Chr(CurrLen);
-      End
-    Else
-      Begin
-      If WLen = 0 Then
-        Begin
-        GetString[0] := Chr(CurrLen);
-        Dec(JM^.TxtPos);
-        End
-      Else
-        Begin
-        GetString[0] := Chr(WLen);
-        JM^.TxtPos := WPos;
-        End;
-      End;
   End;
 
+  If StrDone Then Begin
+    GetString[0] := Chr(CurrLen);
+  End Else
+  If EOM Then Begin
+    GetString[0] := Chr(CurrLen);
+  End Else Begin
+    If WLen = 0 Then Begin
+      GetString[0] := Chr(CurrLen);
+      Dec(JM^.TxtPos);
+    End Else Begin
+      GetString[0] := Chr(WLen);
+      JM^.TxtPos := WPos;
+    End;
+  End;
+End;
 
 Function TMsgBaseJAM.EOM: Boolean;
-  Begin
+Begin
   EOM := (((JM^.TxtPos < MsgHdr^.JamHdr.TextOfs) Or
     (JM^.TxtPos > JM^.TxtEnd)) And (JM^.TxtPos >= 0));
-  End;
+End;
 
 (*
 Function TMsgBaseJAM.WasWrap: Boolean;
@@ -1184,69 +1156,59 @@ Function TMsgBaseJAM.WasWrap: Boolean;
 *)
 
 Function TMsgBaseJAM.GetFrom: String; {Get from name on current msg}
-  Begin
+Begin
   GetFrom := JM^.MsgFrom;
-  End;
-
+End;
 
 Function TMsgBaseJAM.GetTo: String; {Get to name on current msg}
-  Begin
+Begin
   GetTo := JM^.MsgTo;
-  End;
-
+End;
 
 Function TMsgBaseJAM.GetSubj: String; {Get subject on current msg}
-  Begin
+Begin
   GetSubj := JM^.MsgSubj;
-  End;
+End;
 
-
-Function TMsgBaseJAM.GetCost: Word; {Get cost of current msg}
-  Begin
-  GetCost := MsgHdr^.JamHdr.Cost;
-  End;
-
+//Function TMsgBaseJAM.GetCost: Word; {Get cost of current msg}
+//Begin
+//  GetCost := MsgHdr^.JamHdr.Cost;
+//End;
 
 Function TMsgBaseJAM.GetDate: String; {Get date of current msg}
-  Begin
+Begin
   GetDate := JM^.MsgDate;
-  End;
-
+End;
 
 Function TMsgBaseJAM.GetTime: String; {Get time of current msg}
-  Begin
+Begin
   GetTime := JM^.MsgTime;
-  End;
-
+End;
 
 Function TMsgBaseJAM.GetRefer: LongInt; {Get reply to of current msg}
-  Begin
+Begin
   GetRefer := MsgHdr^.JamHdr.ReplyTo;
-  End;
-
+End;
 
 Function TMsgBaseJAM.GetSeeAlso: LongInt; {Get see also of current msg}
-  Begin
+Begin
   GetSeeAlso := MsgHdr^.JamHdr.ReplyFirst;
-  End;
-
+End;
 
 Function TMsgBaseJAM.GetMsgNum: LongInt; {Get message number}
-  Begin
+Begin
   GetMsgNum := MsgHdr^.JamHdr.MsgNum;
-  End;
-
+End;
 
 Procedure TMsgBaseJAM.GetOrig(Var Addr: RecEchoMailAddr); {Get origin address}
-  Begin
+Begin
   Addr := JM^.Orig;
-  End;
-
+End;
 
 Procedure TMsgBaseJAM.GetDest(Var Addr: RecEchoMailAddr); {Get destination address}
-  Begin
+Begin
   Addr := JM^.Dest;
-  End;
+End;
 
 Function TMsgBaseJAM.GetTextLen : LongInt; {returns length of text in msg}
 Begin
@@ -1254,33 +1216,29 @@ Begin
 End;
 
 Function TMsgBaseJAM.IsLocal: Boolean; {Is current msg local}
-  Begin
+Begin
   IsLocal := (MsgHdr^.JamHdr.Attr1 and Jam_Local) <> 0;
-  End;
-
+End;
 
 Function TMsgBaseJAM.IsCrash: Boolean; {Is current msg crash}
-  Begin
+Begin
   IsCrash := (MsgHdr^.JamHdr.Attr1 and Jam_Crash) <> 0;
-  End;
-
+End;
 
 Function TMsgBaseJAM.IsKillSent: Boolean; {Is current msg kill sent}
-  Begin
+Begin
   IsKillSent := (MsgHdr^.JamHdr.Attr1 and Jam_KillSent) <> 0;
-  End;
-
+End;
 
 Function TMsgBaseJAM.IsSent: Boolean; {Is current msg sent}
-  Begin
+Begin
   IsSent := (MsgHdr^.JamHdr.Attr1 and Jam_Sent) <> 0;
-  End;
-
+End;
 
 Function TMsgBaseJAM.IsFAttach: Boolean; {Is current msg file attach}
-  Begin
+Begin
   IsFAttach := (MsgHdr^.JamHdr.Attr1 and Jam_FAttch) <> 0;
-  End;
+End;
 
 
 //Function TMsgBaseJAM.IsReqRct: Boolean; {Is current msg request receipt}
@@ -1300,24 +1258,21 @@ Function TMsgBaseJAM.IsFAttach: Boolean; {Is current msg file attach}
 //  IsRetRct := False;
 //  End;
 
-
 Function TMsgBaseJAM.IsFileReq: Boolean; {Is current msg a file request}
-  Begin
+Begin
   IsFileReq := (MsgHdr^.JamHdr.Attr1 and Jam_Freq) <> 0;
-  End;
+End;
 
 
 Function TMsgBaseJAM.IsRcvd: Boolean; {Is current msg received}
-  Begin
+Begin
   IsRcvd := (MsgHdr^.JamHdr.Attr1 and Jam_Rcvd) <> 0;
-  End;
-
+End;
 
 Function TMsgBaseJAM.IsPriv: Boolean; {Is current msg priviledged/private}
-  Begin
+Begin
   IsPriv := (MsgHdr^.JamHdr.Attr1 and Jam_Priv) <> 0;
-  End;
-
+End;
 
 Function TMsgBaseJAM.IsDeleted: Boolean; {Is current msg deleted}
 Begin
