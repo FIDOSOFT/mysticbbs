@@ -79,68 +79,23 @@ Type
 
 Implementation
 
-{.$DEFINE SOCKETLOG}
-
 { TELNET NEGOTIATION CONSTANTS }
 
 Const
-  Telnet_IAC      = #255;
-  Telnet_DONT     = #254;
-  Telnet_DO       = #253;
-  Telnet_WONT     = #252;
-  Telnet_WILL     = #251;
-  Telnet_SB       = #250;
-  Telnet_BINARY   = #000;
-  Telnet_ECHO     = #001;
-  Telnet_SE       = #240;
-  Telnet_TERM     = #24;
-  Telnet_SGA      = #003;
-  Telnet_WINSIZE  = #31;
-  Telnet_SPEED    = #32;
-  Telnet_FLOW     = #33;
-  Telnet_LINEMODE = #34;
+  Telnet_IAC    = #255;
+  Telnet_DONT   = #254;
+  Telnet_DO     = #253;
+  Telnet_WONT   = #252;
+  Telnet_WILL   = #251;
+  Telnet_SB     = #250;
+  Telnet_BINARY = #000;
+  Telnet_ECHO   = #001;
+  Telnet_SE     = #240;
+  Telnet_TERM   = #24;
+  Telnet_SGA    = #003;
 
   FPSENDOPT     = 0;
   FPRECVOPT     = 0;
-
-{$IFDEF SOCKETLOG}
-Function sCmd (C: Char) : String;
-Begin
-  Case C of
-    Telnet_IAC      : Result := ' IAC ';
-    Telnet_DONT     : Result := ' DONT ';
-    Telnet_DO       : Result := ' DO ';
-    Telnet_WONT     : Result := ' WONT ';
-    Telnet_WILL     : Result := ' WILL ';
-    Telnet_SB       : Result := ' SB ';
-    Telnet_BINARY   : Result := ' BINARY ';
-    Telnet_ECHO     : Result := ' ECHO ';
-    Telnet_SE       : Result := ' SE ';
-    Telnet_TERM     : Result := ' TERM ';
-    Telnet_SGA      : Result := ' SGA ';
-    Telnet_WINSIZE  : Result := ' WINSIZE ';
-    Telnet_SPEED    : Result := ' SPEED ';
-    Telnet_FLOW     : Result := ' FLOW ';
-    Telnet_LINEMODE : Result := ' LINEMODE ';
-  Else
-    Result := ' UNKNOWN ' + strI2S(Ord(C)) + ' ';
-  End;
-End;
-
-Procedure sLog (S: String);
-Var
-  T : Text;
-Begin
-  Assign (T, 'socket.log');
-  Append (T);
-
-  If IoResult <> 0 Then ReWrite(T);
-
-  WriteLn(T, S);
-
-  Close(T);
-End;
-{$ENDIF}
 
 Constructor TIOSocket.Create;
 Begin
@@ -154,7 +109,7 @@ Begin
   FInBufEnd     := 0;
   FOutBufPos    := 0;
   FTelnetState  := 0;
-  FTelnetEcho   := True;
+  FTelnetEcho   := False;
   FTelnetClient := False;
   FTelnetServer := False;
   FDisconnect   := True;
@@ -188,9 +143,6 @@ Begin
   Result := fpSend(FSocketHandle, @Buf, Len, FPSENDOPT);
 
   While (Result = -1) and (SocketError = ESOCKEWOULDBLOCK) Do Begin
-
-    {$IFDEF SOCKETLOG} sLog('WriteBuf Blocking'); {$ENDIF}
-
     WaitMS(10);
 
     Result := fpSend(FSocketHandle, @Buf, Len, FPSENDOPT);
@@ -294,8 +246,6 @@ Begin
   Result := fpSend(FSocketHandle, @Temp, TempPos, FPSENDOPT);
 
   While (Result = -1) and (SocketError = ESOCKEWOULDBLOCK) Do Begin
-    {$IFDEF SOCKETLOG} sLog('WriteBuf Blocking'); {$ENDIF}
-
     WaitMS(10);
 
     Result := fpSend(FSocketHandle, @Temp, TempPos, FPSENDOPT);
@@ -313,8 +263,6 @@ Procedure TIOSocket.TelnetInBuffer (Var Buf: TIOBuffer; Var Len: LongInt);
     Reply[3] := CmdType;
 
     fpSend (FSocketHandle, @Reply[1], 3, FPSENDOPT);
-
-    {$IFDEF SOCKETLOG} sLog('Sending cmd: ' + sCmd(YesNo) + sCmd(CmdType)); sLog(''); {$ENDIF}
   End;
 
   Procedure SendData (CmdType: Char; Data: String);
@@ -335,8 +283,6 @@ Procedure TIOSocket.TelnetInBuffer (Var Buf: TIOBuffer; Var Len: LongInt);
     Reply[7 + DataLen] := Telnet_SE;
 
     fpSend (FSocketHandle, @Reply[1], 7 + DataLen, FPSENDOPT);
-
-    {$IFDEF SOCKETLOG} sLog('Sending data: ' + sCmd(CmdType) + Data); {$ENDIF}
   End;
 
 Var
@@ -349,8 +295,6 @@ Begin
   TempPos := 0;
 
   For Count := 0 to Len - 1 Do Begin
-    {$IFDEF SOCKETLOG} sLog('State loop: ' + strI2S(FTelnetState) + ' Cmd: ' + sCmd(Buf[Count]));{$ENDIF}
-
     Case FTelnetState of
       1 : If Buf[Count] = Telnet_IAC Then Begin
             FTelnetState := 0;
@@ -361,7 +305,7 @@ Begin
             FTelnetCmd := Buf[Count];
           End;
       2 : Begin
-            FTelnetState := 0;    // reset state after command
+            FTelnetState := 0;
 
             Case FTelnetCmd of
               Telnet_WONT : Begin
@@ -386,17 +330,26 @@ Begin
                                 ReplyBad  := Telnet_DONT;
                               End;
 
-                              Case Buf[Count] of
-                                Telnet_BINARY,
-                                Telnet_ECHO,
-                                Telnet_SGA,
-                                Telnet_TERM : SendCommand(ReplyGood, Buf[Count])
-                              Else
-                                SendCommand(ReplyBad, Buf[Count]);
-                              End;
+                              If FTelnetClient Then Begin
+                                Case Buf[Count] of
+                                  Telnet_BINARY,
+                                  Telnet_ECHO,
+                                  Telnet_SGA,
+                                  Telnet_TERM : SendCommand(ReplyGood, Buf[Count])
+                                Else
+                                  SendCommand(ReplyBad, Buf[Count]);
+                                End;
 
-                              If Buf[Count] = Telnet_Echo Then
-                                FTelnetEcho := False;
+                                If Buf[Count] = Telnet_Echo Then
+                                  FTelnetEcho := False;//(FTelnetCmd = Telnet_DO);
+                              End Else Begin
+                                Case Buf[Count] of
+                                  Telnet_ECHO : FTelnetEcho := True;
+                                  Telnet_SGA  : ;
+                                Else
+                                  SendCommand(ReplyBad, Buf[Count]);
+                                End;
+                              End;
                             End;
             End;
           End;
@@ -412,10 +365,9 @@ Begin
             FTelnetSubData := FTelnetSubData + Buf[Count];
     Else
       If Buf[Count] = Telnet_IAC Then Begin
-        Inc (FTelnetState); // might need to make this := 1;
+        Inc (FTelnetState);
       End Else Begin
         Temp[TempPos] := Buf[Count];
-
         Inc (TempPos);
       End;
     End;
@@ -442,12 +394,7 @@ End;
 Function TIOSocket.ReadBuf (Var Buf; Len: LongInt) : LongInt;
 Begin
   If FInBufPos = FInBufEnd Then Begin
-    {$IFDEF OS2}
-      FInBufEnd := Winsock.Recv(FSocketHandle, @FInBuf, TIOBufferSize, FPRECVOPT);
-    {$ELSE}
-      FInBufEnd := fpRecv(FSocketHandle, @FInBuf, TIOBufferSize, FPRECVOPT);
-    {$ENDIF}
-
+    FInBufEnd := fpRecv(FSocketHandle, @FInBuf, TIOBufferSize, FPRECVOPT);
     FInBufPos := 0;
 
     If FInBufEnd <= 0 Then Begin
@@ -497,7 +444,7 @@ Begin
     Exit;
   End;
 
-// Data   := Ord(Not Block);
+//  Data   := Ord(Not Block);
 //  Result := ioctlSocket(FSocketHandle, FIONBIO, Data);
 End;
 
@@ -594,12 +541,7 @@ Begin
   If fpListen(FSocketHandle, 5) = -1 Then Exit;
 
   Temp := SizeOf(SIN);
-
-  {$IFDEF OS2}
-    Sock := Winsock.Accept(FSocketHandle, @SIN, @Temp);
-  {$ELSE}
-    Sock := fpAccept(FSocketHandle, @SIN, @Temp);
-  {$ENDIF}
+  Sock := fpAccept(FSocketHandle, @SIN, @Temp);
 
   If Sock = -1 Then Exit;
 
@@ -626,14 +568,10 @@ Begin
   Client.FTelnetServer := FTelnetServer;
   Client.FTelnetClient := FTelnetClient;
 
-  If FTelnetServer Then Begin
-    {$IFDEF SOCKETLOG} sLog('Sending cmd: DO ECHO'); {$ENDIF}
-    {$IFDEF SOCKETLOG} sLog('Sending cmd: WILL SGA'); {$ENDIF}
-
+  If FTelnetServer Then
     Client.WriteStr (TELNET_IAC + TELNET_WILL + TELNET_ECHO +
                      TELNET_IAC + TELNET_WILL + TELNET_SGA  +
                      TELNET_IAC + TELNET_DO   + TELNET_BINARY);
-  End;
 
   Result := Client;
 End;
