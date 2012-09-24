@@ -26,7 +26,7 @@ Type
     Function    ConnectPipe  (Secs: LongInt) : Boolean;
     // General functions
     Procedure   SendToPipe   (Var Buf; Len: Longint);
-    Procedure   ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongWord);
+    Procedure   ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongInt);
     Procedure   Disconnect;
     Function    DataWaiting : Boolean;
   End;
@@ -72,7 +72,7 @@ Begin
   If Not FileExist(PipeName) Then
     fpMkFIFO(PipeName, 438);
 
-  PipeHandle := fpOpen(PipeName, O_WRONLY, O_NONBLOCK);
+  PipeHandle := fpOpen(PipeName, O_RDWR, O_NONBLOCK);
   Result     := PipeHandle >= 0;
 End;
 
@@ -84,7 +84,7 @@ Begin
     Disconnect;
 End;
 
-Procedure TPipeUnix.ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongWord);
+Procedure TPipeUnix.ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongInt);
 Begin
   bRead := 0;
 
@@ -114,7 +114,7 @@ Begin
   TimeOut  := TimerSet(Secs);
 
   Repeat
-    PipeHandle := fpOpen(PipeName, O_RDONLY, O_NONBLOCK);
+    PipeHandle := fpOpen(PipeName, O_RDWR, O_NONBLOCK);
     Connected  := PipeHandle >= 0;
   Until Connected or TimerUp(TimeOut);
 

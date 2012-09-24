@@ -18,7 +18,7 @@ Type
     PipeID     : Word;
     Connected  : Boolean;
     IsClient   : Boolean;
-    PipeHandle : THandle;
+    PipeHandle : LongInt;
 
     Constructor Create       (Dir: String; Client: Boolean; ID: Word);
     Destructor  Destroy;     Override;
@@ -29,7 +29,7 @@ Type
     Function    ConnectPipe  (Secs: LongInt) : Boolean;
     // General functions
     Procedure   SendToPipe   (Var Buf; Len: Longint);
-    Procedure   ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongWord);
+    Procedure   ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongInt);
     Procedure   Disconnect;
     Function    DataWaiting : Boolean;
   End;
@@ -109,13 +109,13 @@ Begin
     Disconnect;  // was ERROR_SUCCESS check
 End;
 
-Procedure TPipeWindows.ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongWord);
+Procedure TPipeWindows.ReadFromPipe (Var Buf; Len: LongInt; Var bRead: LongInt);
 Begin
   bRead := 0;
 
   If Not Connected Then Exit;
 
-  ReadFile (PipeHandle, Buf, Len, bRead, NIL);
+  ReadFile (PipeHandle, Buf, Len, LongWord(bRead), NIL);
 
   If GetLastError <> ERROR_SUCCESS Then
     Disconnect;
