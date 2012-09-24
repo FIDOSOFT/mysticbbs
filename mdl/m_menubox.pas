@@ -1,6 +1,6 @@
-{$I M_OPS.PAS}
-
 Unit m_MenuBox;
+
+{$I M_OPS.PAS}
 
 Interface
 
@@ -36,6 +36,7 @@ Type
   End;
 
   TMenuListStatusProc = Procedure (Num: Word; Str: String);
+  TMenuListSearchProc = Procedure (Var Owner: Pointer; Str: String);
 
   TMenuListBoxRec = Record
     Name   : String;
@@ -43,10 +44,9 @@ Type
   End;
 
   TMenuList = Class
-    Screen     : TOutput;
-    List       : Array[1..65535] of ^TMenuListBoxRec;
-    Box        : TMenuBox;
     InKey      : TInput;
+    List       : Array[1..10000] of ^TMenuListBoxRec;
+    Box        : TMenuBox;
     HiAttr     : Byte;
     LoAttr     : Byte;
     PosBar     : Boolean;
@@ -66,10 +66,15 @@ Type
     Marked     : Word;
     StatusProc : TMenuListStatusProc;
     Width      : Integer;
-    Length     : Integer;
+    WinSize    : Integer;
     X1         : Byte;
     Y1         : Byte;
     NoInput    : Boolean;
+    LastBarPos : Byte;
+    SearchProc : TMenuListSearchProc;
+    SearchX    : Byte;
+    SearchY    : Byte;
+    SearchA    : Byte;
 
     Constructor Create (Var S: TOutput);
     Destructor  Destroy; Override;
@@ -78,9 +83,11 @@ Type
     Procedure   Add (Str: String; B: Byte);
     Procedure   Get (Num: Word; Var Str: String; Var B: Boolean);
     Procedure   SetStatusProc (P: TMenuListStatusProc);
+    Procedure   SetSearchProc (P: TMenuListSearchProc);
     Procedure   Clear;
     Procedure   Delete (RecPos : Word);
-{    Procedure   Focus (Num: Word);}
+    Procedure   UpdatePercent;
+    Procedure   UpdateBar (X, Y: Byte; RecPos: Word; IsHi: Boolean);
     Procedure   Update;
   End;
 
@@ -211,7 +218,6 @@ Constructor TMenuList.Create (Var S: TOutput);
 Begin
   Inherited Create;
 
-  Screen     := S;
   Box        := TMenuBox.Create(S);
   InKey      := TInput.Create;
   ListMax    := 0;
@@ -224,44 +230,32 @@ Begin
   NoWindow   := False;
   AllowTag   := False;
   TagChar    := '*';
-  TagKey     := #32;
+  TagKey     := #09;
   TagPos     := 0;
   TagAttr    := 15 + 7 * 16;
   Marked     := 0;
   Picked     := 1;
   NoInput    := False;
+  LastBarPos := 0;
   StatusProc := NIL;
-
-  Screen.BufFlush;
+  SearchProc := NIL;
+//  SearchProc := DefListBoxSearch;
+  SearchX    := 0;
+  SearchY    := 0;
+  SearchA    := 0;
+  TopPage    := 1;
 End;
 
 Procedure TMenuList.Clear;
 Var
-  A : Word;
+  Count : Word;
 Begin
-  For A := 1 to ListMax Do Dispose(List[A]);
+  For Count := 1 to ListMax Do
+    Dispose(List[Count]);
+
   ListMax := 0;
   Marked  := 0;
 End;
-
-(*
-Procedure TMenuList.Focus (Num: Word);
-Var
-  NewPicked  : Word;
-  NewTopPage : Word;
-  Count      : Word;
-Begin
-  If Num > ListMax Then Exit;
-
-  Picked := 1;
-  ListMax :=
-
-  For Count := 1 to ListMax Do
-
-  If Picked < ListMax Then Inc (Picked);
-  If Picked > TopPage + Length - 1 Then Inc (TopPage);
-End;
-*)
 
 Procedure TMenuList.Delete (RecPos : Word);
 Var
@@ -287,57 +281,115 @@ Begin
   Inherited Destroy;
 End;
 
+Procedure TMenuList.UpdateBar (X, Y: Byte; RecPos: Word; IsHi: Boolean);
+Var
+  Str  : String;
+  Attr : Byte;
+Begin
+  If IsHi Then
+    Attr := HiAttr
+  Else
+    Attr := LoAttr;
+
+  If RecPos <= ListMax Then Begin
+    Str := ' ' + List[RecPos]^.Name + ' ';
+
+    Case Format of
+      0 : Str := strPadR(Str, Width, ' ');
+      1 : Str := strPadL(Str, Width, ' ');
+      2 : Str := strPadC(Str, Width, ' ');
+    End;
+  End Else
+    Str := strRep(' ', Width);
+
+  Box.Console.WriteXY (X, Y, Attr, Str);
+
+  If AllowTag Then
+    If (RecPos <= ListMax) and (List[RecPos]^.Tagged = 1) Then
+      Box.Console.WriteXY (TagPos, Y, TagAttr, TagChar)
+    Else
+      Box.Console.WriteXY (TagPos, Y, TagAttr, ' ');
+End;
+
+Procedure TMenuList.UpdatePercent;
+Var
+  NewPos : LongInt;
+Begin
+  If Not PosBar Then Exit;
+
+  If (ListMax > 0) and (WinSize > 0) Then Begin
+    NewPos := (Picked * WinSize) DIV ListMax;
+
+    If Picked >= ListMax Then NewPos := Pred(WinSize);
+
+    If (NewPos < 0) or (Picked = 1) Then NewPos := 0;
+
+    NewPos := Y1 + 1 + NewPos;
+
+    If LastBarPos <> NewPos Then Begin
+      If LastBarPos > 0 Then
+        Box.Console.WriteXY (X1 + Width + 1, LastBarPos, Box.BoxAttr2, #176);
+
+      LastBarPos := NewPos;
+
+      Box.Console.WriteXY (X1 + Width + 1, NewPos, Box.BoxAttr2, #178);
+    End;
+  End;
+End;
+
 Procedure TMenuList.Update;
 Var
-  A : LongInt;
-  S : String;
-  B : Integer;
-  C : Integer;
+  Loop   : LongInt;
+  CurRec : Integer;
 Begin
-  For A := 0 to Length - 1 Do Begin
-    C := TopPage + A;
-    If C <= ListMax Then Begin
-      S := ' ' + List[C]^.Name + ' ';
-      Case Format of
-        0 : S := strPadR (S, Width, ' ');
-        1 : S := strPadL (S, Width, ' ');
-        2 : S := strPadC (S, Width, ' ');
-      End;
-    End Else
-      S := strRep(' ', Width);
+  For Loop := 0 to WinSize - 1 Do Begin
+    CurRec := TopPage + Loop;
 
-    If C = Picked Then B := HiAttr Else B := LoAttr;
-
-    Screen.WriteXY (X1 + 1, Y1 + 1 + A, B, S);
-    If PosBar Then
-      Screen.WriteXY (X1 + Width + 1, Y1 + 1 + A, Box.BoxAttr2, '°');
-
-    If AllowTag Then
-      If (C <= ListMax) and (List[C]^.Tagged = 1) Then
-        Screen.WriteXY (TagPos, Y1 + 1 + A, TagAttr, TagChar)
-      Else
-        Screen.WriteXY (TagPos, Y1 + 1 + A, TagAttr, ' ');
+    UpdateBar (X1 + 1, Y1 + 1 + Loop, CurRec, CurRec = Picked);
   End;
 
-  If PosBar Then
-    If (ListMax > 0) and (Length > 0) Then Begin
-      A := (Picked * Length) DIV ListMax;
-      If Picked >= ListMax Then A := Pred(Length);
-      If (A < 0) or (Picked = 1) Then A := 0;
-      Screen.WriteXY (X1 + Width + 1, Y1 + 1 + A, Box.BoxAttr2, '²');
-    End;
+  UpdatePercent;
 End;
 
 Procedure TMenuList.Open (BX1, BY1, BX2, BY2 : Byte);
+
+  Procedure DownArrow;
+  Begin
+    If Picked < ListMax Then Begin
+      If Picked >= TopPage + WinSize - 1 Then Begin
+        Inc (TopPage);
+        Inc (Picked);
+
+        Update;
+      End Else Begin
+        UpdateBar (X1 + 1, Y1 + Picked - TopPage + 1, Picked, False);
+
+        Inc (Picked);
+
+        UpdateBar (X1 + 1, Y1 + Picked - TopPage + 1, Picked, True);
+
+        UpdatePercent;
+      End;
+    End;
+  End;
+
 Var
-  Ch       : Char;
-  A        : Word;
-  sPos     : Word;
-  ePos     : Word;
-  First    : Boolean;
+  Ch          : Char;
+  Count       : Word;
+  StartPos    : Word;
+  EndPos      : Word;
+  First       : Boolean;
+  SavedRec    : Word;
+  SavedTop    : Word;
+  SearchStr   : String;
+  LastWasChar : Boolean;
 Begin
   If Not NoWindow Then
     Box.Open (BX1, BY1, BX2, BY2);
+
+  If SearchX = 0 Then SearchX := BX1 + 2;
+  If SearchY = 0 Then SearchY := BY2;
+  If SearchA = 0 Then SearchA := Box.BoxAttr4;
 
   X1 := BX1;
   Y1 := BY1;
@@ -347,14 +399,32 @@ Begin
     TopPage := 1;
   End;
 
-  Width  := BX2 - X1 - 1;
-  Length := BY2 - Y1 - 1;
-  TagPos := X1 + 1;
+  Width   := BX2 - X1 - 1;
+  WinSize := BY2 - Y1 - 1;
+  TagPos  := X1 + 1;
+
+  While Picked > TopPage + WinSize - 1 Do
+    Inc (TopPage);
+
+  If PosBar Then
+    For Count := 1 to WinSize Do
+      Box.Console.WriteXY (X1 + Width + 1, Y1 + Count, Box.BoxAttr2, #176);
 
   If NoInput Then Exit;
 
+  Update;
+
+  LastWasChar := False;
+  SearchStr   := '';
+
   Repeat
-    Update;
+    If Not LastWasChar Then Begin
+      If Assigned(SearchProc) And (SearchStr <> '') Then
+        SearchProc (Self, '');
+
+      SearchStr := ''
+    End Else
+      LastWasChar := False;
 
     If Assigned(StatusProc) Then
       If ListMax > 0 Then
@@ -363,41 +433,61 @@ Begin
         StatusProc(Picked, '');
 
     Ch := InKey.ReadKey;
+
     Case Ch of
       #00 : Begin
               Ch := InKey.ReadKey;
+
               Case Ch of
-                #71 : Begin { home }
+                #71 : If Picked > 1 Then Begin { home }
                         Picked  := 1;
                         TopPage := 1;
+                        Update;
                       End;
-                #72 : Begin { up arrow }
-                        If Picked > 1 Then Dec (Picked);
-                        If Picked < TopPage Then Dec (TopPage);
+                #72 : If (Picked > 1) Then Begin
+                        If Picked <= TopPage Then Begin
+                          Dec (Picked);
+                          Dec (TopPage);
+
+                          Update;
+                        End Else Begin
+                          UpdateBar (X1 + 1, Y1 + Picked - TopPage + 1, Picked, False);
+
+                          Dec (Picked);
+
+                          UpdateBar (X1 + 1, Y1 + Picked - TopPage + 1, Picked, True);
+
+                          UpdatePercent;
+                        End;
                       End;
-                #73 : Begin { page up }
-                        If Picked - Length > 1 Then Dec (Picked, Length) Else Picked := 1;
-                        If TopPage - Length < 1 Then TopPage := 1 Else Dec(TopPage, Length);
+                #73,
+                #75 : If (TopPage > 1) or (Picked > 1) Then Begin
+                        If Picked - WinSize > 1 Then Dec (Picked, WinSize) Else Picked := 1;
+                        If TopPage - WinSize < 1 Then TopPage := 1 Else Dec(TopPage, WinSize);
+                        Update;
                       End;
-                #79 : Begin { end }
-                        If ListMax > Length Then TopPage := ListMax - Length + 1;
+                #79 : If Picked < ListMax Then Begin
+                        If ListMax > WinSize Then TopPage := ListMax - WinSize + 1;
                         Picked := ListMax;
+                        Update;
                       End;
-                #80 : Begin { down arrow }
-                        If Picked < ListMax Then Inc (Picked);
-                        If Picked > TopPage + Length - 1 Then Inc (TopPage);
-                      End;
-                #81 : If ListMax > 0 Then Begin { page down }
-                        If ListMax > Length Then Begin
-                          If Picked + Length > ListMax Then
+                #80 : DownArrow;
+                #77,
+                #81 : If (Picked <> ListMax) Then Begin
+                        If ListMax > WinSize Then Begin
+                          If Picked + WinSize > ListMax Then
                             Picked := ListMax
                           Else
-                            Inc (Picked, Length);
-                          Inc (TopPage, Length);
-                          If TopPage + Length > ListMax Then TopPage := ListMax - Length + 1;
+                            Inc (Picked, WinSize);
+
+                          Inc (TopPage, WinSize);
+
+                          If TopPage + WinSize > ListMax Then TopPage := ListMax - WinSize + 1;
                         End Else Begin
                           Picked := ListMax;
                         End;
+
+                        Update;
                       End;
               Else
                 If Pos(Ch, HiChars) > 0 Then Begin
@@ -415,44 +505,78 @@ Begin
           List[Picked]^.Tagged := 1;
           Inc (Marked);
         End;
-        If Picked < ListMax Then Inc (Picked);
-        If Picked > TopPage + Length - 1 Then Inc (TopPage);
+
+        DownArrow;
       End Else
       If Pos(Ch, LoChars) > 0 Then Begin
         ExitCode := Ch;
         Exit;
       End Else Begin
-        Ch    := UpCase(Ch);
-        First := True;
-        sPos  := Picked + 1;
-        ePos  := ListMax;
+        If Ch <> #01 Then Begin
+          If Ch = #25 Then Begin
+            LastWasChar := False;
+            Continue;
+          End;
 
-        If sPos > ListMax Then sPos := 1;
+          If Ch = #8 Then Begin
+            If Length(SearchStr) > 0 Then
+              Dec(SearchStr[0])
+            Else
+              Continue;
+          End Else
+            If Ord(Ch) < 32 Then
+              Continue
+            Else
+              SearchStr := SearchStr + UpCase(Ch);
+        End;
 
-        A := sPos;
+        SavedTop    := TopPage;
+        SavedRec    := Picked;
+        LastWasChar := True;
+        First       := True;
+        StartPos    := Picked + 1;
+        EndPos      := ListMax;
 
-        While (A <= ePos) Do Begin
-          If UpCase(List[A]^.Name[1]) = Ch Then Begin
-            While A <> Picked Do Begin
-              If Picked < A Then Begin
+        If Assigned(SearchProc) Then
+          SearchProc(Self, SearchStr);
+
+        If StartPos > ListMax Then StartPos := 1;
+
+        Count := StartPos;
+
+        While (Count <= EndPos) Do Begin
+          If Pos(strUpper(SearchStr), strUpper(List[Count]^.Name)) > 0 Then Begin
+
+            While Count <> Picked Do Begin
+              If Picked < Count Then Begin
                 If Picked < ListMax Then Inc (Picked);
-                If Picked > TopPage + Length - 1 Then Inc (TopPage);
+                If Picked > TopPage + WinSize - 1 Then Inc (TopPage);
               End Else
-              If Picked > A Then Begin
+              If Picked > Count Then Begin
                 If Picked > 1 Then Dec (Picked);
                 If Picked < TopPage Then Dec (TopPage);
               End;
             End;
             Break;
           End;
-          If (A = ListMax) and First Then Begin
-            A     := 0;
-            sPos  := 1;
-            ePos  := Picked - 1;
-            First := False;
+
+          If (Count = ListMax) and First Then Begin
+            Count    := 0;
+            StartPos := 1;
+            EndPos   := Picked - 1;
+            First    := False;
           End;
 
-          Inc (A);
+          Inc (Count);
+        End;
+
+        If TopPage <> SavedTop Then
+          Update
+        Else
+        If Picked <> SavedRec Then Begin
+          UpdateBar (X1 + 1, Y1 + SavedRec - SavedTop + 1, SavedRec, False);
+          UpdateBar (X1 + 1, Y1 + Picked - TopPage + 1, Picked, True);
+          UpdatePercent;
         End;
       End;
     End;
@@ -468,6 +592,7 @@ Procedure TMenuList.Add (Str : String; B : Byte);
 Begin
   Inc (ListMax);
   New (List[ListMax]);
+
   List[ListMax]^.Name   := Str;
   List[ListMax]^.Tagged := B;
 
@@ -478,13 +603,19 @@ Procedure TMenuList.Get (Num : Word; Var Str : String; Var B : Boolean);
 Begin
   Str := '';
   B   := False;
+
   If Num <= ListMax Then Begin
     Str := List[Num]^.Name;
     B   := List[Num]^.Tagged = 1;
   End;
 End;
 
-Procedure TMenuList.SetStatusProc (P : TMenuListStatusProc);
+Procedure TMenuList.SetSearchProc (P: TMenuListSearchProc);
+Begin
+  SearchProc := P;
+End;
+
+Procedure TMenuList.SetStatusProc (P: TMenuListStatusProc);
 Begin
   StatusProc := P;
 End;
