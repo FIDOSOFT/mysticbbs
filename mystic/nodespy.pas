@@ -371,7 +371,7 @@ Procedure SnoopNode (Node: Byte);
 Var
   Pipe    : TPipe;
   Buffer  : Array[1..4 * 1024] of Char;
-  BufRead : LongWord;
+  BufRead : LongInt;
   Update  : LongInt;
 
   Procedure DrawStatus;
@@ -396,13 +396,13 @@ Var
   End;
 
 Begin
-  ShowMsgBox (3, 'Requesting snoop session for node ' + strI2S(Node));
+  ShowMsgBox (2, 'Requesting snoop session for node ' + strI2S(Node));
 
   SendNodeMessage(Node, 11);
 
   Pipe := TPipe.Create(Config.DataPath, True, Node);
 
-  If Not Pipe.ConnectPipe(800) Then Begin
+  If Not Pipe.ConnectPipe(600) Then Begin
     ShowMsgBox (0, 'Unable to establish a session.  Try again');
     Pipe.Free;
     Exit;

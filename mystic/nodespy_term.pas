@@ -283,7 +283,6 @@ Begin
   List := TMenuList.Create(Screen);
 
   List.NoWindow := True;
-  List.AllowTag := False;
   List.LoAttr   := 7;
   List.HiAttr   := 9 + 1 * 16;
   List.LoChars  := #13#27;
