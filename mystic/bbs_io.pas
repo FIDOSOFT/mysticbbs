@@ -120,28 +120,29 @@ Uses
 
 Constructor TBBSIO.Create (Var Owner: Pointer);
 Begin
-  Core          := Owner;
-  FmtString     := False;
-  FmtLen        := 0;
-  FmtType       := 0;
-  InMacro       := False;
-  InMacroPos    := 0;
-  InMacroStr    := '';
-  AllowPause    := False;
-  AllowMCI      := True;
-  LocalInput    := False;
-  AllowArrow    := False;
-  IsArrow       := False;
-  UseInField    := True;
-  UseInLimit    := False;
-  UseInSize     := False;
-  InLimit       := 0;
-  InSize        := 0;
-  NoFile        := False;
-  Graphics      := 1;
-  PausePtr      := 1;
-  LastMCIValue  := '';
-  InputPos      := 0;
+  Core           := Owner;
+  FmtString      := False;
+  FmtLen         := 0;
+  FmtType        := 0;
+  InMacro        := False;
+  InMacroPos     := 0;
+  InMacroStr     := '';
+  AllowPause     := False;
+  AllowMCI       := True;
+  LocalInput     := False;
+  AllowArrow     := False;
+  IsArrow        := False;
+  UseInField     := True;
+  UseInLimit     := False;
+  UseInSize      := False;
+  InLimit        := 0;
+  InSize         := 0;
+  NoFile         := False;
+  Graphics       := 1;
+  PausePtr       := 1;
+  LastMCIValue   := '';
+  InputPos       := 0;
+  GetKeyCallBack := NIL;
 
   FillChar(OutBuffer, SizeOf(OutBuffer), 0);
 
@@ -1188,7 +1189,7 @@ Begin
   Handles[0] := Input.ConIn;
 
   If Not TBBSCore(Core).LocalMode Then Begin
-    If TBBSCore(Core).Client.DataWaiting Then
+    If TBBSCore(Core).Client.FInBufPos < TBBSCore(Core).Client.FInBufEnd Then
       InType := 2
     Else Begin
       Handles[1] := SocketEvent;
@@ -1252,20 +1253,21 @@ Begin
               #19 : Result := #75; { left  }
               #24 : Result := #80; { down  }
               #27 : Begin
-                      If Not TBBSCore(Core).Client.DataWaiting Then WaitMS(25);
-                      If Not TBBSCore(Core).Client.DataWaiting Then WaitMS(25);
-                      If TBBSCore(Core).Client.DataWaiting Then Begin
-                        If TBBSCore(Core).Client.ReadChar = '[' Then
-                          Case TBBSCore(Core).Client.ReadChar of
-                            'A' : Result := #72; { ansi up     }
-                            'B' : Result := #80; { ansi down   }
-                            'C' : Result := #77; { ansi right  }
-                            'D' : Result := #75; { ansi left   }
-                            'H' : Result := #71; { ansi home   }
-                            'K' : Result := #79; { ansi end    }
-                            'V' : Result := #73; { ansi pageup }
-                            'U' : Result := #81; { ansi pgdown }
-                           End;
+                      If Not TBBSCore(Core).Client.DataWaiting Then WaitMS(50);
+
+                      If TBBSCore(Core).Client.PeekChar(0) = '[' Then Begin
+                        TBBSCore(Core).Client.ReadChar;
+
+                        Case TBBSCore(Core).Client.ReadChar of
+                          'A' : Result := #72; { ansi up     }
+                          'B' : Result := #80; { ansi down   }
+                          'C' : Result := #77; { ansi right  }
+                          'D' : Result := #75; { ansi left   }
+                          'H' : Result := #71; { ansi home   }
+                          'K' : Result := #79; { ansi end    }
+                          'V' : Result := #73; { ansi pageup }
+                          'U' : Result := #81; { ansi pgdown }
+                         End;
                       End Else
                         IsArrow := False;
                     End;
