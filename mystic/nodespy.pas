@@ -718,7 +718,7 @@ Begin
                   Continue;
                 End;
 
-                Case GetCommandOption(8, 'S-Snoop|C-User Chat|K-Kick User|G-Kill Ghost|') of
+                Case GetCommandOption(10, 'S-Snoop|C-User Chat|K-Kick User|G-Kill Ghost|') of
                   'S' : Begin
                           SnoopNode(NodeInfo[CurNode]^.Node);
                           FullReDraw;
