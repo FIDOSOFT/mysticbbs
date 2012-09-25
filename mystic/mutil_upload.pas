@@ -52,7 +52,7 @@ Begin
     While Not Eof(BaseFile) Do Begin
       Read (BaseFile, Base);
 
-      ProcessStatus (Base.Name);
+      ProcessStatus (Base.Name, False);
       BarOne.Update (FilePos(BaseFile), FileSize(BaseFile));
 
       If Not DirExists(Base.Path) Then Continue;
@@ -90,6 +90,8 @@ Begin
         End;
 
         If Not Found Then Begin
+          Log (1, '+', '   Add: ' + DirInfo.Name + ' To: ' + strStripPipe(Base.Name));
+
           Inc  (FilesAdded);
           Seek (ListFile, FileSize(ListFile));
 
@@ -172,7 +174,7 @@ Begin
     Close (BaseFile);
   End;
 
-  ProcessStatus ('Uploaded |15' + strI2S(FilesAdded) + ' |07file(s)');
+  ProcessStatus ('Uploaded |15' + strI2S(FilesAdded) + ' |07file(s)', True);
   ProcessResult (rDONE, True);
 End;
 

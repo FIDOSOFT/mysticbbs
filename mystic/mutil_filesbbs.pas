@@ -174,7 +174,7 @@ Begin
     Close (BaseFile);
   End;
 
-  ProcessStatus ('Uploaded |15' + strI2S(FilesAdded) + ' |07file(s)');
+  ProcessStatus ('Uploaded |15' + strI2S(FilesAdded) + ' |07file(s)', True);
   ProcessResult (rDONE, True);
 End;
 

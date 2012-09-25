@@ -21,6 +21,8 @@ Var
   bbsConfig    : RecConfig;
   TempPath     : String;
   StartPath    : String;
+  LogFile      : String;
+  LogLevel     : Byte = 1;
 
 Const
   Header_GENERAL  = 'General';
@@ -33,6 +35,7 @@ Const
   Header_MSGPURGE = 'PurgeMessageBases';
   Header_MSGPACK  = 'PackMessageBases';
 
+Procedure Log                (Level: Byte; Code: Char; Str: String);
 Function  strAddr2Str        (Addr : RecEchoMailAddr) : String;
 Function  GenerateMBaseIndex : LongInt;
 Function  GenerateFBaseIndex : LongInt;
@@ -52,7 +55,32 @@ Uses
   DOS,
   m_Types,
   m_Strings,
+  m_DateTime,
   m_FileIO;
+
+Procedure Log (Level: Byte; Code: Char; Str: String);
+Var
+  T : Text;
+Begin
+  If LogFile = '' Then Exit;
+
+  If LogLevel < Level Then Exit;
+
+  FileMode := 66;
+
+  Assign (T, LogFile);
+  Append (T);
+
+  If IoResult <> 0 Then
+    If IoResult = 5 Then Exit Else ReWrite(T);
+
+  If Str = '' Then
+    WriteLn (T, '')
+  Else
+    WriteLn (T, Code + ' ' + DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, False) + ' ' + Str);
+
+  Close (T);
+End;
 
 Function strAddr2Str (Addr : RecEchoMailAddr) : String;
 Var

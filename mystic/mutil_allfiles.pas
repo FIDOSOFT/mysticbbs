@@ -42,7 +42,7 @@ Begin
   ReWrite    (OutFile);
 
   If IoResult <> 0 Then Begin
-    ProcessStatus ('Cannot create output file');
+    ProcessStatus ('Cannot create output file', True);
     ProcessResult (rWARN, True);
 
     Exit;
@@ -51,7 +51,7 @@ Begin
   Assign (BaseFile, bbsConfig.DataPath + 'fbases.dat');
 
   If Not ioReset (BaseFile, SizeOf(RecFileBase), fmRWDN) Then Begin
-    ProcessStatus ('Cannot open fbases.dat');
+    ProcessStatus ('Cannot open fbases.dat', True);
     ProcessResult (rWARN, True);
 
     Close (OutFile);
@@ -135,7 +135,7 @@ Begin
   Close (BaseFile);
   Close (OutFile);
 
-  ProcessStatus ('Added |15' + strI2S(TotalFiles) + ' |07file(s)');
+  ProcessStatus ('Added |15' + strI2S(TotalFiles) + ' |07file(s)', True);
   ProcessResult (rDONE, True);
 End;
 

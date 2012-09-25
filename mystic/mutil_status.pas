@@ -19,7 +19,7 @@ Type
   TProcessResult = (rDONE, rWARN, rWORKING, rFATAL);
 
 Procedure ProcessName   (Str: String; Start: Boolean);
-Procedure ProcessStatus (Str: String);
+Procedure ProcessStatus (Str: String; Last: Boolean);
 Procedure ProcessResult (Res: TProcessResult; Done: Boolean);
 
 Implementation
@@ -36,21 +36,36 @@ Begin
     Inc (ProcessPos);
 
     BarOne.Reset;
+
+    Log (1, '+', 'Process: ' + Str);
   End;
 End;
 
-Procedure ProcessStatus (Str: String);
+Procedure ProcessStatus (Str: String; Last: Boolean);
 Begin
   Console.WriteXYPipe (33, Console.CursorY, 7, 31, Str);
+
+  If Last Then
+    Log (1, '+', 'Result: ' + strStripPipe(Str))
+  Else
+    Log (2, '+', '   ' + Str);
 End;
 
 Procedure ProcessResult (Res: TProcessResult; Done: Boolean);
 Begin
   Case Res of
     rDONE    : Console.WriteXYPipe(66, Console.CursorY, 10, 11, 'DONE');
-    rWARN    : Console.WriteXYPipe(66, Console.CursorY, 12, 11, 'WARNING');
+    rWARN    : Begin
+                 Console.WriteXYPipe(66, Console.CursorY, 12, 11, 'WARNING');
+
+                 Log (2, '!', 'Status: WARNING');
+               End;
     rWORKING : Console.WriteXYPipe(66, Console.CursorY, 15, 11, 'WORKING');
-    rFATAL   : Console.WriteXYPipe(66, Console.CursorY, 12, 11, 'FATAL');
+    rFATAL   : Begin
+                 Console.WriteXYPipe(66, Console.CursorY, 12, 11, 'FATAL');
+
+                 Log (1, '!', 'Status: FATAL');
+               End;
   End;
 
   If Done Then Begin

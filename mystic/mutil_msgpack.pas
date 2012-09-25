@@ -18,7 +18,7 @@ Begin
   ProcessName   ('Packing Message Bases', True);
   ProcessResult (rWORKING, False);
 
-  ProcessStatus ('Complete');
+  ProcessStatus ('Removed X Msgs in X Bases', True);
   ProcessResult (rDONE, True);
 End;
 

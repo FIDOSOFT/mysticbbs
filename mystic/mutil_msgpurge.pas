@@ -18,7 +18,7 @@ Begin
   ProcessName   ('Purging Message Bases', True);
   ProcessResult (rWORKING, False);
 
-  ProcessStatus ('Complete');
+  ProcessStatus ('Complete', True);
   ProcessResult (rDONE, True);
 End;
 

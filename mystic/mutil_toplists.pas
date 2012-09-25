@@ -93,7 +93,7 @@ Var
     DataLen  := INI.ReadInteger (Header_TopLists, 'top' + CfgName + 'datalen', 10);
 
     If Not FileExist(Template) Then Begin
-      ProcessStatus('Template not found');
+      ProcessStatus('Template not found', True);
       Exit;
     End;
 
@@ -161,11 +161,11 @@ Begin
   Result := True;
 
   Case ListType of
-    TopCall : ProcessStatus('Top Callers');
-    TopPost : ProcessStatus('Top Posts');
-    TopDL   : ProcessStatus('Top Downloaders');
-    TopUL   : ProcessStatus('Top Uploaders');
-    TopPCR  : ProcessStatus('Top Post/Call Ratio');
+    TopCall : ProcessStatus('Top Callers', True);
+    TopPost : ProcessStatus('Top Posts', True);
+    TopDL   : ProcessStatus('Top Downloaders', True);
+    TopUL   : ProcessStatus('Top Uploaders', True);
+    TopPCR  : ProcessStatus('Top Post/Call Ratio', True);
   End;
 
   ExclName := INI.ReadString(Header_TopLists, 'exclude_list', 'exclude.txt');
@@ -239,7 +239,7 @@ Begin
   If INI.ReadString(Header_TopLists, 'top_ul',   '0') = '1' Then GenerateList(TopUL);
   If INI.ReadString(Header_TopLists, 'top_pcr',  '0') = '1' Then GenerateList(TopPCR);
 
-  ProcessStatus ('Created |15' + strI2S(CreatedLists) + ' |07list(s)');
+  ProcessStatus ('Created |15' + strI2S(CreatedLists) + ' |07list(s)', True);
   ProcessResult (rDONE, True);
 End;
 

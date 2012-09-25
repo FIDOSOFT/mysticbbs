@@ -63,11 +63,17 @@ Begin
     Result := True;
 
     Inc (ProcessTotal);
-  End;
+
+    Log (2, '+', '   EXEC ' + pName);
+  End Else
+    Log (2, '+', '   SKIP ' + pName);
 End;
 
 Procedure ApplicationShutdown;
 Begin
+  Log (1, '+', 'Shutdown');
+  Log (1, '+', '');
+
   If Assigned(Console) Then Begin
     Console.SetWindow (1, 1, 80, 25, False);
     Console.CursorXY  (3, 22);
@@ -98,11 +104,11 @@ Begin
   If FileExist(ParamStr(1)) Then
     FN := ParamStr(1)
   Else
-  If FileExist('mutil.cfg') Then
-    FN := 'mutil.cfg'
+  If FileExist('mutil.ini') Then
+    FN := 'mutil.ini'
   Else Begin
     ProcessName   ('Load configuration', False);
-    ProcessStatus ('Missing file');
+    ProcessStatus ('Missing file', True);
     ProcessResult (rFATAL, False);
 
     Halt(1);
@@ -118,7 +124,7 @@ Begin
 
   If IoResult <> 0 Then Begin
     ProcessName   ('Load configuration', False);
-    ProcessStatus ('Missing MYSTIC.DAT');
+    ProcessStatus ('Missing MYSTIC.DAT', True);
     ProcessResult (rFATAL, False);
 
     Halt(1);
@@ -129,7 +135,7 @@ Begin
 
   If bbsConfig.DataChanged <> mysDataChanged Then Begin
     ProcessName   ('Load configuration', False);
-    ProcessStatus ('Version mismatch');
+    ProcessStatus ('Version mismatch', True);
     ProcessResult (rFATAL, False);
 
     Halt(1);
@@ -147,6 +153,13 @@ Begin
 
   DirClean (TempPath, '');
 
+  LogFile := INI.ReadString(Header_GENERAL, 'logfile', '');
+
+  If (LogFile <> '') and (Pos(PathChar, LogFile) = 0) Then
+    LogFile := bbsConfig.LogsPath + LogFile;
+
+  LogLevel := INI.ReadInteger(Header_GENERAL, 'loglevel', 1);
+
   BarOne := TStatusBar.Create(3);
   BarAll := TStatusBar.Create(6);
 End;
@@ -163,6 +176,8 @@ Var
 Begin
   ApplicationStartup;
 
+  Log (1, '+', 'Startup using ' + JustFile(INI.FileName));
+
   // Build process list
 
   DoImportNA   := CheckProcess(Header_IMPORTNA);
@@ -178,7 +193,7 @@ Begin
 
   If ProcessTotal = 0 Then Begin
     ProcessName   ('Load configuration', False);
-    ProcessStatus ('No processes configured!');
+    ProcessStatus ('No processes configured!', True);
     ProcessResult (rFATAL, False);
 
     Halt(1);

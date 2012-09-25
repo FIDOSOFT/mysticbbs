@@ -33,7 +33,7 @@ Begin
   {$I-} Reset(InFile); {$I+}
 
   If IoResult <> 0 Then Begin
-    ProcessStatus ('Cannot find NA file');
+    ProcessStatus ('Cannot find NA file', True);
     ProcessResult (rWARN, True);
 
     Exit;
@@ -49,7 +49,7 @@ Begin
     TagName  := strStripLow(strWordGet(1, Str, ' '));
     BaseName := strStripLow(strStripB(Copy(Str, Pos(' ', Str), 255), ' '));
 
-    ProcessStatus (BaseName);
+    ProcessStatus (BaseName, False);
 
     If Not IsDupeMBase(TagName) Then Begin
       FillChar (MBase, SizeOf(MBase), #0);
@@ -110,7 +110,7 @@ Begin
 
   Close (InFile);
 
-  ProcessStatus ('Created |15' + strI2S(CreatedBases) + ' |07base(s)');
+  ProcessStatus ('Created |15' + strI2S(CreatedBases) + ' |07base(s)', True);
   ProcessResult (rDONE, True);
 End;
 

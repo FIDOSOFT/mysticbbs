@@ -4795,14 +4795,16 @@
    comments (and was created on an Amiga?)
 
  + CTRL-Z and [ESCAPE] now both bring up the full screen editor prompt to
-   save, etc.
+   save, etc.  I did a lot of research with old softwares and editors, and
+   found this approach to be the common ground between everything ever. :)
 
  + Revampped message quoting a little bit.  Quoted text will now be auto
    reformatted if adding the initials would cut off text in the original
    message EXCEPT when quoting quoted text.
 
-   Quote initials will always be 2 characters now.  If the User handle has a
-   single word handle, Mystic will use the first two letters of their name.
+   Quote initials will always be 2 characters now.  In an effort to better
+   "standardize" quoting: If the User handle has a single word handle, Mystic
+   will now use the first two letters of their name instead of one.
 
  ! Fixed a bug that could corrupt a message and/or crash when editing a
    message with a lot of lines.
@@ -4822,15 +4824,15 @@
       End
 
  + The GE menu command (edit user settings) option 14 (select theme) can now
-   have a section option which specifies the base filename of a theme.  For
-   example, if the theme filename is "english" you can do:
+   have an option which specifies the base filename of a theme.  For example
+   if the theme filename is "english" you can do:
 
       Menu command: GE
               Data: 14 english
 
    This will cause the theme to be selected automatically, without prompting
    the user for anything.  If a second parameter is not supplied, the user
-   will be prompted to select a theme.
+   will be prompted to select a theme as usual.
 
  + Copy/Paste is now added/fixed for menu commands and menu execution lists
    in the new menu editor.
@@ -4850,3 +4852,37 @@
 
       [General]
          autosnoop=1
+
+ + Renamed the default mutil.cfg to mutil.ini since it is indeed an INI
+   format file.  This is just in case someone has .ini files associated with
+   an editor on their OS.  EXISTING USERS WILL NEED TO RENAME MUTIL.CFG TO
+   MUTIL.INI unless you are supplying the filename on the command line.
+
+ + Added logging into MUTIL.  Add the following crap below into the
+   [GENERAL] section of your configutation files if you want to use it.  If
+   you would like some things logged that are not please let me know, and
+   vice versa.  Anyway, from the new default mutil.ini:
+
+      ; Logging option.  If no directory is specified in the logfile
+      ; name, mUtil will attempt to use the configured LOGS directory from
+      ; in Mystic's configuration.  To disable logging, leave the logfile
+      ; option commented out or set to a blank value.
+
+      logfile=mutil.log
+
+      ; Level 1 = basic process logging
+      ; Level 2 = verbose
+
+      loglevel=1
+
+   An example of loglevel=1 logging for mUtil configured for a single
+   process (mass upload) follows.  I haven't tested the logging with all
+   processes to get them where I want them, so please give feedback if you
+   have something to suggest! :)
+
+      + 09/24/12 23:11 Startup using mutil.ini
+      + 09/24/12 23:11 Process: Mass Upload Files
+      + 09/24/12 23:11    Add: mbbs_104.zip To: New File Base
+      + 09/24/12 23:11    Add: SPOT1_3B.LHA To: New File Base
+      + 09/24/12 23:11 Result: Uploaded 2 file(s)
+      + 09/24/12 23:11 Shutdown

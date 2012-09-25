@@ -35,7 +35,7 @@ Begin
   {$I-} Reset(InFile); {$I+}
 
   If IoResult <> 0 Then Begin
-    ProcessStatus ('Cannot find NA file');
+    ProcessStatus ('Cannot find NA file', True);
     ProcessResult (rWARN, True);
 
     Exit;
@@ -44,14 +44,14 @@ Begin
   RootDir := DirSlash(INI.ReadString(Header_FILEBONE, 'root_dir', ''));
 
   If RootDir = PathSep Then Begin
-    ProcessStatus ('No root directory');
+    ProcessStatus ('No root directory', True);
     ProcessResult (rFATAL, True);
 
     Exit;
   End;
 
   If Not DirExists(RootDir) Then Begin
-    ProcessStatus ('Root directory does not exist');
+    ProcessStatus ('Root directory does not exist', True);
     ProcessResult (rFATAL, True);
 
     // While DirCreate can 'recursively' create, this is added to prevent
@@ -72,7 +72,7 @@ Begin
     BaseName := strStripLow(strStripB(Copy(Str, strWordPos(5, str, ' '), 255), ' '));
     BaseTag  := strStripLow(strWordGet(2, Str, ' '));
 
-    ProcessStatus (BaseName);
+    ProcessStatus (BaseName, False);
 
     If Not IsDupeFBase(BaseTag) Then Begin
       FillChar (FBase, SizeOf(FBase), 0);
@@ -109,7 +109,7 @@ Begin
 
   Close (InFile);
 
-  ProcessStatus ('Created |15' + strI2S(CreatedBases) + ' |07base(s)');
+  ProcessStatus ('Created |15' + strI2S(CreatedBases) + ' |07base(s)', True);
   ProcessResult (rDONE, True);
 End;
 
