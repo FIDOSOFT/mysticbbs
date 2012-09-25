@@ -611,6 +611,9 @@ Var
       If Stats.Hourly[Count] > 0 Then Begin
         Temp := Stats.Hourly[Count] / Highest * 100;
         Stats.Hourly[Count] := Trunc(Temp) DIV 20;
+
+        If (Stats.Hourly[Count] = 0) And (Temp > 0) Then
+          Stats.Hourly[Count] := 1;  // Make it show at LEAST something
       End;
 
     Close (HistFile);
