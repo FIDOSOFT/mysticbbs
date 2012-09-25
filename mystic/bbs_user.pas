@@ -141,7 +141,7 @@ Var
     Res := False;
 
     Case Key of
-      'A' : Res := DaysAgo(ThisUser.Birthday) DIV 365 >= strS2I(Data);
+      'A' : Res := DaysAgo(ThisUser.Birthday, 1) DIV 365 >= strS2I(Data);
       'D' : Res := (Ord(Data[1]) - 64) in ThisUser.AF2;
       'E' : Case Data[1] of
               '1' : Res := Session.io.Graphics = 1;

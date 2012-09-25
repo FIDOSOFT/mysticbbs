@@ -34,6 +34,7 @@ Const
   Header_ALLFILES = 'GenerateAllFiles';
   Header_MSGPURGE = 'PurgeMessageBases';
   Header_MSGPACK  = 'PackMessageBases';
+  Header_MSGPOST  = 'PostTextFiles';
 
 Procedure Log                (Level: Byte; Code: Char; Str: String);
 Function  strAddr2Str        (Addr : RecEchoMailAddr) : String;
@@ -45,6 +46,7 @@ Procedure AddMessageBase     (Var MBase: RecMessageBase);
 Procedure AddFileBase        (Var FBase: RecFileBase);
 Function  ShellDOS           (ExecPath: String; Command: String) : LongInt;
 Procedure ExecuteArchive     (FName: String; Temp: String; Mask: String; Mode: Byte);
+Function  GetMBaseByIndex    (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
 
 Implementation
 
@@ -287,6 +289,28 @@ Begin
   End;
 
   ShellDOS ('', Temp);
+End;
+
+Function GetMBaseByIndex (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, bbsConfig.DataPath + 'mbases.dat');
+
+  If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
+
+  While Not Eof(F) Do Begin
+    ioRead(F, TempBase);
+
+    If TempBase.Index = Num Then Begin
+      Result := True;
+      Break;
+    End;
+  End;
+
+  Close (F);
 End;
 
 End.

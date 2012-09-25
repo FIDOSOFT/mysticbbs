@@ -66,7 +66,7 @@ Begin
     Chat.Location  := Session.User.ThisUser.City;
     Chat.Action    := Action;
     Chat.Gender    := Session.User.ThisUser.Gender;
-    Chat.Age       := DaysAgo(Session.User.ThisUser.Birthday) DIV 365;
+    Chat.Age       := DaysAgo(Session.User.ThisUser.Birthday, 1) DIV 365;
     If Session.LocalMode Then
       Chat.Baud := 'LOCAL' {++lang}
     Else

@@ -1634,7 +1634,7 @@ Begin
             Store (TempByte, 1);
           End;
     58  : Begin
-            TempLong := DaysAgo(Param[1].L);
+            TempLong := DaysAgo(Param[1].L, 1);
             Store (TempLong, 4);
           End;
     59  : Begin

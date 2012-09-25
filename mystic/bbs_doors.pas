@@ -111,7 +111,7 @@ Begin
   Write (tFile, Session.User.ThisUser.Handle + Ending);
   Write (tFile, Session.User.ThisUser.RealName + Ending);
   Write (tFile, '' + Ending);
-  Write (tFile, DaysAgo(Session.User.ThisUser.Birthday) DIV 365, Ending);  { User's AGE }
+  Write (tFile, DaysAgo(Session.User.ThisUser.Birthday, 1) DIV 365, Ending);  { User's AGE }
   Write (tFile, Session.User.ThisUser.Gender + Ending);
   Write (tFile, '0' + Ending);  { User's gold }
   Write (tFile, DateDos2Str(Session.User.ThisUser.LastOn, 1) + Ending);

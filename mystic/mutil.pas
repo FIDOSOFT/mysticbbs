@@ -51,7 +51,8 @@ Uses
   mUtil_FilesBBS,
   mUtil_AllFiles,
   mUtil_MsgPurge,
-  mUtil_MsgPack;
+  mUtil_MsgPack,
+  mUtil_MsgPost;
 
 {$I MUTIL_ANSI.PAS}
 
@@ -173,6 +174,7 @@ Var
   DoAllFiles   : Boolean;
   DoMsgPurge   : Boolean;
   DoMsgPack    : Boolean;
+  DoMsgPost    : Boolean;
 Begin
   ApplicationStartup;
 
@@ -188,6 +190,7 @@ Begin
   DoAllFiles   := CheckProcess(Header_ALLFILES);
   DoMsgPurge   := CheckProcess(Header_MSGPURGE);
   DoMsgPack    := CheckProcess(Header_MSGPACK);
+  DoMsgPost    := CheckProcess(Header_MSGPOST);
 
   // Exit with an error if nothing is configured
 
@@ -209,4 +212,5 @@ Begin
   If DoAllFiles   Then uAllFilesList;
   If DoMsgPurge   Then uPurgeMessageBases;
   If DoMsgPack    Then uPackMessageBases;
+  If DoMsgPost    Then uPostMessages;
 End.

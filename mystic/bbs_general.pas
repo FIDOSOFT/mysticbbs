@@ -432,7 +432,7 @@ Begin
     Session.io.PromptInfo[4]  := TempUser.Gender;
     Session.io.PromptInfo[5]  := strI2S(TempUser.Security);
     Session.io.PromptInfo[6]  := TempUser.Address;
-    Session.io.PromptInfo[7]  := strI2S(DaysAgo(TempUser.Birthday) DIV 365);
+    Session.io.PromptInfo[7]  := strI2S(DaysAgo(TempUser.Birthday, 1) DIV 365);
     Session.io.PromptInfo[8]  := TempUser.Email;
     Session.io.PromptInfo[9]  := TempUser.UserInfo;
     Session.io.PromptInfo[10] := TempUser.OptionData[1];

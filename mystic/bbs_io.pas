@@ -463,7 +463,7 @@ Begin
             '3' : LastMCIValue := Pipe2Ansi(23);
           End;
     'A' : Case Code[2] of
-            'G' : LastMCIValue := strI2S(DaysAgo(TBBSCore(Core).User.ThisUser.Birthday) DIV 365);
+            'G' : LastMCIValue := strI2S(DaysAgo(TBBSCore(Core).User.ThisUser.Birthday, 1) DIV 365);
             'O' : AllowAbort := False;
             'S' : LastMCIValue := OutON(TBBSCore(Core).User.ThisUser.SigUse);
             'V' : LastMCIValue := OutYN(Chat.Available);

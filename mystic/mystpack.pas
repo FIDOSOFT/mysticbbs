@@ -290,7 +290,7 @@ Begin
         UnixToDT (MsgHdr.DateWritten, MsgDateTime);
         PackTime (MsgDateTime, Temp);
 
-        LimitKill := DaysAgo(Temp) > MBase.MaxAge;
+        LimitKill := DaysAgo(Temp, 2) > MBase.MaxAge;
         Killed    := Killed or LimitKill;
       End;
 

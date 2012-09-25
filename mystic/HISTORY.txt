@@ -4886,3 +4886,17 @@
       + 09/24/12 23:11    Add: SPOT1_3B.LHA To: New File Base
       + 09/24/12 23:11 Result: Uploaded 2 file(s)
       + 09/24/12 23:11 Shutdown
+
+ + MUTIL now has a message purge function.  This function will go through
+   all of the messages in all message bases and delete any messages that do
+   not meet the "Age" or "Max Messages" settings for each message base.
+
+   To use this function simply add the following into your [GENERAL] header
+   of your mUtil .INI configuration file(s):
+
+   	  PurgeMessageBases  = true
+
+ ! MBBSUTIL -UKILL was not working properly.
+
+ ! MBBSUTIL BBS list packer was not working properly when checking
+   verification days.

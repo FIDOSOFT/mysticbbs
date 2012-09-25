@@ -490,7 +490,7 @@ Procedure Kill_BBS_List;
 
         Update_Bar (FilePos(TBBSFile), FileSize(TBBSFile));
 
-        If DaysAgo(BBS.Verified) >= BBSKillDays Then Begin
+        If DaysAgo(BBS.Verified, 2) >= BBSKillDays Then Begin
           BBS.Deleted := True;
           BBSPack     := True;
 
@@ -557,7 +557,7 @@ Begin
 
       Update_Bar (FilePos(TUserFile), FileSize(TUserFile));
 
-      If (DaysAgo(User.LastOn) >= UserKillDays) And (User.Flags AND UserNoKill = 0) Then Begin
+      If (DaysAgo(User.LastOn, 2) >= UserKillDays) And (User.Flags AND UserNoKill = 0) Then Begin
         User.Flags := User.Flags OR UserDeleted;
         Update_Status ('Killing ' + User.Handle);
         UserPack := True;
