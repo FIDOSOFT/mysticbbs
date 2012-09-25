@@ -20,7 +20,7 @@ Procedure DateJ2G           (Julian: LongInt; Var Year, Month, Day: SmallInt);
 Function  DateValid         (Str: String) : Boolean;
 Function  TimeDos2Str       (Date: LongInt; Twelve: Boolean) : String;
 Function  DayOfWeek         (Date: LongInt) : Byte;
-Function  DaysAgo           (Date: LongInt) : LongInt;
+Function  DaysAgo           (Date: LongInt; dType: Byte) : LongInt;
 Function  TimeSecToStr      (Secs: LongInt) : String;
 
 Implementation
@@ -305,9 +305,12 @@ Begin
   Result := Res MOD 7;
 End;
 
-Function DaysAgo (Date: LongInt) : LongInt;
-Begin
-  Result := DateStr2Julian(DateDos2Str(CurDateDos, 1)) - Date;
+Function DaysAgo (Date: LongInt; dType: Byte) : LongInt;
+Begin  // 1 = date=julian,  2 = date=dosdate
+  Case dType of
+    1 : Result := CurDateJulian - Date;
+    2 : Result := CurDateJulian - DateStr2Julian(DateDos2Str(Date, 1));
+  End;
 End;
 
 Function TimerSet (Secs: LongInt) : LongInt;
