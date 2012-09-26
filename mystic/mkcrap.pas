@@ -206,7 +206,7 @@ Var
   F: File;
   Error: Word;
   NumRead: LongInt;
-  Begin
+Begin
   Error := 0;
   If Not FileExist(FN) Then Error := 8888;
   If Error = 0 Then assign (f, fn);
