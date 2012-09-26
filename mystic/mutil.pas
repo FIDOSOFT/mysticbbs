@@ -52,17 +52,16 @@ Uses
   mUtil_AllFiles,
   mUtil_MsgPurge,
   mUtil_MsgPack,
-  mUtil_MsgPost;
+  mUtil_MsgPost,
+  bbs_Common;
 
 {$I MUTIL_ANSI.PAS}
 
 Function CheckProcess (pName: String) : Boolean;
 Begin
-  Result := False;
+  Result := INI.ReadBoolean(Header_General, pName, False);
 
-  If strUpper(INI.ReadString(Header_General, pName, 'FALSE')) = 'TRUE' Then Begin
-    Result := True;
-
+  If Result Then Begin
     Inc (ProcessTotal);
 
     Log (2, '+', '   EXEC ' + pName);

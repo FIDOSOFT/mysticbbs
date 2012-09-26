@@ -10,8 +10,9 @@ Implementation
 
 Uses
   m_Strings,
-  mutil_Common,
-  mutil_Status;
+  mUtil_Common,
+  mUtil_Status,
+  bbs_Common;
 
 Procedure uImportNA;
 Var

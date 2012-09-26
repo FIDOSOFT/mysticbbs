@@ -11,8 +11,9 @@ Uses
   m_FileIO,
   m_Strings,
   m_DateTime,
-  mutil_Common,
-  mutil_Status;
+  mUtil_Common,
+  mUtil_Status,
+  bbs_Common;
 
 Procedure uMassUpload;
 Var

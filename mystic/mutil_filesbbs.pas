@@ -13,7 +13,8 @@ Uses
   m_FileIO,
   m_DateTime,
   mUtil_Common,
-  mUtil_Status;
+  mUtil_Status,
+  bbs_Common;
 
 Procedure uImportFilesBBS;
 Var

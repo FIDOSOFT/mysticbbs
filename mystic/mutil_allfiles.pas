@@ -13,7 +13,8 @@ Uses
   m_Strings,
   m_FileIO,
   mUtil_Common,
-  mUtil_Status;
+  mUtil_Status,
+  bbs_Common;
 
 Const
   TotalFiles : Cardinal = 0;

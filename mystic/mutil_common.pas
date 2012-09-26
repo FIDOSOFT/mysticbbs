@@ -7,9 +7,11 @@ Interface
 Uses
   m_Output,
   m_IniReader,
-  mutil_Status;
-
-{$I RECORDS.PAS}
+  mutil_Status,
+  bbs_Common,
+  bbs_MsgBase_Abs,
+  bbs_MsgBase_Squish,
+  bbs_MsgBase_JAM;
 
 Var
   Console      : TOutput;
@@ -47,6 +49,8 @@ Procedure AddFileBase        (Var FBase: RecFileBase);
 Function  ShellDOS           (ExecPath: String; Command: String) : LongInt;
 Procedure ExecuteArchive     (FName: String; Temp: String; Mask: String; Mode: Byte);
 Function  GetMBaseByIndex    (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+Function  MessageBaseOpen    (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
+Function  SaveMessage        (mArea: RecMessageBase; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mText: RecMessageText; mLines: Integer) : Boolean;
 
 Implementation
 
@@ -311,6 +315,90 @@ Begin
   End;
 
   Close (F);
+End;
+
+Function MessageBaseOpen (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
+Begin
+  Result := False;
+
+  Case Area.BaseType of
+    0 : Msg := New(PMsgBaseJAM, Init);
+    1 : Msg := New(PMsgBaseSquish, Init);
+  End;
+
+  Msg^.SetMsgPath  (Area.Path + Area.FileName);
+  Msg^.SetTempFile (TempPath + 'msgbuf.tmp');
+
+  If Not Msg^.OpenMsgBase Then
+    If Not Msg^.CreateMsgBase (Area.MaxMsgs, Area.MaxAge) Then Begin
+      Dispose (Msg, Done);
+      Exit;
+    End Else
+    If Not Msg^.OpenMsgBase Then Begin
+      Dispose (Msg, Done);
+      Exit;
+    End;
+
+  Result := True;
+End;
+
+Function SaveMessage (mArea: RecMessageBase; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mText: RecMessageText; mLines: Integer) : Boolean;
+Var
+  SemFile : File;
+  Count   : SmallInt;
+  Msg     : PMsgBaseABS;
+Begin
+  Result := False;
+
+  If Not MessageBaseOpen(Msg, mArea) Then Exit;
+
+  Msg^.StartNewMsg;
+  Msg^.SetLocal (True);
+
+  If mArea.NetType > 0 Then Begin
+    If mArea.NetType = 2 Then Begin
+      Msg^.SetMailType (mmtNetMail);
+      Msg^.SetCrash    (bbsConfig.netCrash);
+      Msg^.SetHold     (bbsConfig.netHold);
+      Msg^.SetKillSent (bbsConfig.netKillSent);
+      Msg^.SetDest     (mAddr);
+    End Else
+      Msg^.SetMailType (mmtEchoMail);
+
+    Msg^.SetOrig(bbsConfig.NetAddress[mArea.NetAddr]);
+
+    Case mArea.NetType of
+      1 : Assign (SemFile, Config.SemaPath + fn_SemFileEcho);
+      2 : Assign (SemFile, Config.SemaPath + fn_SemFileNews);
+      3 : Assign (SemFile, Config.SemaPath + fn_SemFileNet);
+    End;
+
+    ReWrite (SemFile);
+    Close   (SemFile);
+  End Else
+    Msg^.SetMailType (mmtNormal);
+
+  Msg^.SetPriv (mArea.Flags And MBPrivate <> 0);
+  Msg^.SetDate (DateDos2Str(CurDateDos, 1));
+  Msg^.SetTime (TimeDos2Str(CurDateDos, False));
+  Msg^.SetFrom (mFrom);
+  Msg^.SetTo   (mTo);
+  Msg^.SetSubj (mSubj);
+
+  For Count := 1 to mLines Do
+    Msg^.DoStringLn(mText[Count]);
+
+  If mArea.NetType > 0 Then Begin
+    Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ')');
+    Msg^.DoStringLn (' * Origin: ' + mArea.Origin + ' (' + strAddr2Str(Config.NetAddress[mArea.NetAddr]) + ')');
+  End;
+
+  Msg^.WriteMsg;
+  Msg^.CloseMsgBase;
+
+  Dispose (Msg, Done);
+
+  Result := True;
 End;
 
 End.

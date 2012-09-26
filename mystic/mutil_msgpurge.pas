@@ -13,6 +13,7 @@ Uses
   m_DateTime,
   mUtil_Common,
   mUtil_Status,
+  bbs_Common,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
   bbs_MsgBase_Squish;
@@ -40,19 +41,7 @@ Begin
 
       PurgeBase := 0;
 
-      Case Base.BaseType of
-        0 : MsgBase := New(PMsgBaseJAM, Init);
-        1 : MsgBase := New(PMsgBaseSquish, Init);
-      End;
-
-      MsgBase^.SetMsgPath  (Base.Path + Base.FileName);
-      MsgBase^.SetTempFile (TempPath + 'msgbuf.tmp');
-
-      If Not MsgBase^.OpenMsgBase Then Begin
-        Dispose (MsgBase, Done);
-
-        Continue;
-      End;
+      If Not MessageBaseOpen(MsgBase, Base) Then Continue;
 
       If Base.MaxAge > 0 Then Begin
         MsgBase^.SeekFirst(1);

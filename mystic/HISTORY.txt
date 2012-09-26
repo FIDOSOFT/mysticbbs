@@ -4900,3 +4900,14 @@
 
  ! MBBSUTIL BBS list packer was not working properly when checking
    verification days.
+
+ + MUTIL now has a message posting function.  This function can post any
+   number of text files to a message base, including echomail and netmail
+   bases.  It will also split large posts into multple messages - allowing
+   up to 10,000 line text files to be posted.  To enable, add this to your
+   [GENERAL] section of your mUtil .INI configuration files:
+
+      PostTextFiles = true
+
+   Then add the [PostTextFiles] section from the default mutil.ini from a
+   new install.
