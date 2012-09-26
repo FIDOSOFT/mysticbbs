@@ -17,6 +17,7 @@ Type
     Destructor  Destroy; Override;
     Function    ReadString  (Category, Value, DefValue: String) : String;
     Function    ReadInteger (Category, Value: String; DefValue: LongInt) : LongInt;
+    Function    ReadBoolean (Category, Value: String; DefValue: Boolean) : Boolean;
   End;
 
 Implementation
@@ -97,5 +98,18 @@ Function TIniReader.ReadInteger (Category, Value: String; DefValue: LongInt) : L
 Begin
   Result := strS2I(ReadString(Category, Value, strI2S(DefValue)));
 End;
+
+Function TIniReader.ReadBoolean (Category, Value: String; DefValue: Boolean) : Boolean;
+Var
+  DefStr : String;
+Begin
+  If DefValue Then
+    DefStr := 'TRUE'
+  Else
+    DefStr := 'FALSE';
+
+  Result := strUpper(ReadString(Category, Value, DefStr)) = 'TRUE';
+End;
+
 
 End.
