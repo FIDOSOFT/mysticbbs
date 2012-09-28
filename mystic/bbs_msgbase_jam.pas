@@ -1263,7 +1263,6 @@ Begin
   IsFileReq := (MsgHdr^.JamHdr.Attr1 and Jam_Freq) <> 0;
 End;
 
-
 Function TMsgBaseJAM.IsRcvd: Boolean; {Is current msg received}
 Begin
   IsRcvd := (MsgHdr^.JamHdr.Attr1 and Jam_Rcvd) <> 0;

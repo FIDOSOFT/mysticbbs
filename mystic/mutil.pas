@@ -71,7 +71,7 @@ End;
 
 Procedure ApplicationShutdown;
 Begin
-  Log (1, '+', 'Shutdown');
+  Log (1, '+', '=> Shutdown');
   Log (1, '+', '');
 
   If Assigned(Console) Then Begin
@@ -177,7 +177,7 @@ Var
 Begin
   ApplicationStartup;
 
-  Log (1, '+', 'Startup using ' + JustFile(INI.FileName));
+  Log (1, '+', '=> Startup using ' + JustFile(INI.FileName));
 
   // Build process list
 

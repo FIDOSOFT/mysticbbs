@@ -969,7 +969,7 @@ Begin
       If DoWrap Then Begin
         If WrapData <> '' Then Begin
           If TempStr = '' Then Begin
-            WriteLn (QuoteFile, Initials + WrapData);
+            WriteLn (QuoteFile, Initials + strStripB(WrapData, ' '));
             WriteLn (QuoteFile, Initials);
 
             WrapData := '';
@@ -977,7 +977,7 @@ Begin
             Continue;
           End;
 
-          TempStr := WrapData + ' ' + TempStr;
+          TempStr := strStripB(WrapData, ' ') + ' ' + strStripL(TempStr, ' ');
         End;
 
         strWrap (TempStr, WrapData, 75);

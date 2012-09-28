@@ -162,11 +162,11 @@ Begin
   Result := True;
 
   Case ListType of
-    TopCall : ProcessStatus('Top Callers', True);
-    TopPost : ProcessStatus('Top Posts', True);
-    TopDL   : ProcessStatus('Top Downloaders', True);
-    TopUL   : ProcessStatus('Top Uploaders', True);
-    TopPCR  : ProcessStatus('Top Post/Call Ratio', True);
+    TopCall : ProcessStatus('Top Callers', False);
+    TopPost : ProcessStatus('Top Posts', False);
+    TopDL   : ProcessStatus('Top Downloaders', False);
+    TopUL   : ProcessStatus('Top Uploaders', False);
+    TopPCR  : ProcessStatus('Top Post/Call Ratio', False);
   End;
 
   ExclName := INI.ReadString(Header_TopLists, 'exclude_list', 'exclude.txt');

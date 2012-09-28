@@ -46,7 +46,7 @@ Begin
   Console.WriteXYPipe (33, Console.CursorY, 7, 31, Str);
 
   If Last Then
-    Log (1, '+', 'Result: ' + strStripPipe(Str))
+    Log (1, '+', 'Results: ' + strStripPipe(Str))
   Else
     Log (2, '+', '   ' + Str);
 End;
