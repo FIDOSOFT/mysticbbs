@@ -51,7 +51,7 @@ Type
     Procedure   ReplyMessage        (Email: Boolean; ListMode: Byte; ReplyID: String);
     Procedure   EditMessage;
     Function    ReadMessages        (Mode : Char; SearchStr: String) : Boolean;
-    Procedure   ToggleNewScan       (QWK: Boolean);
+    Procedure   ToggleNewScan       (QWK: Boolean; Data: String);
     Procedure   MessageGroupChange  (Ops: String; FirstBase, Intro : Boolean);
     Procedure   PostMessage         (Email: Boolean; Data: String);
     Procedure   CheckEMail;
@@ -517,7 +517,7 @@ Begin
   End;
 End;
 
-Procedure TMsgBase.ToggleNewScan (QWK: Boolean);
+Procedure TMsgBase.ToggleNewScan (QWK: Boolean; Data: String);
 Var
   Total: LongInt;
 
@@ -628,11 +628,14 @@ Var
 Begin
   Old := MBase;
 
+  Session.User.IgnoreGroup := Pos('/ALLGROUP', strUpper(Data)) > 0;
+
   List_Bases;
 
   If Total = 0 Then Begin
     Session.io.OutFullLn (Session.GetPrompt(94));
     MBase := Old;
+    Session.User.IgnoreGroup := False;
     Exit;
   End;
 
@@ -662,6 +665,8 @@ Begin
   Close (MBaseFile);
 
   MBase := Old;
+
+  Session.User.IgnoreGroup := False;
 End;
 
 Procedure TMsgBase.MessageGroupChange (Ops : String; FirstBase, Intro : Boolean);
