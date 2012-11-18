@@ -91,7 +91,7 @@ Var
   MIndex    : LongInt;
   Copied    : RecMessageBase;
   HasCopy   : Boolean = False;
-  MBaseFile : TBufFile;
+  MBaseFile : File of RecMessageBase;
   MBase     : RecMessageBase;
 
   Procedure GlobalEdit (Global: RecMessageBase);
@@ -161,8 +161,8 @@ Var
         #21 : If ShowMsgBox(1, 'Update with these settings?') Then Begin
                 For Count := 1 to List.ListMax Do
                   If List.List[Count]^.Tagged = 1 Then Begin
-                    MBaseFile.Seek (Count - 1);
-                    MBaseFile.Read (MBase);
+                    Seek (MBaseFile, Count - 1);
+                    Read (MBaseFile, MBase);
 
                     If Active[01] Then MBase.Path := Global.Path;
                     If Active[02] Then MBase.ListACS := Global.ListACS;
@@ -192,8 +192,8 @@ Var
                     If Active[25] Then BitSet(2, 4, MBase.Flags, (Global.Flags AND MBKillKludge <> 0));
                     If Active[26] Then BitSet(5, 4, MBase.Flags, (Global.Flags AND MBPrivate <> 0));
 
-                    MBaseFile.Seek  (Count - 1);
-                    MBaseFile.Write (MBase);
+                    Seek  (MBaseFile, Count - 1);
+                    Write (MBaseFile, MBase);
                   End;
 
                 Break;
@@ -214,14 +214,14 @@ Var
   Begin
     List.Clear;
 
-    MBaseFile.Reset;
+    Reset (MBaseFile);
 
-    While Not MBaseFile.EOF Do Begin
-      If MBaseFile.FilePos = 0 Then Tag := 2 Else Tag := 0;
+    While Not EOF(MBaseFile) Do Begin
+      If FilePos(MBaseFile) = 0 Then Tag := 2 Else Tag := 0;
 
-      MBaseFile.Read (MBase);
+      Read (MBaseFile, MBase);
 
-      List.Add(strPadR(strI2S(MBaseFile.FilePos - 1), 5, ' ') + '  ' + strStripMCI(MBase.Name), Tag);
+      List.Add(strPadR(strI2S(FilePos(MBaseFile) - 1), 5, ' ') + '  ' + strStripMCI(MBase.Name), Tag);
     End;
 
     List.Add('', 2);
@@ -231,18 +231,18 @@ Var
   Begin
     MIndex := List.Picked;
 
-    MBaseFile.Reset;
+    Reset (MBaseFile);
 
-    While Not MBaseFile.EOF Do Begin
-      MBaseFile.Read (MBase);
+    While Not EOF(MBaseFile) Do Begin
+      Read (MBaseFile, MBase);
 
       If MIndex = MBase.Index Then Begin
         Inc (MIndex);
-        MBaseFile.Reset;
+        Reset (MBaseFile);
       End;
     End;
 
-    MBaseFile.RecordInsert (List.Picked);
+    AddRecord (MBaseFile, List.Picked, SizeOf(RecMessageBase));
 
     FillChar (MBase, SizeOf(RecMessageBase), 0);
 
@@ -277,16 +277,14 @@ Var
       End;
     End;
 
-    MBaseFile.Write(MBase);
+    Write(MBaseFile, MBase);
   End;
 
 Begin
-  MBaseFile := TBufFile.Create(4096);
+  Assign (MBaseFile, Config.DataPath + 'mbases.dat');
 
-  If Not MBaseFile.Open(Config.DataPath + 'mbases.dat', fmOpenCreate, fmReadWrite + fmDenyNone, SizeOf(RecMessageBase)) Then Begin
-    MBaseFile.Free;
+  If Not ioReset(MBaseFile, SizeOf(MBase), fmRWDN) Then
     Exit;
-  End;
 
   Box  := TAnsiMenuBox.Create;
   List := TAnsiMenuList.Create;
@@ -296,7 +294,7 @@ Begin
   List.AllowTag := True;
   List.SearchY  := 21;
 
-  If MBaseFile.FileSize = 0 Then AssignRecord(True);
+  If FileSize(MBaseFile) = 0 Then AssignRecord(True);
 
   Box.Open (15, 5, 65, 21);
 
@@ -319,10 +317,10 @@ Begin
                     End;
               'D' : If (List.Picked > 1) and (List.Picked < List.ListMax) Then
                       If ShowMsgBox(1, 'Delete this entry?') Then Begin
-                        MBaseFile.Seek (List.Picked - 1);
-                        MBaseFile.Read (MBase);
+                        Seek (MBaseFile, List.Picked - 1);
+                        Read (MBaseFile, MBase);
 
-                        MBaseFile.RecordDelete (List.Picked);
+                        KillRecord (MBaseFile, List.Picked, SizeOf(MBase));
 
                         If ShowMsgBox(1, 'Delete data files?') Then Begin
                           FileErase (MBase.Path + MBase.FileName + '.jhr');
@@ -338,36 +336,37 @@ Begin
                         MakeList;
                       End;
               'C' : If List.Picked <> List.ListMax Then Begin
-                      MBaseFile.Seek (List.Picked - 1);
-                      MBaseFile.Read (Copied);
+                      Seek (MBaseFile, List.Picked - 1);
+                      Read (MBaseFile, Copied);
 
                       HasCopy := True;
                     End;
               'P' : If HasCopy And (List.Picked > 1) Then Begin
-                      MBaseFile.RecordInsert (List.Picked);
-                      MBaseFile.Write        (Copied);
+                      AddRecord (MBaseFile, List.Picked, SizeOf(MBase));
+                      Write (MBaseFile, Copied);
 
                       MakeList;
                     End;
               'G' : If List.Marked = 0 Then
-                      ShowMsgBox(0, 'You must tag areas for global edit')
+                      ShowMsgBox(0, 'Use TAB to tag areas for global edit')
                     Else Begin
-                      If List.Picked > 1 Then Begin
-                        MBaseFile.Seek (List.Picked - 1);
-                        MBaseFile.Read (MBase);
-                      End;
+                      If (List.Picked > 1) And (List.Picked < List.ListMax) Then Begin
+                        Seek (MBaseFile, List.Picked - 1);
+                        Read (MBaseFile, MBase);
+                      End Else
+                        FillChar (MBase, SizeOf(MBase), 0);
 
                       GlobalEdit (MBase);
                     End;
             End;
       #13 : If List.Picked < List.ListMax Then Begin
-              MBaseFile.Seek (List.Picked - 1);
-              MBaseFile.Read (MBase);
+              Seek (MBaseFile, List.Picked - 1);
+              Read (MBaseFile, MBase);
 
               EditMessageBase (MBase);
 
-              MBaseFile.Seek  (List.Picked - 1);
-              MBaseFile.Write (MBase);
+              Seek  (MBaseFile, List.Picked - 1);
+              Write (MBaseFile, MBase);
             End;
       #27 : Break;
     End;
@@ -375,8 +374,8 @@ Begin
 
   Box.Close;
 
-  MBaseFile.Close;
-  MBaseFile.Free;
+  Close (MBaseFile);
+
   List.Free;
   Box.Free;
 End;
