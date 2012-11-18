@@ -152,8 +152,8 @@ Type
     Function    GetHighMsgNum  : LongInt; Virtual; {Get highest netmail msg number in area}
     Function    LockMsgBase    : Boolean; Virtual; {Lock the message base}
     Function    UnLockMsgBase  : Boolean; Virtual; {Unlock the message base}
-    Procedure   SetDest        (Var Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Dest}
-    Procedure   SetOrig        (Var Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Orig}
+    Procedure   SetDest        (Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Dest}
+    Procedure   SetOrig        (Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Orig}
     Procedure   SetFrom        (Name: String); Virtual; {Set message from}
     Procedure   SetTo          (Name: String); Virtual; {Set message to}
     Procedure   SetSubj        (Str: String); Virtual; {Set message subject}
@@ -198,6 +198,10 @@ Type
     Function    GetSeeAlso     : LongInt; Virtual; {Get see also of current msg}
     Function    GetMsgNum      : LongInt; Virtual; {Get message number}
     Procedure   GetOrig        (Var Addr: RecEchoMailAddr); Virtual; {Get origin address}
+
+    Function GetOrigAddr : RecEchoMailAddr; Virtual;
+    Function GetDestAddr : RecEchoMailAddr; Virtual;
+
     Procedure   GetDest        (Var Addr: RecEchoMailAddr); Virtual; {Get destination address}
     Function    GetTextLen     : LongInt; Virtual; {returns length of text in msg}
     Function    IsLocal        : Boolean; Virtual; {Is current msg local}
@@ -317,12 +321,12 @@ Begin
   GetHighMsgNum := JM^.BaseHdr.BaseMsgNum + FileSize(JM^.IdxFile) - 1;
 End;
 
-Procedure TMsgBaseJAM.SetDest(Var Addr: RecEchoMailAddr);
+Procedure TMsgBaseJAM.SetDest (Addr: RecEchoMailAddr);
 Begin
   JM^.Dest := Addr;
 End;
 
-Procedure TMsgBaseJAM.SetOrig(Var Addr: RecEchoMailAddr);
+Procedure TMsgBaseJAM.SetOrig(Addr: RecEchoMailAddr);
 Begin
   JM^.Orig := Addr;
 End;
@@ -552,6 +556,7 @@ Begin
   JM^.TxtPos      := 0;
 
   MsgHdr^.JamHdr.SubFieldLen := 0;
+
   FillChar(MsgHdr^.SubBuf, SizeOf(MsgHdr^.SubBuf), #0);
 End;
 
@@ -1200,6 +1205,16 @@ Begin
   GetMsgNum := MsgHdr^.JamHdr.MsgNum;
 End;
 
+Function TMsgBaseJAM.GetOrigAddr : RecEchoMailAddr;
+Begin
+  Result := JM^.Orig;
+End;
+
+Function TMsgBaseJAM.GetDestAddr : RecEchoMailAddr;
+Begin
+  Result := JM^.Dest;
+End;
+
 Procedure TMsgBaseJAM.GetOrig(Var Addr: RecEchoMailAddr); {Get origin address}
 Begin
   Addr := JM^.Orig;
@@ -1415,7 +1430,7 @@ Begin
 
   FillChar(MsgHdr^, SizeOf(MsgHdr^), #0);
 
-//  MsgHdr^.JamHdr.SubFieldLen := 0;
+  MsgHdr^.JamHdr.SubFieldLen := 0;
   MsgHdr^.JamHdr.MsgIdCrc    := -1;
   MsgHdr^.JamHdr.ReplyCrc    := -1;
   MsgHdr^.JamHdr.PwdCrc      := -1;

@@ -40,6 +40,7 @@ Const
 
 Procedure Log                (Level: Byte; Code: Char; Str: String);
 Function  strAddr2Str        (Addr : RecEchoMailAddr) : String;
+Function  GetUserBaseSize    : Cardinal;
 Function  GenerateMBaseIndex : LongInt;
 Function  GenerateFBaseIndex : LongInt;
 Function  IsDupeMBase        (FN: String) : Boolean;
@@ -98,6 +99,13 @@ Begin
   If Addr.Point <> 0 Then Temp := Temp + '.' + strI2S(Addr.Point);
 
   Result := Temp;
+End;
+
+Function GetUserBaseSize : Cardinal;
+Begin
+  Result := FileByteSize(bbsConfig.DataPath + 'users.dat');
+
+  If Result > 0 Then Result := Result DIV SizeOf(RecUser);
 End;
 
 Function IsDupeMBase (FN: String) : Boolean;

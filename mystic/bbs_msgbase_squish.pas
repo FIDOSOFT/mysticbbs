@@ -197,9 +197,13 @@ Type
     Function        GetChar: Char; Virtual;
     Function        GetString(MaxLen: Word): String; Virtual;
     Procedure GetOrig(Var Addr: RecEchoMailAddr); Virtual;
-    Procedure SetOrig(Var Addr: RecEchoMailAddr); Virtual;
+    Procedure SetOrig(Addr: RecEchoMailAddr); Virtual;
     Procedure GetDest(Var Addr: RecEchoMailAddr); Virtual;
-    Procedure SetDest(Var Addr: RecEchoMailAddr); Virtual;
+    Procedure SetDest (Addr: RecEchoMailAddr); Virtual;
+
+    Function GetOrigAddr : RecEchoMailAddr; Virtual;
+    Function GetDestAddr : RecEchoMailAddr; Virtual;
+
     Function        EOM: Boolean; Virtual;
 (*
         Function        WasWrap: Boolean; Virtual;
@@ -252,7 +256,7 @@ Type
     Procedure LoadFree; Virtual; {Load freelist into memory}
     Function        NumberOfMsgs: LongInt; Virtual; {Number of messages}
     Procedure SetEcho(ES: Boolean); Virtual; {Set echo status}
-//        Function        IsEchoed: Boolean; Virtual; {Is current msg unmoved echomail msg}
+    Function        IsEchoed: Boolean; Virtual; {Is current msg unmoved echomail msg}
     Function        GetLastRead(UNum: LongInt): LongInt; Virtual; {Get last read for user num}
     Procedure SetLastRead(UNum: LongInt; LR: LongInt); Virtual; {Set last read}
     Function        GetMsgLoc: LongInt; Virtual; {To allow reseeking to message}
@@ -570,7 +574,12 @@ Begin
   Addr := SqInfo^.MsgHdr.Orig;
 End;
 
-Procedure TMsgBaseSquish.SetOrig(Var Addr: RecEchoMailAddr);
+Function TMsgBaseSquish.GetOrigAddr : RecEchoMailAddr;
+Begin
+  Result := SqInfo^.MsgHdr.Orig;
+End;
+
+Procedure TMsgBaseSquish.SetOrig(Addr: RecEchoMailAddr);
 Begin
   SqInfo^.MsgHdr.Orig := Addr;
 End;
@@ -580,7 +589,12 @@ Begin
   Addr := SqInfo^.MsgHdr.Dest;
 End;
 
-Procedure TMsgBaseSquish.SetDest(Var Addr: RecEchoMailAddr);
+Function TMsgBaseSquish.GetDestAddr : RecEchoMailAddr;
+Begin
+  Result := SqInfo^.MsgHdr.Dest;
+End;
+
+Procedure TMsgBaseSquish.SetDest (Addr: RecEchoMailAddr);
 Begin
   SqInfo^.MsgHdr.Dest := Addr;
 End;
@@ -1310,10 +1324,10 @@ Begin
   IsPriv := ((SqInfo^.MsgHdr.Attr and SqMsgPriv) <> 0);
 End;
 
-//Function TMsgBaseSquish.IsEchoed: Boolean;
-//Begin
-//        IsEchoed := ((SqInfo^.MsgHdr.Attr and SqMsgScanned) = 0);
-//End;
+Function TMsgBaseSquish.IsEchoed: Boolean;
+Begin
+        IsEchoed := ((SqInfo^.MsgHdr.Attr and SqMsgScanned) = 0);
+End;
 
 Function TMsgBaseSquish.IsDeleted: Boolean; {Is current msg deleted}
 Begin

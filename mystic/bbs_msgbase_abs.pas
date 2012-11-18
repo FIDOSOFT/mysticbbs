@@ -1,7 +1,8 @@
-{$I M_OPS.PAS}
-{$WARNINGS OFF}
-
 Unit BBS_MsgBase_ABS;
+
+{$I M_OPS.PAS}
+
+{$WARNINGS OFF}
 
 Interface
 
@@ -28,8 +29,8 @@ Type
     Function  MsgBaseExists: Boolean; Virtual; {Does msg base exist}
     Function  LockMsgBase: Boolean; Virtual; {Lock the message base}
     Function  UnLockMsgBase: Boolean; Virtual; {Unlock the message base}
-    Procedure SetDest(Var Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Dest}
-    Procedure SetOrig(Var Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Orig}
+    Procedure SetDest (Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Dest}
+    Procedure SetOrig (Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Orig}
     Procedure SetFrom(Name: String); Virtual; {Set message from}
     Procedure SetTo(Name: String); Virtual; {Set message to}
     Procedure SetSubj(Str: String); Virtual; {Set message subject}
@@ -72,7 +73,9 @@ Type
     Function  GetMsgNum: LongInt; Virtual; {Get message number}
     Function  GetTextLen: LongInt; Virtual; {Get text length}
     Procedure GetOrig (Var Addr : RecEchoMailAddr); Virtual; {Get origin address}
+    Function  GetOrigAddr : RecEchoMailAddr; Virtual;
     Procedure GetDest (Var Addr : RecEchoMailAddr); Virtual; {Get destination address}
+    Function  GetDestAddr : RecEchoMailAddr; Virtual;
     Function  IsLocal: Boolean; Virtual; {Is current msg local}
     Function  IsCrash: Boolean; Virtual; {Is current msg crash}
     Function  IsKillSent: Boolean; Virtual; {Is current msg kill sent}
@@ -149,11 +152,11 @@ Function TMsgBaseABS.UnLockMsgBase: Boolean;
 Begin
 End;
 
-Procedure TMsgBaseABS.SetDest(Var Addr: RecEchoMailAddr);
+Procedure TMsgBaseABS.SetDest (Addr: RecEchoMailAddr);
 Begin
 End;
 
-Procedure TMsgBaseABS.SetOrig(Var Addr: RecEchoMailAddr);
+Procedure TMsgBaseABS.SetOrig (Addr: RecEchoMailAddr);
 Begin
 End;
 
@@ -413,7 +416,15 @@ Procedure TMsgBaseABS.GetOrig(Var Addr: RecEchoMailAddr);
 Begin
 End;
 
+Function TMsgBaseABS.GetOrigAddr : RecEchoMailAddr;
+Begin
+End;
+
 Procedure TMsgBaseABS.GetDest(Var Addr: RecEchoMailAddr);
+Begin
+End;
+
+Function TMsgBaseABS.GetDestAddr : RecEchoMailAddr;
 Begin
 End;
 
