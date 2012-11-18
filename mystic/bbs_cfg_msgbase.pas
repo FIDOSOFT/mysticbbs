@@ -42,7 +42,7 @@ Begin
   Form.AddPath ('P', ' Path'        , 11, 10, 19, 10,  6, 30, 80, @MBase.Path, Topic + 'Message base storage path');
   Form.AddStr  ('L', ' List ACS'    ,  7, 11, 19, 11, 10, 30, 30, @MBase.ListACS, Topic + 'Access required to see in base list');
   Form.AddStr  ('R', ' Read ACS'    ,  7, 12, 19, 12, 10, 30, 30, @MBase.ReadACS, Topic + 'Access required to read messages');
-  Form.AddStr  ('P', ' Post ACS'    ,  7, 13, 19, 13, 10, 30, 30, @MBase.PostACS, Topic + 'Access required to post messages');
+  Form.AddStr  ('C', ' Post ACS'    ,  7, 13, 19, 13, 10, 30, 30, @MBase.PostACS, Topic + 'Access required to post messages');
   Form.AddStr  ('Y', ' Sysop ACS'   ,  6, 14, 19, 14, 11, 30, 30, @MBase.SysopACS, Topic + 'Access required for Sysop access');
   Form.AddNone ('D', ' Net Address' ,  4, 15, 19, 15, 13, Topic + 'NetMail Address');
   Form.AddStr  ('I', ' Origin'      ,  9, 16, 19, 16,  8, 30, 50, @MBase.Origin, Topic + 'Message base origin line');
@@ -120,10 +120,10 @@ Var
     For Count := 1 to 13 Do
       Form.AddBol ('!', '> ',  8, 6 + Count, 10, 6 + Count, 2, 3, @Active[Count], Topic + ChangeStr);
 
-    Form.AddPath ('!', ' Path'        , 20,  7, 28,  7,  6, 16, 80, @Global.Path, Topic + 'Message base storage path');
+    Form.AddPath ('P', ' Path'        , 20,  7, 28,  7,  6, 16, 80, @Global.Path, Topic + 'Message base storage path');
     Form.AddStr  ('L', ' List ACS'    , 16,  8, 28,  8, 10, 16, 30, @Global.ListACS, Topic + 'Access required to see in base list');
     Form.AddStr  ('R', ' Read ACS'    , 16,  9, 28,  9, 10, 16, 30, @Global.ReadACS, Topic + 'Access required to read messages');
-    Form.AddStr  ('P', ' Post ACS'    , 16, 10, 28, 10, 10, 16, 30, @Global.PostACS, Topic + 'Access required to post messages');
+    Form.AddStr  ('C', ' Post ACS'    , 16, 10, 28, 10, 10, 16, 30, @Global.PostACS, Topic + 'Access required to post messages');
     Form.AddStr  ('Y', ' Sysop ACS'   , 15, 11, 28, 11, 11, 16, 30, @Global.SysopACS, Topic + 'Access required for Sysop access');
     Form.AddNone ('D', ' Net Address' , 13, 12, 28, 12, 13, Topic + 'NetMail Address');
     Form.AddStr  ('I', ' Origin'      , 18, 13, 28, 13,  8, 16, 50, @Global.Origin, Topic + 'Message base origin line');
@@ -154,6 +154,8 @@ Var
     Form.LoExitChars := #21#27;
 
     Repeat
+      WriteXY (28, 12, 113, strPadR(strAddr2Str(Config.NetAddress[Global.NetAddr]), 19, ' '));
+
       Case Form.Execute of
         'D' : Global.NetAddr := Configuration_EchoMailAddress(False);
         #21 : If ShowMsgBox(1, 'Update with these settings?') Then Begin
@@ -185,10 +187,10 @@ Var
                     If Active[20] Then MBase.MaxAge := Global.MaxAge;
                     If Active[21] Then MBase.DefNScan := Global.DefNScan;
                     If Active[22] Then MBase.DefQScan := Global.DefQScan;
-                    If Active[23] Then BitSet(MBRealNames, SizeOf(MBase.Flags), MBase.Flags, (Global.Flags AND MBRealNames <> 0));
-                    If Active[24] Then BitSet(MBAutoSigs, SizeOf(MBase.Flags), MBase.Flags, (Global.Flags AND MBAutoSigs <> 0));
-                    If Active[25] Then BitSet(MBKillKludge, SizeOf(MBase.Flags), MBase.Flags, (Global.Flags AND MBKillKludge <> 0));
-                    If Active[26] Then BitSet(MBPrivate, SizeOf(MBase.Flags), MBase.Flags, (Global.Flags AND MBPrivate <> 0));
+                    If Active[23] Then BitSet(1, 4, MBase.Flags, (Global.Flags AND MBRealNames <> 0));
+                    If Active[24] Then BitSet(3, 4, MBase.Flags, (Global.Flags AND MBAutoSigs <> 0));
+                    If Active[25] Then BitSet(2, 4, MBase.Flags, (Global.Flags AND MBKillKludge <> 0));
+                    If Active[26] Then BitSet(5, 4, MBase.Flags, (Global.Flags AND MBPrivate <> 0));
 
                     MBaseFile.Seek  (Count - 1);
                     MBaseFile.Write (MBase);

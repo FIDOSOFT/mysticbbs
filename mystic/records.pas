@@ -418,12 +418,12 @@ Type
   End;
 
 Const
-  MBRealNames   = $00000001;
-  MBKillKludge  = $00000002;
-  MBAutosigs    = $00000004;
-  MBNoAttach    = $00000008;
-  MBPrivate     = $00000010;
-  MBCrossPost   = $00000020;
+  MBRealNames   = $00000001; // 1
+  MBKillKludge  = $00000002; // 2
+  MBAutosigs    = $00000004; // 3
+  MBNoAttach    = $00000008; // 4
+  MBPrivate     = $00000010; // 5
+  MBCrossPost   = $00000020; // 6
 
 Type
   RecMessageBase = Record                                       // MBASES.DAT
