@@ -4911,3 +4911,7 @@
 
    Then add the [PostTextFiles] section from the default mutil.ini from a
    new install.
+
+ + The Toggle New Scan and Toggle QWK Scan menu commands now allow an optional
+   /ALLGROUP in the optional data.  If this is supplied it will show all bases
+   in all groups.  By default it only shows current group only.
