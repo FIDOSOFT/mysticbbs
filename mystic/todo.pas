@@ -15,10 +15,13 @@ BUGS AND POSSIBLE ISSUES
   functions.
 ! RAR internal viewer does not work with files that have embedded comments
 ! Test midnight rollovers for time (flag for user to be immune to timecheck)
+! Fixed REAL2STR per Gryphon
+! Free diskspace check in Linux
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- Add "PREVIEW" option to message editors
 - Finish Threaded message reader
 - Add "high roller/smack talk" into BlackJack
 - Add better MIS logging per server (connect, refuse, blocked, etc)
