@@ -268,7 +268,7 @@ Begin
             'V' : Session.Msgs.ViewSentEmail;
             'W' : Session.Msgs.PostMessage (True, CmdData);
             'X' : Session.Msgs.PostTextFile(CmdData, False);
-            'Z' : Session.Msgs.ToggleNewScan(False);
+            'Z' : Session.Msgs.ToggleNewScan(False, CmdData);
           End;
     'N' : Case Cmd[2] of
             'A' : Set_Node_Action (CmdData);
@@ -278,7 +278,7 @@ Begin
             'W' : WhosOnline;
           End;
     'O' : Case Cmd[2] of
-            'S' : Session.Msgs.ToggleNewScan(True);
+            'S' : Session.Msgs.ToggleNewScan(True, CmdData);
             'D' : Session.Msgs.DownloadQWK(False, CmdData);
             'E' : Session.Msgs.DownloadQWK(True, CmdData);
             'U' : Session.Msgs.UploadREP;
