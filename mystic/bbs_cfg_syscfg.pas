@@ -77,6 +77,8 @@ Begin
   Box  := TAnsiMenuBox.Create;
   Form := TAnsiMenuForm.Create;
 
+  Box.Header := ' General Settings ';
+
   Box.Open (5, 5, 75, 18);
 
   VerticalLine (24, 7, 16);
