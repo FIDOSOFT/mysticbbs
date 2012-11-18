@@ -4921,3 +4921,9 @@
  + Added a message base packer and renumber option to mUtil.  This replaces
    MYSTPACK with the bonus that it also works with Squish (and appears to not
    be as buggy as MYSTPACK was).
+
+ + Added Global Message Base editor into the Message base editor.  Use the
+   TAB key when in the Message base list to tag areas that you'd like to set
+   global values for.  Then use /G to open the editor.  Set the options you'd
+   like to change to "Yes" and then set the value for that option.  Press
+   CTRL-U when ready to update all tagged bases with the selected values.

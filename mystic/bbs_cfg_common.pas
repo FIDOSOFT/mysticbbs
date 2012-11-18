@@ -45,7 +45,7 @@ Begin
   Box.Open (30, StartY, 51, StartY + Cmds + 1);
 
   For Count := 1 to Cmds Do
-    Form.AddNone (CmdData[Count].Key, ' ' + CmdData[Count].Key + ' ' + CmdData[Count].Desc, 31, StartY + Count, 20, '');
+    Form.AddNone (CmdData[Count].Key, ' ' + CmdData[Count].Key + ' ' + CmdData[Count].Desc, 31, StartY + Count, 31, StartY + Count, 20, '');
 
   Result := Form.Execute;
 

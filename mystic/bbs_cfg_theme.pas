@@ -670,9 +670,9 @@ Begin
   Form.AddBits ('C', ' Allow ASCII'    , 10, 14, 25, 14, 13, ThmAllowASCII, @Theme.Flags, Topic + 'Allow ASCII users to use this theme?');
   Form.AddBits ('N', ' Allow ANSI'     , 11, 15, 25, 15, 12, ThmAllowANSI, @Theme.Flags, Topic + 'Allow ANSI users to use this theme?');
 
-  Form.AddNone ('1', ' 1: Prompts'     , 57,  7, 17, Topic + 'Edit prompts for this theme');
-  Form.AddNone ('2', ' 2: Options'     , 57,  8, 17, Topic + 'Edit general options for this theme');
-  Form.AddNone ('3', ' 3: Percent Bars', 57,  9, 17, Topic + 'Edit percentage bars used in this theme');
+  Form.AddNone ('1', ' 1: Prompts'     , 57,  7, 57, 7, 17, Topic + 'Edit prompts for this theme');
+  Form.AddNone ('2', ' 2: Options'     , 57,  8, 57, 8, 17, Topic + 'Edit general options for this theme');
+  Form.AddNone ('3', ' 3: Percent Bars', 57,  9, 57, 9, 17, Topic + 'Edit percentage bars used in this theme');
 
   Repeat
     Case Form.Execute of

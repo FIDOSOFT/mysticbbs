@@ -10,7 +10,7 @@ Uses
   bbs_Common;
 
 Const
-  FormMaxItems = 50;
+  FormMaxItems = 60;
 
 Const
   YesNoStr : Array[False..True] of String[03] = ('No', 'Yes');
@@ -109,7 +109,7 @@ Type
     Destructor  Destroy; Override;
 
     Procedure   Clear;
-    Procedure   AddNone (HK: Char; D: String; X, Y, DS: Byte; H: String);
+    Procedure   AddNone (HK: Char; D: String; X, Y, FX, FY, DS: Byte; H: String);
     Procedure   AddStr  (HK: Char; D: String; X, Y, FX, FY, DS, FS, MX: Byte; P: Pointer; H: String);
     Procedure   AddPipe (HK: Char; D: String; X, Y, FX, FY, DS, FS, MX: Byte; P: Pointer; H: String);
     Procedure   AddPath (HK: Char; D: String; X, Y, FX, FY, DS, FS, MX: Byte; P: Pointer; H: String);
@@ -367,11 +367,11 @@ Begin
   End;
 End;
 
-Procedure TAnsiMenuForm.AddNone (HK: Char; D: String; X, Y, DS: Byte; H: String);
+Procedure TAnsiMenuForm.AddNone (HK: Char; D: String; X, Y, FX, FY, DS: Byte; H: String);
 Begin
   If Items = FormMaxItems Then Exit;
 
-  AddBasic (HK, D, X, Y, 0, 0, DS, 0, 0, ItemNone, NIL, H);
+  AddBasic (HK, D, X, Y, FX, FY, DS, 0, 0, ItemNone, NIL, H);
 End;
 
 Procedure TAnsiMenuForm.AddChar (HK: Char; D: String; X, Y, FX, FY, DS, MN, MX: Byte; P: Pointer; H: String);
@@ -629,6 +629,7 @@ Var
   Ch      : Char;
   NewPos  : Word;
   NewXPos : Word;
+  NewYPos : Word;
 Begin
   Session.io.AllowArrow := True;
 
@@ -659,6 +660,36 @@ Begin
       End;
 
       Case Ch of
+        #72 : Begin
+                NewPos  := 0;
+                NewYPos := 0;
+
+                For Count := 1 to Items Do
+                  If (ItemData[Count]^.FieldX = ItemData[ItemPos]^.FieldX) and
+                     (ItemData[Count]^.FieldY < ItemData[ItemPos]^.FieldY) and
+                     (ItemData[Count]^.FieldY > NewYPos) Then Begin
+                       NewPos  := Count;
+                       NewYPos := ItemData[Count]^.FieldY;
+                  End;
+
+                If NewPos > 0 Then Begin
+                  BarOFF(ItemPos);
+                  ItemPos := NewPos;
+                  BarON;
+                End Else
+                If ItemPos > 1 Then Begin
+                  BarOFF(ItemPos);
+                  Dec(ItemPos);
+                  BarON;
+                End Else
+                If ExitOnFirst Then Begin
+                  WasFirstExit := True;
+                  Result       := Ch;
+                  Break;
+                End;
+              End;
+
+(*
         #72 : If ItemPos > 1 Then Begin
                 BarOFF(ItemPos);
                 Dec(ItemPos);
@@ -669,6 +700,7 @@ Begin
                 Result := Ch;
                 Break;
               End;
+*)
         #75 : Begin
                 NewPos  := 0;
                 NewXPos := 0;
@@ -705,6 +737,33 @@ Begin
                   BarON;
                 End;
               End;
+        #80 : Begin
+                NewPos := 0;
+
+                For Count := 1 to Items Do
+                  If (ItemData[Count]^.FieldX = ItemData[ItemPos]^.FieldX) and
+                     (ItemData[Count]^.FieldY > ItemData[ItemPos]^.FieldY) Then Begin
+                       NewPos := Count;
+                       Break;
+                  End;
+
+                If NewPos > 0 Then Begin
+                  BarOFF(ItemPos);
+                  ItemPos := NewPos;
+                  BarON;
+                End Else
+                If ItemPos < Items Then Begin
+                  BarOFF(ItemPos);
+                  Inc(ItemPos);
+                  BarON;
+                End Else
+                If ExitOnLast Then Begin
+                  WasLastExit := True;
+                  Result      := Ch;
+                  Break;
+                End;
+              End;
+(*
         #80 : If ItemPos < Items Then Begin
                 BarOFF(ItemPos);
                 Inc(ItemPos);
@@ -715,6 +774,7 @@ Begin
                 Result      := Ch;
                 Break;
               End;
+*)
       End;
     End Else Begin
       Case Ch of
