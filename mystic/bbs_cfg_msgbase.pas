@@ -232,7 +232,7 @@ Begin
 
                       HasCopy := True;
                     End;
-              'P' : If HasCopy Then Begin
+              'P' : If HasCopy And (List.Picked > 1) Then Begin
                       MBaseFile.RecordInsert (List.Picked);
                       MBaseFile.Write        (Copied);
 
