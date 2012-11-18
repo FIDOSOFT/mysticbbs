@@ -69,7 +69,7 @@ Begin
   End;
 
   If Done Then Begin
-    Console.WriteLine('');
+    If ProcessPos < ProcessTotal Then Console.WriteLine('');
 
     BarOne.Update (100, 100);
     BarAll.Update (ProcessPos, ProcessTotal);

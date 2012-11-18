@@ -79,7 +79,7 @@ Begin
     Console.CursorXY  (3, 22);
 
     Console.TextAttr := 15;
-    Console.WriteLine('> Execution complete');
+    Console.WriteLine('> Execution of ' + strI2S(ProcessTotal) + ' processes complete');
     Console.TextAttr := 7;
   End;
 
@@ -99,7 +99,7 @@ Begin
 
   If Console.Active Then DrawStatusScreen;
 
-  Console.SetWindow(5, 14, 76, 21, True);
+  Console.SetWindow(5, 14, 76, 20, True);
 
   If FileExist(ParamStr(1)) Then
     FN := ParamStr(1)
