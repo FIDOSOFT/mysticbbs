@@ -12,11 +12,86 @@ Uses
   m_Strings,
   m_FileIO,
   m_Bits,
+  m_QuickSort,
   bbs_Ansi_MenuBox,
   bbs_Ansi_MenuForm,
   bbs_Cfg_Common,
   bbs_Cfg_SysCfg,
   bbs_Common;
+
+Type
+  RecMessageBaseFile = File of RecMessageBase;
+
+Procedure SortMessageBases (Var List: TAnsiMenuList; Var MBaseFile: RecMessageBaseFile);
+Var
+  TempBase  : RecMessageBase;
+  TempFile  : File of RecMessageBase;
+  Sort      : TQuickSort;
+  SortFirst : Word;
+  SortLast  : Word;
+  SortType  : Byte;
+  Count     : Word;
+  Str       : String;
+  Tagged    : Boolean;
+Begin
+  If Not GetSortRange(List, SortFirst, SortLast) Then Exit;
+
+  Case GetCommandOption(10, 'B-Base Name|F-File Name|N-Network|A-Abort|') of
+    'B' : SortType := 1;
+    'F' : SortType := 2;
+    'N' : SortType := 3;
+    'A' : Exit;
+  End;
+
+  ShowMsgBox (3, ' Sorting... ');
+
+  Sort := TQuickSort.Create;
+
+  For Count := SortFirst to SortLast Do Begin
+    Seek (MBaseFile, Count - 1);
+    Read (MBaseFile, TempBase);
+
+    Case SortType of
+      1 : Sort.Add (strUpper(strStripPipe(TempBase.Name)), Count - 1);
+      2 : Sort.Add (strUpper(TempBase.FileName), Count - 1);
+      3 : Sort.Add (strI2S(TempBase.NetAddr), Count - 1);
+    End;
+  End;
+
+  Sort.Sort (1, Sort.Total, qAscending);
+
+  Close  (MBaseFile);
+  ReName (MBaseFile, Config.DataPath + 'mbases.sortbak');
+
+  Assign (TempFile, Config.DataPath + 'mbases.sortbak');
+  Reset  (TempFile);
+
+  Assign  (MBaseFile, Config.DataPath + 'mbases.dat');
+  ReWrite (MBaseFile);
+
+  While FilePos(TempFile) < SortFirst - 1 Do Begin
+    Read  (TempFile, TempBase);
+    Write (MBaseFile, TempBase);
+  End;
+
+  For Count := 1 to Sort.Total Do Begin
+    Seek  (TempFile, Sort.Data[Count]^.Ptr);
+    Read  (TempFile, TempBase);
+    Write (MBaseFile, TempBase);
+  End;
+
+  Seek (TempFile, SortLast);
+
+  While Not Eof(TempFile) Do Begin
+    Read  (TempFile, TempBase);
+    Write (MBaseFile, TempBase);
+  End;
+
+  Close (TempFile);
+  Erase (TempFile);
+
+  Sort.Free;
+End;
 
 Procedure EditMessageBase (Var MBase: RecMessageBase);
 Var
@@ -310,7 +385,7 @@ Begin
     List.Close;
 
     Case List.ExitCode of
-      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|G-Global|') of
+      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|G-Global|S-Sort|') of
               'I' : If List.Picked > 1 Then Begin
                       AssignRecord(False);
                       MakeList;
@@ -358,6 +433,7 @@ Begin
 
                       GlobalEdit (MBase);
                     End;
+              'S' : SortMessageBases (List, MBaseFile);
             End;
       #13 : If List.Picked < List.ListMax Then Begin
               Seek (MBaseFile, List.Picked - 1);
