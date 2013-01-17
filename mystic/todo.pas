@@ -8,6 +8,13 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
+! Make sure MIS in Linux works with DOSEMU
+! Node chat goes haywire at 1000 lines scrollback
+! Node chat needs to actualy word wrap not nickname wrap.
+! Node chat does not seem to account for prompt MCI codes when calculating
+  the wrap length.
+! Make sure ALL msgbase and filebase MPL variables are in place.
+! Make sure copy/paste for any msg file base REGENS unique numbers.
 ! GOTO does not always work properly in MPL (IceDevil)
 ! Complex boolean evaluations using numerical variables can sometime fail to
   compile (IceDevil)
@@ -21,6 +28,7 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- Outbound telnet feature
 - Add "PREVIEW" option to message editors
 - Finish Threaded message reader
 - Add "high roller/smack talk" into BlackJack
