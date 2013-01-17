@@ -3877,18 +3877,21 @@ Begin
 
     If Not Session.FileBase.DszSearch(Config.qwkBBSID + '.rep') Then Begin
       Session.io.PromptInfo[1] := Config.qwkBBSID + '.rep';
+
       Session.io.OutFullLn (Session.GetPrompt(84));
+
       Exit;
     End;
 
     Session.FileBase.ExecuteArchive (Session.TempPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
   End;
 
-  Assign (DataFile, Session.TempPath + Config.qwkBBSID + '.msg');
+  Assign (DataFile, FileFind(Session.TempPath + Config.qwkBBSID + '.msg'));
   {$I-} Reset (DataFile, 1); {$I+}
+
   If IoResult <> 0 Then Begin
     Session.io.OutFull (Session.GetPrompt(238));
-    DirClean(Session.TempPath, '');
+    DirClean (Session.TempPath, '');
     Exit;
   End;
 
