@@ -136,6 +136,8 @@ Begin
 
   Res := Pos(UpCase(LineBuf[0]), 'RSZ') > 0;
 
+  Session.SystemLog('DEBUG: DSZ Status character: ' + LineBuf[0]);
+
   While WordPos < 11 Do Begin
     If LineBuf[Count] = #32 Then Begin
       Inc (WordPos);
@@ -176,16 +178,15 @@ Begin
     Exit;
   End;
 
+  Session.SystemLog('DEBUG: DSZ Searching for: ' + FName);
+
   While Not Eof(LogFile) Do Begin
     DszGetFile(LogFile, FileName, Status);
 
-    {$IFDEF FS_SENSITIVE}
-      If FileName = FName Then Begin
-    {$ELSE}
-    If strUpper(FileName) = strUpper(FName) Then Begin
-    {$ENDIF}
-      Result := Status;
+    Session.SystemLog('DEBUG: DSZ GetFile returned: ' + FileName + ' (success ' + strI2S(Ord(Status)) + ')');
 
+    If strUpper(FileName) = strUpper(FName) Then Begin
+      Result := Status;
       Break;
     End;
   End;
@@ -601,7 +602,7 @@ Begin
 
   Session.io.PromptInfo[1] := JustFile(Data);
 
-  If dszSearch(JustFile(Data)) Then Begin
+  If DszSearch(JustFile(Data)) Then Begin
     Result := True;
     Session.io.OutFullLn (Session.GetPrompt(385));
   End Else
@@ -3139,6 +3140,7 @@ Begin
   Reset (FBaseFile);
 
   Session.io.OutRawLn ('');
+
   For A := 1 to BatchNum Do Begin
     Session.io.PromptInfo[1] := JustFile(Batch[A].FileName);
 
