@@ -4937,3 +4937,12 @@
  + Added Message base sorting.  Use TAB to select a range of bases to sort
    and then use Sort from the command menu.  Ranges of bases can be sorted
    by base Name, FileName, or Network that they belong to.
+
+ ! Fixed a bug where /ADDR: option was not properly being parsed when
+   supplied as optional data MP menu command.
+
+ ! The Copy/Paste in the message base editor was not properly generating a
+   permanent index for the pasted message base.
+
+ ! Fixed a problem with MIS and Windows that caused port scanners to create
+   a ghost node.
