@@ -2517,8 +2517,11 @@ Begin
     If Pos ('/SUBJ:', strUpper(TempStr)) > 0 Then
       MsgSubj := strReplace(Copy(TempStr, Pos('/SUBJ:', strUpper(TempStr)) + 6, Length(TempStr)), '_', ' ')
     Else
-    If Pos('/ADDR:', strUpper(TempStr)) > 0 Then
+    If Pos('/ADDR:', strUpper(TempStr)) > 0 Then Begin
       MsgAddr := strReplace(Copy(TempStr, Pos('/ADDR:', strUpper(TempStr)) + 6, Length(TempStr)), '_', ' ');
+
+      If Not strStr2Addr(MsgAddr, DestAddr) Then MsgAddr := '';
+    End;
   End;
 
   If MBase.NetType = 2 Then           { UseNet Base: To = "All" }
