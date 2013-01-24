@@ -64,12 +64,15 @@ Begin
   FInBufEnd := 0;
 
   If Drain Then
-    While DataWaiting Do
+    While DataWaiting Do Begin
       ReadBuf(Buf, SizeOf(Buf));
+      If FInBufEnd <= 0 Then Break;
+    End;
 End;
 
 Function TIOBase.DataWaiting : Boolean;
 Begin
+  Result := False;
 End;
 
 Function TIOBase.WriteBuf (Var Buf; Len: LongInt) : LongInt;
