@@ -27,8 +27,8 @@ Var
 
 Procedure FullReDraw;
 Var
-  Count : Byte;
-  Temp  : Byte;
+  Count : Integer;
+  Temp  : Integer;
 Begin
   If Not Full Then Exit;
 
@@ -38,6 +38,7 @@ Begin
 
   For Count := 0 to ChatSize Do Begin
     Session.io.AnsiClrEOL;
+
     If Temp <= TextPos Then Begin
       Session.io.OutPipeLn (Session.Msgs.MsgText[Temp]);
       Inc (Temp);
@@ -109,8 +110,8 @@ Function GetKeyNodeChatFunc (Forced: Boolean) : Boolean;
 
 Var
   Str     : String;
-  StrLen  : Byte;
-  Indent  : Byte;
+  StrLen  : Integer;
+  Indent  : Integer;
   Lines   : Integer;
   OldAttr : Byte;
   OldX    : Byte;
@@ -299,7 +300,7 @@ Procedure Node_Chat;
   Procedure ChatScrollBack;
   Var
     Ch      : Char;
-    TopSave : Byte;
+    TopSave : Integer;
   Begin
     If Not Full Then Exit;
 
