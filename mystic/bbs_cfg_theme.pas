@@ -396,6 +396,59 @@ Var
     DrawPage(False);
   End;
 
+  Procedure SimulatePrompt;
+  Var
+    SimStr  : String;
+    SavedX  : Byte;
+    SavedY  : Byte;
+  Begin
+    Repeat
+      SimStr := Copy(StrData[PageData[CurLine]]^, 5, 255);
+
+      Session.io.AnsiColor(7);
+      Session.io.AnsiClear;
+
+      Session.io.OutFull(SimStr);
+
+      SavedX := Screen.CursorX;
+      SavedY := Screen.CursorY;
+
+      WriteXY (1, 23, 112, strPadC('Simulating Prompt', 79, ' '));
+
+      Session.io.AnsiGotoXY(SavedX, SavedY);
+
+      Case Session.io.GetKey of
+        #13,
+        #27 : Break;
+      End;
+    Until False;
+  End;
+
+  Procedure FullReDraw;
+  Begin
+    Session.io.AnsiColor(7);
+    Session.io.AnsiClear;
+
+    Box.FrameType := 1;
+    Box.BoxAttr   := 8;
+    Box.Box3D     := False;
+    Box.Shadow    := False;
+
+    Input.HiChars := #72#73#80#81;
+    Input.LoChars := #01#02#06#07#11#13#16#20#21#27;
+
+    Box.Open (1, 1, 79, 22);
+
+    WriteXY (2, 18, 8, strRep('Ä', 77));
+    WriteXY (3,  1, 8, '    /    ');
+    WriteXY (8,  1, 7, strI2S(TotalPrompt));
+    WriteXY (73 - Length(Theme.FileName), 1, 7, ' ' + Theme.FileName + '.txt ');
+
+    WriteXYPipe (1, 23, 112, 79, ' Prompts ³  |01Press |15CTRL |01+ |15T|01op |15B|01ottom |15F|01ind |15A|01gain |15G|01oto |15K|01ut |15P|01aste |15U|01ndo  |00³ ESC/Quit ');
+
+    DrawPage(False);
+  End;
+
 Var
   EditStr    : String;
   UndoStr    : String;
@@ -412,9 +465,6 @@ Begin
 
   GetTotalPages;
 
-  Session.io.AnsiColor(7);
-  Session.io.AnsiClear;
-
   SavedTheme := Session.Theme;
 
   Move (Theme.Colors, Session.Theme.Colors, SizeOf(Theme.Colors));
@@ -422,24 +472,7 @@ Begin
   Box   := TAnsiMenuBox.Create;
   Input := TAnsiMenuInput.Create;
 
-  Box.FrameType := 1;
-  Box.BoxAttr   := 8;
-  Box.Box3D     := False;
-  Box.Shadow    := False;
-
-  Input.HiChars := #72#73#80#81;
-  Input.LoChars := #01#02#06#07#11#16#20#21#27;
-
-  Box.Open (1, 1, 79, 22);
-
-  WriteXY (2, 18, 8, strRep('Ä', 77));
-  WriteXY (3,  1, 8, '    /    ');
-  WriteXY (8,  1, 7, strI2S(TotalPrompt));
-  WriteXY (73 - Length(Theme.FileName), 1, 7, ' ' + Theme.FileName + '.txt ');
-
-  WriteXYPipe (1, 23, 112, 79, ' Prompts ³  |01Press |15CTRL |01+ |15T|01op |15B|01ottom |15F|01ind |15A|01gain |15G|01oto |15K|01ut |15P|01aste |15U|01ndo  |00³ ESC/Quit ');
-
-  DrawPage(False);
+  FullReDraw;
 
   Repeat
     DrawComments;
@@ -482,6 +515,10 @@ Begin
       #06 : Search(False);
       #07 : JumpToPrompt(strS2I(CurStr));
       #11 : CopyStr := EditStr;
+      #13 : Begin
+              SimulatePrompt;
+              FullRedraw;
+            End;
       #20 : Begin
               CurPage := 1;
               CurLine := 1;
