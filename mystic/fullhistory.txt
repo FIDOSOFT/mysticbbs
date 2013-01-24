@@ -1,0 +1,2699 @@
+.---------------------------------------------------------------------------.
+| Mystic BBS History Documentation                      STARTING WITH V1.05 |
+`---------------------------------------------------------------------------'
+
+ ! = Bug fix
+ + = New or changed feature
+ - = Removed
+
+.--------------------------------------------------.
+| Mystic BBS RELEASED Version 1.05 : May 2nd, 1999 |
+`--------------------------------------------------'
+
+ ! Mystic was not updating the user's total message posts if they were
+   posting via a REP offline mail packet.
+
+ ! Mystic was not pausing on a screen full when displaying a text file!
+   I was testing some code right before the 1.05 release and I left the
+   page pausing stuff commented out.  Duh... =)
+
+ + Mystic now allows message bases to be defined as "mandatory" in the
+   scan setting.  This means that users will never be able to toggle the
+   base off in their scan settings.
+
+ ! When executing an MPE program, the arrow key functions would stop working
+   after a call to the MenuCmd procedure.
+
+ + Mystic now displays "None" for the user's current message and file base
+   if they have never selected a message base instead of just blank spaces.
+
+ + New MCI code: IL.  This code returns either ON or OFF depending on the
+   user's node invisibility status.
+
+ + Mystic now allows file bases to be defined as "mandatory" in the scan
+   base's scan setting.  This means that users will never be able to toggle
+   the base OFF in their scan settings.
+
+ + New command option for the MN (Message New Scan) option.  When supplying
+   /M on the command line, the MN command will only scan bases that are
+   tagged as mandatory ("Always").  I will probably be re-writing the
+   MN and FN commands completely sometime in the near future...
+
+ ! The percentage bar in MIDE would get corrupt when compiling a .MPS file
+   larger than 32,000 bytes.  Fixed!
+
+.----------------------------------------------------.
+| Mystic BBS RELEASED Version 1.05a : June 9th, 1999 |
+`----------------------------------------------------'
+
+ ! Fixed a bug in the Message Base Editor of MCONFIG.EXE which caused the QWK
+   Index to get corrupted.  This caused QWK packets to be corrupted when
+   created via Mystic BBS.
+
+ ! Fixed a bug in the File Base Editor of MCONFIG.EXE.  The Default New Scan
+   field was not allowing file bases to be set to "Always Scan".
+
+ + The full screen editor quote window now saves the current text position
+   after quoting, and will resume at that position if a user opens the quote
+   window again.
+
+ + In the user editor, the [ and ] keys now wrap around to the first/last
+   record into the user database.  This makes things a little easier...
+
+ + The search function in the user editor now allows a record number to be
+   entered.  If a record number entered, Mystic will automatically jump to
+   that record.
+
+ + Added a new menu hotkey: TAB.  When "TAB" is entered as a hotkey, the
+   menu command will be ran when/if a user presses the TAB key.
+
+ + The DF mci code in language prompts can now have text after it.  After
+   a DF is encountered, Mystic will look for a space or the end of the
+   prompt.  For example, "|CL|DFhello more text here" will now be displayed
+   as expected.
+
+ + Added four new menu command hotkeys: RIGHT, LEFT, UP, and DOWN.  These
+   only work in non-lightbar menus and are used to detect arrow key input
+   in standard menus.
+
+ ! Fixed carrier detection problems in the OS/2 native version.
+
+ ! MIDE.EXE and MPLC.EXE were not always catching undefined variables in
+   MPS source code.
+
+ ! When using the Matrix login system, if the Matrix menu was not found,
+   Mystic would loop over and over printing: "Menu not found.  Loading
+   fallback."  Mystic will now exit with an error if the Matrix menu is
+   not found.
+
+ ! Other stuff... =)
+
+.----------------------------------------------------.
+| Mystic BBS RELEASED Version 1.05b : July 6th, 1999 |
+`----------------------------------------------------'
+
+ + Added new DOOR MCI code: %0 passes the com port handle for Win32 and
+   OS/2 versions only.
+
+ ! The Win32 (and possibly the OS/2) version was displaying the message
+   date incorrectly in JAM message bases.
+
+ ! When executing a MenuCmd function from an MPE, the arrow keys would
+   stop working after the MenuCmd.  This was just fixed in the past version
+   but I commented the fix for it out by accident when I recompiled the
+   1.05b executables.
+
+ + The -F menu command now allows multiple flags to be manipulated instead
+   of only one flag per menu command.  See MYSTIC.DOC for more information!
+
+ + Added a new display file: EMAILHLP.XXX.  This file is displayed when the
+   user enters "?" while reading e-mail messages.
+
+ + Added a (Q)uit option to the first screen of the group editor.
+
+ + When in the message and file base editor, Mystic will now redisplay the
+   list of bases if enter is pressed at the prompt.
+
+ ! It was rumored that ALT-U would drop carrier on a user.  I wasn't able
+   to reproduce this problem, but hopefully it has been fixed.
+
+ ! The ALT-U (upgrade user) command was not upgrading a user's time when
+   their security was changed while online.
+
+ + If @S is found in a menu's display filename, Mystic will replace it with
+   the user's security level.  For example, a menu's display file of
+   MAIN@S will translate to MAIN20 if the user has a security level of 20.
+   If MAIN20 doesn't exist, Mystic will strip the @S and use the base
+   filename (ie, MAIN in this example).
+
+ + Bad password attempts now log the user name as well as the password
+   entered.
+
+ ! Mystic was not executing events if the execution time passed while a
+   user was in a door.  Now Mystic should log the user off immediately
+   after returning from a door (if the event is forced) or wait until the
+   user logs off (if the event is NOT forced).
+
+ + The default screen length during a new user login is now configurable
+   in System Config -> General Configuration.  Prompt #153 has been changed,
+   as well as prompt 372:
+
+        153 |CR|09Screen Pause Length (Enter/|&1):
+        372 |CR|09Screen Pause Length (Enter/|&1):
+
+ + Duplicate file scanning option: System Config - File Base Settings
+   -> Upload Dupe Scan.  This can be set to three different options:
+
+        None    -> Mystic will not scan for duplicate files
+        Current -> Mystic will only scan the CURRENT file base for dupes
+        All     -> Mystic will scan ALL file bases for duplicate files
+
+ + Blind uploads have been added into Mystic.  The entire upload process
+   has been rewritten.    The following prompts have been changed during the
+   rewrite.  Replace these new prompts with your old ones:
+
+       ; File upload testing FAILED text
+       035 Failed
+
+       ; File upload PASSED text
+       055 Passed
+
+       ; Xfer successful:      &1 = file name
+       083 |CR|12Ч |11|&1 |03found.|CR
+
+       ; Xfer failed:  &1 = file name
+       084 |CR|12Ч |11|&1 |03skipped.|CR
+
+       ; Displayed before running uploads processor
+       206 |12Ч |03Testing file for errors :
+
+   The following prompts are new.  Add these to your language file and
+   recompile with the new MAKELANG.EXE:
+
+       ; Blind upload?
+       375 |CR|12Blind upload?
+
+       ; Processing uploads
+       376 |CR|14Processing uploads ...|CR
+
+       ; BLIND dupe search
+       377 |12Ч |03Searching for duplicate files :
+
+       ; BLIND dupe found
+       378 Dupe found.
+
+       ; BLIND no dupe found
+       379 None.
+
+       ; Importing file_id.diz
+       380 |12Ч |03Importing file description :
+
+       ; FILE_ID found
+       381 Found.
+
+       ; No FILE_ID
+       382 None.
+
+ + New display file: BLINDUL.XXX - This file is displayed after a user
+   selects a blind upload, just as the UPLOAD.XXX file is displayed.
+
+ ! Pressing enter when upgrading a user's security level from the user
+   editor was sometimes causing some strange display problems.
+
+ ! Mystic was bombing out with an error when 0 byte files were uploaded,
+   or if a user tried to view the contents of a 0 byte archive.
+
+ + New prompt info MCI code for prompt #072: &2 now displays the file
+   name for which the description is being entered.
+
+ + Mystic now prompts the user to post a message on a message base after
+   the last message has been read.        A new prompt goes along with this
+   addition, make sure you update your language files:
+
+       ; Post on message base?
+       383 |12Post on |MB?
+
+ + Enhanced the archive view functions.  When a user views a text file from
+   within an archive, Mystic will now display a line of text before sending
+   the text file.  The filename prompt has also been added to the language
+   file.  Prompt #306 should replace the old one, and prompt 384 should be
+   added to your language file.
+
+       ; Viewing text file &1 = Filename
+       306 |CL|14Viewing contents of text file: |15|&1|14.|07|CR
+
+       ; View text file filename prompt
+       384 |CR|09File name:
+
+ + More rearrangement of prompts has brought two more additions to the
+   prompt file.  Add the following:
+
+       ; Download successful
+       385 |CR|12Transfer successful!
+
+       ; Download failed
+       386 |CR|12Transfer failed!
+
+ + Added the option to download files from within archived files.  When
+   viewing the contents of an archive, files can now be downloaded.  As
+   a result of this added feature, prompt #304 has been changed:
+
+       ; Archive view command prompt
+       304 |CR|14Archive View: (|15R|14)e-list, (|15V|14)iew File, (|15D|14)ownload File or (|15Q|14)uit: |15
+
+ + When viewing a text file from within an archive, MCI codes are no longer
+   filtered out.  The file is displayed in straight text mode.
+
+ ! If the last read pointer file in a JAM base was deleted for some reason,
+   Mystic would not recreate it, and thus users weren't getting their last
+   read information saved.
+
+ ! Fixed a bug in MIDE which would cause an error when when text was
+   marked and deleted (under certain conditions).
+
+ + New ACS command: OI.  This returns true if the user is invisible.
+
+ + New MCI code: AV.  This returns Yes or No depending on the user's
+   node message availability.
+
+ + New ACS command: OA.  This returns true if the user is available to
+   receive node messages.
+
+ + Added three new Prompt Info MCI codes to prompt #139 (Who's Online):
+
+       &6 = User's gender (M or F)
+       &7 = User's Age
+       &8 = User's Availability
+
+ + Added a new menu command: MM - This is a mass e-mail command, which
+   allows the sysop to send multiple users e-mail all in one shot.
+   The following new prompts have been added, make the nessasary changes
+   to your language files, and recompile:
+
+       ; Mass mail prompt
+       387 |CRsend mass mail by:|CR|CR(1) ACS level|CR(2) List of users|CR(3) All users|CR(Q) Quit|CR|CRCommand:
+
+       ; Mass mail ACS prompt
+       388 |CREnter ACS level:
+
+       ; Mass mail name info
+       389 |CR|11Enter user name, or search string.|CREnter a blank line to end.|CR
+
+       ; Mass mail name prompt &1 = # of users in list
+       390 |CR|11|&1 |03users in list.  Enter user name:
+
+       ; Mass mail name list
+       391 |CR|14User mailing list:|CR
+
+       ; Mass mail name format &1 = name
+       392      |03|&1
+
+       ; Mass mail name list confirmation
+       393 |CR|12send e-mail to this list?
+
+       ; sending mass mail
+       394 |CR|CR|14sending mass e-mail, please wait ...
+
+ + New language prompt #395: Displayed when a user tries to send a node
+   message to an unavailable node:
+
+       ; Node unavilable
+       395 |CR|14Sorry, this user is marked as unavailable.
+
+ + Added the option to perform a text search on message bases.  When a user
+   selects to read message in the current message base, Mystic will now
+   offer the option to search for text, which will search the From, To,
+   and Subject fields as well as the message body.  Prompt #112 has been
+   changed and a new prompt (#396) has been added:
+
+       112 |CR|07(|14F|07)|15orward, |07(|14N|07)|15ew, |07(|14Y|07)|15ours, |07(|14S|07)|15earch, |07(|14Q|07)|15uit?
+
+       ; Msg search prompt
+       396 |CR|03Enter search string:
+
+ + Expanded the inactivity timeout setting to allow for up to 9999
+   seconds.  It would only allow for up to 255 seconds in the past.
+
+ ! Fixed some strange MPE engine bugs in the Win32 and OS/2 versions.  For
+   some reason, some MPE programs that worked fine with the DOS version
+   were not working correctly with the 32-bit versions.
+
+ + Added ([) Prev and (]) Next commands to the Protocol editor.
+
+ + Added the ability to toggle hotkeys on or off.  A new MCI code HK is now
+   available which displays ON or OFF depending on the user's hotkey setting.
+   The GE menu command has been expanded as well - option 19 now toggles
+   the user's hotkey status.  A new field has been added for each menu
+   command in the menu command editor.    This field is called "LONG KEY" and
+   works just like the hotkey field except it sets the valid key to execute
+   the command when the user has hot keys toggled OFF.
+
+ + Added new option to System Config -> New User Settings in preparation
+   for the lightbar message reading system. "Message Reader" has three
+   options, similar to the file lists: Normal, Lightbar, and Ask.  Two
+   prompts have been added to go along with this:
+
+      ; Info edit: Msg Read type
+      397 |CR|11(|030|08) |14Normal   |15: |10View messages page by page|CR|11(|031|08) |14LightBar |15: |10Scroll message lists with arrow keys|CR|CR|15S|10ele|02ct |15T|10yp|02e: |15
+
+      ; New user: Msg Read type
+      398 |CR|11(|030|08) |14Normal   |15: |10View messages page by page|CR|11(|031|08) |14LightBar |15: |10Scroll message lists with arrow keys|CR|CR|15S|10ele|02ct |15T|10yp|02e: |15
+
+ + Added new option to the Security Level editor.  The option
+   "Post / Call Ratio" is used to set the number of posts a user must have
+   within 100 calls to the BBS.
+
+ + Added new ACS command: OP.  This option returns true if the current user
+   meets the set post / call ratio for their security level.      If they do
+   not meet this ratio, OP will be false.
+
+ + Added two new MCI codes:
+
+      PC - This returns the user's actual post / call percentage.
+      SP - This returns the user's needed post / call percentage in
+           order to have a passing post/call ratio.
+
+ + Completed the new full screen ANSI message reader / lister.  There are
+   lots of changes that go along with this - as the entire message reading
+   process has been rewritten for this addition.
+
+   The first new addition is a new ANSI template: ANSIMLST.XXX.  This is the
+   template for the ANSI message index listing, where users can scroll
+   through a list of messages with the arrow keys.  The following MCI codes
+   are used:
+
+      !1 = Y position of the top line in the message index list
+      !2 = Y position of the borrom line in the message index list
+      !3 = Bottom of template.  When a user exists from the list, Mystic
+           will move to this Y position in preparation for other text.
+
+   The second new addition is a new ANSI template: ANSIMRD.XXX.  This is the
+   template for the actual message reader, which allows the user to scroll
+   through the message using the arrow keys / pgup, pgdn keys.  The following
+   MCI codes are used:
+
+      !1 = Y position of the top line of the message text window
+      !2 = Y position of the bottom line of the message text window
+      !3 = Y position of the bottom of the template.
+
+   The message header information is the same as it for the standard
+   message reading mode:
+
+      |&1  From                       |&6  Total messages in base
+      |&2  To                         |&7  Reply to message number
+      |&3  Subject                    |&8  See also message number
+      |&4  Date / Time                |&9  Message status
+      |&5  Message number
+
+   The third new addition are new prompts.  Add the following prompts to
+   your language files and recompile them using MAKELANG.EXE:
+
+      ; Ansi msg read: index list format
+      ; &1 = msg #   &2 = subject     &3 = from       &4 = to
+      399 |15|$L05|&1        |10|$R30|&2 |14|$R20|&3 |13|$R20|&4
+
+      ; Ansi msg read: index list highlight
+      ; &1 = msg #   &2 = subject     &3 = from       &4 = to
+      400 |08|23|$L05|&1  |$R30|&2 |$R20|&3 |$R20|&4|16
+
+      ; Ansi msg read: index list highlight OFF
+      ; &1 = msg #   &2 = subject     &3 = from       &4 = to
+      401 |15|$L05|&1        |10|$R30|&2 |14|$R20|&3 |13|$R20|&4
+
+      ; Ansi msg read: delete msg
+      402 |CR|12Delete this mail?
+
+      ; Ansi msg read: jump to msg: &1 = cur msg num  &2 = high msg num
+      403 |CR|09Jump to which message? (1-|&2):
+
+      ; Ansi msg read: scan toggle  &1 = message base name
+      404 |CR|11|&1 will NOT be scanned in new message scan!
+
+      405 |CR|11|&1 will be scanned in new message scan!
+      406 |CR|11|MB is marked as mandatory reading!
+
+ + Separated the "To:" prompt when posting a message.  The following
+   new prompts are:
+
+      ; Reply msg To: standard
+      407 |CR|09To:
+
+      ; Reply msg To: lightbar
+      408 |CR|09To:
+
+ + Mystic now has the option System Config -> New User Settings ->
+   HotKeys.  This option allows for three options: Yes/No/Ask.  Two
+   new prompts have been added:
+
+      ; User edit: Hotkeys
+      409 |CR|12Use hot-key input?
+
+      ; New user: Hotkeys
+      410 |CR|12Use hot-key input?
+
+ + Added a new command to the standard message reader: (L)ist messages
+   Three new prompts go along with this new addition:
+
+      ; Msg List Header
+      411 |CR|15Msg #  From                                                           To                                                                       Subject|CR|09|$D79-
+
+      ; Msg List Format (Same prompt info as header)
+      412 |15|$L05|&5  |09|$R20|&1 |$R20|&2 |10|$R30|&3
+
+      ; Msg List Footer
+      413 |09|$D79-|CR|PA
+
+ + New MPL procedure: MOVEY.  This works just like MOVEX except it works for
+   the Y position.
+
+ + The DATE/TIME PromptInfo MCI code for message headers have been
+   separated.  Now &4 = msg date, and &0 = msg time.
+
+ ! Mystic had a slight error in the format of the CHAIN.TXT door drop file.
+   This should be fixed, and it should be created properly.
+
+ + Rewrote the variable handling in the MPE engine.  Arrays can now have
+   full expressions as indicies.  For example:
+
+       Str := 4
+       Test(Str2Int(Str) - 3) := 'Hello world'
+
+ + The Win32 version now sets the console window title to "Mystic Node x"
+   where X is the node number.    Haven't added this to the OS/2 version yet
+   as I haven't had the chance to search for the appropriate API call.
+
+ + The mouse is no longer active during a Mystic BBS Win32 session as it
+   was in the past.
+
+ + The VAR statement (for defining variables) in the MPE engine has been
+   rewritten to allow a comma to separate variable defintions.  For example,
+   the following is now supported:
+
+        var
+          somestr  string,
+          somech   char,
+          somebyte byte
+
+ + Added local procedure variables into the MPE language.  This means that
+   variables can be defined within a procedure and will only be able to be
+   used in that procedure.  For example:
+
+        Proc Hello
+          Var S String
+          S := 'Hello'
+          WriteLn(S)
+        Pend Hello
+
+        WriteLn(S)
+
+   The above example would not compile because the main body of the program
+   is trying to access a variable which was defined within the HELLO
+   procedure only.  Variables declared in the main body of the program are
+   still considered global variables, and will be available to any/all
+   functions.
+
+ + The MPE engine compilers now ignore all "BEGIN" and "END" keywords to
+   make it a little more "pascal-syntax" friendly.  Some people think that
+   the "BEGIN/END" helps make their program code more readable.  However,
+   this could cause some confusion in the future since BEGIN and END don't
+   come up as errors, but they are not actual valid MPL keywords.
+
+ + MIDE now syntax highlights "BEGIN" and "END".
+
+ + Changed the syntax of the Procedure definition in the MPL.  The new
+   format is as follows:
+
+        Procedure <procname> (<optional vars>)
+        Pend
+
+   So for example, an old procedure that looked like this:
+
+        Proc Hello_World
+          WriteLn ('Hello world')
+        Pend Hello_World
+
+   Would now be changed to:
+
+        Procedure Hello_World
+          WriteLn ('Hello world')
+        Pend
+
+   Now that this change has been implemented, all older .MPS source code
+   will need to be modified to fit this format.  The "PROC" keyword has
+   been extended to "Procedure" and the procedure name is no longer
+   required after the "Pend" statement.  If you forget to remove the name
+   at the end of your Pend statement, the code will still compile.  However,
+   it will not execute properly!
+
+ + Variables can now be passed to procedures!  For example, the following
+   is a valid procedure:
+
+        Procedure Print (Str String)
+          WriteLn ('Contents of STR = ' + Str)
+        Pend
+
+   Then, to call the procedure in your code:
+
+        Print ('Hello World')
+
+   And now that the MPL engine is a little more friendly to some of the
+   Pascal syntax, the following is a valid procedure:
+
+        Procedure Print (Str String)
+        Var
+          Str2 String,
+          Str3 String
+        Begin
+          WriteLn (Str)
+        Pend
+
+ + Added four new options to menu commands MW (Write e-mail) and MP
+   (post new message):
+
+        /TO:<username>   <- This sets the message's TO field.
+      /SUBJ:<subject>    <- This sets the message's SUBJECT field.
+      /ADDR:<netaddr>    <- This sets the message's netmail address field.
+         /F              <- Forces user to post the message (they can't
+                            abort it from the editor).
+
+ + Added two new options to the FF menu command (Create/Download file list):
+
+              /NEW - Creates a list of only NEW files.
+        /ALLGROUPS - Creates a list of files in ALL file groups.
+
+ + New MPL function: ISLOCALKEY.  Returns TRUE or FALSE after calling
+   READKEY based on who entered the key.
+
+ ! If Allow ANSI is set to NO, Mystic will now skip the graphics detection
+   and automatically set their terminal type of ASCII.
+
+ ! Mystic was not pausing after a screen size of message and file group
+   names when selecting groups.
+
+ + Added new MPL command: WriteLocalXY.  This procedure allows text to be
+   printed to the local screen only.
+
+ - Removed MPL command: StatusWrite.  This procedure can be completely
+   replaced by the new WriteLocalXY command.
+
+ + New MPL "CFG" variable: CFGSTATUSTYPE
+
+ + Added two new prompts, to separate the Xport message function in ansi
+   and standard reading modes:
+
+        ; Ansi msg read: export to file
+        414 Export to filename:
+        ; Ansi msg read: local export
+        415 Export to filepath/filename:
+
+ + Added the user's age after their birthdate in the user editor.
+
+ + MPE change: The Write and WriteLn statements now REQUIRE that any
+   variables passed or functions used are of the STRING type.  If you want
+   to print numerical variables, you must use the strI2S function.
+
+ + Added new MPE command: CONST.  This allows constant variable
+   defintions to be defined.  At this time there are a few limitations...
+   Any CONSTANT value cannot be used when assigning variables.  For
+   example:
+
+       Var
+         Str String
+       Const
+         SomeStr = 'Hello World'
+       Begin
+         Str := SomeStr
+       End
+
+   The above example won't work, because you are trying to assign a
+   variable the value of a CONSTANT.  They do work, however, in
+   expression evaluations:
+
+       Const
+         SomeByte = 69
+       Begin
+         If SomeByte > 69 Then
+           WriteLn ('Greater!')
+         ElseIf SomeByte < 69 Then
+           WriteLn ('Less than!')
+         Else
+           WriteLn ('Same')
+         EndIf
+       End
+
+ + Added permanent user index numbers for each user.  These will be used
+   quite a bit internally in the future.
+
+ + New ACS command: Ux.  This command will return true if the user's
+   permanent index matches the supplied number.  For example, an ACS of
+   "u1" would only return true if the user's permanent index was 1.
+
+ + Added FUNCTIONS into the MPE engine.  Functions work almost indentical
+   to procedures except that they return values.  The following is an
+   example function:
+
+     Function Return10 : Byte
+     Begin
+       Return10 := 10
+     Pend
+
+     Var
+       Temp Byte
+     Begin
+       Temp := Return10 + 10
+       WriteLn ('This should say 20 : ' + strI2S(Temp))
+     End
+
+ + Added new prompt #416 to the mass e-mail...
+
+      ; mass email subj: prompt
+      416 |CR|09Subject:
+
+ + Added new MPE command: ONEKEY.
+
+ + Added new ACS option to System Config -> General Settings.  The
+   "See Invisible ACS" is the ACS level required to see users marked as
+   invisible in the Who's Online listing.
+
+ + Added new USER variable into the MPE engine: USERPERMIDX is the user's
+   permanent user index number.
+
+ + The new user feedback e-mail can now be configured in System Config ->
+   New User Settings.  In the past it would automatically send the e-mail
+   to the SysOp name defined in System Config -> General Settings.
+
+ + Added some new options to the Mass Upload command.  The (G)lobal command
+   now scans all areas for all new files automatically.
+
+   If no FILE_ID.DIZ file is found, Mystic will now prompt for a file
+   description, unless in Auto Area or Auto Global mode.  The mass upload
+   command should also be much faster than it was in previous versions!
+
+ + Added new MPE demo program: MPEDEMO.MPS into the default full
+   installation.  I'll also include it into the 1.06 upgrade package.
+
+ + Added a wide-beta release telnet server for the Win32 version.  This
+   server allows Mystic BBS for Win32 to handle incomming telnet connections
+   without the need of a virtual modem driver.  Unfortunetly, existing DOS
+   doors and protocol drivers will not work with this server, so it may not
+   attract too many SysOps.  In the future, Mystic will have its own set of
+   internal protocols which will work over a telnet connection.
+
+ + Separated many of the "invalid password" prompts.  From now on, #417
+   will be a "general" invalid password prompt, for most things like
+   invalid menu passwords, invalid file/msg base passwords, etc.  Other
+   invalid password prompts have been separated and will be listed
+   below:
+
+      ; General Invalid PW
+      417 |CR|12Invalid password.
+
+ + Separated the new user login PW prompts with the change password prompts.
+   Along with this comes some new prompts:
+
+      ; INFO EDIT: Do not match
+      418 |CR|12 Passwords do not match!
+      ; INFO EDIT: PW prompt
+      419 |CR|03Enter your desired password.|CRIt should be between 4 and 20 characters.|CR|CR|09Password:
+      ; INFO EDIT: PW too short
+      420 |CR|12Password must be at least 4 characters long!
+      ; INFO EDIT: Verify PW
+      421 |CR|11Enter your password again for verification.|CR|CR|09Password:
+
+ + Some new and changed invalid password prompts:
+
+      ; User login: Invalid PW
+      003 |CR|12invalid password.
+      ; Matrix user login: Invalid PW
+      293 |CR|12Invalid password.
+      ; UNUSED
+      331 UNUSED!!
+      ; General Invalid PW
+      417 |CR|12Invalid password.
+      ; Invalid New User PW
+      422 |CR|12Invalid password!
+      ; Invalid Matrix PW
+      423 |CR|12Invalid password!
+
+ + Added new blind upload prompt:
+
+      ; Upload: No files found
+      424 |CR|15No files found!|CR|CR|PA
+
+ + Added new read command (B)y you.  When this is selected, Mystic will
+   only show messages post by the user.  Prompt 112 has been changed to
+   add this command:
+
+      112 |CR|07(|14F|07)|15orward, |07(|14N|07)|15ew, |07(|14B|07)|15y You, |07(|14Y|07)|15ours, |07(|14S|07)|15earch, |07(|14Q|07)|15uit?
+
+ + Added new menu command: MV - View outbound (sent) e-mail.
+
+ ! When compiling a file list, Mystic would sometimes not display the file
+   base name after the "Working..." prompt.  This only happened when there
+   were no files in a base and the data files didn't exist for that area.
+
+ + File list compiler now aborts if there are no files in the list.  A new
+   prompt goes along with this:
+
+      ; File list compile: No files found
+      425 |CR|15No files found!|CR|CR|PA
+
+ + Added the ability to refuse multinode user logins on multiple nodes.
+   If System Config -> General Config -> User Multiple Logins is set to
+   Yes, Mystic will not allow the same user to be connected to more than
+   more node at a time.  A new prompt #426 has been added:
+
+      426 |CR|14You cannot login to more than one node at a time.|CR|CR|PA
+
+.---------------------------------------------------.
+| Mystic BBS RELEASED Version 1.06 : Jan 30th, 2000 |
+`---------------------------------------------------'
+
+ + Added new Prompt Info MCI code to Prompt #30: &7 now returns the user's
+   age.
+
+ + New MCI code: RPxx.  This sets Mystic's pause count to the value contained
+   in xx when displaying a text file.  I've found that this can come in
+   handy when doing some in depth modding.  For example: RP10 will set the
+   pause count to 10, meaning Mystic thinks its displayed 10 lines since the
+   last page pause.
+
+ ! SysOp feedback after a chat page was not working.  It does now! =)
+
+ + The <space> key can now be used to toggle the Yes/No lightbars.
+
+ ! New user feedback was not being forced.  In other words, the user would
+   be able to abort posting the message.  This has been fixed.
+
+ + LANGEDIT.EXE will now ask if you would like the language file
+   automatically compiled after saving.
+
+ + Updated the node chat a little bit.  The chat now has real-time updating,
+   which basically means that you can be typing a reply and it will still
+   display other user's text.  In the past, if you weren't typing it would
+   look for new text from other nodes, but now it will do it the entire time
+   you're in chat, no matter what you're doing!  I've also been thinking
+   about rewriting the chat to be more IRC-like.  If that sounds good, let
+   me know and i'll probably do it! =)
+
+ + New program LANGUPDT.EXE has been added to the Mystic upgrade packages.
+   This program will automatically update old language files with new or
+   changed prompts...
+
+ ! MPE: The GET/PUTMBASE functions were off by a number, for example
+   GetMBase(1) would actually return Base 0.
+
+ ! MPE: PutMBase was corrupting a field in the message base record.
+
+ + MPE: Added new MBASE variable: MBASENTYPE.  Just to clear some things up
+   here:
+
+      MBASENTYPE = Net type (Local, Echomail, etc)
+      MBASEBTYPE = Base type (JAM, Squish)
+      MBASEPTYPE = Post type (Public, Private)
+
+ ! Fixed a small bug in the Win32 full screen editor that caused Mystic to
+   lock up.
+
+ + New prompt in node chat:
+
+     ; nodechat input &1 = username
+     427 |07[ |15|&1 |07>> |03
+
+ + Added a configurable WFC screen template.  The WFC screen template is
+   found in the data directory as "WFCSCRN.XXX".  The random display file
+   system works as well, allowing up to 10 randomly selected WFC screens!
+
+   The following screen info codes are used:
+
+      !1 Status line (40 characters in length)
+      !2 System Time
+      !3 System Date
+      !4 Next Event Time
+      !5 Top X/Y position and standard color of node window
+      !6 Bottom X/Y position and highlight color of node window
+      !7 Top X/Y position and color of modem window
+      !8 Bottom X/Y position of modem window
+
+ + MPE: Added two new USER variables:
+
+      USERCURMBASE - User's current MBASE
+      USERCURFBASE - User's current FBASE
+
+ + Added User's Screen Size into the user editor.  I can't believe I forgot
+   to add that in the past! =)
+
+ ! Mystic was not updating the user's flags on the statusline after the
+   -F menu command was used.
+
+ + Passing a zero to the baud parameter when loading Mystic now skips the
+   WFC screen and runs the user login in local mode.  Passing a -L on the
+   command line still goes to the WFC screen first.
+
+ + Changed the split screen chat a little bit.  First, the text color is
+   now defined by the screen info MCI codes.  This allows the SysOp and
+   User windows to have different text color.  Second, two new screen info
+   codes have been added:
+
+      !0 - Specifies the X/Y position and color for the user's time left.
+           It will be updated every minute, and is optional.
+      !9 - Specified the X/Y position and color for the system time.  It
+           will be updated every minute and is optional.
+
+ + Added new nodechat prompt:
+
+     ; nodechat user not found
+     428 |CR|15User not found.
+
+ ! The "S" optional data option for the MR menu command was not working
+   properly.
+
+ ! When reading messages in the lightbar message reader, users were able
+   to delete messages even if they were not the user who posted them.
+
+ ! Fixed a bug in the menu hotkeys when entering "/x" commands.  Sometimes
+   Mystic would temorarily ignore input after backspacing over the "/"
+   character.
+
+ + The maximum number of menu commands have been expanded to 75 commands
+   per menu, rather than the old maximum of 50 commands.
+
+ + Added the option for Sysop/Users to toggle which mode the lightbar
+   message reader starts in: message index mode, or message reading mode.
+   Along with these additions comes to following:
+
+      System Config -> New User Settings -> Msg Lightbar Idx.  This option
+      sets the default for new accounts and can be set to "Yes/No/Ask".
+
+      Added prompt #429:
+      ; new user: use lightbar message index?
+      429 |CR|12Use lightbar message index? |11
+
+      Added new option to menu command GE: 21.  This toggles the status of
+      the user's lightbar message reading index mode on/off.
+
+      Added new MCI code: ML.  This returns on/off based on the status of
+      the lightbar message index.
+
+ + Added the (Q)uit command to the lightbar message reader.  This command
+   was in the standard message reader, but I somehow overlooked it in the
+   lightbar version.
+
+ + Added new program: MYSTPACK.EXE.  This program packs all JAM message
+   bases on your BBS.  It will remain external from MBBSUTIL.EXE until I am
+   able to finish the Squish side of things.  Here's the following
+   functions:
+
+      - Removes deleted messages from your data files.
+      - Renumbers messages in numerical order
+      - Renumbers the reply chains (Refer to and See Also)
+      - Updates each user's last read pointers
+      - Removes any message in violation of the Max Msgs / Max Age settings
+        for each base (found in the Message Base Editor).
+
+   It also has the option to -SKIPFIRST, which will skip the first message
+   in all local message bases, so they will never be deleted unless marked
+   deleted by the SysOp.  This allows for a "This base is for..." or
+   BASE_ID.DIZ message to always stay as the first message.
+
+ ! When inputting a password and CTRL-Y was pressed, Mystic was filling the
+   entire field up with the echo character instead of blank spaces.
+
+ + Added two new command options to the FG menu command (change file
+   group).  The + and - command will now move to the next and the previous
+   file group.  Mystic will automatically find the first file base the user
+   has access to after changing groups.
+
+ + Added two new command options to the MG menu command (change message
+   group).  The + and - command will now move to the next and the previous
+   message group.  Mystic will automatically find the first message base
+   the user has access to after changing groups.
+
+ + Added new prompt: Message base scan setting footer:
+
+      ; msg scan setting footer
+      430
+
+ + In Lightbar menus, Mystic will now keep track of the user's lightbar
+   position when a menu command is ran.  In the past, it would always default
+   to the first command on the menu when it was redisplayed.
+
+ + Full screen editor quote window now only adds a blank line to the bottom
+   of the message if new text was quoted.
+
+ + The %0 door MCI code now returns the fossil com port in the DOS version.
+   In the past, it would not get filtered out.
+
+ ! Ocassionally, when editing text of a posted message, Mystic would garble
+   up the display.
+
+ ! Mystic was not correctly rewriting the message index information after
+   saving changes to an edited message.  This would cause some JAM packers
+   to duplicate messages, which other JAM packers would process the index
+   correctly.
+
+ + Mystic will now try to put new users into a group instead of having them
+   start out in no group.
+
+ + The (N) command during a lightbar message index has been changed to
+   (G) to match the identical command when reading in non-lightbar mode.
+   This function goes to the next base in the message scan, or does
+   nothing if not in a message scan.  You may want to update your lightbar
+   message index template and your AMSGHLP1.XXX files to reflect these
+   changes.
+
+ + The (ESC) function in the lightbar message reader has been changed to
+   quit reading.  In the past, it would show the lightbar message index.
+
+ + The lightbar message index command, which was (ESC) in the past, has
+   been changed to (L) to reflect the same command as the non-lightbar
+   reading command to view the message index.
+
+ + Made some major changes to the file lists, in preparation for support
+   for long file names.  The ANSIFLST.XXX template has been changed quite a
+   bit and the highlight data has been moved to prompts to make it more
+   flexible.  The following Screen Info codes are used in ANSIFLST.XXX now:
+
+   !1 = Top Y location of the file list window.
+   !2 = Bottom Y location of the file list window.
+   !3 = Y location of the status text.
+   !4 = X/Y location of the number of files tagged.
+
+   The following prompts are new or changed:
+
+   ; Standard file list: #/filename:
+   ; &1 = file num, &2 = filename, &3 = tag char
+   042 |15|&1|07|&3 |14|&2
+
+   ; Standard file list: description/info
+   ; &1 = size, &2 = date, &3 = DLs, &4 = desc, &5 = uploader
+   043  |07юд |09|$L11|&1 bytes |10|&2    |11|&4
+
+   ; Standard file list, ext desc: &4 = description
+   045 |11|$D34 |&4
+
+   ; Lightbar file list: #/filename:
+   ; &1 = file num, &2 = filename, &3 = tag char
+   431 |15|&1|07|&3 |14|&2
+
+   ; Lightbar file list: highlight on: &1 = #, &2 = filename, &3 = tag char
+   432 |00|23|&1|16
+
+   ; Lightbar file list: highlight off: &1 = #, &2 = filename, &3 = tag char
+   433 |15|&1|07|&3 |14|&2
+
+   ; Lightbar file list: description/info
+   ; &1 = size, &2 = date, &3 = DLs, &4 = desc, &5 = uploader
+   434  |07юд |09|$L11|&1 bytes |10|&2    |11|&4
+
+   ; Lightbar file list, ext desc: &4 = description
+   435 |11|$D34 |&4
+
+   ; Lightbar file list, uploaded by: &5 = uploader
+   436 |03|$D34 Uploaded By: |&5
+
+   ; Standard file list, uploaded by: &5 = uploader
+   437 |03|$D34 Uploaded By: |&5
+
+ ! When a user tried to login on more than one node at a time (and multiple
+   login is disabled), their time left was being set to 0.
+
+ + Added new MCI code: PI.  This just displays a | character.
+
+ ! There was a security leak in Mystic's email system that allowed user's to
+   access other user's email messages!  This has been fixed!
+
+ + Added a set of internal file transfer protocols.  Included are the
+   following:
+
+     Xmodem
+     Xmodem/CRC
+     Xmodem/1K
+     Ymodem Batch
+     Ymodem/G Batch
+     Zmodem Batch
+
+   Support for external protocols has been removed, at least temporarily.
+   I'm not aware of any external protocol drivers that will work with
+   long file names, or with Mystic's internal telnet server anyway.  So
+   supporting them wouldn't do much good.
+
+   Two changed prompts go along with this:
+
+   ; Protocol select batch prompt
+   061 |CR|14[|15Y|14] Ymodem|CR[|15G|14] Ymodem/G|CR[|15Z|14] Zmodem|CR|CRSelect Protocol [|15Y G Z|14]:
+
+   ; Protocol select standard prompt
+   062 |CR|14[|15X|14] Xmodem CRC|CR[|151|14] Xmodem 1K|CR|14[|15Y|14] Ymodem|CR[|15G|14] Ymodem/G|CR[|15Z|14] Zmodem|CR|CRSelect Protocol [|15X 1 Y G Z|14]:
+
+   Also, be aware that when updating you will probably want to modify all the
+   prompts that ask for a filename, by adding a CR at the end of them.  For
+   example:
+
+     OLD: 344 |CREnter file name:
+     NEW: 344 |CREnter file name|CR:
+
+ - Display files PROTO.XXX and PROTOB.XXX have been removed, as they are
+   useless now.  You can replace prompts #61 and #62 with the PROTO and
+   PROTOB display files if you want to still use those files.
+
+ + Added new LightBar Grid menu type.  In the menu flags for each menu,
+   there is now a menu type field, which can be set to any one of the
+   following options:
+
+      Standard
+      Lightbar
+      Lightbar Grid
+
+   Both Standard and Lightbar options work the same as they have in the
+   previous versions, but the LightBar Grid system implements a way more
+   confusing and way more flexible LightBar system. =)
+
+   When the grid system is activated on a menu, it will use the following
+   new options that have been added to each menu command within a menu:
+
+     Arrow Up    : 1
+     Arrow Down  : 5
+     Arrow Left  : 2
+     Arrow Right : 4
+
+   If a menu command is currently highlighted in a lightbar grid menu, and
+   the up arrow is pressed, Mystic will jump to menu command #1.  If the
+   down arrow is pressed, Mystic will jump to menu command #5.  The same
+   also goes for the left and right options.
+
+   As you can see, this will allow for an enormous amount of flexibility as
+   compared to the previous lightbar system and the lightbar systems found
+   in most other BBS packages.  However, its a little more work to create
+   these menus so I imagine only some of the hard core SysOps will make
+   much use of this system.
+
+ + Due to "popular demand", file description line length has been expanded
+   from 45 characters to 50 characters.
+
+ + The mass upload command now executes the upload tester if one has been
+   configured for Mystic.
+
+ + Added a "Post on this base?" prompt after reading messages into the
+   Lightbar message reader.
+
+ + Cleaned up the functionality of the Lightbar message reader quite a bit,
+   to make it operate more like the standard reader in certain places.
+
+ + MPE: New MPL function ODD.  Returns true or false based on if the passed
+   number is ODD or EVEN.
+
+ + MPE: Finished up the CONST variable support.  In the past CONST
+   variables would only work in evaluations and could not be used in
+   variable assigning statements.
+
+ + MPE: In the past, declared functions were not allowed in expression
+   evaluations.  They are now! =)
+
+ + MPE: Boolean parameters are now allowed in declared functions and
+   procedures.
+
+ + MPE: Boolean modifiers were not allowed when assigning variables.  I
+   totally overlooked that somehow and never noticed that it wasn't
+   implemented.  For example, this will work now:
+
+      Function Neg (Bol Boolean) : Boolean
+      Begin
+        Neg := Not Bol
+      Pend
+
+ + Added a character in the lightbar message index listing to mark messages
+   which are new.  The character can be setup in System Config -> Language
+   Definitions -> New Msg Char.  Prompts #399-401 now have a promptinfo &5
+   code that returns either the new msg char or a space.
+
+ + Recoded some internal MPE engine functions.  The compiler is probably
+   now a little faster than it was in the previous release, and the executor
+   engine is probably about 300-400% faster in most cases!
+
+ + Cleaned up the word wrapping in the full screen editor.  In the past,
+   if a paragraph existed under the paragraph currently being edited, Mystic
+   would allow the text from the first paragraph to wrap into the second
+   paragraph.  The editor now detects a second paragraph and will insert
+   a line when wrapping to prevent this.
+
+ + Added a second set of access flags for each user.
+
+ + Added new ACS command: "Dx".  This command works just like the "Fx" ACS
+   command, except it targets the second set of access flags as opposed to
+   the first set, which "Fx" checks.
+
+ + The login display file "FLAGx.XXX" has been changed to "FLAG1x.XXX".
+
+ + Added new display file "FLAG2x.XXX", which is works just like FLAG1.XXX
+   except it targets the second set of access flags.  IE: FLAG2A.XXX will
+   display during login if the user has flag A set in their second set.
+
+ + Rewrote the user editor to make room for the second set of flags, and
+   other new user options.
+
+ + Added new menu command: -D.  This works identical to the -F command, and
+   is used to toggle or set flags in the user's SECOND set.
+
+ + Added new user database field: E-mail address.  This option can be set
+   or disabled in the new user settings, and edited within the user editor.
+   Two new prompts have been added to go along with this:
+
+      ; new user: enter email address
+      439 |CR|09Enter e-mail address|CR:
+      ; info edit: enter email address
+      440 |CR|09Enter E-mail address|CR:
+
+   An addition to the GE menu command has also been made.  Optional data
+   22 now edits the E-mail address field.
+
+   New MCI code: UK has been added, which returns the users email address.
+
+ + Added new user database field: User note.  This option can be set or
+   disabled in the new user settings, and edited with the user editor.
+   Two new prompts have been added to go along with this:
+
+      ; new user: enter user note
+      441 |CR|09Enter your desired user note|CR:
+      ; info edit: enter user note
+      442 |CR|09Enter your desired user note|CR:
+
+   An addition to the GE menu command has also been made.  Optional data
+   field 23 now edits the User Note field.
+
+   New MCI code: UI has been added, which returns the user note field.
+
+ + Added three new optional/configurable questions into the user database.
+   They can be configured/enabled/disabled in New User Settings.  Six new
+   prompts have been added:
+
+      ; new user: option 1
+      443 |CR|09Enter optional field 1:
+      ; info edit: option 1
+      444 |CR|09Enter optional field 1:
+      ; new user: option 2
+      445 |CR|09Enter optional field 2:
+      ; info edit: option 2
+      446 |CR|09Enter optional field 2:
+      ; new user: option 3
+      447 |CR|09Enter optional field 3:
+      ; info edit: option 3
+      448 |CR|09Enter optional field 3:
+
+   Optional data fields for menu command GE have been added to edit these
+   fields.  These are 24, 25, and 26.
+
+   Three new MCI codes have been added. U1, U2, and U3.  These return the
+   optional data 1, 2, and 3 fields.
+
+ + The "Post on this base" question is no longer asked when a user aborts
+   reading messages.
+
+ + Added the ability to disable the Lightbar Quote Window both on a SysOp
+   and a user basis.  These have been added into the user editor and into
+   the new user settings.  One changed prompt goes with this:
+
+      ; New user: Use FSE quote window?
+      060 |CR|12Use full screen editor quote window?
+
+   Optional data field 27 has been added into the GE menu command to toggle
+   this option on a user basis.
+
+   New MCI code of UQ has been added, which returns "standard" or "lightbar"
+   for the quote mode, based on the user's setting.
+
+ + Added the ability to start reading in the lightbar index mode in just
+   the e-mail base.  This is also configurable on a Sysop and individual
+   user basis.  One changed prompt goes along with this:
+
+      ; Start at message index in email? (lightbar msg reader)
+      331 |CR|12Start at e-mail message index?
+
+   Optional data field 28 has been added into the GE menu command to toggle
+   this option on a user basis.
+
+   New MCI code UM returns ON/OFF based on this setting
+
+ ! Mystic no longer asks users if they want to "Post a message here" when
+   viewing sent e-mail.
+
+ + New MPE command: TextColor.  This takes a text attribute number and
+   changes to that color.
+
+ + New MPE function: TextAttr.  This returns the current text attribute.
+
+ ! MPE: Assigning a char variable to a string variable would cause a
+   variable type mismatch!  IE: Str := Str + Ch
+
+ + MPE: Support for CHAR variables as function results has been added.  I
+   didn't even realized that they weren't supported!  Hrrmmm,
+   Forgetful I am, yes...
+
+ + Each network address now has a network name to go along with it, which
+   is defined in System Config -> Network Settings.  There is also a new
+   MCI code that goes along with this: MN, which returns the network
+   name for the current message base.  This can be used in the message base
+   scanning prompt or the message base list format prompt... or anywhere
+   else! =)
+
+ + Added a footer to the "file base scan setting" list:
+
+   ; file base scan setting footer
+   449
+
+ + Default options for TSERVER can now be set in MCFG.EXE, under System
+   Configuration -> Telnet Options.
+
+ + MPL: Added two new commands: GETFGROUP and PUTFGROUP.  These are used
+   to read and write to the file group records, and work just like the
+   GETFBASE and PUTFBASE commands.  Two new variables go along with this:
+
+      FGROUPNAME - Name of File Group
+      FGROUPACS  - Access string of File Group
+
+ + MPL: Added two new commands: GETMGROUP and PUTMGROUP.  These are used
+   to read and write to the file group records, and work just like the
+   GETMBASE and PUTMBASE commands.  Two new variables go along with this:
+
+      MGROUPNAME - Name of File Group
+      MGROUPACS  - Access string of File Group
+
+ + MPL: Added two new commands: GetTextStr and PutTextStr.  These commands
+   will be used to read/write/edit messages and file descriptions as well
+   as being used to access the message and text editors within Mystic.
+   More on this stuff later! =)
+
+ + Expanded the Prompt Info codes to 15 instead of ten.  New Prompt Info
+   codes are &A through &E...
+
+ + Added new prompt info codes for prompt #30:
+
+      &8 = Email address
+      &9 = User note
+      &0 = Optional field 1
+      &A = Optional field 2
+      &B = Optional field 3
+
+ + Added new prompt info codes for prompt #142:
+
+      &9 = User note
+      &0 = Email
+      &A = Optional field 1
+      &B = Optional field 2
+      &C = Optional field 3
+
+ + New menu command auto-exec type: AFTER.  This works just like EVERY
+   except it is drawn AFTER the menu is displayed, directly before
+   the prompt.  EVERY executes before the menu is drawn each time it is
+   drawn.
+
+ + New menu option: "Input Type".  This can be set to any of the following
+   values:
+
+      Long key     : Forces the menu to use long key input
+      Hot key      : Forces the menu to use hot key input
+      User setting : Uses whichever input mode the user has set
+
+ - Removed the Xmodem and Ymodem protocols.  This is most likely a temporary
+   thing, but I doubt many will use them anyway.  They're still kinda buggy
+   and I want to get 1.07 released as soon as I can.
+
+   Changed two prompts for this:
+
+   ; Protocol select batch prompt
+   061 |CR|14Press [|15ENTER|14] to start Zmodem transfer, or [|15Q|14] to Quit:
+   ; Protocol select standard prompt
+   062 |CR|14Press [|15ENTER|14] to start Zmodem transfer, or [|15Q|14] to Quit:
+
+ + New menu command: VN.  This will search for any new voting questions and
+   allow the user to vote on them.
+
+ ! Mystic (Win32) wasn't setting the node number correctly in the Window
+   Title.
+
+ + New prompt: Prompt #450 is now the TO: for a privately posted message
+   "TO:" field.
+
+      450 |CR|09To:
+
+ + Added two new fields to the New User Settings in System Configuraton:
+
+      Start Message Group
+      Start File Group
+
+   This allows for the msg/file group that new users start off in to be
+   defined.  In the past, Mystic would just put them in the first group
+   and first base they had access to.  Setting these options to zero will
+   cause Mystic to act like it used to - putting the user into the first
+   group and base they have access to.
+
+ - Removed MENUEDIT.EXE from the distribution
+
+ - Removed LANGEDIT.EXE from the distribution
+
+ - Removed MCONFIG.EXE from the distribution
+
+ + Added new program: MCFG.EXE.  This program is going to be an all-in-one
+   configuration and management utility!  All of the functions that existed
+   in MENUEDIT, LANGEDIT, and MCONFIG have already been added to this, as
+   well as a file base list manager and many other parts of the System
+   Configuration.  This program is not 100% completed, but its a VERY nice
+   start!  Many MANY enhancements into the menu editor, and language editor
+   as well as an overall clearer and more intuitive interface!  Includes
+   native DOS, Win32, OS/2 and Linux versions!
+
+ + Completely rewrote MIDE.EXE, the Mystic Programming Language IDE.  This
+   new version offers these new features:
+
+      + Improved interface
+      + Allows up to 9 files to be edited at once
+      + Configurable tab spacing stops
+      + Ability to disable syntax highlighting
+      + Enhanced text copy/cut/paste block functions
+      + DOS, Win32, OS/2, and Linux native versions
+      + Full online help system similar to Borland's IDE help systems.
+        Includes a full reference to the Mystic Programming Language
+        functions and procedures - along with examples of each of them!
+
+ + Completely rewrote MPL.DOC (The Mystic BBS Programming Language Manual).
+   Its not 100% completed, but its more organized and complete than the
+   MPL.DOC which was distributed with version 1.06.
+
+ + Cleaned up the way Mystic determines file/msg groups for new users and
+   existing users.  It's very "intelligent" now...
+
+ + Rewrote the installation program.  The install looks much nicer than the
+   pervious install and no longer requires any type of external archive
+   utility to complete the installation.
+
+ + MYSTIC BBS NOW HAS A NATIVE LINUX VERSION!
+
+      The linux version of Mystic BBS has been completed.  Mystic/Linux is
+      a complete shell replacement, which means that it will work
+      effortlessly over dialup and telnet connections to your system!  The
+      configuration is file case sensitive, but other than that all data
+      files are compatible with other native versions of Mystic (ie, DOS,
+      Windows, and OS/2).
+
+      Many changes had to be made to the Sysop end of Mystic to work around
+      various Linux issues.  Running a BBS under Linux is an entirely
+      different experience, but i've tried to make the transistion as easy
+      as possible for everyone.  Just be aware that the functionality of
+      Mystic/Linux is identical to all other versions, but the Sysop
+      operations will be different.
+
+ + TSERVER (the Mystic BBS telnet server for Windows) has been cleaned up.
+   When a new connection is received, TSERVER will now spawn new Mystic
+   windows completely in the background without interrupting the current
+   process.  In the past, TSERVER would always force Windows to return to
+   the desktop - so, for example, if you were in a full screen DOS session,
+   it would return your DOS session to a GUI window.
+
+ + Mystic now has full support for long file names.  It already has since
+   early 1.07 alphas, but apparently I forgot to reflect that in the whats
+   new file!
+
+ + Mystic's internal user editor now sets users who are logged into other
+   nodes as "read only" when their account is being viewed.  If their
+   account needs editing, you'll have to switch to their task and edit them
+   with the SysOp functions.
+
+ ! Mystic wasn't saving user accouts in the user editor if the user logged
+   in was trying to edit their own account.  For example, if "Joe SysOp"
+   was logged in, went to the user editor, and tried to edit his account -
+   it wouldn't save.
+
+ ! When using the ALT-E sysop command (edit user account), Mystic was not
+   changing the users online time if a new "Time Left" was set.
+
+ + New MPE command: EXIT.  This function will immediately exit the current
+   procedure or function.
+
+ + Two new options have been added to the new user settings: Start Msg
+   Group and Start File Group.  In the past, Mystic would start a new user
+   in whatever the first group they had access to was.  This can be used to
+   start a new user in a definied message and file group.
+
+ + New option added to the message base options:  The option to "Show Bases
+   in Group List" must now be set to Yes for Mystic to calculate the number
+   of areas in that group when the user is selecting a message group.  If
+   this option is toggled off, Mystic will return a "0" for number of areas
+   in a group.
+
+ + New option added to the file base options: Show Base in Group List.
+   This works just like the same option in the message base settings.
+
+ ! Fixed a bug with user's time left getting set to 0 on certain occasions
+   during a login.
+
+ + Mystic now disconnects the user after three login attempts.  If they
+   don't select to create an account in those 3 attempts, Mystic boots them.
+
+ + MPE: Added support for including source files into the main source of
+   an MPS file.  This hasn't been tested very well and has caused a slight
+   decrease in compile speed, but its there and appears to work! =)
+
+   Example:
+
+     # Sample source file which includes common.mps
+     # --------------------------------------------
+
+     #include common.mps
+
+     Begin
+       WriteLn ('Any functions or procedures in common.mps can be called')
+     End
+
+   Note that the compilers will still compile a procedure or function into
+   the executable if they're not used in the program.  So if you did make
+   an include of common functions and procedures that you use, they will
+   all be compiled.  In the future i'd like to add a "smart linking"
+   feature which would remove all unused functions and variables.
+
+ + Added new user flag: Ignore LC.  When set to YES, this option will
+   not add the user into the last caller information.
+
+ + Mystic will now not add the user to the last callers file if they log in
+   in Invisible mode.
+
+ ! Fixed a problem within MBBSUTIL's user packer.  Under certain situations,
+   MBBSUTIL was messing up the user's last read pointers and their base
+   scan settings.  This has been fixed.
+
+ + MPE: Added new var to USER record: UserEditType.  This returns the user's
+   current editor setting.
+
+ + The one liners function now redisplays the oneliners after a user adds
+   a new entry.
+
+ + Separated the post subject prompt and the REPLY subject prompt in the
+   language file.  New prompt added:
+
+      ; reply msg SUBJ
+      451 |CR|09Subject:
+
+ + Added a header prompt into the standard (non-quote-window) quote mode.  A
+   new prompt has been added:
+
+      ; standard quote header
+      452 |15Quote mode: Select a range of text to quote
+
+ + Added a new option to the message and file area selection menu commands
+   (MA and FA).  When "nolist" is supplied in the optional data field of
+   the menu command, Mystic will just show the prompt to select a message
+   base number unless, of course, the user enters "?" on that prompt, which
+   they would then get a listing of available bases.
+
+ + Added new option to Mystic's graphics detection when a user connects.
+   An option of "Force ANSI" can be set in the general settings of the
+   system configuration as the detect type.  This will force the user into
+   ANSI mode and not attempt to detect or ask for the graphics mode.
+
+ + Added new prompt: 453.  This is the footer for the listing of users in
+   teleconference.
+
+      ; footer for teleconference user list
+      453 |CR|PA
+
+ + Added an entirely new FULL SCREEN irc-like teleconference system!  The
+   older system is still around for people who like it better or for users
+   who don't support ANSI graphics.  This new system allows for the user to
+   have a permanent input line as well as a window where text will scroll,
+   maybe similar to a text-based mIRC client.  Each user also has a 200
+   line scrollback buffer!  Many changes and additions go along with this:
+
+   Changed prompts:
+
+      ; nodechat user's text: &1 = user name
+      181 |07<|15&1|07> |03
+
+      ; nodechat broadcast text: &1 = user name
+      319 |01<|09|&1 |11Broadcast|01> |03
+
+      ; nodechat private text: &1 = user name
+      218 |04<|12|&1 |14Private|04> |03
+
+      ; nodechat action text: &1 = user name
+      229 |13* |&1
+
+      ; nodechat: info/status text
+      226 |12- |07
+
+      ; new user: use full screen node chat?
+      187 |CR|12Use full screen node chat? |11
+
+      ; Node chat scroll mode back
+      237 |15Scrollback:  (Up/Down) Move  (Ctrl-R) Page Up  (Ctrl-C) Page Down  (ESC) Quit
+
+   Also some new options in the new user settings, where the node chat can
+   be either forced on or off for new users, or the new user can be asked.
+   New additions for this field has also been added to the user editors as
+   well as an addition to the "GE" menu command with optional field data
+   of 29 to toggle the user's setting.  The MCI code "CM" returns the
+   on/off status of the full screen chat function.
+
+ ! Fixed a bug that existed when viewing text files.  The pause prompt would
+   display on the last line of the page (overwriting the last line) rather
+   than moving down to the next line and displaying the pause.
+
+ + When doing a new scan for personal messages, Mystic will now update the
+   last read pointers for each base.  This wasn't a bug, I designed it to
+   not save the pointers, but I really don't know why I originally did it
+   that way. :p
+
+ + Added a new menu command: MS.  This command allows for easy message
+   searching in the current base, current group, or all groups/bases.
+   See MYSTIC.DOC for more information.  Two changed prompts go along
+   with this new command:
+
+      ; Message search: search text input
+      310 |CR|03Enter text to search for:
+
+      ; Message search completed
+      311 |15Message search completed.
+
+ + Two new additions to the MPL evaluation engine: In the past both function
+   calls and constant variables could not be evaluated in the second part of
+   a statement.  I never noticed this before, but it has been completed now.
+
+   For example (in the 1.06 MPL engine):
+
+       OK: If Ord(' ') = 32 Then WriteLn('Hello') EndIf
+      BAD: If 32 = Ord(' ') Then WriteLn('Hello') EndIf
+
+ + Added new option: System Config -> New User Settings -> Ask Screen Size.
+   If this option is set to Yes, Mystic will ask new users for their screen
+   size.  If this option is set to No, Mystic will automaticly set the user's
+   screen length to the configured default screen length.
+
+ + New MCI code: QL.  This returns YES or NO based on the user's QWK setting
+   to include a new files list in each packet.
+
+ - Removed the "OC" menu command (Set QWK options) and added the options
+   individually into the GE menu command.  See MYSTIC.DOC for more
+   information on the GE menu command.
+
+ - Removed prompt 228 that went along with the OC menu command.
+
+ + Added a footer prompt to the batch queue listing.  New prompt is #428
+
+ + Expanded the modem initialization string from 40 characters to a max
+   of 80 characters
+
+ + Added new prompt to the QWK packet creation: Prompt #228 now displays
+   if a packet is created with 0 messages, and the download is then aborted
+
+      ; QWK DL: No messages
+      228 |CR|15No messages found.|CR|CR|PA
+
+.-----------------------------------------------.
+| Mystic BBS RELEASED v1.07 : December 26, 2000 |
+`-----------------------------------------------'
+
+ ! MCFG: The New User Settings 1 -> Language file setting was backwards.
+   It'd say "Ask" when it really should have said "Use default".
+
+ ! MCFG: The option New User Settings 2 -> Ask Screen Size was missing from
+   the options but available from within Mystic's internal configuration.
+
+ ! Fixed a bug in the QWK system that would cause certain messages in a
+   packet to get scrambled.
+
+ ! The QWK system was creating .NDX files for bases that didn't have any
+   messages in them.  This is fine for most QWK readers, but there are a few
+   that didn't like that.  In addition, the .NDX files were not getting
+   created correctly under certain operating systems.
+
+ + Mystic will now restore the screen on the user's side after sysop chat
+   modes.
+
+ + Mystic was looking for FILE_ID.DIZ in the Linux version of Mystic.  This
+   has been changed to look for file_id.diz instead.
+
+ ! In line quote mode, Mystic would not allow you to quote a range of text
+   that wasn't already displayed.
+
+ ! MIDE: When changing the file name during a "Save As", MIDE was not
+   renaming the window to the new file name.
+
+ + Added new MPL function: PATHCHAR.  This will allow for MPE programs to
+   be easily written to work on both Unix and DOS type file systems.
+
+ ! The index files in Squish message bases were getting written incorrectly.
+   I think i've managed to nail this bug but I haven't had any substancial
+   testing done as none of my alpha sites run Squish message bases. :(
+
+ + MCFG: Added (ALT+S) Sort into the status line of the file base editor.
+   Sorting was always available, but for some reason I never put it on
+   the status line.  Even the help listing had ALT-S documented. =]
+
+ + Changed the INSTALL program to use CTRL-S to start the installation,
+   instead of the F2 key that was used.  Linux users were not able to
+   use F2 over an xterminal.
+
+ + MPL: Added new procedure called GETSCREENINFO.  This is used to read the
+   values of the Screen Info MCI codes.  This will come in handy when
+   creating lightbar mods which use ANSI templates similar to the rest of
+   Mystic.
+
+ ! Fixed a small memory leak in the DOS/WIN/OS2 versions caused when running
+   external programs (doors).
+
+ ! Fixed the DOOR32 problems in Windows version.  I had some code commented
+   out when I released 1.07.  I forgot to 'put things back to normal' when
+   I was done testing some things before the release. =]
+
+ ! Fixed the viewing of the BBS list in the Linux version.  Just the case of
+   an error in file casing.  Mystic was looking for a data file in all
+   uppercased letters when it should have been lowercased.
+
+ ! Fixed the error with inserting a new menu in the Linux internal menu
+   editor.
+
+ ! Fixed a small problem with displaying the time in twelve hour format.
+   It'd display 12:01am when it should have said been 12:01pm.
+
+ ! The BI mci code (User's Birthdate) wasn't being displayed correctly.
+
+.------------------------------------------------.
+| Mystic BBS RELEASED v1.07.2 : January 20, 2000 |
+`------------------------------------------------'
+
+ + Added (Q)uit to prompt #361.  Before if you selected to add to the BBS
+   list, you'd have to fill out the entire entry before you could save or
+   abort.
+
+ ! Fixed a problem with the Linux MPE loader.  If you tried to run a
+   script outside of the script directory, things wouldn't work.  Mystic
+   was looking for a "\" instead of a "/".
+
+ + MYSTPACK: Changed the file names of the temporary files created when
+   packing bases.  Hopefully this will solve it crashing on some Linux
+   distributions.
+
+ ! When Mystic prompted for an upload file name, a space could be entered
+   as a valid filename.
+
+ ! MPL: When compiling a program, Numerical variables could be assigned to
+   a function which returned variables in the type of String.  A mismatch
+   error should have occured.
+
+ ! When the remote screen was redrawn after a sysop chat session, it would
+   redraw incorrectly on if the status bar was NOT in single line mode.
+
+ + Mystic now creates QWK packet's CONTROL.DAT file in MSDOS format even
+   in Unix type file systems.  This seems to be more compatible with all
+   types of QWK readers.
+
+ ! MPL: When assigning certain numerical variable types, MIDE and MPLC would
+   report a variable type mismatch when it shouldn't have.
+
+ + Optimized the idle sensitivity within Mystic's Windows version.  This
+   should make keyboard input a little faster/more efficient.
+
+ + Enhanced the method Mystic uses to determine if a line of message text
+   is quoted text.  A few QWK readers would indent quoted text within the
+   message and Mystic wouldn't see it as quoted text.
+
+ ! Fixed a bug in the file and message base selection listing.  When the
+   base listing was aborted, Mystic would only let an area be selected if it
+   were already displayed in the list.
+
+ + Mystic/Windows will now check to see if the window title was changed
+   after running a door, and restore it as "Mystic Node x" if it has been
+   changed.
+
+ ! If the SysOp was in two line status bar mode and the node chat template
+   used line 23 as the input line, the teleconferance wouldn't work right.
+   Fixed.
+
+ + Added new command into the message reading system.  The (H) key will now
+   set the current message as the high water (last read) pointer.  At the
+   moment it doesn't display anything telling you that it worked (when H is
+   pressed), but it does work.  The reason for this is that I don't like to
+   add new prompts into minor builds.  I'll add the new prompts for it in
+   the 1.08 release.  Just thought i'd include it in this form because
+   there were a couple requests for this feature.
+
+ + The ENTER key is now available in menus using longkey input.
+
+ ! The Hotkey and Longkey settings were reversed in MCFG's menu editor.
+
+ ! When using the lightbar file lister's previous page option, it'd skip
+   the second page (and ONLY the second page) and go directly from the
+   third page to the first page in the listing.  Fixed.
+
+ + The ESCAPE key in the full screen message editor will now bring up the
+   command prompt.
+
+ + MCFG: There is now a command to delete a ghosted user from within the
+   node manager.
+
+ + MCFG: Changed all the commands within MCFG to use CTRL keys instead of Fx
+   or ALT keys.  It may take a little to get used to these changes, but it
+   allows for us to have MCFG work over terminals in Linux while keeping all
+   the function keys consistant in all versions of MCFG.
+
+ + MCFG: The mouse cursor is no longer present in the Windows version.
+
+ + MCFG: The window title is now set to "Mystic Configuration"
+
+ + The Linux version of Mystic will now accept the D3 menu command.  This
+   allows the Linux version to write a DOOR32.SYS drop file.
+
+ ! MPL: Fixed a bug with the UserDeleted variable which could cause the
+   user's flags to get corrupted.
+
+ ! The CHAIN.TXT drop file now outputs the user's age field and a zero for
+   the gold field.  Apparently, having a blank and not a 0 for gold would
+   cause some doors to crash.
+
+ ! Fixed some Squish related QWK bugs, which caused QWK packet corruption
+   on all Squish format message bases.
+
+ + Added the (I)gnore message reading command into the lightbar message
+   index.
+
+ ! Squish last read pointers were not stored in records based on a
+   0-based user index.  This would cause problems with 3rd party SysOp
+   mail readers.
+
+ ! Fixed a problem with the lightbar message reader in Squish mode.  Mystic
+   was giving strange results when the previous message command was selected
+   on the last message of a base.
+
+ + Mystic now adds the ^AMSGID and ^AREPLY fields to all outbound echomail
+   posts and replies.
+
+ + Mystic will now filter any kludge lines from message text, quoting, and
+   message exporting.  Kludges lines are any line of text in which the first
+   character is a ^A (smiley face)...
+
+ ! Fixed small input bug in MCFG's language prompt editor.
+
+ ! If a user was online at midnight, their time per day wasn't getting reset
+   correctly.  Mystic will now reset their time left to whatever their
+   daily limit is for their security level.
+
+ + Added a new door command line MCI code: %U will now be replaced with
+   the user's alias.
+
+ + MCFG: Added the General Settings into the System Configuration menu.
+
+ + MCFG: Added the Global Message Base Editing feature into the Message
+   Base Editor.  This is a very handy utility.
+
+ + The online file listing editor will now allow renaming files based on
+   file casing, for operating systems that support it.
+
+ ! Fixed a small bug in the lightbar file lister's next page option which
+   would sometimes report the end of the listing without displaying the
+   last file in the listing.
+
+ + MIDE will now save its configuration file in the same path that the
+   actual MIDE.EXE file exists.  This allows for MIDE to be placed in a
+   directory on the PATH and will prevent it from making a new .cfg file
+   in each directory MIDE is used.
+
+ + MIDE will now also look for it's help file (mide.hlp) in the actual
+   path where MIDE.EXE exists.
+
+ ! Finally got around to nailing one of the two word wrapping bugs in the
+   Full screen editor.  This one would cause the BBS to lock up under
+   certain rare situations.
+
+ + Removed the hard coded clear screen from the standard quote mode.  You
+   will have to update prompt #452 with a |CL mci code in the beginning
+   of the prompt for it to work the same as it did in the past...
+
+ + MPE programs can now be executed from one of the sysop macros.  Any
+   macro which begins with a ! character will execute an MPL program.  The
+   format is !<mpepath><mpename>.  If <mpepath> is omitted, Mystic will
+   look in the SCRIPTS directory as defined in System Paths.
+
+ ! When an MPL program resided in the scripts path, the ParamStr(0) function
+   would only return the file name of the MPL program and not the full
+   path and file name as it should have.
+
+ + Added the OS/2 native version of Mystic back into the distribution.  It
+   hasn't had much testing, but hopefully it will do us well.  If you find
+   any problems with it, let me know and I'll try to fix it.  Keep in mind
+   that I no longer have an OS/2 development machine here so I will need
+   a hand testing things.
+
+.----------------------------------------------.
+| Mystic BBS RELEASED v1.07.3 : May 13th, 2000 |
+`----------------------------------------------'
+
+ + New MPL function: GETUSERTIME returns the number of minutes the user
+   has remaining.
+
+ ! Kludge lines were not getting filtered out in standard message reader
+   mode.  This also caused a problem creating REPLYID tags in networked
+   message bases.
+
+ ! MCFG would exit out to the prompt when CTRL-C was used to copy a menu
+   command in the menu editor.
+
+ + Added IP blocking into Mystic's Telnet server (TSERVER).  The file
+   IPBLOCK.TXT can now be placed into the data directory and contain a
+   list of IP addresses which should be blocked.  An asterics can be used
+   to block a mask of addresses.  Each address needs to be in the format
+   of #.#.#.# and only one address can be specified on a single line.  For
+   example:
+
+      204.186.*.*
+      24.67.213.*
+      24.87.321.534
+
+ + Completely rewrote MYSTPACK to fix some problems with the way the
+   previous version packed the message bases.  Gone should be the crashes
+   and any problems with last read pointers being screwed up because of
+   MYSTPACK.  Also added the -pack command line, which is now required
+   in order to start packing the bases. IE: mystpack -pack -skipfirst. Some
+   minor cosmetic changes have been made.  A spinning cursor has been added
+   while each base is getting packed, and the total number of messages and
+   bytes removed are displayed or each base along with a total for all
+   bases after all packing has been completed.
+
+ ! MPL: Fixed a bug which caused some of the MBASE variables to get
+   corrupted.
+
+ ! MCFG: Fixed a minor aestetics error in the global file base editor.
+
+ + Added a daily history system.  Mystic will now track the following
+   things on a daily basis: emails, posts, downloads, uploads, upload KB,
+   download KB, calls, and new users.  A new menu command (G1) has been
+   added to view all the daily history, and the following new prompts have
+   been added:
+
+      ; no history data
+      454 |CR|12No history data available.|CR|CR|PA
+      ; history header
+      455 |CL|15Daily System History|CR|CR  Date    Calls  New    Posts  Email  DLs    DLkb       ULs    ULkb|CR|08|$D79-
+      ; history list
+      ; &1=date  &2=calls  &3=newusers  &4=posts  &5=emails  &6=dls  &7=dlkb
+      ; &8=uls   &9=ulkb
+      456 |07|&1  |$R05|&2  |$R05|&3  |$R05|&4  |$R05|&5  |$R05|&6  |$R09|&7  |$R05|&8  |&9
+      ; history footer &1=total days
+      457 |08|$D79-|CR|15* Total days: |&1|CR|CR|PA
+
+ ! The extended descriptions in the file list compiler were off by a single
+   character.  Fixed.
+
+ + Added message scan date setting.  Users can now set the message last read
+   pointers based on a date.  A new menu command of MD accesses this
+   function, and a few new prompts have been added:
+
+      ; msg scan date prompt
+      458 |CR|09Enter new message scan date |01[|10|UF|01]|09: |11
+      ; msg scan date global prompt
+      459 |CR|12Set this date for all bases? |11
+      ; msg scan date: updating pointers
+      460 |CR|12Updating pointers: Please wait...
+
+ + The [ and ] keys now work while editing files within file listings.
+
+ + Mystic will now automatically rename any file name longer than 70
+   characters (the maximum Mystic supports) during an upload or a mass
+   upload.  It will keep the file extention if there is one and make the
+   total filename length 70 characters.  If a file already exists with the
+   new shortened name, Mystic will prompt for the user to enter a new file
+   name for the file, and then rename it to whatever they type.  Pretty
+   slick if you ask me. =]  A new prompt goes along with this:
+
+      461 |CR|12File of this name already exists.|CR|CR|09Enter new file name (max 70 chars)|CR:
+
+ + Mystic's internal user editor will now accept partial user searching as
+   well as user record number jumping.
+
+ + When importing FILE_ID.DIZ, Mystic will now strip off all extra blank
+   lines of text.  So if a FILE_ID.DIZ has 10 blank lines before or after
+   the description, Mystic will remove those 10 blank lines.
+
+ + MPL: Expanded the maximum number of parameters passed in a procedure or
+   function from 5 to 8.
+
+ + Mystic can now set an ACS level for each node which a user must meet
+   in order to login to that node.  This is found in the Modem/Node
+   editor.  A changed prompt goes along with this:
+
+      ; Node login ACS failed
+      315 |CR|14You do not have access to call this node.
+
+ + MPL: Added new MPL function: MCI2STR.  This function takes an MCI code
+   and converts the value of the code into a string variable.
+
+ + Added the /ALLGROUP optional data option into the QWK Download menu
+   command.
+
+ + Removed the Lightbar Yes/No configuration from the language settings
+   into the language file as prompts.  You will need to replace the
+   following prompts with the lightbar Y/N stuff:
+
+      ; Lightbar Y/N: YES text
+      316 |09|17щ|15Yes|09ч|16  |14N|11o |16
+      ; Lightbar Y/N: NO text
+      317 |14 Y|11es  |09|17щ|15No|09ч|16
+
+ + Added a new option into the language settings.  There are now two input
+   field colors, one being the color of the typed text, and the other
+   being the color of the field itself.  This allows for some pretty cool
+   input field combinations, when playing with these two settings and the
+   input field fill character.
+
+ + Added the language settings into MCFG, accessible via the language
+   editor.
+
+ + Added new 'percentage bar' system into MCFG's language configuration.
+   The first percentage bar is the voting booth results bar.  It is now
+   configured with the language editor and activated when the same Prompt
+   Info MCI code as in the past.  This just allows more customization of
+   the percentage bar.
+
+ + Added a percentage bar into the lightbar message viewer.  The new
+   configuration options for the message reader percentage bar can be
+   found in the language editor of MCFG.  Two new and optional Screen
+   Info MCI codes are now available in the ANSIMRD.XXX template file:
+
+      !4 = The X/Y location and text attribute of the actual percentage
+           of the message read (ie a number between 0 and 100).  If this
+           code is not in the template, it will be ignored.
+
+      !5 = The X/Y location of the percentage bar.  If this code is not in
+           the template file, it will also be ignored.
+
+ + Changed the clear screen functions in Mystic to send an ESC[2J rather
+   than a ASCII #12 if the user has ANSI graphics.  This is a little more
+   compatible with obscure terminals and telnet clients.
+
+ + MCFG now saves the selected option when navigating menus, and keeps that
+   option highlighted when returning to a previous menu.
+
+ ! When the status bar was set to single line and a user paged the sysop,
+   Mystic wouldn't update the statusbar properly to show the user name,
+   chat reason, and chat commands.
+
+ + MCFG: Added some extra checking in the sort functions.  This should
+   prevent any sorting problems due to memory limitations in the file
+   and message base editors.
+
+ ! Fixed a bug which could cause some messages that were marked as deleted
+   to still be readable.  In fact, they'd only be actually deleted when
+   MYSTPACK was ran on the bases.
+
+ ! MCFG: Fixed a very bad bug in the user editor.  If you selected CTRL-U
+   to upgrade, then hit ESC to abort the upgrade, MCFG would upgrade the
+   user to security level 255.  VERY BAD - BUT FIXED NOW!  SORRY!
+
+ + Added the ability for message moving.  If a user was the original
+   poster of the message, or if the user has SysOp access rights to the
+   message base, they can move the message to any message base they have
+   access to by pressing (M).  Changed prompts:
+
+      ; Move message to where?
+      282 |CR|09Move to which base (?/List):
+      ; Moving message. &1=base name
+      318 |CR|14Moving message to |15|&1|14...
+
+ - Removed CTRL-Z and CTRL-R commands from the line mode text editor for
+   compatibility with Linux.  Also removed prompt #161.
+
+ + Removed CTRL-Z in the full screen editor and the full screen text editor.
+   CTRL-Z was save in the text editor and CTRL-Z was help in the normal
+   full screen editor.  The help command has been moved to /H.
+
+ ! Fixed a huge bug in MBBSUTIL's -FPACK function which would truncate
+   file descriptions at 45 characters.  When Mystic was enhanced to allow
+   50 characters on a line, somehow MBBSUTIL wasn't. :(
+
+ + Added two new command line features: The -U and -P command line options
+   can be used to log in as a user from the command line, skipping the
+   user name and password prompts, or login matrix if one is activated.
+   These must be used along side the -B command line option in order to
+   work.  If either the user name or password supplied is not valid,
+   Mystic will simply exit.  When supplying a user name, you must replace
+   all spaces in a name with an underscore (_).  For example:
+
+        MYSTIC -B0 -Usome_user_name -Ppassword
+
+   The above would start Mystic in local mode with user "some user name"
+   already logged in.
+
+ + Mystic will now run STARTUP.MPE if it exists in the scripts directory
+   directly after the graphics emulation detection/selection.
+
+ + When replying to a private or e-mail message, Mystic will now force
+   that the To: field is a valid user on the system.  A changed prompt
+   goes along with this:
+
+      161 |CR|11|&1 is not a valid user on this system.
+
+ + Added new ACS command "Mx" which is based on the current minute.  This
+   command is used to check if a user is accessing a command at a certain
+   minute.  Where X is the minute.  For example: M15 will prevent the user
+   from accessing the command before :15 after each hour.
+
+ + Added new ACS command "Wx" which is based on the current day of the week.
+   Where X is a numerical value from 0 to 6, representing a day of the week:
+
+      0 = Sunday
+      1 = Monday
+      2 = Tuesday
+      3 = Wednesday
+      4 = Thursday
+      5 = Friday
+      6 = Saturday
+
+   For example, "W0" would make the command only accessible on sunday.  W5
+   would be Friday, etc.
+
+ ! The Netmail Origin and Destination address was not getting set properly
+   when replying to a netmail message.  The Origin address was also not
+   getting set properly when posting a netmail message.  These are fixed!
+
+ + Added new command line option: -X<data>
+   This option goes along with the -U and -P command line options and when
+   supplied on the command line will execute a compiled MPL program file.
+   <data> contains the file name and any command line options supplied to
+   the mpe program.  As with the -U option, any spaces should be replaced
+   with a _ character.  If no path is supplied, Mystic will look in the
+   configured scripts directory for the program.  Some examples:
+
+      MYSTIC -B0 -Ug00r00 -PHELLO -XTEST
+      MYSTIC -B0 -Ug00r00 -PHELLO -XBULLETIN_BULLETIN_BULLET_CHECK
+      MYSTIC -B0 -Ug00r00 -PHELLO -XC:\MYSTIC\SCRIPTS\GAME\MYGAME
+
+   After the script is ran, Mystic will exit back to the operating system.
+   This is mostly useful to MPE developers being that they can setup an
+   external editor for coding their programs, and have it automatically
+   run the program from within the editor to test things.
+
+ + Expanded the maximum number of variables in an MPL program to 500.  This
+   took quite a bit of recoding because MPL was originally intended to be
+   a simple script engine, and was written with certain limitations.  Well,
+   now one of those limitations is gone.  Technically (if memory allowed),
+   I could expand the max variables up to 64,000 now!
+
+ + Added the display of the user's permanent index within MCFG's User
+   Editor.  That should have been there to begin with, but I must have
+   overlooked it.
+
+ ! Fixed a small display bug in MCFG's user editor with the "Editing User
+   XXX of XXX" would get messed up.
+
+ ! MCFG: The statusbar in the file base editor didn't have the (I)nsert
+   command on it.  I'm not sure if it was like that in 1.07.3 or just the
+   1.08 alphas, so I thought I'd mention it here.
+
+ ! Did a full rewrite of the mandatory message base code.  The old system
+   was very buggy and allowed users to quit reading mandatory bases.  In
+   addition, the /M option of the new message scan (scan all mandatory
+   bases) was not working properly.  This should all be fixed now.
+
+ + Added a new auto-running menu command type called 'LINEFEED'.  If you
+   set the hotkey of a internally generated menu to LINEFEED, Mystic will
+   go to the next line and display the 'display text' of the command.  This
+   can be used, for example, to separate normal commands from sysop commands.
+
+ + Added new 'LINEFEED' option into MCFG's menu editor.
+
+ + The Linux version now sets the terminal mode back into RAW mode when
+   returning from doors.  This should solve some problems with running
+   external programs that modified the terminal setting, causing Mystic to
+   seem like its getting input in 'line mode' (ie, no hotkeys).
+
+ + Linux: The input buffer is now purged after an ANSI detection.
+
+ + Added new Door execution MCI codes:
+
+     %P = Current node's temp path where door drop files are made.
+     %T = Current user's time left in minutes.
+     %# = Current user's permanent user index number.
+
+ + MIDE: New option for auto indenting added.  This can be toggled on or off
+   within the MIDE options.
+
+ + MPL: The compilers now ignore semicolons, so if you accidentally add on
+   at the end of a line or something, the program will still compile.
+
+ + MIDE: When the delete key is pressed on a blank line or if it is pressed
+   at the end of a line, MIDE will now wrap the text from the following
+   line onto the current line.
+
+ ! When reading private e-mail, it was possible to read another user's
+   email by using a combination of the prev/next message commands and the
+   reply command.  This has been fixed.  I doubt many people found the bug
+   though as it went over a year before it was reported to me.
+
+ + New MCI display code: U#.  This returns the user's permanent index
+   number.
+
+ ! The GROUP.XXX and FGROUP.XXX display files were showing up during the
+   login sequence when Mystic was loading the user's msg/file group
+   information.
+
+ + Added a percentage bar into the lightbar file lister.  The new
+   configuration options for the file list percentage bar can be found in
+   the language editor of MCFG.  Two new and optional Screen Info MCI codes
+   are now available in the ANSIFLST.XXX template file:
+
+      !5 = The X/Y location and text attribute of the actual percentage
+           of the message read (ie a number between 0 and 100).  If this
+           code is not in the template, it will be ignored.
+
+      !6 = The X/Y location of the percentage bar.  If this code is not in
+           the template file, it will also be ignored.
+
+ + If the user's NoCaller flag is set, Mystic will no longer update the
+   total system calls.  In the past, Mystic would only exempt the use from
+   the last callers data.
+
+ ! Fixed a bug which would cause the message base listing to pop up during
+   the user's login.  This was a rare bug, but I finally tracked it down
+   and squashed it.
+
+ + The optional data field of command G1 (View System History) will now
+   accept a numerical value to display the last xx days of history.  For
+   example, optional data of 10 will show the history of the last 10
+   days.
+
+ + New MCI Code: SN.  Displays the SysOp name as configured in Mystic's
+   configuration.
+
+ ! Fixed a bug in the mass mailing procedure that would cause the From:
+   field in the message to get corrupted.
+
+ + Two new command line options for the Win32 version of Mystic.  When
+   loading Mystic, the socket descriptor or the comm handle can be passed
+   on the command line.  This is used for using 3rd party telnet and dialup
+   servers such as a mailer.  The command line options are:
+
+      -TID<socket descriptor>
+      -CID<comm handle>
+
+ ! MPL/Linux: Fixed problems with the file access functions, specifically
+   FSEEK, but others may have been affected by the same bug.
+
+ ! While reading messages using the lightbar message index, Mystic would
+   sometimes show messages as new when they were not.
+
+ + The left/right arrow keys now work as page up and down in the lightbar
+   file listings.
+
+ ! Mystic was not checking the Post ACS for message bases when uploading
+   a QWK reply packet.
+
+ ! Mystic was not checking the ACS before running menu commands with the
+   AFTER hotkey.
+
+ ! Mystic was not checking the ACS before running menu commands with the
+   EVERY hotkey.
+
+ ! Fixed all mass email bugs.  There were several and they should all be
+   squashed now
+
+ - Removed Mystic's internal Zmodem protocol.
+
+ + Added support for external protocols.  Mystic is now compatibile with any
+   protocol driver that can create a DSZ-style log of the files that were
+   transferred.  Mystic will automatically set the DSZLOG environment
+   variable before executing the configured protocol.  Here are the MCI
+   codes used in the Protocol Configuration:
+
+     %0 : Returns communications handle (Win32 and OS/2 only)
+     %1 : Node's modem port as configured
+     %2 : User's baud rate
+     %3 : FileName of file to send/receive (or path/filename of text file
+          which lists all of the files if in batch mode.  When receiving
+          this will return the directory where files should be uploaded
+          to).
+     %4 : Node's baud rate as configured
+     %5 : User's UserID as passed with the -UID command option
+     %6 : User's handle.  Spaces are converted to _.
+     %7 : Current node number
+
+ + New Menu command of *P for Protocol Editor and new WFC menu key P to
+   access the Protocol Editor.
+
+ + New command line option: UID.  Here you can pass any value up to 60
+   characters in length to identify the user.  It must be a single word,
+   it cannot contain any spaces.
+
+ + New MCI code UX returns the user's ID as it was passed with the -UID
+   command, or blank if one wasn't passed.
+
+ + When pressing ENTER in the lightbar message reader, Mystic will now
+   PAGE DOWN instead of jumping to the next message immediately.  This
+   allows reading of all messages in the reader by just using the ENTER
+   key! =]
+
+ + Pressing ENTER in the lightbar file listings now work the same as the
+   message reader.  ENTER will scroll down the listing a page, and if at the
+   bottom, will move onto the next base in the scan or quit the listing if
+   not scanning.
+
+ + New Door MCI code (translated when executing doors): %5 will be replaced
+   by the User ID as passed with the -UID command line option.  This works
+   the same as %5 in the protocol editor.
+
+ + Added the ability to execute an MPL program instead of the command line
+   for a protocol.  By starting your command line with a !, you can have
+   Mystic run a MPE program.  For example:
+
+       send Command: !test %1 %2 %3
+
+   The above would execute test.mpe from your scripts directory and pass
+   the results of the %1 %2 %3 protocol MCI codes as command parameters to
+   the MPL program.  Keep in mind that if you do use this to execute some
+   type of protocol, you must set the DSZLOG environment variable yourself
+   and have it point to the current node's temp directory as xfer.log.  Mystic
+   will also create an xfer.bat or xfer.sh (depending on operating system) which
+   can also be executed.
+
+ + Added prompts for protocol selection to the language file.  You will
+   need to replace the old prompts with the new prompts listed below, and
+   then recompile your language files:
+
+      ; Protocol List Header
+      359 |CR|14Available Protocols:|CR
+      ; Protocol list prompt &1=HotKey &2=Description
+      061 |14[|15|&1|14] |&2
+      ; Protocol select prompt
+      062 |CR|14Select Protocol [|15Q/Quit|14]: |XX
+
+ + Users now have the option to (R)eply to a received node to node message.
+   There are updated prompts that go along with this:
+
+     145 |CR|09(R)eply to Message or (ENTER/Continue): |15
+     ; NodeMsg reply &1=from &2=node#
+     360 |CR|09sending reply to |&1 on node |&2:
+
+ + If a user is online when another user sends them e-mail, Mystic will now
+   notify the user via a system message that new mail has been received.
+
+ + TSERVER now passes the user's IP address using the -UID command line
+   option.
+
+ + The /TO: /SUBJ: and /ADDR: options now work with the MP menu command.
+
+ ! MCI codes are now stripped from Message and File base names when they
+   are written to the Sysop logs.
+
+ ! The UM (use lightbar message index in E-mail) MCI code was not working
+   correctly.
+
+ ! Fixed MCFG and MIDE "Out of memory" errors that could occur sometimes
+   in Linux.  Now if it happens, you are seriously out of memory that was
+   allocated to those programs. =]
+
+ + Added the ability to change the message subject from within the line and
+   full screen message editors.  The following new/changed prompts exist:
+
+      ; Line editor "command" prompt help
+      167 |CR|03(|11A|03)bort Message    (|11C|03)ontinue Message     (|11U|03)pload Message|CR(|11Q|03)uote Message    (|11S|03)ave Message         (|11H|03)elp|CR(|11T|03)itle Change
+      ; FS editor command prompt help
+      355 |CR|03(|11A|03)bort Message    (|11C|03)ontinue Message     (|11U|03)pload Message|CR(|11Q|03)uote Message    (|11S|03)ave Message         (|11H|03)elp|CR(|11T|03)itle Change
+      ; line editor edit subject
+      462 |CR|09Enter new subject:
+      ; FS editor edit subject
+      463 |CR|09Enter new subject:
+
+ + Expanded the data filename size from 8 characters to 40 characters in
+   both the message and file bases.
+
+ + Mystic will now recreate MBASES.DAT with the Electronic Mail base if for
+   some reason reason it does not exist in the data directory.
+
+ + Mystic now allows the quote header to be configurable in all quoted text.
+   A new prompt goes along with this:
+
+      ; msgtext quote header &1=date &2=from &3=initials
+      464 On |&1, |&2 said the following...
+
+ + When tagging a file in the lightbar file lister, Mystic now automatically
+   moves to the next file after tagging the current.
+
+ ! Fixed a bug in Linux relating to parsing MCI codes in a display file.
+
+ + Completely rewrote all of the 'local' input and output functions in
+   the Windows version.  It should be faster.
+
+ - Removed the password being displayed in clear text on the SysOp status
+   bar when a user is logging in.
+
+ + The user editor now masks the password with asterisk unless it is being
+   edited.
+
+ - Removed the DOS and OS2 versions.
+
+ + Completely switched all versions of Mystic BBS over to Free Pascal. Using
+   only one compiler now makes it much easier to maintain the code.
+
+ + Added new MCI code |ISxx where XX is a two digit number.  This limits the
+   actual max amount of input on the next input prompt.  Whereas IN limits
+   the size of the input prompt space itself, this limits the actual amount
+   of characters that will be accepted.
+
+ ! Fixed a bug when attempting to determine an archive's file extension
+   under Linux.  The actual extension comparison is now NOT case sensitive
+   when checking it against the archive tools in the configuration.
+
+ ! Fixed a bug in the full screen editor, where the cursor would move
+   strangely when using the right arrow key at the end of a line.
+
+ + MBBSUTIL's UPACK (user pack) function will now go through every message
+   base marked as "Private" and delete any messages TO or FROM the person
+   being deleted.
+
+ ! Mystic wasn't working correctly on voting questions #15-20 (if you had
+   that many).  The maximum is 20 and all 20 should work correctly now.
+
+ + All door menu commands can now include the /DOS option on the command
+   line data.  If /DOS is found, drop files will be created in MSDOS format
+   even if the operating system is not Windows.  If the /DOS option is not
+   supplied, the drop files will be created in the format of the operating
+   system (CRLF for Windows and LF for Linux/OSX). Ex:
+
+        Menu Command: DD
+       Optional data: c:\mystic\doors\mydoor.sh %1 %2 /DOS
+
+ + Removed all of the remote modem/TCPIP code for Windows and replaced it
+   with newer stuff from Mystic 2.0 code.  Unfortunately this means that
+   built in support for modems/dialup has been removed.  But it opens a
+   lot of doors moving forward.  I would like to eventually support dialup
+   in Windows again in the future.  It is probably possible using 3rd party
+   software for now.
+
+ ! Mystic was not always setting the user's node action correctly when
+   reading messages.  This should be fixed.
+
+ ! Fixed various bugs with pause prompts, where some terminals sending
+   CRLF would cause subsequent pause prompts to be skipped.
+
+ + Replaced TSERVER with MIS.  MIS only has its telnet functionality
+   enabled for now.  It is based off of the Mystic 2.0 server code,
+   which had semi-working POP3/SMTP/FTP servers and seems to be more
+   efficient and at least as stable.
+
+ + Changed the WFC screen to "configuration mode", accessible by running
+   mystic -cfg command line.  This also works in Linux allowing access
+   to the internal configuration editors.  Mystic will skip checking
+   for created directories and some other data file related start up
+   checks when this command line is used, so that they can be corrected
+   using the editors.  Mystic only requires MYSTIC.DAT and a valid language
+   file in order to enter configuration mode.
+
+ - Removed the "screen saver" from the WFC/Configuration mode screen. It
+   was really only useful in the DOS version which is no longer supported.
+
+ + Added a new MCI code: XX.  This actually does nothing, but it can be useful
+   in some prompts files to help with prompts.  For example, if you have an
+   editor that always removes any trailing spaces, you might use it to make
+   sure the ending space is never removed:
+        Enter user name:
+        Enter user name: |XX
+
+ ! Fixed a bug where Mystic was doing a case sensitive check of language
+   files in Windows.
+
+ + Expanded menu names to a maximum of 20 characters now, up from 8.  Now
+   that the DOS version is no longer developed, we can finally start moving
+   away from its limitations! There will be places where this isn't updated
+   and that is because I didn't want to change the data file formats this
+   close to release.
+
+ + Added in a new Intel Mac OSX native version of Mystic BBS!
+
+.------------------------------------------------.
+| Mystic BBS RELEASED v1.08 : September 20, 2011 |
+`------------------------------------------------'
+
+ ! Fixed a bug in the full screen editor that could sometimes garble text
+   seemingly at random.
+
+ ! The TAB and ESCAPE hotkeys were not working in lightbar menus.
+
+ ! Fixed some minor display bugs in MCFG
+
+ + Added new function to MBBSUTIL called -MTRASH.  This will go through
+   all message bases and delete any messages To or From the users listed
+   in a text file.  The file should contain one username per line,
+   and the names do NOT have to be members of your BBS.
+
+       MBBSUTIL -MTRASH c:\mybbs\data\trashcan.dat
+
+   It is recommended to use this with your trashcan.dat file in the data
+   directory, which Mystic uses to disallow new users with any usernames
+   found in the file.  If you have networked message bases, this could
+   be executed whenever your tosser brings in new messages - assuming
+   it is not already able to filter out messages on its own.
+
+ + Mystic now creates semaphore files in the DATA directory when new
+   networked mail is created:
+
+     echomail.now - Created when new echomail has been posted.
+     netmail.now  - Created when new netmail has been posted.
+     newsmail.now - Created when new "newsgroup" message has been posted.
+
+   This is basically an alternative to using errorlevels to process
+   networked messages.  This is now the recommended method to use for
+   tosser activity as there may be a time in the future when Mystic does
+   not exit after each session.
+
+ + Did some restructuring of the file base data.  The following changes
+   have been made in order to support future features:
+
+      + Added FTP name for each base
+      + Added FTP list ACS for each base
+      + Expanded file base passwords to 20 characters
+      + Expanded all file base ACS strings to 30 characters
+      + Expanded the file directory to 120 characters
+      + Expanded the display file name to 20 characters.
+      + Added an ansi template field on a per base level.
+
+ + Enabled the FTP server inside of MIS.  At the time of this writing the
+   server does not support uploads and it does not properly send file and
+   directory dates.  It has been tested with the following:
+
+      Linux "ftp"       - No problems
+      Windows FTP       - No problems
+      Filezilla FTP     - No problems
+      SmartFTP          - No problems
+      Firefox           - No problems
+      Chrome            - Does not work.  This is a problem with Chrome
+                          which does not properly support the base FTP
+                          protocol standards (tries to force EPSV mode)
+                          I think.
+      Internet Explorer - Does not work, cannot determine why
+
+   As a result, a version of MIS is now included in the OSX and Linux
+   versions.  These versions do not support telnet (since Telnet is
+   currently handled by inetd-type services on those platforms).
+
+   The FTP server creates a virtual directory structure, one for each
+   file base using the "FTP Name" configured for each file base.  No
+   other configuration is needed outside of setting the basic FTP
+   stuff within the Internet options of MCFG.
+
+   When configuring the FTP ACS for each file base, keep in mind that
+   any "session"-type data in ACS will automatically return true.  This
+   means that most basic ACS works (security, time of day stuff, user
+   flags) but some things like "ansi graphics mode" are always true,
+   since the user cannot have a graphics mode via FTP.
+
+ ! Removed some debug logging accidentally left in 1.08.
+
+ + Expanded the maximum message size in the message bases to 500 lines,
+   up from 200.  This was a bigger undertaking than I had expected, so
+   hopefully there are no issues.
+
+ + Message Base permanent indexes are now shown in the internal message
+   base editor.
+
+ ! Fixed a screen bleeding bug that could happen occasionally while
+   scrolling the screen.
+
+ ! Door drop files under Linux were actually being created in old MacOS
+   file format, unless /DOS was specified to create DOS versions.  Whoops!
+
+ ! Fixed the installation where it would not properly assign/create the
+   local QWK path.
+
+ ! Fixed a bug where Windows was not letting sub-processes properly
+   inherit a socket handle.  This means that NetFoss for example was not
+   working properly with Mystic to run old DOS doors in Windows.
+
+ + Mystic no longer creates duplicate socket handles when executing doors.
+   This was added to work around a bug in Windows 95, which I have decided
+   doesn't really need to be supported anymore.
+
+ + Added in a POP3 mail server into MIS.  This allows BBS e-mail be to
+   retrieved by e-mail clients, smart phones, etc.  Use MCFG to set it up
+   under Internet Options and make sure you set your domain name correctly
+   as all email will be User_Name@yourdomain.com.
+
+ + Mystic now saves the last 5 inputs and you can use the up and down arrow
+   keys to scroll through your input history during field-based input.
+   This doesn't work for hotkeys and the like, only field-based input such
+   as message subjects, node chat messages, etc.
+
+ + Mystic will now remember the user name entered before "Create new user?"
+   question and force it into the input buffer as the default value if the
+   user selects to create a new account.  Unless of course the user types
+   "new" then it will not default to anything.
+
+ ! Fixed some file-casing issues with the message base editor, when
+   deleting a message base and its data files in Linux.
+
+ + New MCI code [K sends a "clear to end of line" ANSI code, or nothing
+   if the user does not have a capable terminal.
+
+ + New MCI code BS sends a destructive backspace.
+
+ ! MCI code IS was not working correctly when it was found in a display
+   file.
+
+ + New MCI code [Lxx, where XX is a two-digit number.  This code takes the
+   cursor from its current position, and does a descrutive backpace until
+   it reaches cursor position XX.  So for example, |[L01 would move the
+   cursor to the beginning of the current line, while erasing everything
+   on the way.  If the cursor is already less than XX, it does nothing.
+
+ ! Mystic now longer converts the user name to proper casing when a new
+   message is uploaded by QWK.
+
+ + Removed some data file checks on startup of Mystic.  Any major issues
+   which would cause Mystic not to start can be addressed using MCFG.
+
+ + Added SMTP server into MIS to go along with the POP3 server.  Settings
+   are in MCFG.  Make sure you are setting your domain name correctly.  Its
+   a very basic server.  It does not reformat messages that might
+   be sent with a client that does not word wrap at a compatible level.  In
+   addition, there is always the challenge of HTML emails.
+
+ ! Fixed a small display file parsing bug.
+
+ + If "newletter.txt" exists in the DATA directory, its contents will now
+   be automatically e-mailed to new users when their account is created.
+
+ + If "sysletter.txt" exists in the DATA directory, its contents will now
+   be automatically e-mailed to the SYSOP whenever a new user account is
+   created.  An example of its contents might be:
+
+          A new user account has been created!
+
+                 Handle: |UH
+              Real name: |UN
+               Security: |SL (|SD)
+                     IP: |UX
+
+          This account was created on |DA at |TI.
+
+ + If "hackwarn.txt" exists in the DATA directory, its contents will now
+   be automatically e-mailed to a USER if someone tries to log in as them
+   but fails the password check enough to be disconnected.  An example of
+   its contents might be:
+
+     This is an automated E-mail sent to users when an unsuccessful attempt to
+     login has occured.  This could have been your own error, or possibly someone
+     attempting to access your account without your knowledge.
+
+     Here is some information our system has logged from this attempt:
+
+              Date: |DA
+              Time: |TI
+        IP Address: |UX
+
+ + Added a new MPL function: PurgeInput.  This will clear out any local
+   or remote input data.
+
+ + Added new MCI code PB.  This will purge the input buffer just as the
+   MPL function above will.
+
+ + The left and right arrow keys now function the same as page down and
+   page up keys in the full screen editor quote window.
+
+ ! Fixed a very rare MCI parsing bug. So rare it made it this long without
+   ever being reported!  Hopefully this fix doesn't create any new issues.
+
+ ! Fixed a small bug where the cursor wasn't properly updating on the screen
+   after a backspace during local mode in the Windows version!  Whew!
+
+ + The lightbar message reader now allows you to scroll through all messages
+   in the message base, regardless of where you start reading from.
+
+ + The HOME key now works in the lightbar message index.  This returns you
+   to the first message on the first page.
+
+ + The END key now works in the lightbar message index.  This takes you to
+   the last message on the last page.
+
+ + The HOME key now works in the lightbar message reader.  This takes you
+   to the start of the message.
+
+ + The END key now works in the lightbar message reader.  This takes you to
+   the end of the message.
+
+ + New menu command: MX.  This command posts a text file to a message
+   base.  First it will look for the file in the DATA directory, but
+   you can also include the path in the command data.  The format of
+   the command data is:
+
+       Syntax: <TextFile>;Area #;From;To;Subject
+   Ex:
+      Command: MX
+         Data: \mystic\mystic.doc;2;g00r00;All;Mystic Documentation
+
+   The command will automatically split text files into multiple posts
+   if the text file is larger than 500 lines (the max per message).  It
+   will also append the post count onto the subject.  So for example, if
+   the above document was 1200 lines in size, it would create 3 posts in
+   area 2 with the subjects:
+
+      Mystic Documentation (1/3)
+      Mystic Documentation (2/3)
+      Mystic Documentation (3/3)
+
+   The command caps at 10,000 lines for a text file post.  Even that much
+   would be pretty rediculous (20 posts!).
+
+ + Setting message scan pointer dates now checks to see if a valid date
+   has been entered, and aborts if an invalid date has been entered.
+
+ ! MCFG wasn't updating the status bar correctly when returning from the
+   message base edit back to the message base list.
+
+ + Mystic now supports random origin lines on a per-base level.  You can
+   replace the origin line for each message base with:
+
+      @RANDOM=<textfile>
+
+   You can include a path to the text file, but if no path is included
+   Mystic will look in the DATA directory for the file.  This allows
+   for random origin lines to be generated from separate lists, per base
+   if you choose.
+
+   Example:
+
+     Origin: @RANDOM=randomorigins.txt
+
+   If the origin line is configured as above, it will select a random
+   origin line from the file "randomorigins.txt" in the DATA directory. The
+   random origin text file should contain one origin line per line in the
+   file.  Traditionally the maximum characters for an origin line is 50, but
+   Mystic does not put any restriction on this - so you are responsible to
+   keep them at a length considered acceptable.  Blank lines will not be
+   factored into the random line.  If it finds a blank line, it will skip
+   over it and select a new one.
+
+   Remember, you can use MCFG's global message base editor to update
+   every (or some) message bases at once with this new feature, if you
+   decide to use it.
+
+ + The %0 code has been added to the Test upload commmand line.  This
+   passes the socket handle.
+
+ + Mystic now checks for valid date input when setting the new file scan
+   date.
+
+ ! Fixed a bug in the installation program that would cause the terminal
+   in Linux/OS to get stuck in RAW mode if the installation encountered an
+   error.
+
+ ! Fixed a problem in the FTP server where it was returning the wrong
+   status number with the PWD command.
+
+ ! Fixed a problem with PASSIVE mode FTP transfers.  The server was not
+   opening a passive connection immediately when a PASV command was
+   found.  Instead it was waiting for the next command where a data
+   connection would be used to open it.  This caused the server not to
+   work with some clients.  As a result, it now works with Internet
+   Explorer and Cyberduck.
+
+ + Added Extended Passive and Extended Port support to the FTP server.  The
+   server now works with Google Chrome as a client.
+
+.------------------------------------------------.
+| Mystic BBS RELEASED v1.09  :  October 17, 2011 |
+`------------------------------------------------'
