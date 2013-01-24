@@ -24,7 +24,6 @@ Program NodeSpy;
 // page chat notification
 // user editor
 // split chat
-// terminal mode
 
 {$I M_OPS.PAS}
 
@@ -43,6 +42,7 @@ Uses
   m_Pipe,
   m_Input,
   m_Output,
+  m_Output_ScrollBack,
   m_Term_Ansi,
   m_IniReader,
   NodeSpy_Common,
@@ -123,7 +123,7 @@ Begin
   {$ENDIF}
 
   ExitProc := @ApplicationShutdown;
-  Screen   := TOutput.Create(True);
+  Screen   := TConsoleScrollBack.Create(True);
   Keyboard := TInput.Create;
 
   INI := TIniReader.Create('nodespy.ini');
@@ -408,7 +408,7 @@ Begin
     Exit;
   End;
 
-  Term := TTermAnsi.Create(Screen);
+  Term := TTermAnsi.Create(TOutput(Screen));
 
   Screen.SetWindowTitle('NodeSpy/Snoop ' + strI2S(Node));
 

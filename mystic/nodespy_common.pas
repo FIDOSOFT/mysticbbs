@@ -8,6 +8,7 @@ Uses
   Math,
   m_Input,
   m_Output,
+  m_Output_ScrollBack,
   m_Term_Ansi,
   m_MenuBox,
   m_MenuForm,
@@ -20,7 +21,7 @@ Function GetCommandOption (StartY: Byte; CmdStr: String) : Char;
 {$I RECORDS.PAS}
 
 Var
-  Screen     : TOutput;
+  Screen     : TConsoleScrollback;
   Keyboard   : TInput;
   Term       : TTermAnsi;
   ConfigFile : File of RecConfig;
@@ -177,8 +178,8 @@ Begin
     Delete (CmdStr, 1, Pos('|', Cmdstr));
   End;
 
-  Box  := TMenuBox.Create(Screen);
-  Form := TMenuForm.Create(Screen);
+  Box  := TMenuBox.Create(TOutput(Screen));
+  Form := TMenuForm.Create(TOutput(Screen));
 
   Form.HelpSize := 0;
 

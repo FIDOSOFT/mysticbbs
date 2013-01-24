@@ -9,12 +9,15 @@ Procedure Terminal;
 Implementation
 
 Uses
+  m_Types,
   m_DateTime,
   m_Strings,
   m_FileIO,
   m_IniReader,
   m_io_Base,
   m_io_Sockets,
+  m_Input,
+  m_Output,
   m_Term_Ansi,
   m_MenuBox,
   m_MenuForm,
@@ -133,7 +136,193 @@ Begin
   INI.Free;
 End;
 
+Procedure ActivateScrollback;
+Var
+  TopPage : Integer;
+  BotPage : Integer;
+  WinSize : Byte;
+  Image   : TConsoleImageRec;
+
+  Procedure DrawPage;
+  Var
+    Count : Integer;
+    YPos  : Integer;
+  Begin
+    YPos := 1;
+
+    For Count := TopPage to BotPage Do Begin
+      Screen.WriteLineRec (YPos, Screen.ScrollBuf[Count + 1]);
+      Inc (YPos);
+    End;
+  End;
+
+Var
+  Per      : Byte;
+  LastPer  : Byte;
+  BarPos   : Byte;
+  Offset   : Byte;
+  StatusOn : Boolean;
+
+  Procedure DrawStatus;
+  Begin
+    LastPer  := 0;
+    StatusOn := True;
+
+    Screen.WriteXY (1, 23 + Offset, 15, strRep('Ü', 80));
+    Screen.WriteXY (1, 25 + Offset,  8, strRep('ß', 80));
+    Screen.WriteXYPipe (1, 24 + Offset, 112, 80, ' Scrollback         |01ESC|00/|01Quit        |01Space|00/|01Status                    |00(    /|01' + strPadR(strI2S(Screen.ScrollPos-1), 4, ' ') + '|00) ');
+  End;
+
+Begin
+  If Screen.ScrollPos <= 0 Then Begin
+    ShowMsgBox(0, 'No scrollback data');
+    Exit;
+  End;
+
+  Case Screen.ScreenSize of
+    25 : Begin
+           Offset  := 0;
+           WinSize := 21;
+         End;
+    50 : Begin
+           Offset  := 25;
+           WinSize := 46;
+         End;
+  End;
+
+  Screen.GetScreenImage(1, 1, 80, Screen.ScreenSize, Image);
+  Screen.ClearScreen;
+
+  TopPage := Screen.ScrollPos - WinSize - 1;
+  BotPage := Screen.ScrollPos - 1;
+
+  If TopPage < 0 Then TopPage := 0;
+
+  DrawStatus;
+  DrawPage;
+
+  Repeat
+    If StatusOn Then Begin
+      Screen.WriteXY (70, 24 + Offset, 113, strPadL(strI2S(BotPage), 4, ' '));
+
+      Per := Round(BotPage / Screen.ScrollPos * 100 / 10);
+
+      If Per = 0 Then Per := 1;
+
+      If LastPer <> Per Then Begin
+        BarPos := 0;
+
+        Screen.WriteXY (58, 24 + Offset, 8, '°°°°°°°°°°');
+
+        Repeat
+          Inc (BarPos);
+
+          Case BarPos of
+            1 : Screen.WriteXY (58, 24 + Offset,  1, '°');
+            2 : Screen.WriteXY (59, 24 + Offset,  1, '±');
+            3 : Screen.WriteXY (60, 24 + Offset,  1, '²');
+            4 : Screen.WriteXY (61, 24 + Offset,  1, 'Û');
+            5 : Screen.WriteXY (62, 24 + Offset, 25, '°');
+            6 : Screen.WriteXY (63, 24 + Offset, 25, '±');
+            7 : Screen.WriteXY (64, 24 + Offset, 25, '²');
+            8 : Screen.WriteXY (65, 24 + Offset,  9, 'Û');
+            9 : Screen.WriteXY (66, 24 + Offset, 27, '±');
+            10: Screen.WriteXY (67, 24 + Offset, 27, '²');
+          End;
+        Until BarPos = Per;
+
+        LastPer := Per;
+      End;
+    End;
+
+    Case Keyboard.ReadKey of
+      #00 : Case Keyboard.ReadKey of
+              keyHOME : If TopPage > 0 Then Begin
+                          TopPage := 0;
+                          BotPage := WinSize;
+                          DrawPage;
+                        End;
+              keyEND  : If BotPage <> Screen.ScrollPos - 1 Then Begin
+                          TopPage := Screen.ScrollPos - 1 - WinSize;
+                          BotPage := Screen.ScrollPos - 1;
+                          DrawPage;
+                        End;
+              keyUP   : If TopPage > 0 Then Begin
+                          Dec (TopPage);
+                          Dec (BotPage);
+                          DrawPage;
+                        End;
+              keyDOWN : If BotPage < Screen.ScrollPos - 1 Then Begin
+                          Inc (TopPage);
+                          Inc (BotPage);
+                          DrawPage;
+                        End;
+              keyPGUP : If TopPage - WinSize > 0 Then Begin
+                          Dec (TopPage, WinSize);
+                          Dec (BotPage, WinSize);
+                          DrawPage;
+                        End Else Begin
+                          TopPage := 0;
+                          BotPage := WinSize;
+                          DrawPage;
+                        End;
+              keyPGDN : If BotPage + WinSize < Screen.ScrollPos - 1 Then Begin
+                          Inc (TopPage, WinSize + 1);
+                          Inc (BotPage, WinSize + 1);
+                          DrawPage;
+                        End Else Begin
+                          TopPage := Screen.ScrollPos - WinSize - 1;
+                          BotPage := Screen.ScrollPos - 1;
+                          DrawPage;
+                        End;
+            End;
+      #27 : Break;
+      #32 : Begin
+              If StatusOn Then Begin
+                Case Screen.ScreenSize of
+                  25 : WinSize := 24;
+                  50 : WinSize := 49;
+                End;
+                StatusOn := False;
+
+                Inc (BotPage, 3);
+
+                If BotPage > Screen.ScrollPos - 1 Then Begin
+                  TopPage := Screen.ScrollPos - WinSize - 1;
+                  BotPage := Screen.ScrollPos - 1;
+                  If TopPage < 0 Then TopPage := 0;
+                End;
+
+                DrawPage;
+              End Else Begin
+                StatusOn := True;
+
+                Case Screen.ScreenSize of
+                  25 : WinSize := 21;
+                  50 : WinSize := 46;
+                End;
+
+                Dec (BotPage, 3);
+                DrawStatus;
+                DrawPage;
+              End;
+            End;
+    End;
+  Until False;
+
+  Screen.PutScreenImage(Image);
+End;
+
 Procedure TelnetClient (Dial: PhoneRec);
+
+  Procedure DrawStatus;
+  Begin
+    If Dial.StatusBar Then Begin
+      Screen.SetWindow (1, 1, 80, 24, True);
+      Screen.WriteXY   (1, 25, Config.StatusColor3, strPadC('ALT/B-Scrollback     ALT/L-Send Login     ALT-X/Quit', 80, ' '));
+    End;
+  End;
+
 Const
   BufferSize = 1024 * 4;
 Var
@@ -156,12 +345,9 @@ Begin
     Screen.ClearScreen;
 
     Done := False;
-    Term := TTermAnsi.Create(Screen);
+    Term := TTermAnsi.Create(TOutput(Screen));
 
-    If Dial.StatusBar Then Begin
-      Screen.SetWindow (1, 1, 80, 24, True);
-      Screen.WriteXY   (1, 25, Config.StatusColor3, strPadC('ALT/L-Send Login Info     ALT-X/Quit', 80, ' '));
-    End;
+    DrawStatus;
 
     Term.SetReplyClient(TIOBase(Client));
 
@@ -177,7 +363,11 @@ Begin
           Break;
         End;
 
+        Screen.Capture := True;
+
         Term.ProcessBuf(Buffer, Res);
+
+        Screen.Capture := False;
       End Else
       If Keyboard.KeyPressed Then Begin
         Ch := Keyboard.ReadKey;
@@ -189,6 +379,10 @@ Begin
                           Client.WriteStr (Dial.Password + #13);
                         End;
                   #45 : Break;
+                  #48 : Begin
+                          ActivateScrollBack;
+                          DrawStatus;
+                        End;
                   #71 : Client.WriteStr(#27 + '[H');
                   #72 : Client.WriteStr(#27 + '[A');
                   #73 : Client.WriteStr(#27 + '[V');
@@ -224,8 +418,8 @@ Var
   NewRec : PhoneRec;
 Begin
   NewRec := Book[Num];
-  Box    := TMenuBox.Create(Screen);
-  Form   := TMenuForm.Create(Screen);
+  Box    := TMenuBox.Create(TOutput(Screen));
+  Form   := TMenuForm.Create(TOutput(Screen));
 
   Box.HeadAttr := 1 + 7 * 16;
   Box.Header   := ' Book Editor ';
@@ -280,7 +474,7 @@ Begin
 
   Picked := 1;
 
-  List := TMenuList.Create(Screen);
+  List := TMenuList.Create(TOutput(Screen));
 
   List.NoWindow := True;
   List.LoAttr   := 7;
