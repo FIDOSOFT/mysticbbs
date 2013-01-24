@@ -296,7 +296,7 @@ Var
 
       Read (MBaseFile, MBase);
 
-      List.Add(strPadR(strI2S(FilePos(MBaseFile) - 1), 5, ' ') + '  ' + strStripMCI(MBase.Name), Tag);
+      List.Add(strPadR(strI2S(FilePos(MBaseFile) - 1), 5, ' ') + '  ' + strPadR(strStripMCI(MBase.Name), 35, ' ') + ' ' + strPadL(strAddr2Str(Config.NetAddress[MBase.NetAddr]), 12, ' '), Tag);
     End;
 
     List.Add('', 2);
@@ -305,8 +305,10 @@ Var
   Function GetPermanentIndex (Start: LongInt) : LongInt;
   Var
     TempBase : RecMessageBase;
+    SavedRec : LongInt;
   Begin
-    Result := Start;
+    Result   := Start;
+    SavedRec := FilePos(MBaseFile);
 
     Reset (MBaseFile);
 
@@ -318,6 +320,8 @@ Var
         Reset (MBaseFile);
       End;
     End;
+
+    Seek (MBaseFile, SavedRec);
   End;
 
   Procedure AssignRecord (Email: Boolean);
@@ -372,25 +376,25 @@ Begin
   List.NoWindow := True;
   List.LoChars  := #13#27#47;
   List.AllowTag := True;
-  List.SearchY  := 21;
+  List.SearchY  := 20;
 
   If FileSize(MBaseFile) = 0 Then AssignRecord(True);
 
-  Box.Open (15, 5, 65, 21);
+  Box.Open (11, 5, 69, 20);
 
-  WriteXY (17,  6, 112, '#####  Message Base Description');
-  WriteXY (16,  7, 112, strRep('Ä', 49));
-  WriteXY (16, 19, 112, strRep('Ä', 49));
-  WriteXY (29, 20, 112, cfgCommandList);
+  WriteXY (13,  6, 112, '#####  Message Base Description                 Network');
+  WriteXY (12,  7, 112, strRep('Ä', 57));
+  WriteXY (12, 18, 112, strRep('Ä', 57));
+  WriteXY (29, 19, 112, cfgCommandList);
 
   Repeat
     MakeList;
 
-    List.Open (15, 7, 65, 19);
+    List.Open (11, 7, 69, 18);
     List.Close;
 
     Case List.ExitCode of
-      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|G-Global|S-Sort|') of
+      '/' : Case GetCommandOption(8, 'I-Insert|D-Delete|C-Copy|P-Paste|G-Global|S-Sort|') of
               'I' : If List.Picked > 1 Then Begin
                       AssignRecord(False);
                       MakeList;
