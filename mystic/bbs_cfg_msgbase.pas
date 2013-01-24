@@ -302,27 +302,32 @@ Var
     List.Add('', 2);
   End;
 
-  Procedure AssignRecord (Email: Boolean);
+  Function GetPermanentIndex (Start: LongInt) : LongInt;
+  Var
+    TempBase : RecMessageBase;
   Begin
-    MIndex := List.Picked;
+    Result := Start;
 
     Reset (MBaseFile);
 
     While Not EOF(MBaseFile) Do Begin
-      Read (MBaseFile, MBase);
+      Read (MBaseFile, TempBase);
 
-      If MIndex = MBase.Index Then Begin
-        Inc (MIndex);
+      If Result = TempBase.Index Then Begin
+        Inc (Result);
         Reset (MBaseFile);
       End;
     End;
+  End;
 
+  Procedure AssignRecord (Email: Boolean);
+  Begin
     AddRecord (MBaseFile, List.Picked, SizeOf(RecMessageBase));
 
     FillChar (MBase, SizeOf(RecMessageBase), 0);
 
     With MBase Do Begin
-      Index       := MIndex;
+      Index       := GetPermanentIndex(List.Picked);
       FileName    := 'new';
       Path        := Config.MsgsPath;
       Name        := 'New Base';
@@ -418,6 +423,9 @@ Begin
                     End;
               'P' : If HasCopy And (List.Picked > 1) Then Begin
                       AddRecord (MBaseFile, List.Picked, SizeOf(MBase));
+
+                      Copied.Index := GetPermanentIndex(1);
+
                       Write (MBaseFile, Copied);
 
                       MakeList;
