@@ -2263,3 +2263,16 @@
    different color while viewing the history or the whatsnew.
 
    <ALPHA 22 RELEASED>
+
+ + Added the network that a message base belongs to into the list of message
+   bases in the configuration editor.
+
+ ! Fixed an issue with inserting records in the message base editor where it
+   would copy the record before it, instead of creating a fresh entry.
+
+ + NodeSpy now has a 1000 line scrollback when connecting via telnet using
+   it's terminal mode.  Press Alt-B when connected and you will get a nice
+   status line/scrollback of up to 1000 lines!
+
+ + Prompt editor now has a prompt simulator if you press ENTER while editing
+   a prompt.
