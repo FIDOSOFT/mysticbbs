@@ -247,13 +247,15 @@ Procedure ViewTextFile (FN : String);
 Const
   WinSize = 12;
 Var
-	T 		 : Text;
-	Count  : Word;
-	A 		 : Word;
-	Line	 : Integer;
-	Per 	 : LongInt;
-	Per10  : Byte;
-	BarPos : Byte = 0;
+	T 		    : Text;
+	Count     : Word;
+	A 	      : Word;
+	Line      : Integer;
+	Per       : LongInt;
+	Per10     : Byte;
+	BarPos    : Integer = -1;
+  LineColor : Byte;
+  LineTemp  : Byte;
 Begin
 	Assign (T, FN);
 	{$I-} Reset(T); {$I+}
@@ -310,8 +312,18 @@ Begin
 			BarPos := Per10;
 		End;
 
-		For A := 0 to WinSize Do
-			Screen.WriteXY (1, A + 11, 7, strPadR(Txt[Line + A]^, 80, ' '));
+		For A := 0 to WinSize Do Begin
+      If Copy(Txt[Line + A]^, 4, 6) = '<ALPHA' Then
+        LineColor := 9
+      Else Begin
+        If Copy(Txt[Line + A]^, 1, 21) = '| Mystic BBS RELEASED' Then
+          LineColor := 9
+        Else
+          LineColor := 7;
+      End;
+
+      Screen.WriteXY (1, A + 11, LineColor, strPadR(Txt[Line + A]^, 80, ' '));
+    End;
 
 		Case Keys.ReadKey of
 			#00 : Case Keys.ReadKey of
@@ -546,11 +558,13 @@ Var
 	Var
 		A : Byte;
 	Begin
-                A := Pos(Config.SystemPath, NewStr);
-		If A > 0 Then Begin
-                        Delete (NewStr, A, Length(Config.SystemPath));
+    A := Pos(Config.SystemPath, NewStr);
+
+    If A > 0 Then Begin
+      Delete (NewStr, A, Length(Config.SystemPath));
 			Insert (Str, NewStr, A);
 		End;
+
 		Change := NewStr;
 	End;
 
@@ -649,9 +663,10 @@ Begin
 End;
 
 Const
-	Items : Array[1..3] of String[32] = (
+	Items : Array[1..4] of String[32] = (
 						'     %  INSTALL MYSTIC BBS     ',
 						'     %  READ WHATS NEW         ',
+            '     %  READ FULL HISTORY      ',
 						'     %  ABORT INSTALLATION     '
 					);
 
@@ -667,7 +682,7 @@ Begin
 	Pos := 2;
 
 	Repeat
-		For A := 1 to 3 Do
+		For A := 1 to 4 Do
 			If A = Pos Then
         Screen.WriteXY (25, 16 + A, 15 + 3 * 16, Items[A])
 			Else
@@ -676,7 +691,7 @@ Begin
 		Case Keys.ReadKey of
 			#00 : Case Keys.ReadKey of
 							#72 : If Pos > 1 Then Dec(Pos);
-							#80 : If Pos < 3 THen Inc(Pos);
+							#80 : If Pos < 4 THen Inc(Pos);
 						End;
 			#13 : Case Pos of
 							1 : Begin
@@ -689,7 +704,11 @@ Begin
 										ViewTextFile('whatsnew.txt');
 										DrawMainMenu;
 									End;
-							3 : Break;
+							3 : Begin
+                    ViewTextFile('history.txt');
+                    DrawMainMenu;
+                  End;
+              4 : Break;
 						End;
 
 			#27 : Break;
