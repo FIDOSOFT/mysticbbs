@@ -15,13 +15,14 @@
 //   - Added Top 10 list
 //   - Added command line option RESET to reset scores
 //   - Added command line option TOP10 to show top 10 and exit
+//   - No longer allows negative numbers to be a Wager.
 // ==========================================================================
 
 Uses
   User;
 
 Const
-  Version     = '1.3';
+  Version     = '1.4';
   CashStart   = 1000;
   CardJack    = 11;
   CardQueen   = 12;
@@ -403,7 +404,7 @@ Begin
 
   Write('|17');
 
-  Wager := Str2Int(Input(10, 10, 1, ''));
+  Wager := Abs(Str2Int(Input(10, 10, 1, '')));
 
   If Wager > Player.Cash Then Wager := 0;
 
@@ -470,7 +471,7 @@ Begin
       FileErase(DataPath + 'blackjack.ply');
       WriteLn ('|CRScores have been reset|CR|CR|PA');
     End;
-    
+
     Halt;
   End;
 
