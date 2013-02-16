@@ -245,7 +245,8 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'fillchar',       {$ENDIF} '*lc',     iNone);    // 90
           AddProc    ({$IFDEF MPLPARSER} 'fwriterec',      {$ENDIF} 'Fx',      iNone);    // 91
           AddProc    ({$IFDEF MPLPARSER} 'freadrec',       {$ENDIF} 'Fx',      iNone);    // 92
-          AddProc    ({$IFDEF MPLPARSER} 'real2str',       {$ENDIF} 'rb',      iString);  // 93;
+          AddProc    ({$IFDEF MPLPARSER} 'real2str',       {$ENDIF} 'rb',      iString);  // 93
+          AddProc    ({$IFDEF MPLPARSER} 'abs',            {$ENDIF} 'l',       iLongInt); // 94
 
           IW := 500; // BEGIN BBS-SPECIFIC STUFF
 
