@@ -2276,3 +2276,15 @@
 
  + Prompt editor now has a prompt simulator if you press ENTER while editing
    a prompt.
+
+ + NodeSpy's phone book now allows directory searching similar to other
+   Mystic editors.  Just type away and it will search on the fly.
+
+ ! Fixed a bug during list box searches that would cause the search string
+   to not get updated.
+
+ + Mystic will now set the window title to "Mystic Configuration" when
+   started in configuration mode (-cfg)
+
+ + New MPL fuction: Function ABS (Num: LongInt) : LongInt;  This value takes
+   a signed integer and returns the absolute value.
