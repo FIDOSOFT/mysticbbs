@@ -8,6 +8,7 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
+! MUTIL FILESBBS import is not skipping FILES.BBS?
 ! Make sure MIS in Linux works with DOSEMU
 ! Node chat goes haywire at 1000 lines scrollback
 ! Node chat needs to actualy word wrap not nickname wrap.
@@ -28,6 +29,11 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- Recode FCHECK into MUTIL, but also add the option to phsyically delete the
+  file record instead of marking it offline.
+- Add ability to ignore files from a files.bbs import
+- Need ALL mystic servers to hvae the option to auto-ban an IP address if it
+  connects X amount of times in X seconds.
 - Outbound telnet feature
 - Add "PREVIEW" option to message editors
 - Finish Threaded message reader
@@ -127,7 +133,7 @@ Disconnect while posting design:
           Line 5: Network address (or blank if none)
           Line 6: MsgText
              overwrite if exists
-          NOTE WHAT ABOUT QUOTE TEXT
+          NOTE WHAT ABOUT QUOTE TEXT - HAS TO BE SAVED TOO.
 5. During LOGIN, check for msg_<UID>.txt or have menu command to do it?
 6. If exists, process and prompt user:
 
@@ -152,6 +158,8 @@ Disconnect while posting design:
         Delete msg_UID* in data.
      Ask later:
         Do nothing.  Keep files so Mystic asks on next login.
+        Or also Mystic could ask any time a MP menu command happens
+        But all of this stuff should be optional?
 
 PROBLEM: When we localize MsgText for the ANSI viewer integration...
 how will this work?  I am not sure it really can work without it being
