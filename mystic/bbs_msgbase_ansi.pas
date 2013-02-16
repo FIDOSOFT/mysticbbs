@@ -1,6 +1,6 @@
-{$I M_OPS.PAS}
-
 Unit BBS_MsgBase_Ansi;
+
+{$I M_OPS.PAS}
 
 Interface
 
