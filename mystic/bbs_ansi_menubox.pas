@@ -702,6 +702,12 @@ Begin
               End;
       Else
         If Pos(Ch, HiChars) > 0 Then Begin
+          If SearchStr <> '' Then Begin
+            SearchStr := '';
+            If Assigned(SearchProc) Then
+              SearchProc(Self, SearchStr);
+          End;
+
           ExitCode := Ch;
           Exit;
         End;
@@ -719,6 +725,12 @@ Begin
         DownArrow;
       End Else
       If Pos(Ch, LoChars) > 0 Then Begin
+        If SearchStr <> '' Then Begin
+          SearchStr := '';
+          If Assigned(SearchProc) Then
+            SearchProc(Self, SearchStr);
+        End;
+
         ExitCode := Ch;
         Exit;
       End Else Begin
