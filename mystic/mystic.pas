@@ -438,6 +438,8 @@ Begin
   If Session.ConfigMode Then Begin
     Session.NodeNum := 0;
 
+    Screen.SetWindowTitle ('Mystic Configuration');
+
     Configuration_MainMenu;
 
     Screen.TextAttr := 7;
