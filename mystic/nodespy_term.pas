@@ -449,6 +449,26 @@ Begin
   Box.Free;
 End;
 
+Procedure SearchEntry (Var Owner: Pointer; Str: String);
+Begin
+  If Str = '' Then
+    Str := strRep(' ', 17)
+  Else Begin
+    If Length(Str) > 15 Then
+      Str := Copy(Str, Length(Str) - 15 + 1, 255);
+
+    Str := '[' + strLower(Str) + ']';
+
+    While Length(Str) < 17 Do
+      Str := Str + ' ';
+  End;
+
+  Screen.WriteXY (TMenuList(Owner).SearchX,
+                  23,
+                  8 + 7 * 16,
+                  Str);
+End;
+
 Function GetTerminalEntry (Var Book: PhoneBookRec; Var Dial: PhoneRec) : Boolean;
 Var
   Count  : SmallInt;
@@ -481,6 +501,7 @@ Begin
   List.HiAttr   := 9 + 1 * 16;
   List.LoChars  := #13#27;
   List.HiChars  := #18#82#83;
+  List.SetSearchProc(SearchEntry);
 
   Repeat
     List.Clear;
