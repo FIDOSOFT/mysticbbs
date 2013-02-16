@@ -452,6 +452,7 @@ Var
   ArticleNum : LongInt = 0;
   Found      : Boolean = False;
   MsgBase    : PMsgBaseABS;
+  Str        : String;
 Begin
   If Not LoggedIn Then Begin
     ClientWriteLine(re_AuthReq);
@@ -500,7 +501,8 @@ Begin
 
   MsgBase^.MsgTxtStartUp;
 
-  Client.WriteLine('220 0 ' + strI2S(ArticleNum));
+  ClientWriteLine ('220 ' + strI2S(ArticleNum) + ' <0> article retrieved - head and body follow');
+//  ClientWriteLine('220 0 ' + strI2S(ArticleNum));
 
   Client.WriteLine('From: ' + MsgBase^.GetFrom);
   Client.WriteLine('Newsgroups: ' + MBase.NewsName);
@@ -508,8 +510,13 @@ Begin
   Client.WriteLine('Date: ' + MsgBase^.GetDate);
   Client.WriteLine('');
 
-  While Not MsgBase^.EOM Do
-    Client.WriteLine(MsgBase^.GetString(79));
+  While Not MsgBase^.EOM Do Begin
+    Str := MsgBase^.GetString(79);
+
+    If Str[1] = ^A Then Continue;
+
+    Client.WriteLine(Str);
+  End;
 
   Client.WriteLine ('.');
 
@@ -523,6 +530,7 @@ Var
   Found   : Boolean = False;
   MsgBase : PMsgBaseABS;
   MsgText : TStringList;
+  Str     : String;
 Begin
   If Not LoggedIn Then Begin
     ClientWriteLine(re_AuthReq);
@@ -575,8 +583,13 @@ Begin
 
     MsgText.Clear;
 
-    While Not MsgBase^.EOM Do
-      MsgText.Add(MsgBase^.GetString(79));
+    While Not MsgBase^.EOM Do Begin
+      Str := MsgBase^.GetString(79);
+
+      If Str[1] = ^A Then Continue;
+
+      MsgText.Add(Str);
+    End;
 
     Client.WriteStr(strI2S(MsgBase^.GetMsgNum) + #9);
     Client.WriteStr(MsgBase^.GetSubj + #9);
