@@ -9,6 +9,7 @@ Procedure Configuration_FileBaseEditor;
 Implementation
 
 Uses
+  m_DateTime,
   m_Strings,
   m_FileIO,
   bbs_Ansi_MenuBox,
@@ -69,19 +70,43 @@ Var
   List      : TAnsiMenuList;
   Copied    : RecFileBase;
   HasCopy   : Boolean = False;
-  FBaseFile : TBufFile;
+  FBaseFile : File of RecFileBase;
   FBase     : RecFileBase;
+
+  Function GetPermanentIndex (Start: LongInt) : LongInt;
+  Var
+    TempBase : RecFileBase;
+    SavedRec : LongInt;
+  Begin
+    Result   := Start;
+    SavedRec := FilePos(FBaseFile);
+
+    Reset (FBaseFile);
+
+    While Not Eof(FBaseFile) Do Begin
+      Read (FBaseFile, TempBase);
+
+      If Result = TempBase.Index Then Begin
+        If Result >= 2000000 Then Result := 0;
+
+        Inc   (Result);
+        Reset (FBaseFile);
+      End;
+    End;
+
+    Seek (FBaseFile, SavedRec);
+  End;
 
   Procedure MakeList;
   Begin
     List.Clear;
 
-    FBaseFile.Reset;
+    Reset (FBaseFile);
 
-    While Not FBaseFile.EOF Do Begin
-      FBaseFile.Read (FBase);
+    While Not Eof(FBaseFile) Do Begin
+      Read (FBaseFile, FBase);
 
-      List.Add(strPadR(strI2S(FBaseFile.FilePos), 5, ' ') + '  ' + strStripPipe(FBase.Name), 0);
+      List.Add(strPadR(strI2S(FilePos(FBaseFile)), 5, ' ') + '  ' + strStripPipe(FBase.Name), 0);
     End;
 
     List.Add('', 2);
@@ -89,7 +114,7 @@ Var
 
   Procedure InsertRecord;
   Begin
-    FBaseFile.RecordInsert (List.Picked);
+    AddRecord (FBaseFile, List.Picked, SizeOf(RecFileBase));
 
     FillChar (FBase, SizeOf(RecFileBase), 0);
 
@@ -102,18 +127,18 @@ Var
       SysopACS := 's255';
       Template := 'ansiflst';
       Flags    := FBShowUpload;
+      Created  := CurDateDos;
+      Index    := GetPermanentIndex(FileSize(FBaseFile));
     End;
 
-    FBaseFile.Write(FBase);
+    Write (FBaseFile, FBase);
   End;
 
 Begin
-  FBaseFile := TBufFile.Create(4096);
+  Assign (FBaseFile, Config.DataPath + 'fbases.dat');
 
-  If Not FBaseFile.Open(Config.DataPath + 'fbases.dat', fmOpenCreate, fmReadWrite + fmDenyNone, SizeOf(RecFileBase)) Then Begin
-    FBaseFile.Free;
+  If Not ioReset(FBaseFile, SizeOf(FBase), fmRWDN) Then
     Exit;
-  End;
 
   Box  := TAnsiMenuBox.Create;
   List := TAnsiMenuList.Create;
@@ -123,7 +148,7 @@ Begin
   List.AllowTag := True;
   List.SearchY  := 21;
 
-  If FBaseFile.FileSize = 0 Then InsertRecord;
+  If FileSize(FBaseFile) = 0 Then InsertRecord;
 
   Box.Open (15, 5, 65, 21);
 
@@ -146,10 +171,10 @@ Begin
                     End;
               'D' : If (List.Picked < List.ListMax) Then
                       If ShowMsgBox(1, 'Delete this entry?') Then Begin
-                        FBaseFile.Seek (List.Picked - 1);
-                        FBaseFile.Read (FBase);
+                        Seek (FBaseFile, List.Picked - 1);
+                        Read (FBaseFile, FBase);
 
-                        FBaseFile.RecordDelete (List.Picked);
+                        KillRecord (FBaseFile, List.Picked, SizeOf(FBase));
 
                         If ShowMsgBox(1, 'Delete data files?') Then Begin
                           FileErase (Config.DataPath + FBase.FileName + '.dir');
@@ -160,34 +185,36 @@ Begin
                         MakeList;
                       End;
               'C' : If List.Picked <> List.ListMax Then Begin
-                      FBaseFile.Seek (List.Picked - 1);
-                      FBaseFile.Read (Copied);
+                      Seek (FBaseFile, List.Picked - 1);
+                      Read (FBaseFile, Copied);
 
                       HasCopy := True;
                     End;
               'P' : If HasCopy Then Begin
-                      FBaseFile.RecordInsert (List.Picked);
-                      FBaseFile.Write        (Copied);
+                      AddRecord (FBaseFile, List.Picked, SizeOf(FBase));
+
+                      Copied.Index   := GetPermanentIndex(FileSize(FBaseFile));
+                      Copied.Created := CurDateDos;
+
+                      Write (FBaseFile, Copied);
 
                       MakeList;
                     End;
             End;
       #13 : If List.Picked < List.ListMax Then Begin
-              FBaseFile.Seek (List.Picked - 1);
-              FBaseFile.Read (FBase);
+              Seek (FBaseFile, List.Picked - 1);
+              Read (FBaseFile, FBase);
 
               EditFileBase(FBase);
 
-              FBaseFile.Seek  (List.Picked - 1);
-              FBaseFile.Write (FBase);
+              Seek  (FBaseFile, List.Picked - 1);
+              Write (FBaseFile, FBase);
             End;
       #27 : Break;
     End;
   Until False;
 
   Box.Close;
-
-  FBaseFile.Free;
   List.Free;
   Box.Free;
 End;
