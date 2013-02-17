@@ -464,7 +464,8 @@ Type
     ITemplate : String[20];                                     // lightbar index template
     Index     : Word;                                           // permanent index
     Flags     : LongInt;                                        // MB flag bits see above
-    Res       : Array[1..80] of Byte;                           // RESERVED
+    Created   : LongInt;
+    Res       : Array[1..76] of Byte;                           // RESERVED
   End;
 
   FScanRec = Record                    { <Data Path> *.SCN               }
@@ -494,7 +495,8 @@ Type
     Path       : String[80];
     DefScan    : Byte;
     Flags      : LongInt;
-    Res        : Array[1..36] of Byte;
+    Created    : LongInt;
+    Res        : Array[1..32] of Byte;
     //echomail network adresss?
   End;
 
