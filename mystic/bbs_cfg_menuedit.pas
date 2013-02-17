@@ -30,7 +30,7 @@ Type
   End;
 
 Const
-  Num_Cmds = 98;
+  Num_Cmds = 99;
   MenuCmds : Array[1..Num_Cmds] of CmdRec = (
     // AUTOSIG MENU COMMANDS
     (  Name: 'AE';   Desc: 'Autosig editor'               ),
@@ -80,6 +80,7 @@ Const
     (  Name: 'GS';   Desc: 'Gosub to new menu'            ),
     (  Name: 'GT';   Desc: 'Display line of text'         ),
     (  Name: 'GU';   Desc: 'Display user list'            ),
+    (  Name: 'GV';   Desc: 'ANSI File viewer'             ),
     (  Name: 'GX';   Desc: 'Execute MPL program'          ),
     (  Name: 'G?';   Desc: 'Open ANSI help browser'       ),
 
