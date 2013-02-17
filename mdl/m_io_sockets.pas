@@ -2,6 +2,8 @@ Unit m_io_Sockets;
 
 {$I M_OPS.PAS}
 
+{.$DEFINE TNDEBUG}
+
 Interface
 
 Uses
@@ -96,6 +98,43 @@ Const
 
   FPSENDOPT     = 0;
   FPRECVOPT     = 0;
+
+{$IFDEF TNDEBUG}
+Function CommandType (C: Char) : String;
+Begin
+  Case C of
+    TELNET_WILL   : Result := 'WILL';
+    TELNET_WONT   : Result := 'WONT';
+    TELNET_DO     : Result := 'DO';
+    TELNET_DONT   : Result := 'DONT';
+    TELNET_SB     : Result := 'SB';
+    Telnet_IAC    : Result := 'IAC';
+    Telnet_BINARY : Result := 'BINARY';
+    Telnet_ECHO   : Result := 'ECHO';
+    Telnet_SE     : Result := 'SE';
+    Telnet_TERM   : Result := 'TERM';
+    Telnet_SGA    : Result := 'SGA';
+  Else
+    Result := 'UNKNOWN';
+  End;
+
+  Result := Result + ' Ord:' + strI2S(Ord(C));
+End;
+
+Procedure TNLOG (Str: String);
+Var
+  T : Text;
+Begin
+  Assign (T, 'tnlog.txt');
+  {$I-} Append(T); {$I+}
+
+  If IoResult <> 0 Then ReWrite(T);
+
+  WriteLn(T, Str);
+
+  Close(T);
+End;
+{$ENDIF}
 
 Constructor TIOSocket.Create;
 Begin
@@ -263,6 +302,10 @@ Procedure TIOSocket.TelnetInBuffer (Var Buf: TIOBuffer; Var Len: LongInt);
     Reply[3] := CmdType;
 
     fpSend (FSocketHandle, @Reply[1], 3, FPSENDOPT);
+
+    {$IFDEF TNDEBUG}
+      TNLOG ('InBuffer -> Sending response: ' + CommandType(YesNo) + ' ' + CommandType(CmdType));
+    {$ENDIF}
   End;
 
   Procedure SendData (CmdType: Char; Data: String);
@@ -283,6 +326,10 @@ Procedure TIOSocket.TelnetInBuffer (Var Buf: TIOBuffer; Var Len: LongInt);
     Reply[7 + DataLen] := Telnet_SE;
 
     fpSend (FSocketHandle, @Reply[1], 7 + DataLen, FPSENDOPT);
+
+    {$IFDEF TNDEBUG}
+      TNLOG ('InBuffer -> Sending data response');
+    {$ENDIF}
   End;
 
 Var
@@ -300,12 +347,20 @@ Begin
             FTelnetState := 0;
             Temp[TempPos] := Telnet_IAC;
             Inc (TempPos);
+
+            {$IFDEF TNDEBUG}
+              TNLOG ('InBuffer -> Escaped IAC (2x255) to 1 character');
+            {$ENDIF}
           End Else Begin
             Inc (FTelnetState);
             FTelnetCmd := Buf[Count];
           End;
       2 : Begin
             FTelnetState := 0;
+
+            {$IFDEF TNDEBUG}
+              TNLOG ('InBuffer -> Received telnet command: ' + CommandType(FTelnetCmd) + ' ' + CommandType(Buf[Count]));
+            {$ENDIF}
 
             Case FTelnetCmd of
               Telnet_WONT : Begin
@@ -344,8 +399,9 @@ Begin
                                   FTelnetEcho := False;//(FTelnetCmd = Telnet_DO);
                               End Else Begin
                                 Case Buf[Count] of
-                                  Telnet_ECHO : FTelnetEcho := True;
-                                  Telnet_SGA  : ;
+                                  Telnet_ECHO   : FTelnetEcho := True;
+                                  Telnet_SGA    : ;
+                                  Telnet_BINARY : ;
                                 Else
                                   SendCommand(ReplyBad, Buf[Count]);
                                 End;
@@ -572,6 +628,15 @@ Begin
     Client.WriteStr (TELNET_IAC + TELNET_WILL + TELNET_ECHO +
                      TELNET_IAC + TELNET_WILL + TELNET_SGA  +
                      TELNET_IAC + TELNET_DO   + TELNET_BINARY);
+
+  {$IFDEF TNDEBUG}
+  If FTelnetServer Then Begin
+    TNLOG('New server connection');
+    TNLOG('Sending: IAC WILL ECHO');
+    TNLOG('Sending: IAC WILL SGA');
+    TNLOG('Sending: IAC DO BINARY');
+  End;
+  {$ENDIF}
 
   Result := Client;
 End;
