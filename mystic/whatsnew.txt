@@ -2270,6 +2270,9 @@
  ! Fixed an issue with inserting records in the message base editor where it
    would copy the record before it, instead of creating a fresh entry.
 
+ ! Fixed an issue with inserting records in the file base editor where it
+   would copy the record before it, instead of creating a fresh entry.
+
  + NodeSpy now has a 1000 line scrollback when connecting via telnet using
    it's terminal mode.  Press Alt-B when connected and you will get a nice
    status line/scrollback of up to 1000 lines!
@@ -2291,18 +2294,18 @@
    recompiled.
 
  + New menu command: GV.  This uses an ANSI full screen file viewer which is
-   capable of extracting SAUCE info and also parsing ANSI display files.  The
-   format of the optional data is as follows:
+   capable of extracting SAUCE info and also parsing ANSI/pipe display files.
+   The format of the optional data is as follows:
 
-      <template name>;<filename>;<END optional>
+      <template name>;<placeholder>;<filename>;<END optional>
 
    Examples:
 
-     Optional data: ansiviewer;prelogon
-     Optional data: ansiviewer;prelogon;end
+     Optional data: ansiviewer;dummy;prelogon
+     Optional data: ansiviewer;dummy;prelogon;end
 
    If ;END is added at the end, the viewer will start viewing at the END of
-   the file.
+   the file instead of at the top of it.
 
    An example ansiviewer.ans template is now included with the default
    installation and has the following new MCI codes used:
@@ -2343,5 +2346,29 @@
 
        Optional data: <directory>;<speed>;DISPLAY
        Optional data: /mygallery;100;DISPLAY
+
+ ! Fixed improper message date generation in NTTP server.
+
+ + NNTP server now reports the raw message number as the MsgID which seems to
+   increase compatibility with certain readers.  In the future this should be
+   changed to truely unique MsgIDs if possible.
+
+ ! Fixed an issue where message base permanent indexes were not properly
+   being generated.
+
+ ! Fixed an issue where file base permanent indexes were not properly being
+   generated.
+
+ + Message base records now contain the date the message base was created.
+
+ + Added new function to MBBSUTIL: -FIXINDEX.  This function will go through
+   all message and file bases and make sure that the indexes are unique, and
+   if they are not it will make them unique.
+
+   It will also check to make sure the "creation date" of each base is set to
+   a valid date.  If it is not, it will set it to the current date.
+
+   This needs to be ran once after upgrading to this alpha due to some prior
+   bugs.
 
    <ALPHA 23 RELEASED>
