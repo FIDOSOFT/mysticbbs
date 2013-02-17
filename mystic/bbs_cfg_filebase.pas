@@ -148,7 +148,7 @@ Begin
   List.AllowTag := True;
   List.SearchY  := 21;
 
-  If FileSize(FBaseFile) = 0 Then InsertRecord;
+  //If FileSize(FBaseFile) = 0 Then InsertRecord;
 
   Box.Open (15, 5, 65, 21);
 
@@ -213,6 +213,8 @@ Begin
       #27 : Break;
     End;
   Until False;
+
+  Close (FBaseFile);
 
   Box.Close;
   List.Free;
