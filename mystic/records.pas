@@ -83,6 +83,12 @@ Type
     Point : Word;
   End;
 
+  RecSauceInfo = Packed Record
+    Title  : String[35];
+    Author : String[20];
+    Group  : String[20];
+  End;
+
   RecUserOptionalField = Record
     Ask    : Boolean;
     Desc   : String[12];
