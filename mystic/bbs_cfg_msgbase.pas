@@ -32,8 +32,6 @@ Var
   SortLast  : Word;
   SortType  : Byte;
   Count     : Word;
-  Str       : String;
-  Tagged    : Boolean;
 Begin
   If Not GetSortRange(List, SortFirst, SortLast) Then Exit;
 
@@ -164,7 +162,6 @@ Procedure Configuration_MessageBaseEditor;
 Var
   Box       : TAnsiMenuBox;
   List      : TAnsiMenuList;
-  MIndex    : LongInt;
   Copied    : RecMessageBase;
   HasCopy   : Boolean = False;
   MBaseFile : File of RecMessageBase;
