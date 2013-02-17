@@ -9,6 +9,17 @@ Uses
   m_Input,
   m_Output;
 
+Const
+  BoxFrameType : Array[1..8] of String[8] =
+        ('⁄ƒø≥≥¿ƒŸ',
+         '…Õª∫∫»Õº',
+         '÷ƒ∑∫∫”ƒΩ',
+         '’Õ∏≥≥‘Õæ',
+         '€ﬂ€€€€‹€',
+         '€ﬂ‹€€ﬂ‹€',
+         '        ',
+         '.-.||`-''');
+
 Type
   TMenuBox = Class
     Console    : TOutput;
@@ -126,16 +137,6 @@ Begin
 End;
 
 Procedure TMenuBox.Open (X1, Y1, X2, Y2: Byte);
-Const
-  BF : Array[1..8] of String[8] =
-        ('⁄ƒø≥≥¿ƒŸ',
-         '…Õª∫∫»Õº',
-         '÷ƒ∑∫∫”ƒΩ',
-         '’Õ∏≥≥‘Õæ',
-         '€ﬂ€€€€‹€',
-         '€ﬂ‹€€ﬂ‹€',
-         '        ',
-         '.-.||`-''');
 Var
   A  : Integer;
   B  : Integer;
@@ -157,16 +158,16 @@ Begin
     BoxAttr4 := BoxAttr;
   End;
 
-  Console.WriteXY (X1, Y1, BoxAttr, BF[FrameType][1] + strRep(BF[FrameType][2], B));
-  Console.WriteXY (X2, Y1, BoxAttr4, BF[FrameType][3]);
+  Console.WriteXY (X1, Y1, BoxAttr, BoxFrameType[FrameType][1] + strRep(BoxFrameType[FrameType][2], B));
+  Console.WriteXY (X2, Y1, BoxAttr4, BoxFrameType[FrameType][3]);
 
   For A := Y1 + 1 To Y2 - 1 Do Begin
-    Console.WriteXY (X1, A, BoxAttr, BF[FrameType][4] + strRep(' ', B));
-    Console.WriteXY (X2, A, BoxAttr2, BF[FrameType][5]);
+    Console.WriteXY (X1, A, BoxAttr, BoxFrameType[FrameType][4] + strRep(' ', B));
+    Console.WriteXY (X2, A, BoxAttr2, BoxFrameType[FrameType][5]);
   End;
 
-  Console.WriteXY (X1,   Y2, BoxAttr3, BF[FrameType][6]);
-  Console.WriteXY (X1+1, Y2, BoxAttr2, strRep(BF[FrameType][7], B) + BF[FrameType][8]);
+  Console.WriteXY (X1,   Y2, BoxAttr3, BoxFrameType[FrameType][6]);
+  Console.WriteXY (X1+1, Y2, BoxAttr2, strRep(BoxFrameType[FrameType][7], B) + BoxFrameType[FrameType][8]);
 
   If Header <> '' Then
     Case HeadType of
@@ -491,6 +492,12 @@ Begin
                       End;
               Else
                 If Pos(Ch, HiChars) > 0 Then Begin
+                  If SearchStr <> '' Then Begin
+                    SearchStr := '';
+                    If Assigned(SearchProc) Then
+                      SearchProc(Self, SearchStr);
+                  End;
+
                   ExitCode := Ch;
                   Exit;
                 End;
@@ -509,6 +516,12 @@ Begin
         DownArrow;
       End Else
       If Pos(Ch, LoChars) > 0 Then Begin
+        If SearchStr <> '' Then Begin
+          SearchStr := '';
+          If Assigned(SearchProc) Then
+            SearchProc(Self, SearchStr);
+        End;
+
         ExitCode := Ch;
         Exit;
       End Else Begin
