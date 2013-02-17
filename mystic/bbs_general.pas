@@ -36,6 +36,7 @@ Procedure Voting_Booth (Forced: Boolean; Num: Integer);
 Procedure Voting_Result (Data: Integer);
 Procedure Voting_Booth_New;
 Procedure View_Directory (Data: String; ViewType: Byte);
+Procedure AnsiViewer (Bar: RecPercent; Data: String);
 
 {$IFNDEF UNIX}
   Procedure PageForSysopChat (Forced: Boolean);
@@ -48,6 +49,7 @@ Uses
   m_FileIO,
   m_QuickSort,
   bbs_Core,
+  bbs_MsgBase_Ansi,
   bbs_NodeInfo;
 
 Function Editor (Var Lines: SmallInt; MaxLen, MaxLine: SmallInt; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
@@ -889,17 +891,49 @@ Begin
   End;
 End;
 
+Function ReadSauceInfo (FN: String; Var Sauce: RecSauceInfo) : Boolean;
+Var
+  DF  : File;
+  Str : String;
+  Res : LongInt;
+Begin
+  Result := False;
+
+  Assign (DF, FN);
+
+  {$I-} Reset (DF, 1); {$I+}
+
+  If IoResult <> 0 Then Exit;
+
+  {$I-} Seek (DF, FileSize(DF) - 130); {$I+}
+
+  If IoResult <> 0 Then Begin
+    Close (DF);
+    Exit;
+  End;
+
+  BlockRead (DF, Str[1], 130);
+
+  Str[0] := #130;
+
+  Close (DF);
+
+  Res := Pos('SAUCE', Copy(Str, 1, 7));
+
+  If Res > 0 Then Begin
+    Result := True;
+
+    Sauce.Title  := strReplace(Copy(Str,  7 + Res, 35), #0, #32);
+    Sauce.Author := strReplace(Copy(Str, 42 + Res, 20), #0, #32);
+    Sauce.Group  := strReplace(Copy(Str, 62 + Res, 20), #0, #32);
+  End;
+End;
+
 Procedure View_Directory (Data: String; ViewType: Byte);
 Const
   vtMaxList = 1000;
 
 Type
-  RecSauceInfo = Packed Record
-    Title  : String[35];
-    Author : String[20];
-    Group  : String[20];
-  End;
-
   DirRec = Record
     Desc   : String[160];
     Size   : LongInt;
@@ -921,43 +955,6 @@ Var
   CurPos   : LongInt = 1;
   CurPath  : String;
   Root     : String;
-
-  Function ReadSauceInfo (FN: String; Var Sauce: RecSauceInfo) : Boolean;
-  Var
-    DF  : File;
-    Str : String;
-    Res : LongInt;
-  Begin
-    Result := False;
-
-    Assign (DF, FN);
-
-    {$I-} Reset (DF, 1); {$I+}
-
-    If IoResult <> 0 Then Exit;
-
-    {$I-} Seek (DF, FileSize(DF) - 130); {$I+}
-
-    If IoResult <> 0 Then Begin
-      Close (DF);
-      Exit;
-    End;
-
-    BlockRead (DF, Str[1], 130);
-    Str[0] := #130;
-
-    Close (DF);
-
-    Res := Pos('SAUCE', Copy(Str, 1, 7));
-
-    If Res > 0 Then Begin
-      Result := True;
-
-      Sauce.Title  := strReplace(Copy(Str,  7 + Res, 35), #0, #32);
-      Sauce.Author := strReplace(Copy(Str, 42 + Res, 20), #0, #32);
-      Sauce.Group  := strReplace(Copy(Str, 62 + Res, 20), #0, #32);
-    End;
-  End;
 
   Procedure BuildDirectory (Path: String);
   Var
@@ -1208,9 +1205,10 @@ Var
   End;
 
 Var
-  Ch    : Char;
-  Count : Word;
-  Speed : Byte;
+  Ch      : Char;
+  Count   : Word;
+  Speed   : Byte;
+  UseFull : Boolean;
 Begin
   If Session.io.Graphics = 0 Then Begin
     Session.io.OutFullLn(Session.GetPrompt(466));
@@ -1221,6 +1219,7 @@ Begin
 
   Root    := DirSlash(strWordGet(1, Data, ';'));
   Speed   := strS2I(strWordGet(2, Data, ';'));
+  UseFull := Not (strUpper(strWordGet(3, Data, ';')) = 'DISPLAY');
   CurPath := Root;
 
   BuildDirectory(CurPath);
@@ -1344,8 +1343,13 @@ Begin
                 Session.io.AllowMCI := True;
                 Session.io.AnsiColor(7);
                 Session.io.AnsiClear;
-                Session.io.OutFile (CurPath + DirList[CurPos]^.Desc, False, Speed);
-                Session.io.PauseScreen;
+
+                If UseFull Then
+                  AnsiViewer (Session.Theme.ViewerBar, 'ansigalv;' + CurPath + DirList[CurPos]^.Desc)
+                Else Begin
+                  Session.io.OutFile (CurPath + DirList[CurPos]^.Desc, False, Speed);
+                  Session.io.PauseScreen;
+                End;
 
                 FullReDraw;
               End;
@@ -1433,11 +1437,7 @@ Begin
 End;
 {$ENDIF}
 
-(* MYSTIC 2's ANSIVIEWER
-- needs to be intergrated with the msgbases.  there should NOT be a msgtext AND this
-  class.  there should only be one place where the massive message buffer exists.
-
-Procedure TBBSIO.AnsiViewer (Data: String);
+Procedure AnsiViewer (Bar: RecPercent; Data: String);
 Var
   Buf      : Array[1..4096] of Char;
   BufLen   : LongInt;
@@ -1452,39 +1452,45 @@ Var
   Sauce    : RecSauceInfo;
 
   Procedure Update;
+  Var
+    Per : SmallInt;
   Begin
-    // add percentage bar and line number here
-    Ansi.DrawPage (TBBSCore(Owner).Term.ScreenInfo[1].Y, TBBSCore(Owner).Term.ScreenInfo[2].Y, TopLine);
+    Session.io.AnsiGotoXY (Session.io.ScreenInfo[3].X, Session.io.ScreenInfo[4].Y);
+    Session.io.OutRaw     (Session.io.DrawPercent(Bar, TopLine + WinSize - 1, Ansi.Lines, Per));
+    Session.io.AnsiGotoXY (Session.io.ScreenInfo[4].X, Session.io.ScreenInfo[4].Y);
+    Session.io.AnsiColor  (Session.io.Screeninfo[4].A);
+    Session.io.OutRaw     (strPadL(strI2S(Per), 3, ' '));
+
+    Ansi.DrawPage (Session.io.ScreenInfo[1].Y, Session.io.ScreenInfo[2].Y, TopLine);
   End;
 
 Begin
   Template := strWordGet(1, Data, ';');
   FN       := strWordGet(2, Data, ';');
 
-  If Pos(mysPathSep, FN) = 0 Then
-    FN := TBBSCore(Owner).Theme.PathText + FN;
+  If Pos(PathChar, FN) = 0 Then
+    FN := Session.Theme.TextPath + FN;
 
   If Pos('.', FN) = 0 Then
     FN := FN + '.ans';
 
   If Not FileExist(FN) Then Exit;
 
-  PromptInfo['A'] := JustFile(FN);
-
   If ReadSauceInfo(FN, Sauce) Then Begin
-    PromptInfo['B'] := strStripR(strWide2Str(Sauce.Title, 35), ' ');
-    PromptInfo['C'] := strStripR(strWide2Str(Sauce.Author, 20), ' ');
-    PromptInfo['D'] := strStripR(strWide2Str(Sauce.Group, 20), ' ');
-    Str             := strWide2Str(Sauce.Date, 8);
-    PromptInfo['E'] := Copy(Str, 5, 2) + '/' + Copy(Str, 7, 2) + '/' + Copy(Str, 1, 4);
+    Session.io.PromptInfo[2] := Sauce.Title;
+    Session.io.PromptInfo[3] := Sauce.Author;
+    Session.io.PromptInfo[4] := Sauce.Group;
   End Else Begin
-    PromptInfo['B'] := 'Unknown';
-    PromptInfo['C'] := PromptInfo['B'];
-    PromptInfo['D'] := PromptInfo['B'];
-    PromptInfo['E'] := '??/??/????';
+    Str := Session.GetPrompt(473);
+
+    Session.io.PromptInfo[2] := strWordGet(1, Str, ';');
+    Session.io.PromptInfo[3] := strWordGet(2, Str, ';');
+    Session.io.PromptInfo[4] := strWordGet(3, Str, ';');
   End;
 
-  Ansi := TMsgBaseAnsi.Create(TBBSCore(Owner), False);
+  Session.io.PromptInfo[1] := JustFile(FN);
+
+  Ansi := TMsgBaseAnsi.Create(Session, False);
 
   Assign  (AFile, FN);
   ioReset (AFile, 1, fmReadWrite + fmDenyNone);
@@ -1496,24 +1502,25 @@ Begin
 
   Close (AFile);
 
-  TBBSCore(Owner).Term.AllowArrow := True;
+  Session.io.AllowArrow := True;
 
-  ShowTemplate(Template);
+  Session.io.OutFile(Template, False, 0);
 
-  WinSize := TBBSCore(Owner).Term.ScreenInfo[2].Y - TBBSCore(Owner).Term.ScreenInfo[1].Y + 1;
+  WinSize := Session.io.ScreenInfo[2].Y - Session.io.ScreenInfo[1].Y + 1;
 
   If strUpper(strWordGet(3, Data, ';')) = 'END' Then Begin
     TopLine := Ansi.Lines - WinSize + 1;
+
     If TopLine < 1 Then TopLine := 1;
   End Else
     TopLine := 1;
 
   Update;
 
-  While Not TBBSCore(Owner).ShutDown Do Begin
-    Ch := UpCase(GetKey(0));
+  While Not Session.ShutDown Do Begin
+    Ch := UpCase(Session.io.GetKey);
 
-    If IsArrow Then Begin
+    If Session.io.IsArrow Then Begin
       Case Ch of
         #71 : If TopLine > 1 Then Begin
                 TopLine := 1;
@@ -1545,12 +1552,23 @@ Begin
               End;
       End;
     End Else
-      If Ch = #27 Then Break;
+      Case Ch of
+        #32,
+        #13 : If TopLine < Ansi.Lines - WinSize Then Begin
+                Inc (TopLine, WinSize);
+
+                If TopLine + WinSize > Ansi.Lines Then TopLine := Ansi.Lines - WinSize + 1;
+
+                Update;
+              End;
+
+        #27 : Break;
+      End;
   End;
 
   Ansi.Free;
 
-  OutRaw(AnsiGotoXY(1, TBBSCore(Owner).User.ThisUser.ScreenSize));
+  Session.io.AnsiGotoXY(1, Session.User.ThisUser.ScreenSize);
 End;
-*)
+
 End.
