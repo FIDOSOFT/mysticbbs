@@ -26,6 +26,8 @@ Var
   Term       : TTermAnsi;
   ConfigFile : File of RecConfig;
   Config     : RecConfig;
+  XferPath   : String;
+  AutoZmodem : Boolean;
 
 Implementation
 

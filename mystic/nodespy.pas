@@ -126,9 +126,13 @@ Begin
   Screen   := TConsoleScrollBack.Create(True);
   Keyboard := TInput.Create;
 
+  GetDIR (0, XferPath);
+
   INI := TIniReader.Create('nodespy.ini');
 
-  AutoSnoop := INI.ReadString('General', 'autosnoop', '0') = '1';
+  AutoSnoop  := INI.ReadString('General', 'autosnoop', '0') = '1';
+  XferPath   := INI.ReadString('General', 'transfer_dir', DirSlash(XferPath));
+  AutoZmodem := INI.ReadBoolean('General;', 'auto_zmodem', True);
 
   INI.Free;
 
