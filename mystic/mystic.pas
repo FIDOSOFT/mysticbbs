@@ -427,6 +427,7 @@ Begin
 
     If Not Session.LocalMode Then Begin
       TIOSocket(Session.Client).FSocketHandle := Session.CommHandle;
+      TIOSocket(Session.Client).FTelnetServer := True;
 
       Session.io.LocalScreenDisable;
     End;
