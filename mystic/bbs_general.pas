@@ -1345,7 +1345,7 @@ Begin
                 Session.io.AnsiClear;
 
                 If UseFull Then
-                  AnsiViewer (Session.Theme.ViewerBar, 'ansigalv;' + CurPath + DirList[CurPos]^.Desc)
+                  AnsiViewer (Session.Theme.ViewerBar, 'ansigalv;dummy;' + CurPath + DirList[CurPos]^.Desc)
                 Else Begin
                   Session.io.OutFile (CurPath + DirList[CurPos]^.Desc, False, Speed);
                   Session.io.PauseScreen;
@@ -1448,6 +1448,7 @@ Var
   Ch       : Char;
   FN       : String;
   Template : String;
+  HelpFile : String;
   Str      : String;
   Sauce    : RecSauceInfo;
 
@@ -1455,18 +1456,21 @@ Var
   Var
     Per : SmallInt;
   Begin
-    Session.io.AnsiGotoXY (Session.io.ScreenInfo[3].X, Session.io.ScreenInfo[4].Y);
-    Session.io.OutRaw     (Session.io.DrawPercent(Bar, TopLine + WinSize - 1, Ansi.Lines, Per));
-    Session.io.AnsiGotoXY (Session.io.ScreenInfo[4].X, Session.io.ScreenInfo[4].Y);
-    Session.io.AnsiColor  (Session.io.Screeninfo[4].A);
-    Session.io.OutRaw     (strPadL(strI2S(Per), 3, ' '));
+    If Session.io.ScreenInfo[3].X <> 0 Then Begin
+      Session.io.AnsiGotoXY (Session.io.ScreenInfo[3].X, Session.io.ScreenInfo[4].Y);
+      Session.io.OutRaw     (Session.io.DrawPercent(Bar, TopLine + WinSize - 1, Ansi.Lines, Per));
+      Session.io.AnsiGotoXY (Session.io.ScreenInfo[4].X, Session.io.ScreenInfo[4].Y);
+      Session.io.AnsiColor  (Session.io.Screeninfo[4].A);
+      Session.io.OutRaw     (strPadL(strI2S(Per), 3, ' '));
+    End;
 
     Ansi.DrawPage (Session.io.ScreenInfo[1].Y, Session.io.ScreenInfo[2].Y, TopLine);
   End;
 
 Begin
   Template := strWordGet(1, Data, ';');
-  FN       := strWordGet(2, Data, ';');
+  HelpFile := strWordGet(2, Data, ';');
+  FN       := strWordGet(3, Data, ';');
 
   If Pos(PathChar, FN) = 0 Then
     FN := Session.Theme.TextPath + FN;
@@ -1502,13 +1506,14 @@ Begin
 
   Close (AFile);
 
-  Session.io.AllowArrow := True;
+  Session.io.AllowArrow      := True;
+  Session.io.ScreenInfo[3].X := 0;
 
   Session.io.OutFile(Template, False, 0);
 
   WinSize := Session.io.ScreenInfo[2].Y - Session.io.ScreenInfo[1].Y + 1;
 
-  If strUpper(strWordGet(3, Data, ';')) = 'END' Then Begin
+  If strUpper(strWordGet(4, Data, ';')) = 'END' Then Begin
     TopLine := Ansi.Lines - WinSize + 1;
 
     If TopLine < 1 Then TopLine := 1;
