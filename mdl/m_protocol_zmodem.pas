@@ -199,7 +199,7 @@ Begin
 
   Status.Protocol := 'Zmodem';
   LastSent        := 0;
-  EscapeAll       := False;
+  EscapeAll       := True;
   Attn            := '';
 End;
 
@@ -517,7 +517,7 @@ Begin
               LastSent := B XOR $40;
             End;
     13,
-    13 OR $80 : If {EscapeAll And} (LastSent AND $7F = Ord('@')) Then Begin
+    13 OR $80 : If EscapeAll And (LastSent AND $7F = Ord('@')) Then Begin
                   Client.BufWriteChar(Char(ZDLE));
                   LastSent := B XOR $40;
                 End Else
@@ -528,7 +528,7 @@ Begin
               End;
 
   Else
-    If {(EscapeAll) and} ((B AND $60) = 0) Then Begin
+    If (EscapeAll) and ((B AND $60) = 0) Then Begin
       Client.BufWriteChar(Char(ZDLE));
       LastSent := B XOR $40;
     End Else
@@ -763,6 +763,10 @@ Splat:
   End;
 
   C := ZGetByte;
+
+  {$IFDEF ZDEBUG}
+    ZLog ('ZGetHeader -> Checking Frame Index: ' + HeaderType(C));
+  {$ENDIF}
 
   Case C of
     RCDO,
@@ -1354,7 +1358,7 @@ Var
 Begin
   RxCount := 0;
 
-  {$IFDEF ZDEBUG} ZLog('ZReceiveData -> begin'); {$ENDIF}
+  {$IFDEF ZDEBUG} ZLog('ZReceiveData -> begin (frameindex=' + HeaderType(RxFrameIdx) + ')'); {$ENDIF}
 
   If RxFrameIdx = ZBIN32 Then Begin
     ulCRC := LongInt($FFFFFFFF);
@@ -1467,7 +1471,9 @@ ErrorCRC16:
     End;
   End;
 
-  {$IFDEF ZDEBUG} ZLog('ZReceiveData -> Long packet (frameidx=' + HeaderType(RxFrameIdx) + '; rxcount=' + strI2S(RxCount) + ')'); {$ENDIF}
+  {$IFDEF ZDEBUG}
+    ZLog('ZReceiveData -> Long packet (frameidx=' + HeaderType(RxFrameIdx) + '; rxcount=' + strI2S(RxCount));
+  {$ENDIF}
 
   ZReceiveData := ZERROR;
 End;
@@ -1478,6 +1484,7 @@ Label
   MoreData;
 Var
   Tmp        : SmallInt;
+  Str        : String;
   FName      : String;
   FSize      : LongInt;
   RetryCount : SmallInt;
@@ -1487,7 +1494,7 @@ Begin
   {$IFDEF ZDEBUG} ZLog('ZRecvFile -> begin'); {$ENDIF}
 
   FName   := '';
-  FSize   := 0;
+  Str     := '';
   RxBytes := 0;
 
   Tmp := 0;
@@ -1500,10 +1507,14 @@ Begin
   FName := JustFile(strStripB(FName, ' '));
 
   Inc (Tmp);
-  While (RxBuf[Tmp] <> $20) and (RxBuf[Tmp] <> 0) Do Begin
-    FSize := (FSize * 10) + RxBuf[Tmp] - $30;
+
+  While (RxBuf[Tmp] <> 32) and (RxBuf[Tmp] <> 0) Do Begin
+    Str := Str + Char(RxBuf[Tmp]);
+//    FSize := (FSize * 10) + RxBuf[Tmp] - $30;
     Inc (Tmp);
   End;
+
+  FSize := strS2I(Str);
 
   {$IFDEF ZDEBUG} ZLog('ZRecvFile -> File:' + FName); {$ENDIF}
   {$IFDEF ZDEBUG} ZLog('ZRecvFile -> Size:' + strI2S(FSize)); {$ENDIF}
@@ -1585,6 +1596,8 @@ Begin
 
     ZPutLong (RxBytes);
     ZSendBinaryHeader (ZRPOS);
+
+    // purge input here?
 
 NextHeader:
 
