@@ -255,7 +255,6 @@ Var
 	Per10     : Byte;
 	BarPos    : Integer = -1;
   LineColor : Byte;
-  LineTemp  : Byte;
 Begin
 	Assign (T, FN);
 	{$I-} Reset(T); {$I+}
