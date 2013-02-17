@@ -2287,4 +2287,61 @@
    started in configuration mode (-cfg)
 
  + New MPL fuction: Function ABS (Num: LongInt) : LongInt;  This value takes
-   a signed integer and returns the absolute value.
+   a signed integer and returns the absolute value.  All MPL programs must be
+   recompiled.
+
+ + New menu command: GV.  This uses an ANSI full screen file viewer which is
+   capable of extracting SAUCE info and also parsing ANSI display files.  The
+   format of the optional data is as follows:
+
+      <template name>;<filename>;<END optional>
+
+   Examples:
+
+     Optional data: ansiviewer;prelogon
+     Optional data: ansiviewer;prelogon;end
+
+   If ;END is added at the end, the viewer will start viewing at the END of
+   the file.
+
+   An example ansiviewer.ans template is now included with the default
+   installation and has the following new MCI codes used:
+
+   Optional:
+     &1 = Display file name (excluding directories)
+     &2 = File title (from SAUCE)
+     &3 = File author (from SAUCE)
+     &4 = File group (from SAUCE)
+
+   Required:
+     !1 = Specifies the first line (row) of the file viewing display window
+     !2 = Specifies the last line (row) of the file viewing display window
+
+   If you want to use the File Viewer percentage bar from the theme's
+   configuration you will need to add these two Screen Info codes as well:
+
+     !3 = Specifies the X/Y location of the File Viewer percentage bar
+     !4 = Specifies the X/Y location and attribute of the percentage number
+
+ + The ANSI art gallery now by default uses the full screen ANSI file viewer
+   to display ANSI files.
+
+   A new template has been added called "ansigalv" which will be used to
+   display files and uses the same template format as the ansiviewer (GV)
+   menu command template.
+
+   If you would like to continue NOT use the full screen viewer you can
+   specify the speed and DISPLAY option on the optional data of the menu
+   command:
+
+     Example using full screen viewer:
+
+       Optional data: <directory>
+       Optional data: /mygallery/
+
+     Example using the old display type with display speed option:
+
+       Optional data: <directory>;<speed>;DISPLAY
+       Optional data: /mygallery;100;DISPLAY
+
+   <ALPHA 23 RELEASED>
