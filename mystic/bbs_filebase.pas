@@ -136,7 +136,7 @@ Begin
 
   Res := Pos(UpCase(LineBuf[0]), 'RSZ') > 0;
 
-  Session.SystemLog('DEBUG: DSZ Status character: ' + LineBuf[0]);
+  //Session.SystemLog('DEBUG: DSZ Status character: ' + LineBuf[0]);
 
   While WordPos < 11 Do Begin
     If LineBuf[Count] = #32 Then Begin
@@ -178,12 +178,12 @@ Begin
     Exit;
   End;
 
-  Session.SystemLog('DEBUG: DSZ Searching for: ' + FName);
+  //Session.SystemLog('DEBUG: DSZ Searching for: ' + FName);
 
   While Not Eof(LogFile) Do Begin
     DszGetFile(LogFile, FileName, Status);
 
-    Session.SystemLog('DEBUG: DSZ GetFile returned: ' + FileName + ' (success ' + strI2S(Ord(Status)) + ')');
+    //Session.SystemLog('DEBUG: DSZ GetFile returned: ' + FileName + ' (success ' + strI2S(Ord(Status)) + ')');
 
     If strUpper(FileName) = strUpper(FName) Then Begin
       Result := Status;
