@@ -2372,3 +2372,26 @@
    bugs.
 
    <ALPHA 23 RELEASED>
+
+ ! Fixed a bug with the telnet protocol negotiation which was causing Zmodem
+   uploads from SyncTerm to fail.
+
+ ! Fixed a few additional internal Zmodem related bugs
+
+ ! Fixed a bug in the file base editor where a file was left open, causing
+   Mystic to eventually crash.
+
+ + NodeSpy's telnet client now has the option to ALT-H to disconnect.
+
+ + NodeSpy's telnet client now has a built in Zmodem upload and download. The
+   default download/upload directory can be defined in nodespy.ini in the
+   [General] section as transfer_dir.  If nothing is defined, NodeSpy will use
+   the current directory.
+
+ + NodeSpy telnet client can optionally automatically start Zmodem downloads
+   and uploads.  This option can be disabled in the .ini file:
+
+      [General]
+        auto_zmodem = true
+
+   <ALPHA 24 RELEASED>
