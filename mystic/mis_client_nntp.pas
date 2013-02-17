@@ -39,6 +39,7 @@ Type
 
     Procedure   ClientWriteLine (Str: String);
     Procedure   ResetSession;
+    Function    NNTPDate (DateStr, TimeStr: String) : String;
 
     Procedure   cmd_ARTICLE;
     Procedure   cmd_AUTHINFO;
@@ -51,6 +52,7 @@ Type
 Implementation
 
 Uses
+  Dos,
   Classes,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
@@ -87,6 +89,26 @@ Procedure TNNTPServer.ClientWriteLine (Str: String);
 Begin
   Server.Status('S:' + Str);
   Client.WriteLine(Str);
+End;
+
+Function TNNTPServer.NNTPDate (DateStr, TimeStr: String) : String;
+Var
+  TimeStamp : LongInt;
+  TimeZone  : String;
+  Month     : Byte;
+  Year      : Integer;
+Begin
+  TimeStamp := DateStr2Dos(DateStr);
+  TimeZone  := GetENV('TZ');
+
+  If TimeZone = '' Then TimeZone := 'GMT';
+
+  Month := strS2I(Copy(DateStr, 1, 2));
+  Year  := strS2I(Copy(DateStr, 7, 2));
+
+  If Year < 80 Then Inc(Year, 2000) Else Inc(Year, 1900);
+
+  Result := DayString[DayOfWeek(TimeStamp)] + ', ' + Copy(DateStr, 4, 2) + ' ' + MonthString[Month] + ' ' + strI2S(Year) + ' ' + TimeStr + ':00 ' + TimeZone;
 End;
 
 Procedure TNNTPServer.ResetSession;
@@ -501,13 +523,13 @@ Begin
 
   MsgBase^.MsgTxtStartUp;
 
-  ClientWriteLine ('220 ' + strI2S(ArticleNum) + ' <0> article retrieved - head and body follow');
+  ClientWriteLine ('220 ' + strI2S(ArticleNum) + ' <' + strI2S(ArticleNum) + '> article retrieved - head and body follow');
 //  ClientWriteLine('220 0 ' + strI2S(ArticleNum));
 
   Client.WriteLine('From: ' + MsgBase^.GetFrom);
   Client.WriteLine('Newsgroups: ' + MBase.NewsName);
   Client.WriteLine('Subject: ' + MsgBase^.GetSubj);
-  Client.WriteLine('Date: ' + MsgBase^.GetDate);
+  Client.WriteLine('Date: ' + NNTPDate(MsgBase^.GetDate, MsgBase^.GetTime));
   Client.WriteLine('');
 
   While Not MsgBase^.EOM Do Begin
@@ -594,8 +616,8 @@ Begin
     Client.WriteStr(strI2S(MsgBase^.GetMsgNum) + #9);
     Client.WriteStr(MsgBase^.GetSubj + #9);
     Client.WriteStr(MsgBase^.GetFrom + #9);
-    Client.WriteStr(MsgBase^.GetDate + #9);
-    Client.WriteStr(#9); //msgID
+    Client.WriteStr(NNTPDate(MsgBase^.GetDate, MsgBase^.GetTime) + #9);
+    Client.WriteStr(strI2S(MsgBase^.GetMsgNum) + #9); //msgID
     Client.WriteStr(#9); //refs
     Client.WriteStr(strI2S(Length(MsgText.Text)) + #9);
     Client.WriteStr(strI2S(MsgText.Count) + #13#10);
