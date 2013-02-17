@@ -9,6 +9,7 @@ Procedure Configuration_MessageBaseEditor;
 Implementation
 
 Uses
+  m_DateTime,
   m_Strings,
   m_FileIO,
   m_Bits,
@@ -316,7 +317,9 @@ Var
       Read (MBaseFile, TempBase);
 
       If Result = TempBase.Index Then Begin
-        Inc (Result);
+        If Result >= 2000000 Then Result := 0;
+
+        Inc   (Result);
         Reset (MBaseFile);
       End;
     End;
@@ -331,7 +334,8 @@ Var
     FillChar (MBase, SizeOf(RecMessageBase), 0);
 
     With MBase Do Begin
-      Index       := GetPermanentIndex(List.Picked);
+      Index       := GetPermanentIndex(FileSize(MBaseFile));
+      Created     := CurDateDos;
       FileName    := 'new';
       Path        := Config.MsgsPath;
       Name        := 'New Base';
@@ -428,7 +432,8 @@ Begin
               'P' : If HasCopy And (List.Picked > 1) Then Begin
                       AddRecord (MBaseFile, List.Picked, SizeOf(MBase));
 
-                      Copied.Index := GetPermanentIndex(1);
+                      Copied.Index   := GetPermanentIndex(FileSize(MBaseFile));
+                      Copied.Created := CurDateDos;
 
                       Write (MBaseFile, Copied);
 
