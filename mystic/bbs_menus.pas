@@ -242,6 +242,7 @@ Begin
                     Session.io.BufFlush;
                   End;
             'U' : ShowUserList (strUpper(CmdData));
+            'V' : AnsiViewer(Session.Theme.ViewerBar, CmdData);
             'X' : Result := ExecuteMPL(NIL, CmdData) = 2;
             '?' : Begin
                     // online ANSI help system (BBSHTML) prototype
