@@ -9,18 +9,24 @@ Procedure Terminal;
 Implementation
 
 Uses
+  DOS,
   m_Types,
   m_DateTime,
   m_Strings,
   m_FileIO,
   m_IniReader,
+  m_QuickSort,
   m_io_Base,
   m_io_Sockets,
+  m_Protocol_Base,
+  m_Protocol_Queue,
+  m_Protocol_Zmodem,
   m_Input,
   m_Output,
   m_Term_Ansi,
   m_MenuBox,
   m_MenuForm,
+  m_MenuInput,
   NodeSpy_Common;
 
 {$I NODESPY_ANSITERM.PAS}
@@ -63,6 +69,33 @@ Begin
     GetAddressPort := strS2I(Copy(Addr, A+1, Length(Addr)))
   Else
     GetAddressPort := 23;
+End;
+
+Function GetTransferType : Byte;
+Var
+  List : TMenuList;
+Begin
+  List := TMenuList.Create(TOutput(Screen));
+
+  List.Box.Header    := ' Transfer Type ';
+  List.Box.HeadAttr  := 1 + 7 * 16;
+  List.Box.FrameType := 6;
+  List.Box.Box3D     := True;
+  List.PosBar        := False;
+
+  List.Add('Zmodem: Download', 0);
+  List.Add('Zmodem: Upload', 0);
+
+  List.Open (30, 11, 49, 14);
+  List.Box.Close;
+
+  Case List.ExitCode of
+    #27 : GetTransferType := 0;
+  Else
+    GetTransferType := List.Picked;
+  End;
+
+  List.Free;
 End;
 
 Function GetNewRecord : PhoneRec;
@@ -313,13 +346,359 @@ Begin
   Screen.PutScreenImage(Image);
 End;
 
+Function ProtocolAbort : Boolean;
+Begin
+  Result := Keyboard.KeyPressed and (KeyBoard.ReadKey = #27);
+End;
+
+Procedure ProtocolStatusUpdate (Starting, Ending, Status: RecProtocolStatus);
+Var
+  KBRate  : LongInt;
+Begin
+  Screen.WriteXY (19, 10, 113, strPadR(Status.FileName, 56, ' '));
+  Screen.WriteXY (19, 11, 113, strPadR(strComma(Status.FileSize), 15, ' '));
+  Screen.WriteXY (19, 12, 113, strPadR(strComma(Status.Position), 15, ' '));
+  Screen.WriteXY (64, 11, 113, strPadR(strI2S(Status.Errors), 3, ' '));
+
+  KBRate := 0;
+
+  If (TimerSeconds - Status.StartTime > 0) and (Status.Position > 0) Then
+    KBRate := Round((Status.Position / (TimerSeconds - Status.StartTime)) / 1024);
+
+  Screen.WriteXY (64, 12, 113, strPadR(strI2S(KBRate) + ' k/sec', 12, ' '));
+End;
+
+Procedure ProtocolStatusDraw;
+Var
+  Box : TMenuBox;
+Begin
+  Box := TMenuBox.Create(TOutput(Screen));
+
+  Box.Open (6, 8, 76, 14);
+
+  Box.Header := ' Zmodem File Transfer ';
+
+  (*
+  Screen.WriteXY (6,  8, 120, '+' + strRep('-', 69) + '+');
+  Screen.WriteXY (6,  9, 120, '+' + strRep(' ', 69) + '+');
+  Screen.WriteXY (6, 10, 120, '+' + strRep(' ', 69) + '+');
+  Screen.WriteXY (6, 11, 120, '+' + strRep(' ', 69) + '+');
+  Screen.WriteXY (6, 12, 120, '+' + strRep(' ', 69) + '+');
+  Screen.WriteXY (6, 13, 120, '+' + strRep(' ', 69) + '+');
+  Screen.WriteXY (6, 14, 120, '+' + strRep('-', 69) + '+');
+  *)
+
+  Screen.WriteXY ( 8, 10, 112, 'File Name:');
+  Screen.WriteXY (13, 11, 112, 'Size:');
+  Screen.WriteXY ( 9, 12, 112, 'Position:');
+  Screen.WriteXY (56, 11, 112, 'Errors:');
+  Screen.WriteXY (58, 12, 112, 'Rate:');
+
+  Box.Free;
+End;
+
+Function GetUploadFileName : String;
+Const
+  ColorBox = 31;
+  ColorBar = 7 + 0 * 16;
+Var
+  DirList  : TMenuList;
+  FileList : TMenuList;
+  InStr    : TMenuInput;
+  Str      : String;
+  Path     : String;
+  Mask     : String;
+
+  Procedure UpdateInfo;
+  Begin
+    Screen.WriteXY (8,  7, 31, strPadR(Path, 40, ' '));
+    Screen.WriteXY (8, 21, 31, strPadR(Mask, 40, ' '));
+  End;
+
+  Procedure CreateLists;
+  Var
+    Dir      : SearchRec;
+    DirSort  : TQuickSort;
+    FileSort : TQuickSort;
+    Count    : LongInt;
+  Begin
+    DirList.Clear;
+    FileList.Clear;
+
+    While Path[Length(Path)] = PathSep Do Dec(Path[0]);
+
+    ChDir(Path);
+
+    Path := Path + PathSep;
+
+    If IoResult <> 0 Then Exit;
+
+    DirList.Picked  := 1;
+    FileList.Picked := 1;
+
+    UpdateInfo;
+
+    DirSort  := TQuickSort.Create;
+    FileSort := TQuickSort.Create;
+
+    FindFirst (Path + '*', AnyFile - VolumeID, Dir);
+
+    While DosError = 0 Do Begin
+      If (Dir.Attr And Directory = 0) or ((Dir.Attr And Directory <> 0) And (Dir.Name = '.')) Then Begin
+        FindNext(Dir);
+        Continue;
+      End;
+
+      DirSort.Add (Dir.Name, 0);
+      FindNext    (Dir);
+    End;
+
+    FindClose(Dir);
+
+    FindFirst (Path + Mask, AnyFile - VolumeID, Dir);
+
+    While DosError = 0 Do Begin
+      If Dir.Attr And Directory <> 0 Then Begin
+        FindNext(Dir);
+
+        Continue;
+      End;
+
+      FileSort.Add(Dir.Name, 0);
+      FindNext(Dir);
+    End;
+
+    FindClose(Dir);
+
+    DirSort.Sort  (1, DirSort.Total,  qAscending);
+    FileSort.Sort (1, FileSort.Total, qAscending);
+
+    For Count := 1 to DirSort.Total Do
+      DirList.Add(DirSort.Data[Count]^.Name, 0);
+
+    For Count := 1 to FileSort.Total Do
+      FileList.Add(FileSort.Data[Count]^.Name, 0);
+
+    DirSort.Free;
+    FileSort.Free;
+
+    Screen.WriteXY (14, 9, 113, strPadR('(' + strComma(FileList.ListMax) + ')', 7, ' '));
+    Screen.WriteXY (53, 9, 113, strPadR('(' + strComma(DirList.ListMax) + ')', 7, ' '));
+  End;
+
+Var
+  Box  : TMenuBox;
+  Done : Boolean;
+  Mode : Byte;
+Begin
+  Result   := '';
+  Path     := XferPath;
+  Mask     := '*.*';
+  Box      := TMenuBox.Create(TOutput(Screen));
+  DirList  := TMenuList.Create(TOutput(Screen));
+  FileList := TMenuList.Create(TOutput(Screen));
+
+  FileList.NoWindow   := True;
+  FileList.LoChars    := #9#13#27;
+  FileList.HiChars    := #77;
+  FileList.HiAttr     := ColorBar;
+  FileList.LoAttr     := ColorBox;
+
+  DirList.NoWindow    := True;
+  DirList.NoInput     := True;
+  DirList.HiAttr      := ColorBox;
+  DirList.LoAttr      := ColorBox;
+
+  Box.Header := ' Upload file ';
+
+  Box.Open (6, 5, 74, 22);
+
+  Screen.WriteXY ( 8,  6, 113, 'Directory');
+  Screen.WriteXY ( 8,  9, 113, 'Files');
+  Screen.WriteXY (41,  9, 113, 'Directories');
+  Screen.WriteXY ( 8, 20, 113, 'File Mask');
+  Screen.WriteXY ( 8, 21,  31, strRep(' ', 40));
+
+  CreateLists;
+
+  DirList.Open (40, 9, 72, 19);
+  DirList.Update;
+
+  Done := False;
+
+  Repeat
+    FileList.Open (7, 9, 39, 19);
+
+    Case FileList.ExitCode of
+      #09,
+      #77 : Begin
+              FileList.HiAttr := ColorBox;
+              DirList.NoInput := False;
+              DirList.LoChars := #09#13#27;
+              DirList.HiChars := #75;
+              DirList.HiAttr  := ColorBar;
+
+              FileList.Update;
+
+              Repeat
+                DirList.Open(40, 9, 72, 19);
+
+                Case DirList.ExitCode of
+                  #09 : Begin
+                          DirList.HiAttr := ColorBox;
+                          DirList.Update;
+
+                          Mode  := 1;
+                          InStr := TMenuInput.Create(TOutput(Screen));
+                          InStr.LoChars := #09#13#27;
+
+                          Repeat
+                            Case Mode of
+                              1 : Begin
+                                    Str := InStr.GetStr(8, 21, 40, 255, 1, Mask);
+
+                                    Case InStr.ExitCode of
+                                      #09 : Mode := 2;
+                                      #13 : Begin
+                                              Mask := Str;
+                                              CreateLists;
+                                              FileList.Update;
+                                              DirList.Update;
+                                            End;
+                                      #27 : Begin
+                                              Done := True;
+                                              Break;
+                                            End;
+                                    End;
+                                  End;
+                              2 : Begin
+                                    UpdateInfo;
+
+                                    Str := InStr.GetStr(8, 7, 40, 255, 1, Path);
+
+                                    Case InStr.ExitCode of
+                                      #09 : Break;
+                                      #13 : Begin
+                                              ChDir(Str);
+
+                                              If IoResult = 0 Then Begin
+                                                Path := Str;
+                                                CreateLists;
+                                                FileList.Update;
+                                                DirList.Update;
+                                              End;
+                                            End;
+                                      #27 : Begin
+                                              Done := True;
+                                              Break;
+                                            End;
+                                    End;
+                                  End;
+                            End;
+                          Until False;
+
+                          InStr.Free;
+
+                          UpdateInfo;
+
+                          Break;
+                        End;
+                  #13 : If DirList.ListMax > 0 Then Begin
+                          ChDir  (DirList.List[DirList.Picked]^.Name);
+                          GetDir (0, Path);
+
+                          Path := Path + PathSep;
+
+                          CreateLists;
+                          FileList.Update;
+                        End;
+                  #27 : Done := True;
+                  #75 : Break;
+                End;
+              Until Done;
+
+              DirList.NoInput := True;
+              DirList.HiAttr  := ColorBox;
+              FileList.HiAttr := ColorBar;
+              DirList.Update;
+            End;
+      #13 : If FileList.ListMax > 0 Then Begin
+              Result := Path + FileList.List[FileList.Picked]^.Name;
+              Break;
+            End;
+      #27 : Break;
+    End;
+  Until Done;
+
+  FileList.Free;
+  DirList.Free;
+  Box.Close;
+  Box.Free;
+End;
+
+Procedure DoZmodemDownload (Var Client: TIOBase);
+Var
+  Zmodem : TProtocolZmodem;
+  Image  : TConsoleImageRec;
+  Queue  : TProtocolQueue;
+Begin
+  Queue  := TProtocolQueue.Create;
+  Zmodem := TProtocolZmodem.Create(Client, Queue);
+
+  Screen.GetScreenImage(1, 1, 80, Screen.ScreenSize, Image);
+
+  ProtocolStatusDraw;
+
+  Zmodem.StatusProc  := @ProtocolStatusUpdate;
+  Zmodem.AbortProc   := @ProtocolAbort;
+  Zmodem.ReceivePath := XferPath;
+
+  Zmodem.QueueReceive;
+
+  Zmodem.Free;
+  Queue.Free;
+
+  Screen.PutScreenImage(Image);
+End;
+
+Procedure DoZmodemUpload (Var Client: TIOBase);
+Var
+  FileName : String;
+  Zmodem   : TProtocolZmodem;
+  Image    : TConsoleImageRec;
+  Queue    : TProtocolQueue;
+Begin
+  FileName := GetUploadFileName;
+
+  If FileName = '' Then Exit;
+
+  Queue  := TProtocolQueue.Create;
+  Zmodem := TProtocolZmodem.Create(Client, Queue);
+
+  Screen.GetScreenImage(1, 1, 80, Screen.ScreenSize, Image);
+
+  ProtocolStatusDraw;
+
+  Zmodem.StatusProc := @ProtocolStatusUpdate;
+  Zmodem.AbortProc  := @ProtocolAbort;
+
+  Queue.Add(JustPath(FileName), JustFile(FileName));
+
+  Zmodem.QueueSend;
+
+  Zmodem.Free;
+  Queue.Free;
+
+  Screen.PutScreenImage(Image);
+End;
+
 Procedure TelnetClient (Dial: PhoneRec);
 
   Procedure DrawStatus;
   Begin
     If Dial.StatusBar Then Begin
-      Screen.SetWindow (1, 1, 80, 24, True);
-      Screen.WriteXY   (1, 25, Config.StatusColor3, strPadC('ALT/B-Scrollback     ALT/L-Send Login     ALT-X/Quit', 80, ' '));
+      Screen.SetWindow (1, 1, 80, 24, False);
+      Screen.WriteXY   (1, 25, Config.StatusColor3, strPadC('ALT/B-Scrollback   ALT/L-Send Login   ALT/T-Zmodem   ALT-H/Hangup   ALT-X/Quit', 80, ' '));
     End;
   End;
 
@@ -331,6 +710,7 @@ Var
   Buffer : Array[1..BufferSize] of Char;
   Done   : Boolean;
   Ch     : Char;
+  Count  : LongInt;
 Begin
   ShowMsgBox (2, 'Connecting to ' + Dial.Address);
 
@@ -365,7 +745,26 @@ Begin
 
         Screen.Capture := True;
 
-        Term.ProcessBuf(Buffer, Res);
+        If Not AutoZmodem Then
+          Term.ProcessBuf(Buffer, Res)
+        Else Begin
+          For Count := 1 to Res Do
+            If (Buffer[Count] = #24) and (Count <= Res - 3) Then Begin
+              If (Buffer[Count + 1] <> 'B') or (Buffer[Count + 2] <> '0') Then
+                Term.Process(#24)
+              Else Begin
+                Screen.BufFlush;
+
+                Case Buffer[Count + 3] of
+                  '0' : DoZmodemDownload(TIOBase(Client));
+                  '1' : DoZmodemUpload(TIOBase(Client));
+                End;
+              End;
+            End Else
+              Term.Process(Buffer[Count]);
+
+          Screen.BufFlush;
+        End;
 
         Screen.Capture := False;
       End Else
@@ -374,6 +773,15 @@ Begin
 
         Case Ch of
           #00 : Case Keyboard.ReadKey of
+                  #20 : Begin
+                          Case GetTransferType of
+                            1 : DoZmodemDownload(TIOBase(Client));
+                            2 : DoZmodemUpload(TIOBase(Client));
+                          End;
+
+                          DrawStatus;
+                        End;
+                  #35 : Done := True;
                   #38 : Begin
                           Client.WriteStr (Dial.User + #13);
                           Client.WriteStr (Dial.Password + #13);
