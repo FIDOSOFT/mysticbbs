@@ -4,6 +4,10 @@ Unit m_DateTime;
 
 Interface
 
+Const
+  DayString   : Array[0..6] of String[3]  = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
+  MonthString : Array[1..12] of String[3] = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
+
 Procedure WaitMS            (MS: Word);
 Function  TimerMinutes      : LongInt;
 Function  TimerSeconds      : LongInt;
