@@ -54,6 +54,7 @@ Const
   MsgTrash   : Boolean = False;
   NodeCheck  : Boolean = True;
   AreasOut   : Boolean = False;
+  FixIndex   : Boolean = False;
 
   UserKillDays : Integer = 0;
   BBSSortID    : String  = '';
@@ -119,6 +120,7 @@ Begin
   WriteLn ('-BPACK                      Pack all BBS lists');
   WriteLn ('-BSORT    <ID> <Type>       Sorts and packs BBS list by <type>');
   WriteLn ('-FCHECK                     Checks file entries for correct size and status');
+  WriteLn ('-FIXINDEX                   Fix broken permanent index for msg/file bases');
   WriteLn ('-FPACK                      Pack file bases');
   WriteLn ('-FSORT                      Sort file base entries by filename');
   WriteLn ('-MTRASH   <File>            Delete messages to/from users listed in <File>');
@@ -899,6 +901,137 @@ Begin
   WriteLn;
 End;
 
+Procedure FixIndexes;
+Var
+  ConfigFile : File of RecConfig;
+  MBaseFile  : File of RecMessageBase;
+  FBaseFile  : File of RecFileBase;
+  Config     : RecConfig;
+  MBase      : RecMessageBase;
+  FBase      : RecFileBase;
+
+  Function IsDupeMBaseIndex (SavedPos, Idx: LongInt) : Boolean;
+  Var
+    TempBase : RecMessageBase;
+  Begin
+    Result := False;
+
+    Reset (MBaseFile);
+
+    While Not Eof(MBaseFile) Do Begin
+      Read (MBaseFile, TempBase);
+
+      If (TempBase.Index = Idx) and (FilePos(MBaseFile) <> SavedPos) Then Begin
+        Result := True;
+        Break;
+      End;
+    End;
+
+    Seek (MBaseFile, SavedPos);
+  End;
+
+  Function IsDupeFBaseIndex (SavedPos, Idx: LongInt) : Boolean;
+  Var
+    TempBase : RecFileBase;
+  Begin
+    Result := False;
+
+    Reset (FBaseFile);
+
+    While Not Eof(FBaseFile) Do Begin
+      Read (FBaseFile, TempBase);
+
+      If (TempBase.Index = Idx) and (FilePos(FBaseFile) <> SavedPos) Then Begin
+        Result := True;
+        Break;
+      End;
+    End;
+
+    Seek (FBaseFile, SavedPos);
+  End;
+
+Var
+  NewIndex : Cardinal;
+Begin
+  Write ('Fixing Indexes       :');
+
+  Assign (ConfigFile, 'mystic.dat');
+
+  {$I-} Reset(ConfigFile); {$I+}
+
+  If IoResult <> 0 Then Begin
+    WriteLn ('Must be executed in same directory as MYSTIC.DAT file');
+    Halt(1);
+  End;
+
+  Read  (ConfigFile, Config);
+  Close (ConfigFile);
+
+  If Config.DataChanged <> mysDataChanged Then Begin
+    WriteLn ('This program is not compatible with the current version of Mystic');
+    Halt(1);
+  End;
+
+  Assign (MBaseFile, Config.DataPath + 'mbases.dat');
+  Reset  (MBaseFile);
+
+  While Not Eof(MBaseFile) Do Begin
+    Read (MBaseFile, MBase);
+
+    Update_Bar (FilePos(MBaseFile), FileSize(MBaseFile));
+
+    If IsDupeMBaseIndex(FilePos(MBaseFile), MBase.Index) Then Begin
+      NewIndex := 0;
+
+      While IsDupeMBaseIndex(FilePos(MBaseFile), NewIndex) Do
+        Inc (NewIndex);
+
+      MBase.Index := NewIndex;
+    End;
+
+    If (MBase.Created = 0) Or Not DateValid(DateDos2Str(MBase.Created, 1)) Then Begin
+      MBase.Created := CurDateDos;
+    End;
+
+    Seek  (MBaseFile, FilePos(MBaseFile) - 1);
+    Write (MBaseFile, MBase);
+  End;
+
+  Close (MBaseFile);
+
+  Assign (FBaseFile, Config.DataPath + 'fbases.dat');
+  Reset  (FBaseFile);
+
+  While Not Eof(FBaseFile) Do Begin
+    Read (FBaseFile, FBase);
+
+    Update_Bar (FilePos(FBaseFile), FileSize(FBaseFile));
+
+    If IsDupeFBaseIndex(FilePos(FBaseFile), FBase.Index) Then Begin
+      NewIndex := 0;
+
+      While IsDupeFBaseIndex(FilePos(FBaseFile), NewIndex) Do
+        Inc (NewIndex);
+
+      FBase.Index := NewIndex;
+    End;
+
+    If (FBase.Created = 0) Or Not DateValid(DateDos2Str(FBase.Created, 1)) Then Begin
+      FBase.Created := CurDateDos;
+    End;
+
+    Seek  (FBaseFile, FilePos(FBaseFile) - 1);
+    Write (FBaseFile, FBase);
+  End;
+
+  Close (FBaseFile);
+
+  Update_Bar(100, 100);
+  Update_Status('Completed');
+
+  WriteLn;
+End;
+
 Var
   A        : Byte;
   Temp     : String;
@@ -998,6 +1131,7 @@ Begin
         BBSSort := True;
     End;
     If Temp = '-FCHECK' Then FileCheck := True;
+    If Temp = '-FIXINDEX' Then FixIndex := True;
     If Temp = '-FPACK'  Then FilePack  := True;
     If Temp = '-FSORT'  Then FileSort  := True;
     If Temp = '-UKILL'  Then Begin
@@ -1077,4 +1211,5 @@ Begin
   If UserPack   Then Pack_User_File;
   If MsgTrash   Then MsgBase_Trash;
   If AreasOut   Then ExportAreasBBS;
+  If FixIndex   Then FixIndexes;
 End.
