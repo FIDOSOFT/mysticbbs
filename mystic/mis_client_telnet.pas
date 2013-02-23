@@ -135,12 +135,10 @@ Begin
 
   Proc.Execute;
 
-  While Proc.Running Do Begin
+  While Proc.Running Or (Proc.Output.NumBytesAvailable > 0) Do Begin
     If Proc.Output.NumBytesAvailable > 0 Then Begin
-      While Proc.Output.NumBytesAvailable > 0 Do Begin
-        bRead := Proc.Output.Read(Buffer, TIOBufferSize);
-        Client.WriteBufEscaped (Buffer, bRead);
-      End;
+      bRead := Proc.Output.Read(Buffer, TIOBufferSize);
+      Client.WriteBufEscaped (Buffer, bRead);
     End Else
     If Client.DataWaiting Then Begin
       bWrite := Client.ReadBuf(Buffer, TIOBufferSize);
