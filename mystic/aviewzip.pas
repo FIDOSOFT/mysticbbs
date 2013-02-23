@@ -52,8 +52,8 @@ Type
     Procedure   FindNext  (Var SR : ArcSearchRec); Virtual;
 
     Private
-                Hdr     : ZFLocalHeader;
-                cHdr    : ZFCentralHeader;
+                Hdr   : ZFLocalHeader;
+                cHdr  : ZFCentralHeader;
                 cFile : Word;
                 tFile : Word;
                 Procedure GetHeader (Var SR : ArcSearchRec);
@@ -107,9 +107,13 @@ Begin
 
   While Hdr.Signature = LocalSig Do Begin
     Inc (tFile);
+
     CurPos := FilePos(ArcFile) + Hdr.FNameLen + Hdr.ExtraField + Hdr.cSize;
+
     Seek (ArcFile, CurPos);
+
     BlockRead (ArcFile, Hdr, SizeOf(Hdr), bRead);
+
     If bRead <> SizeOf(Hdr) Then Exit;
   End;
 
