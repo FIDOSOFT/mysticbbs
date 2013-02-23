@@ -199,7 +199,7 @@ Begin
 
   Status.Protocol := 'Zmodem';
   LastSent        := 0;
-  EscapeAll       := True;
+  EscapeAll       := False;
   Attn            := '';
 End;
 
@@ -503,6 +503,7 @@ Begin
 End;
 *)
 
+(*
 Procedure TProtocolZmodem.SendEscaped (B: SmallInt);
 Begin
   Case B of
@@ -518,6 +519,42 @@ Begin
             End;
     13,
     13 OR $80 : If EscapeAll And (LastSent AND $7F = Ord('@')) Then Begin
+                  Client.BufWriteChar(Char(ZDLE));
+                  LastSent := B XOR $40;
+                End Else
+                  LastSent := B;
+    255     : Begin
+                Client.BufWriteChar(Char(ZDLE));
+                LastSent := ZRUB1;
+              End;
+
+  Else
+    If (EscapeAll) and ((B AND $60) = 0) Then Begin
+      Client.BufWriteChar(Char(ZDLE));
+      LastSent := B XOR $40;
+    End Else
+      LastSent := B;
+  End;
+
+  Client.BufWriteChar(Char(LastSent));
+End;
+*)
+
+Procedure TProtocolZmodem.SendEscaped (B: SmallInt);
+Begin
+  Case B of
+    DLE,
+    DLEHI,
+    XON,
+    XONHI,
+    XOFF,
+    XOFFHI,
+    ZDLE :  Begin
+              Client.BufWriteChar(Char(ZDLE));
+              LastSent := B XOR $40;
+            End;
+    13,
+    13 OR $80 : If (LastSent AND $7F = Ord('@')) Then Begin
                   Client.BufWriteChar(Char(ZDLE));
                   LastSent := B XOR $40;
                 End Else
