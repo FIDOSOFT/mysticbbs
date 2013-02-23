@@ -2,30 +2,6 @@ Unit AViewRAR;
 
 {$I M_OPS.PAS}
 
-(* DOES NOT WORK IF FILE HAS COMMENTS... NEED TO READ SKIP ADDSIZE IF NOT $74
-
-1. Read and check marker block
-2. Read archive header
-3. Read or skip HEAD_SIZE-sizeof(MAIN_HEAD) bytes
-4. If end of archive encountered then terminate archive processing,
-   else read 7 bytes into fields HEAD_CRC, HEAD_TYPE, HEAD_FLAGS,
-   HEAD_SIZE.
-5. Check HEAD_TYPE.
-   if HEAD_TYPE==0x74
-     read file header ( first 7 bytes already read )
-     read or skip HEAD_SIZE-sizeof(FILE_HEAD) bytes
-     if (HEAD_FLAGS & 0x100)
-       read or skip HIGH_PACK_SIZE*0x100000000+PACK_SIZE bytes
-     else
-       read or skip PACK_SIZE bytes
-   else
-     read corresponding HEAD_TYPE block:
-       read HEAD_SIZE-7 bytes
-       if (HEAD_FLAGS & 0x8000)
-         read ADD_SIZE bytes
-6. go to 4.
-*)
-
 Interface
 
 Uses
@@ -34,6 +10,13 @@ Uses
 
 Type
   RarHeaderRec = Record
+    CRC     : Word;
+    HdrType : Byte;
+    Flags   : Word;
+    Size    : Word;
+  End;
+
+  RarFileRec = Record
     PackSize : LongInt;
     Size     : LongInt;
     HostOS   : Byte;
@@ -48,12 +31,14 @@ Type
   PRarArchive = ^TRarArchive;
   TRarArchive = Object(TGeneralArchive)
     Constructor Init;
-    Procedure   FindFirst (Var SR : ArcSearchRec); Virtual;
-    Procedure   FindNext  (Var SR : ArcSearchRec); Virtual;
+    Procedure   FindFirst (Var SR: ArcSearchRec); Virtual;
+    Procedure   FindNext  (Var SR: ArcSearchRec); Virtual;
   Private
-    RAR    : RarHeaderRec;
-    Buf    : Array[1..12] of Byte;
-    Offset : Word;
+    RAR     : RarFileRec;
+    Hdr     : RarHeaderRec;
+    ArcHdr  : Array[1..7] of Byte;
+    NextPos : LongInt;
+    Offset  : LongInt;
   End;
 
 Implementation
@@ -66,37 +51,49 @@ Procedure TRarArchive.FindFirst (Var SR : ArcSearchRec);
 Begin
   If Eof(ArcFile) Then Exit;
 
-  BlockRead (ArcFile, Buf[1], 12);
+  BlockRead (ArcFile, ArcHdr[1], 7);      // marker header
+  BlockRead (ArcFile, Hdr, SizeOf(Hdr));  // archive header
 
-  If Buf[10] <> $73 Then Exit;
+  If Hdr.HdrType <> $73 Then Exit;
 
-  BlockRead (ArcFile, offset, 2);
-  BlockRead (ArcFile, Buf[1], 6);
+  NextPos := FilePos(ArcFile) + Hdr.Size - 7;
 
-  Seek (ArcFile, FilePos(ArcFile) + (offset - 13));
   FindNext (SR);
 End;
 
 Procedure TRarArchive.FindNext (Var SR: ArcSearchRec);
 Begin
-  If Eof(ArcFile) Then Exit;
+  Repeat
+    Seek (ArcFile, NextPos);
 
-  BlockRead (ArcFile, Buf[1], 5);
+    If Eof(ArcFile) Then Exit;
 
-  If Buf[3] <> $74 Then Exit;
+    BlockRead (ArcFile, Hdr, SizeOf(Hdr));
 
-  BlockRead (ArcFile, Offset, 2);
-  BlockRead (ArcFile, RAR, SizeOf(RAR));
-  BlockRead (ArcFile, SR.Name[1], RAR.FNSize);
+    If (Hdr.HdrType = $74) Then Begin
+      BlockRead (ArcFile, RAR, SizeOf(RAR));
+      BlockRead (ArcFile, SR.Name[1], RAR.FNSize);
 
-  SR.Name[0] := Chr(RAR.FNSize);
+      SR.Name[0] := Chr(RAR.FNSize);
 
-  SR.Time := RAR.Time;
-  SR.Size := RAR.Size;
+      If RAR.Attr = 16 Then SR.Attr := $10;
 
-  If RAR.Attr = 16 Then SR.Attr := $10;
+      SR.Time := RAR.Time;
+      SR.Size := RAR.Size;
 
-  Seek(ArcFile, FilePos(ArcFile) + (Offset - (SizeOf(RAR) + 7 + Length(SR.Name))) + RAR.PackSize);
+      NextPos := NextPos + Hdr.Size + RAR.PackSize;
+
+      Break;
+    End Else Begin
+      If (Hdr.Flags And $8000) = 0 Then
+        NextPos := NextPos + Hdr.Size
+      Else Begin
+        BlockRead (ArcFile, Offset , 4);
+
+        NextPos := NextPos + Hdr.Size + Offset;
+      End;
+    End;
+  Until Eof(ArcFile);
 End;
 
 End.
