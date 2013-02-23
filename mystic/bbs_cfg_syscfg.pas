@@ -243,15 +243,15 @@ Begin
 
   List.NoWindow := True;
 
-  Box.Open (17, 6, 64, 21);
+  Box.Open (17, 5, 64, 20);
 
-  WriteXY (27, 7, 112, 'Network Address          Description');
-  WriteXY (19, 8, 112, strRep('Ä', 44));
+  WriteXY (27, 6, 112, 'Network Address          Description');
+  WriteXY (19, 7, 112, strRep('Ä', 44));
 
   Repeat
     CreateList;
 
-    List.Open (17, 8, 64, 21);
+    List.Open (17, 7, 64, 20);
 
     Case List.ExitCode of
       #13 : If Edit Then
