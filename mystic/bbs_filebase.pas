@@ -949,20 +949,22 @@ Begin
               If Mask <> '' Then Begin
                 ExecuteArchive (FName, '', Mask, 2);
 
-                Session.io.PromptInfo[1] := Mask;
+                If Not ArchiveList(Session.TempPath + Mask) Then Begin
+                  Session.io.PromptInfo[1] := Mask;
 
-                Session.io.OutFullLn(Session.GetPrompt(306));
+                  Session.io.OutFullLn(Session.GetPrompt(306));
 
-                Session.io.AllowMCI := False;
+                  Session.io.AllowMCI := False;
 
-                Session.io.OutFile (Session.TempPath + Mask, True, 0);
+                  Session.io.OutFile (Session.TempPath + Mask, True, 0);
 
-                Session.io.AllowMCI := True;
+                  Session.io.AllowMCI := True;
 
-                If Session.io.NoFile Then
-                  Session.io.OutFullLn (Session.GetPrompt(305))
-                Else
-                  FileErase(Session.TempPath + Mask);
+                  If Session.io.NoFile Then
+                    Session.io.OutFullLn (Session.GetPrompt(305));
+                End;
+
+                FileErase(Session.TempPath + Mask);
               End;
             End;
     End;
@@ -2247,7 +2249,7 @@ Var
     B  : Integer;
   Begin
     Session.io.AllowArrow := True;
-    ListType   := 1;
+    ListType              := 1;
 
     strListFormat := Session.GetPrompt(431);
     strBarON      := Session.GetPrompt(432);
@@ -2479,6 +2481,10 @@ Var
               End;
         'P' : Begin
                 PrevPage;
+
+                If CurPage = 1 Then
+                  TopDesc := 0;
+
                 DrawPage;
               End;
         'Q' : Begin
@@ -2724,19 +2730,21 @@ End;
 
 Procedure TFileBase.UploadFile;
 Var
-  FileName : String;
-  A        : LongInt;
-  D        : DirStr;
-  N        : NameStr;
-  E        : ExtStr;
-  OLD      : RecFileBase;
-  Blind    : Boolean;
-  Temp     : String;
-  FullName : String;
-  DataFile : File;
-  Found    : Boolean;
-  LogFile  : Text;
+  FileName   : String;
+  A          : LongInt;
+  OLD        : RecFileBase;
+  Blind      : Boolean;
+  Temp       : String;
+  FullName   : String;
+  DataFile   : File;
+  Found      : Boolean;
+  LogFile    : Text;
   FileStatus : Boolean;
+  {$IFNDEF UNIX}
+  D          : DirStr;
+  N          : NameStr;
+  E          : ExtStr;
+  {$ENDIF}
 Begin
   OLD   := FBase;
   Found := False;
@@ -2775,15 +2783,21 @@ Begin
   End;
 
   If Config.FreeUL > 0 Then Begin
-    FSplit (FBase.Path, D, N, E);
+    {$IFDEF UNIX}
+      If DiskFree(0) DIV 1024 < Config.FreeUL Then Begin
+        Session.io.OutFullLn (Session.GetPrompt(81));
+        FBase := OLD;
+        Exit;
+      End;
+    {$ELSE}
+      FSplit (FBase.Path, D, N, E);
 
-    // this might be broken?
-
-    If DiskFree(Ord(UpCase(D[1])) - 64) DIV 1024 < Config.FreeUL Then Begin
-      Session.io.OutFullLn (Session.GetPrompt(81));
-      FBase := OLD;
-      Exit;
-    End;
+      If DiskFree(Ord(UpCase(D[1])) - 64) DIV 1024 < Config.FreeUL Then Begin
+        Session.io.OutFullLn (Session.GetPrompt(81));
+        FBase := OLD;
+        Exit;
+      End;
+    {$ENDIF}
   End;
 
   Blind    := Session.io.GetYN(Session.GetPrompt(375), False);
