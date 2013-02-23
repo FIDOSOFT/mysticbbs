@@ -408,6 +408,7 @@ Var
   Str      : String;
   Path     : String;
   Mask     : String;
+  OrigDIR  : String;
 
   Procedure UpdateInfo;
   Begin
@@ -497,6 +498,8 @@ Begin
   Box      := TMenuBox.Create(TOutput(Screen));
   DirList  := TMenuList.Create(TOutput(Screen));
   FileList := TMenuList.Create(TOutput(Screen));
+
+  GetDIR (0, OrigDIR);
 
   FileList.NoWindow   := True;
   FileList.LoChars    := #9#13#27;
@@ -629,6 +632,8 @@ Begin
       #27 : Break;
     End;
   Until Done;
+
+  ChDIR(OrigDIR);
 
   FileList.Free;
   DirList.Free;
