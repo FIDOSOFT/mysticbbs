@@ -21,10 +21,8 @@ BUGS AND POSSIBLE ISSUES
   compile (IceDevil)
 ! After data file review, add missing variables to various MPL Get/Put
   functions.
-! RAR internal viewer does not work with files that have embedded comments
 ! Test midnight rollovers for time (flag for user to be immune to timecheck)
 ! Fixed REAL2STR per Gryphon
-! Free diskspace check in Linux
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================

@@ -2395,3 +2395,25 @@
         auto_zmodem = true
 
    <ALPHA 24 RELEASED>
+
+ ! NodeSpy's telnet client was saving the phone directory in the wrong
+   directory after a Zmodem upload was completed.
+
+ ! The internal RAR archive viewer was not working when a .RAR file had a
+   comment in the file.
+
+ ! Fixed an issue with the minimum upload space check in Linux.
+
+ + Mystic can now view archives within an archive instead of just text files.
+   So for example if you have MYZIP.ZIP and inside that file there is another
+   ZIP/LZH/LHA/ARJ/RAR file, you can View it's contents using the (V)iew
+   command.  If the file you've entered is not a valid archive, it will try
+   to display it as a text file as it has in the past.
+
+ ! Fixed an issue with the previous page command in the standard file
+   listing, where it could sometimes show the file uploader text before the
+   actual filename text.
+
+ ! More Zmodem upload fixes with SyncTerm
+
+   <ALPHA 25 RELEASED>
