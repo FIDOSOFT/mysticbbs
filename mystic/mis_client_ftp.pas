@@ -90,7 +90,7 @@ Const
   re_XferOK      = '226 Transfer OK';
   re_PassiveOK   = '227 Entering Passive Mode ';
   re_LoggedIn    = '230 User logged in, proceed.';
-  re_DirOkay     = '257 Working directory is now ';
+  re_DirOkay     = '250 Working directory is now ';
   re_UserOkay    = '331 User name okay, need password.';
   re_NoData      = '425 Unable to open data connection';
   re_BadCommand  = '503 Bad sequence of commands.';
