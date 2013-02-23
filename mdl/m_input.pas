@@ -47,6 +47,7 @@ Const
   keyALTL  = #38;
   keyALTM  = #50;
   keyALTO  = #24;
+  keyALTP  = #25;
   keyALTQ  = #16;
   keyALTR  = #19;
   keyALTS  = #31;
