@@ -4,6 +4,8 @@ Unit bbs_FileBase;
 
 Interface
 
+{$DEFINE USEALTPROT}
+
 Uses
   m_io_Base,
   {$IFDEF WINDOWS}
@@ -17,14 +19,19 @@ Uses
   m_Strings,
   m_FileIO,
   m_DateTime,
-  m_Protocol_Queue,
-  m_Protocol_Base,
-  m_Protocol_Zmodem,
   bbs_Common,
   bbs_General,
   bbs_NodeInfo,
   bbs_Ansi_MenuBox,
-  AView;
+  AView,
+  {$IFDEF USEALTPROT}
+    m_Prot_Base,
+    m_Prot_Zmodem;
+  {$ELSE}
+    m_Protocol_Queue,
+    m_Protocol_Base,
+    m_Protocol_Zmodem;
+  {$ENDIF}
 
 Type
   BatchRec = Record
@@ -194,6 +201,7 @@ Begin
   Close (LogFile);
 End;
 
+{$IFNDEF USEALTPROT}
 {$IFNDEF UNIX}
 Procedure ProtocolStatus (Start, Finish: Boolean; Status: RecProtocolStatus);
 Var
@@ -212,6 +220,54 @@ Begin
   Screen.WriteXY (64, 12, 113, strPadR(strI2S(KBRate) + ' k/sec', 12, ' '));
 End;
 {$ENDIF}
+{$ENDIF}
+
+{$IFDEF USEALTPROT}
+{$IFNDEF UNIX}
+Procedure XferStatus (P: AbstractProtocolPtr; First, Last: Boolean);
+Var
+  KBRate : LongInt;
+Begin
+  Screen.WriteXY (19, 10, 113, strPadR(P^.PathName, 56, ' '));
+  Screen.WriteXY (19, 11, 113, strPadR(strComma(P^.SrcFileLen), 15, ' '));
+  Screen.WriteXY (19, 12, 113, strPadR(strComma(P^.BytesTransferred), 15, ' '));
+  Screen.WriteXY (64, 11, 113, strPadR(strI2S(P^.TotalErrors), 3, ' '));
+
+  KBRate := 0;
+
+  If (TimerSeconds - P^.StartTimer > 0) and (P^.BytesTransferred > 0) Then
+    KBRate := Round((P^.SrcFileLen / (TimerSeconds - P^.StartTimer)) / 1024);
+
+  Screen.WriteXY (64, 12, 113, strPadR(strI2S(KBRate) + ' k/sec', 12, ' '));
+End;
+{$ENDIF}
+    Procedure XferResult (P: AbstractProtocolPTR; Status: LogFileType);
+    Var
+      T   : Text;
+      Res : Char;
+    Begin
+      Res := '!';
+
+      Case Status of
+        lfReceiveFail,
+        lfReceiveSkip,
+        lfTransmitSkip,
+        lfTransmitFail : Res := 'E';
+        lfReceiveOk,
+        lfTransmitOk   : Res := 'Z';
+      End;
+
+      If Res <> '!' Then Begin
+        Assign (T, Session.TempPath + 'xfer.log');
+        {$I-} Append (T); {$I+}
+
+        If IoResult <> 0 Then ReWrite(T);
+
+        WriteLn (T, Res + ' 0 0 0 0 0 0 0 0 0 ' + P^.PathName + ' -1');
+        Close   (T);
+      End;
+    End;
+{$ENDIF}
 
 Procedure TFileBase.ExecuteProtocol (Mode: Byte; FName: String);
 // mode: 0=recv batch, 1=recv file, 2=send file, 3= send batch
@@ -226,6 +282,108 @@ Var
     SavedA : Boolean;
   {$ENDIF}
 
+  {$IFDEF USEALTPROT}
+  Procedure ExecInternal;
+  Var
+    Protocol : AbstractProtocolPTR;
+    Client   : TIOBase;
+    FileList : FileListPTR;
+  Begin
+    {$IFDEF UNIX}
+      Client := TSTDIO.Create;
+    {$ELSE}
+      Client := Session.Client;
+    {$ENDIF}
+
+    Command := strStripB(strUpper(Command), ' ');
+
+    If Command = '@ZMODEM' Then
+      Protocol := New(ZmodemProtocolPTR, Init(Client, False))
+    Else
+    If Command = '@ZMODEM8' Then
+      Protocol := New(ZmodemProtocolPTR, Init(Client, True))
+    Else Begin
+      {$IFDEF UNIX}
+      Client.Free;
+      {$ENDIF}
+      Exit;
+    End;
+
+    Protocol^.MakeFileList(FileList, 1024 * 8);
+
+    Case Mode of
+      0  : Protocol^.SetDestinationDirectory(JustPath(FName));
+      1  : Protocol^.AddFileToList(FileList, FName);
+      2  : Protocol^.AddFileToList(FileList, FName);
+      3  : Begin
+             Assign (T, Session.TempPath + 'file.lst');
+             Reset  (T);
+
+             While Not Eof(T) Do Begin
+               ReadLn (T, Res);
+
+               Protocol^.AddFileToList(FileList, Res);
+             End;
+
+             Close (T);
+           End;
+    End;
+
+    Session.io.BufFlush;
+
+    Protocol^.SetFileList(FileList);
+    Protocol^.SetLogFileProc(@XferResult);
+
+    {$IFNDEF UNIX}
+      Protocol^.SetShowStatusProc(@XferStatus);
+
+      SavedL            := Session.LocalMode;
+      SavedA            := Screen.Active;
+      Session.LocalMode := True;
+
+      Session.io.LocalScreenEnable;
+
+      Box := TAnsiMenuBox.Create;
+
+      Case Mode of
+        0..1 : Box.Header := ' Zmodem Upload ';
+        2..3 : Box.Header := ' Zmodem Download ';
+      End;
+
+      Box.Open (6, 8, 76, 14);
+
+      Screen.WriteXY ( 8, 10, 112, 'File Name:');
+      Screen.WriteXY (13, 11, 112, 'Size:');
+      Screen.WriteXY ( 9, 12, 112, 'Position:');
+      Screen.WriteXY (56, 11, 112, 'Errors:');
+      Screen.WriteXY (58, 12, 112, 'Rate:');
+    {$ENDIF}
+
+    Case Mode of
+      0..1 : Protocol^.ProtocolReceive;
+      2..3 : Protocol^.ProtocolTransmit;
+    End;
+
+    {$IFNDEF UNIX}
+      Box.Free;
+
+      Session.io.BufFlush;
+
+      If Not SavedA Then
+        Session.io.LocalScreenDisable;
+
+      Session.LocalMode := SavedL;
+    {$ENDIF}
+
+    Protocol^.DisposeFileList(FileList, 8 * 1024);
+
+    Dispose (Protocol, Done);
+
+    {$IFDEF UNIX}
+      Client.Free;
+    {$ENDIF}
+  End;
+  {$ELSE}
   Procedure ExecInternal;
   Var
     Protocol : TProtocolBase;
@@ -244,7 +402,11 @@ Var
 
     If Command = '@ZMODEM' Then
       Protocol := TProtocolZmodem.Create(Client, Queue)
-    Else Begin
+    Else If Command = '@ZMODEM8' Then Begin
+      Protocol := TProtocolZmodem.Create(Client, Queue);
+
+      TProtocolZmodem(Protocol).CurBufSize := 8 * 1024;
+    End Else Begin
       {$IFDEF UNIX}
       Client.Free;
       {$ENDIF}
@@ -333,6 +495,7 @@ Var
       Client.Free;
     {$ENDIF}
   End;
+  {$ENDIF}
 
   Procedure ExecExternal;
   Var
@@ -393,6 +556,12 @@ Var
   End;
 
 Begin
+  If Session.LocalMode Then Begin
+    Session.io.OutFullLn(Session.GetPrompt(63));
+
+    Exit;
+  End;
+
   Set_Node_Action(Session.GetPrompt(351));
 
   If Mode > 1 Then
