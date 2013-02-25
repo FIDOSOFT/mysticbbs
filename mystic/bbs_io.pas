@@ -4,6 +4,8 @@ Unit BBS_IO;
 
 Interface
 
+{.$DEFINE UTF8}
+
 Uses
   {$IFDEF WINDOWS}
     Windows,
@@ -58,6 +60,7 @@ Type
     LastSecond     : LongInt;
     OutBuffer      : Array[0..TBBSIOBufferSize] of Char;
     OutBufPos      : SmallInt;
+    RangeValue     : LongInt;
 
     {$IFDEF WINDOWS}
       SocketEvent : THandle;
@@ -101,6 +104,7 @@ Type
     Function    GetYN            (Str: String; Yes: Boolean) : Boolean;
     Function    GetPW            (Str: String; BadStr: String; PW: String) : Boolean;
     Function    OneKey           (Str: String; Echo: Boolean) : Char;
+    Function    OneKeyRange      (Str: String; Lo, Hi: LongInt) : Char;
     Procedure   RemoteRestore    (Var Image: TConsoleImageRec);
     Procedure   PurgeInputBuffer;
 
@@ -167,6 +171,119 @@ Begin
   Inherited Destroy;
 End;
 
+{$IFDEF UTF8}
+Function UTF8Encode(Ch : LongInt) : String;
+Const
+  CP437_Map : Array[0..255] of LongInt = (
+    $2007, $263A, $263B, $2665, $2666, $2663, $2660, $2022,
+    $25D8, $25CB, $25D9, $2642, $2640, $266A, $266B, $263C,
+    $25BA, $25C4, $2195, $203C, $00B6, $00A7, $25AC, $21A8,
+    $2191, $2193, $2192, $2190, $221F, $2194, $25B2, $25BC,
+    $0020, $0021, $0022, $0023, $0024, $0025, $0026, $0027,
+    $0028, $0029, $002a, $002b, $002c, $002d, $002e, $002f,
+    $0030, $0031, $0032, $0033, $0034, $0035, $0036, $0037,
+    $0038, $0039, $003a, $003b, $003c, $003d, $003e, $003f,
+    $0040, $0041, $0042, $0043, $0044, $0045, $0046, $0047,
+    $0048, $0049, $004a, $004b, $004c, $004d, $004e, $004f,
+    $0050, $0051, $0052, $0053, $0054, $0055, $0056, $0057,
+    $0058, $0059, $005a, $005b, $005c, $005d, $005e, $005f,
+    $0060, $0061, $0062, $0063, $0064, $0065, $0066, $0067,
+    $0068, $0069, $006a, $006b, $006c, $006d, $006e, $006f,
+    $0070, $0071, $0072, $0073, $0074, $0075, $0076, $0077,
+    $0078, $0079, $007a, $007b, $007c, $007d, $007e, $007f,
+    $00c7, $00fc, $00e9, $00e2, $00e4, $00e0, $00e5, $00e7,
+    $00ea, $00eb, $00e8, $00ef, $00ee, $00ec, $00c4, $00c5,
+    $00c9, $00e6, $00c6, $00f4, $00f6, $00f2, $00fb, $00f9,
+    $00ff, $00d6, $00dc, $00a2, $00a3, $00a5, $20a7, $0192,
+    $00e1, $00ed, $00f3, $00fa, $00f1, $00d1, $00aa, $00ba,
+    $00bf, $2310, $00ac, $00bd, $00bc, $00a1, $00ab, $00bb,
+    $2591, $2592, $2593, $2502, $2524, $2561, $2562, $2556,
+    $2555, $2563, $2551, $2557, $255d, $255c, $255b, $2510,
+    $2514, $2534, $252c, $251c, $2500, $253c, $255e, $255f,
+    $255a, $2554, $2569, $2566, $2560, $2550, $256c, $2567,
+    $2568, $2564, $2565, $2559, $2558, $2552, $2553, $256b,
+    $256a, $2518, $250c, $2588, $2584, $258c, $2590, $2580,
+    $03b1, $00df, $0393, $03c0, $03a3, $03c3, $00b5, $03c4,
+    $03a6, $0398, $03a9, $03b4, $221e, $03c6, $03b5, $2229,
+    $2261, $00b1, $2265, $2264, $2320, $2321, $00f7, $2248,
+    $00b0, $2219, $00b7, $221a, $207f, $00b2, $25a0, $00a0);
+
+Begin
+  If (Ch <= $FF) Then Begin
+    Case Ch Of
+       $00, $1B, $0D, $0A, $07, $08, $09 : { NOP } ;
+    Else
+      Ch := CP437_Map[Ch];
+    End;
+  End;
+
+  If (Ch <= $7F) Then Begin
+    Result := Chr(Ch);
+    Exit;
+  End;
+
+  If (Ch <= $7FF) Then Begin
+		Result := Chr($C0 or ((Ch shr  6) and $1F)) +
+              Chr($80 or  (Ch         and $3F));
+    Exit;
+  End;
+
+	If (Ch <= $FFFF) Then Begin
+		Result := Chr($E0 or ((Ch shr 12) and $0F)) +
+              Chr($80 or ((Ch shr  6) and $3F)) +
+              Chr($80 or  (Ch         and $3F));
+    Exit;
+	End;
+
+	If (ch <= $10FFFF) Then Begin
+		Result := Chr($F0 or ((Ch shr 18) and $07)) +
+              Chr($80 or ((Ch shr 12) and $3F)) +
+              Chr($80 or ((Ch shr  6) and $3F)) +
+              Chr($80 or  (Ch         and $3F));
+    Exit;
+	End;
+
+  Result := ' ';
+End;
+
+Procedure TBBSIO.BufAddChar (Ch: Char);
+Const
+  ConvertUTF8 : Boolean = True;
+Var
+  S : String;
+  C : Byte;
+Begin
+  {$IFDEF WINDOWS}
+    Term.Process(Ch);
+  {$ENDIF}
+
+  If ConvertUTF8 Then Begin
+    S := UTF8Encode(LongInt(Ch));
+
+    For C := 1 to Length(S) Do Begin
+      {$IFDEF UNIX}
+        Term.Process(S[C]);
+      {$ENDIF}
+
+      OutBuffer[OutBufPos] := S[C];
+
+      Inc (OutBufPos);
+
+      If OutBufPos = TBBSIOBufferSize Then BufFlush;
+    End;
+  End Else Begin
+    {$IFDEF UNIX}
+      Term.Process(Ch);
+    {$ENDIF}
+
+    OutBuffer[OutBufPos] := Ch;
+
+    Inc (OutBufPos);
+
+    If OutBufPos = TBBSIOBufferSize Then BufFlush;
+  End;
+End;
+{$ELSE}
 Procedure TBBSIO.BufAddChar (Ch: Char);
 Begin
   OutBuffer[OutBufPos] := Ch;
@@ -177,6 +294,7 @@ Begin
 
   Term.Process(Ch);
 End;
+{$ENDIF}
 
 Procedure TBBSIO.BufAddStr (Str: String);
 Var
@@ -201,6 +319,8 @@ Begin
   {$ENDIF}
 
   {$IFDEF UNIX}
+    // UTF8 considerations?
+
     If Session.Pipe.Connected Then
       Session.Pipe.SendToPipe(OutBuffer, OutBufPos);
 
@@ -1498,6 +1618,60 @@ Begin
   Result := Ch;
 End;
 
+Function TBBSIO.OneKeyRange (Str: String; Lo, Hi: LongInt) : Char;
+Var
+  Ch     : Char;
+  CurStr : String = '';
+  LoStr  : String[10];
+  HiStr  : String[10];
+Begin
+  PurgeInputBuffer;
+
+  RangeValue := -1;
+  LoStr      := strI2S(Lo);
+  HiStr      := strI2S(Hi);
+
+  Repeat
+    Ch := UpCase(GetKey);
+
+    If (Pos(Ch, Str) > 0) and (CurStr = '') Then Begin
+      Result := Ch;
+
+      OutRawLn(Ch);
+
+      Exit;
+    End Else
+      Case Ch of
+        #08 : If CurStr <> '' Then Begin
+                Dec    (CurStr[0]);
+                OutRaw (#08#32#08);
+              End;
+        #13 : If CurStr <> '' Then Begin
+                RangeValue := strS2I(CurStr);
+                Result     := #0;
+
+                OutRawLn('');
+
+                Exit;
+              End;
+        '0'..
+        '9' : If (strS2I(CurStr + Ch) >= Lo) and (strS2I(CurStr + Ch) <= Hi) Then Begin
+                CurStr := CurStr + Ch;
+
+                If Length(CurStr) = Length(HiStr) Then Begin
+                  OutRawLn(Ch);
+
+                  RangeValue := strS2I(CurStr);
+                  Result     := #0;
+
+                  Exit;
+                End Else
+                  OutRaw (Ch);
+              End;
+      End;
+  Until False;
+End;
+
 Function TBBSIO.GetInput (Field, Max, Mode: Byte; Default: String) : String;
 (*
 { input modes: }
@@ -1928,7 +2102,7 @@ Begin
   While Input.KeyPressed Do Input.ReadKey;
   {$ENDIF}
   {$IFDEF WINDOWS}
-  If Not TBBSCore(Core).LocalMode Then TBBSCore(Core).Client.PurgeInputData(True);
+  If Not TBBSCore(Core).LocalMode Then TBBSCore(Core).Client.PurgeInputData(100);
   {$ENDIF}
 End;
 
