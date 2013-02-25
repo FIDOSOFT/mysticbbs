@@ -174,7 +174,7 @@ End;
 
 Function TIOSocket.DataWaiting : Boolean;
 Begin
-  Result := (FInBufPos < FInBufEnd) or (WaitForData(0) > 0);
+  Result := (FInBufPos < FInBufEnd) or (WaitForData(1) > 0);
 End;
 
 Function TIOSocket.WriteBuf (Var Buf; Len: LongInt) : LongInt;
@@ -456,6 +456,7 @@ Begin
     If FInBufEnd <= 0 Then Begin
       FInBufEnd := 0;
       Result    := -1;
+      Connected := False;
       Exit;
     End;
 

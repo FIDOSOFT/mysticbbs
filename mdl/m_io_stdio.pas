@@ -47,7 +47,7 @@ End;
 
 Function TSTDIO.DataWaiting : Boolean;
 Begin
-  Result := (FInBufPos < FInBufEnd) or (WaitForData(0) > 0);
+  Result := (FInBufPos < FInBufEnd) or (WaitForData(1) > 0);
 End;
 
 Function TSTDIO.WriteBuf (Var Buf; Len: LongInt) : LongInt;
