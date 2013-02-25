@@ -657,6 +657,7 @@ Begin
   Zmodem.StatusProc  := @ProtocolStatusUpdate;
   Zmodem.AbortProc   := @ProtocolAbort;
   Zmodem.ReceivePath := XferPath;
+  Zmodem.CurBufSize  := 8 * 1024;
 
   Zmodem.QueueReceive;
 
