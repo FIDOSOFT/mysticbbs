@@ -46,7 +46,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Ability to override listing type per file base (same as above)
 - Ability to list files in a base that is not the current file base
 - MCI code to show how many files are in current filebase
-- Online ANSI file viewer (integrate with art gallery)
 - Online text editor / ansi editor?
 - Externalize remaining prompt data (msg flags, etc)
 - File comments and rating system
