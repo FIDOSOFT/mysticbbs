@@ -428,7 +428,7 @@ Begin
   If Session.LocalMode Then
     Session.io.Graphics := 1
   Else Begin
-    Session.Client.PurgeInputData(True);
+    Session.Client.PurgeInputData(100);
     Session.io.OutRaw (#27 + '[6n');
     Session.io.BufFlush;
 
@@ -440,7 +440,7 @@ Begin
         End;
     End;
 
-    Session.Client.PurgeInputData(True);
+    Session.Client.PurgeInputData(100);
   End;
 
   Session.io.OutFullLn (Session.GetPrompt(259));
