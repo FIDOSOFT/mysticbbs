@@ -2414,6 +2414,20 @@
    listing, where it could sometimes show the file uploader text before the
    actual filename text.
 
- ! More Zmodem upload fixes with SyncTerm
+ ! More Zmodem upload fixes with SyncTerm.
+
+ ! Closing a node window in Windows should no longer create a ghost user
+   on the node.
+
+ + Added Zmodem 8K (ZEDZAP) internal protocol.  You can use the Send/Recv
+   command of "@zmodem8" to use it.  Updated the protocol definitions for
+   the default install to include ZEDZAP, and to also disable SEXYZ
+   protocols by default.
+
+ + NodeSpy's telnet client will now switch to ZEDZAP (Zmodem 8K) during
+   Zmodem download if the sender supports it.
+
+ + When reading messages in the normal message reader, you can now just type
+   a message number on the prompt to automatically jump to that message.
 
    <ALPHA 25 RELEASED>
