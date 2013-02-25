@@ -2197,8 +2197,21 @@ Var
         Else
           Session.io.OutFull (Session.GetPrompt(116));
 
-        Str := Session.io.OneKey(ValidKeys, True);
+        Str := Session.io.OneKeyRange(ValidKeys, 1, MsgBase^.GetHighMsgNum);
+
         Case Str[1] of
+          #00 : Begin
+                  B := MsgBase^.GetMsgNum;
+
+                  MsgBase^.SeekFirst(Session.io.RangeValue);
+
+                  If Not SeekNextMsg(True, False) Then Begin
+                    MsgBase^.SeekFirst(B);
+                    SeekNextMsg(True, False);
+                  End;
+
+                  Break;
+                End;
           'A' : Break;
           'D' : If Session.io.GetYN (Session.GetPrompt(117), True) Then Begin {Delete E-mail}
                   MsgBase^.DeleteMsg;
