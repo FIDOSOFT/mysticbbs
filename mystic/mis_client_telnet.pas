@@ -17,6 +17,7 @@ Uses
   {$ENDIF}
   m_io_Base,
   m_io_Sockets,
+  m_FileIO,
   m_Strings,
   MIS_Common,
   MIS_NodeData,
@@ -101,6 +102,8 @@ Begin
   NI.Action := '';
 
   ND.SetNodeInfo(Num, NI);
+
+  FileErase (bbsConfig.DataPath + 'chat' + strI2S(Num) + '.dat');
 End;
 {$ENDIF}
 
@@ -154,16 +157,14 @@ Begin
 
   Proc.Free;
 
-  FileMode := 66;
-
-  FileErase (bbsConfig.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
-
   NI.Busy   := False;
   NI.IP     := '';
   NI.User   := '';
   NI.Action := '';
 
   ND.SetNodeInfo(Num, NI);
+
+  FileErase (bbsConfig.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
 End;
 {$ENDIF}
 
