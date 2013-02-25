@@ -21,15 +21,16 @@ Uses
   m_Protocol_Queue;
 
 Const
-  ZBufSize    = 1024;  // 1024 only maybe 8k ZEDZAP someday
   ZAttnLen    = 32;
+  MaxBufSize  = 1024 * 8;
   RxTimeOut   : Word = 500;
 
 Type
   ZHdrType = Array[0..3] of Byte;
-  ZBufType = Array[0..ZBUFSIZE - 1] of Byte;
+  ZBufType = Array[0..MaxBufSize - 1] of Byte;
 
   TProtocolZmodem = Class(TProtocolBase)
+    CurBufSize : Word;
     UseCRC32   : Boolean;
     EscapeAll  : Boolean;
     LastSent   : Byte;
@@ -201,6 +202,7 @@ Begin
   LastSent        := 0;
   EscapeAll       := False;
   Attn            := '';
+  CurBufSize      := 1024;
 End;
 
 Destructor TProtocolZmodem.Destroy;
@@ -250,7 +252,7 @@ Begin
   ZPutHex (Lo(CRC));
 
   Client.BufWriteChar (#13);
-  Client.BufWriteChar (#10);
+  Client.BufWriteChar (Char(10 or $80));
 
   If (FrameType <> ZFIN) And (FrameType <> ZACK) Then
     Client.BufWriteChar (Char(XON));
@@ -312,12 +314,12 @@ Begin
     ZRUB0  : Result := $007F;
     ZRUB1  : Result := $00FF;
   Else
-    If ((Result AND $60) = $40) Then
+//    If ((Result AND $60) = $40) Then
       Result := Result XOR $40
-    Else Begin
-      Result := ZERROR;
-      {$IFDEF ZDEBUG} ZLog('ZDLRead -> Got ZERROR'); {$ENDIF}
-    End;
+//    Else Begin
+//      Result := ZERROR;
+//      {$IFDEF ZDEBUG} ZLog('ZDLRead -> Got ZERROR'); {$ENDIF}
+//    End;
   End;
 
   {$IFDEF ZCHARLOG} ZLog('ZDLRead -> ' + HeaderType(Result)); {$ENDIF}
@@ -464,46 +466,6 @@ Begin
   ZReceiveBinaryHeader32 := RxType;
 End;
 
-(*
-//XON, XOFF, DLE, CTRLX, CR@CR...
-//ALSO translate TELNET_IAC... optional?
-Procedure TProtocolZmodem.SendEscaped (B: SmallInt);
-Begin
-  Case B of
-    DLE,
-    DLEHI,
-    XON,
-    XONHI,
-    XOFF,
-    XOFFHI,
-    ZDLE : Begin
-              Client.BufWriteChar(Char(ZDLE));
-              LastSent := B XOR $40;
-            End;
-    13,
-    13 OR $80 : If (LastSent AND $7F = Ord('@')) Then Begin
-                  Client.BufWriteChar(Char(ZDLE));
-                  LastSent := B XOR $40;
-                End Else
-                  LastSent := B;
-    255     : Begin
-                Client.BufWriteChar(Char(ZDLE));
-                LastSent := ZRUB1;
-              End;
-
-  Else
-    If (EscapeAll) and ((B AND $60) = 0) Then Begin
-      Client.BufWriteChar(Char(ZDLE));
-      LastSent := B XOR $40;
-    End Else
-      LastSent := B;
-  End;
-
-  Client.BufWriteChar(Char(LastSent));
-End;
-*)
-
-(*
 Procedure TProtocolZmodem.SendEscaped (B: SmallInt);
 Begin
   Case B of
@@ -519,42 +481,6 @@ Begin
             End;
     13,
     13 OR $80 : If EscapeAll And (LastSent AND $7F = Ord('@')) Then Begin
-                  Client.BufWriteChar(Char(ZDLE));
-                  LastSent := B XOR $40;
-                End Else
-                  LastSent := B;
-    255     : Begin
-                Client.BufWriteChar(Char(ZDLE));
-                LastSent := ZRUB1;
-              End;
-
-  Else
-    If (EscapeAll) and ((B AND $60) = 0) Then Begin
-      Client.BufWriteChar(Char(ZDLE));
-      LastSent := B XOR $40;
-    End Else
-      LastSent := B;
-  End;
-
-  Client.BufWriteChar(Char(LastSent));
-End;
-*)
-
-Procedure TProtocolZmodem.SendEscaped (B: SmallInt);
-Begin
-  Case B of
-    DLE,
-    DLEHI,
-    XON,
-    XONHI,
-    XOFF,
-    XOFFHI,
-    ZDLE :  Begin
-              Client.BufWriteChar(Char(ZDLE));
-              LastSent := B XOR $40;
-            End;
-    13,
-    13 OR $80 : If (LastSent AND $7F = Ord('@')) Then Begin
                   Client.BufWriteChar(Char(ZDLE));
                   LastSent := B XOR $40;
                 End Else
@@ -1071,7 +997,7 @@ Start:
   FileDone   := False;
   GoodBlks   := 0;
   GoodNeeded := 0;
-  RxBufLen   := ZBufSize;
+  RxBufLen   := CurBufSize;
 
   Status.Position  := RxPos;
   Status.BlockSize := RxBufLen;
@@ -1120,11 +1046,11 @@ Start:
 
     Inc (GoodBlks);
 
-    If (RxBufLen < ZBUFSIZE) And (GoodBlks > GoodNeeded) Then Begin
-      If ((RxBufLen SHL 1) < ZBUFSIZE) Then
+    If (RxBufLen < CurBufSize) And (GoodBlks > GoodNeeded) Then Begin
+      If ((RxBufLen SHL 1) < CurBufSize) Then
         RxBufLen := RxBufLen SHL 1
       Else
-        RxBufLen := ZBUFSIZE;
+        RxBufLen := CurBufSize;
 
       GoodBlks := 0;
     End;
@@ -1303,7 +1229,7 @@ Again:
       ZEOF    : Continue;
       ZTIMEOUT: Continue;
       ZFILE   : Begin
-                  If ZReceiveData(RxBuf, ZBUFSIZE) = GOTCRCW Then Begin
+                  If ZReceiveData(RxBuf, CurBufSize) = GOTCRCW Then Begin
                     ZInitSender := ZFILE;
                     Exit;
                   End;
@@ -1349,7 +1275,7 @@ Again:
                   Goto Again;
                 End;
       ZCOMMAND: Begin
-                  If ZReceiveData (RxBuf, ZBUFSIZE) = GOTCRCW Then Begin
+                  If ZReceiveData (RxBuf, CurBufSize) = GOTCRCW Then Begin
                     ZPutLong (0);
 
                     Repeat
@@ -1520,7 +1446,7 @@ Label
   NextHeader,
   MoreData;
 Var
-  Tmp        : SmallInt;
+  Tmp        : LongInt;
   Str        : String;
   FName      : String;
   FSize      : LongInt;
@@ -1547,7 +1473,6 @@ Begin
 
   While (RxBuf[Tmp] <> 32) and (RxBuf[Tmp] <> 0) Do Begin
     Str := Str + Char(RxBuf[Tmp]);
-//    FSize := (FSize * 10) + RxBuf[Tmp] - $30;
     Inc (Tmp);
   End;
 
@@ -1555,8 +1480,6 @@ Begin
 
   {$IFDEF ZDEBUG} ZLog('ZRecvFile -> File:' + FName); {$ENDIF}
   {$IFDEF ZDEBUG} ZLog('ZRecvFile -> Size:' + strI2S(FSize)); {$ENDIF}
-
-//  Client.PurgeInputData;
 
   Queue.Add(ReceivePath, FName);
 
@@ -1631,10 +1554,18 @@ Begin
 
     {$IFDEF ZDEBUG} ZLog('ZRecvFile -> Sending ZRPOS ' + strI2S(RxBytes)); {$ENDIF}
 
+    Client.PurgeOutputData;
+
     ZPutLong (RxBytes);
     ZSendBinaryHeader (ZRPOS);
 
-    // purge input here?
+//    Client.BufFlush;
+
+    {$IFDEF UNIX}
+    Client.PurgeInputData(100);
+    {$ELSE}
+    Client.PurgeInputData(100);
+    {$ENDIF}
 
 NextHeader:
 
@@ -1654,7 +1585,8 @@ NextHeader:
                   End;
                 End;
       ZFILE   : Begin
-                  ZReceiveData (RxBuf, ZBUFSIZE);
+                  {$IFDEF ZDEBUG} ZLog('ZRecvFile -> Got ZFILE expected data sending ZRPOS'); {$ENDIF}
+                  ZReceiveData(RxBuf, CurBufSize);
                   Continue;
                 End;
       ZEOF    : Begin
@@ -1720,7 +1652,7 @@ MoreData:
                     StatusTimer := TimerSet(StatusCheck);
                   End;
 
-                  C := ZReceiveData(RxBuf, ZBUFSIZE);
+                  C := ZReceiveData(RxBuf, CurBufSize);
 
                   {$IFDEF ZDEBUG} ZLog('ZRecvFile -> MoreData -> Got ' + HeaderType(C) + ' want data packet'); {$ENDIF}
 
@@ -1824,7 +1756,7 @@ Begin
 
   {$IFDEF ZDEBUG} ZLog('DoAbortSequence -> begin'); {$ENDIF}
 
-  Client.PurgeInputData(False);
+  Client.PurgeInputData(0);
   Client.PurgeOutputData;
 
   Client.BufWriteStr(Attn);
@@ -1838,7 +1770,7 @@ Begin
 
   StatusUpdate(True, False);
 
-  RxBufLen := ZBufSize;
+  RxBufLen := CurBufSize;
 
   While Not AbortTransfer Do Begin
     If ZInitSender = ZFILE Then Begin
