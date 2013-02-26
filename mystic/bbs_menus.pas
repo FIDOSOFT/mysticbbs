@@ -39,9 +39,10 @@ Type
     Function    SpecialKey         (Str: String) : Boolean;
     Function    MenuGetKey : Char;
     Function    ShowMenu : Boolean;
-    Procedure   GenerateMenu;
+    Procedure   GenerateMenu       (Cols: Integer; Cmd: Boolean);
     Procedure   DoStandardMenu;
     Procedure   DoLightBarMenu;
+    Procedure   DoLBPromptMenu;
   End;
 
 Implementation
@@ -139,6 +140,7 @@ Begin
     '-' : Case Cmd[2] of
             'D' : ToggleAccessFlags(CmdData, Session.User.ThisUser.AF2);
             'F' : ToggleAccessFlags(CmdData, Session.User.ThisUser.AF1);
+            'G' : GenerateMenu(strS2I(CmdData), True);
             'I' : TimerCount := strS2I(CmdData);
             'N' : Session.User.AcsOkFlag := Session.io.GetYN(CmdData, False);
             'P' : Session.User.AcsOkFlag := Session.io.GetPW(Copy(CmdData, 1, Pos(';', CmdData) - 1), Session.GetPrompt(417),
@@ -433,7 +435,7 @@ Begin
     (Str = 'TIMER');
 End;
 
-Procedure TMenuEngine.GenerateMenu;
+Procedure TMenuEngine.GenerateMenu (Cols: Integer; Cmd: Boolean);
 Var
   Format : Byte;
   Listed : Word;
@@ -445,8 +447,11 @@ Begin
         Data.Item[Count]^.TimerShow := True;
   End;
 
-  If ShowMenu Then Begin
-    Case Data.Info.DispCols of
+  If (Cols < 0) or (Cols > 4) Then
+    Cols := Data.Info.DispCols;
+
+  If ShowMenu And (Cols > 0) Then Begin
+    Case Cols of
       1 : Format := 79;
       2 : Format := 39;
       3 : Format := 26;
@@ -467,11 +472,11 @@ Begin
       Then Continue;
 
       If Data.Item[Count]^.HotKey = 'LINEFEED' Then Begin
-        If Listed MOD Data.Info.DispCols <> 0 Then Session.io.OutRawLn('');
+        If Listed MOD Cols <> 0 Then Session.io.OutRawLn('');
 
         Session.io.OutFullLn(Data.Item[Count]^.Text);
 
-        While Listed Mod Data.Info.DispCols <> 0 Do Inc(Listed);
+        While Listed Mod Cols <> 0 Do Inc(Listed);
       End Else Begin
         Inc (Listed);
 
@@ -483,21 +488,23 @@ Begin
         While Screen.CursorX < Format Do
           Session.io.BufAddChar(' ');
 
-        If Listed MOD Data.Info.DispCols = 0 Then
+        If Listed MOD Cols = 0 Then
           TBBSCore(Owner).io.OutFullLn ('');
       End;
     End;
 
-    If Listed MOD Data.Info.DispCols <> 0 Then
+    If Listed MOD Cols <> 0 Then
       TBBSCore(Owner).io.OutFullLn ('');
 
     TBBSCore(Owner).io.BufFlush;
   End;
 
-  If ExecuteByHotKey('AFTER', 0) = 2 Then Exit;
+  If Not Cmd Then Begin
+    If ExecuteByHotKey('AFTER', 0) = 2 Then Exit;
 
-  If Data.Info.Footer <> '' Then
-    TBBSCore(Owner).io.OutFull(Data.Info.Footer);
+    If Data.Info.Footer <> '' Then
+      TBBSCore(Owner).io.OutFull(Data.Info.Footer);
+  End;
 
   TBBSCore(Owner).io.BufFlush;
 End;
@@ -542,7 +549,7 @@ Begin
     If Not ViewOnly Then
       If ExecuteByHotKey('EVERY', 0) = 2 Then Exit;
 
-    If ReDraw Then GenerateMenu;
+    If ReDraw Then GenerateMenu(-1, False);
 
     TBBSCore(Owner).io.AllowArrow := True;
 
@@ -622,6 +629,226 @@ Begin
 
     If Not TBBSCore(Owner).ShutDown Then
       If ExecuteByHotKey(Temp, 0) = 2 Then
+        Exit;
+  End;
+End;
+
+Procedure TMenuEngine.DoLBPromptMenu;
+Var
+  CurItem   : Word = 0;
+  ItemX     : Byte = 1;
+  ItemY     : Byte = 1;
+  MaxLBSize : Byte = 1;
+  MaxDESize : Byte = 1;
+
+  Procedure FindNextItem;
+  Var
+    SavedItem : Integer;
+    Wrapped   : Boolean = False;
+  Begin
+    SavedItem := CurItem;
+
+    Repeat
+      Inc (CurItem);
+
+      If (CurItem = SavedItem) and Wrapped Then
+        Break
+      Else
+      If (CurItem > Data.NumItems) Then Begin
+        CurItem := 1;
+
+        If Wrapped Then Break;
+
+        CurItem := 1;
+        Wrapped := True;
+      End;
+
+      If Not SpecialKey(Data.Item[CurItem]^.HotKey) Then
+        If TBBSCore(Owner).User.Access(Data.Item[CurItem]^.Access) Then Break;
+    Until False;
+  End;
+
+  Procedure FindPrevItem;
+  Var
+    SavedItem : Integer;
+    Wrapped   : Boolean = False;
+  Begin
+    SavedItem := CurItem;
+
+    Repeat
+      Dec (CurItem);
+
+      If (CurItem = SavedItem) and Wrapped Then
+        Break
+      Else
+      If (CurItem < 1) Then Begin
+        CurItem := Data.NumItems;
+
+        If Wrapped Then Break;
+
+        CurItem := Data.NumItems;
+        Wrapped := True;
+      End;
+
+      If Not SpecialKey(Data.Item[CurItem]^.HotKey) Then
+        If TBBSCore(Owner).User.Access(Data.Item[CurItem]^.Access) Then Break;
+    Until False;
+  End;
+
+  Function FindByKey (Str: String) : Boolean;
+  Var
+    SavedItem : Integer;
+    Wrapped   : Boolean = False;
+  Begin
+    SavedItem := CurItem;
+    Result    := False;
+
+    Repeat
+      Inc (CurItem);
+
+      If (CurItem = SavedItem) and Wrapped Then
+        Break
+      Else
+      If (CurItem > Data.NumItems) Then Begin
+        CurItem := 1;
+
+        If Wrapped Then Begin
+          CurItem := SavedItem;
+          Break;
+        End;
+
+        CurItem := 1;
+        Wrapped := True;
+      End;
+
+      If (Length(Data.Item[CurItem]^.HotKey) >= Length(Str)) And (strUpper(Copy(Data.Item[CurItem]^.HotKey, 1, Length(Str))) = Str) And Not SpecialKey(Data.Item[CurItem]^.HotKey) And TBBSCore(Owner).User.Access(Data.Item[CurItem]^.Access) Then Begin
+        Result := True;
+        Break;
+      End;
+    Until False;
+
+    If (Length(Data.Item[CurItem]^.HotKey) >= Length(Str)) And (strUpper(Copy(Data.Item[CurItem]^.HotKey, 1, Length(Str))) = Str) And Not SpecialKey(Data.Item[CurItem]^.HotKey) And TBBSCore(Owner).User.Access(Data.Item[CurItem]^.Access) Then
+      Result := True;
+  End;
+
+  Procedure DrawItem;
+  Begin
+    If ItemY >= Session.User.ThisUser.ScreenSize {24} Then Begin
+      Session.io.OutRawLn('');
+
+      //ItemY := Session.User.ThisUser.ScreenSize - 1;
+
+      Dec (ItemY);
+    End;
+
+    If Data.Item[CurItem]^.TextLo <> '' Then Begin
+      IF Data.Item[CurItem]^.X <> 0 Then
+        Session.io.AnsiGotoXY (Data.Item[CurItem]^.X, ItemY + 1)
+      Else
+        Session.io.AnsiGotoXY (ItemX, ItemY + 1);
+
+      Session.io.OutFull(Data.Item[CurItem]^.TextLo);
+
+      If Screen.CursorX > MaxDESize Then
+        MaxDESize := Screen.CursorX;
+
+      While Screen.CursorX < MaxDESize Do
+        Session.io.OutRaw(' ');
+    End;
+
+    Session.io.AnsiGotoXY (ItemX, ItemY);
+    Session.io.OutFull    (Data.Item[CurItem]^.TextHi);
+
+    If Screen.CursorX > MaxLBSize Then
+      MaxLBSize := Screen.CursorX;
+
+    While Screen.CursorX < MaxLBSize Do
+      Session.io.OutRaw(' ');
+  End;
+
+Var
+  HotKey : String;
+  Ch     : Char;
+Begin
+  While Not TBBSCore(Owner).ShutDown Do Begin
+    If Not ViewOnly Then
+      If ExecuteByHotKey('EVERY', 0) = 2 Then Exit;
+
+    If ReDraw Then GenerateMenu(-1, False);
+
+    ItemX := Screen.CursorX;
+    ItemY := Screen.CursorY;
+
+    TBBSCore(Owner).io.AllowArrow := True;
+
+    If SetAction Then
+      If Data.Info.NodeStatus <> '' Then
+        Set_Node_Action(Data.Info.NodeStatus)
+      Else
+        Set_Node_Action(TBBSCore(Owner).GetPrompt(346));
+
+    HotKey := '';
+
+    If CurItem = 0 Then FindNextItem;
+
+    DrawItem;
+
+    While Not TBBSCore(Owner).ShutDown Do Begin
+      Ch := MenuGetKey;
+
+      If TBBSCore(Owner).ShutDown Then Exit;
+
+      If UseTimer And (Ch = #02) Then Begin
+        If TimerReload Then Exit;
+        If ReDraw Then Break;
+      End;
+
+      If Session.io.IsArrow Then Begin
+        Case Ch of
+          #72,
+          #75 : Begin
+                  FindPrevItem;
+                  DrawItem;
+                End;
+          #77,
+          #80 : Begin
+                  FindNextItem;
+                  DrawItem;
+                End;
+        End;
+      End Else Begin
+        Case Ch of
+          #13 : Begin
+                  HotKey := Data.Item[CurItem]^.HotKey;
+
+                  Break;
+                End;
+          #32..
+          #126: Begin
+                  HotKey := HotKey + UpCase(Ch);
+
+                  If Not FindByKey(HotKey) Then Begin
+                    HotKey := UpCase(Ch);
+
+                    If Not FindByKey(HotKey) Then
+                      HotKey := '';
+                  End;
+
+                  DrawItem;
+
+                  If (HotKey <> '') And (HotKey = Data.Item[CurItem]^.HotKey) And UseHotKeys Then
+                    Break;
+                End;
+        End;
+      End;
+    End;
+
+    Session.io.OutFullLn('|CR');
+
+    If ViewOnly Then Exit;
+
+    If Not TBBSCore(Owner).ShutDown Then
+      If ExecuteByHotKey(HotKey, 0) = 2 Then
         Exit;
   End;
 End;
@@ -1034,6 +1261,10 @@ Begin
             DoLightBarMenu
           Else
             DoStandardMenu;
+      3 : If TBBSCore(Owner).io.Graphics > 0 Then
+            DoLBPromptMenu
+          Else
+            DoStandardMenu;
     End;
 
     Exit;
@@ -1097,6 +1328,10 @@ Begin
     1,
     2 : If TBBSCore(Owner).io.Graphics > 0 Then
           DoLightBarMenu
+        Else
+          DoStandardMenu;
+    3 : If TBBSCore(Owner).io.Graphics > 0 Then
+          DoLBPromptMenu
         Else
           DoStandardMenu;
   End;

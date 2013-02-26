@@ -107,6 +107,7 @@
 ; &1 = size, &2 = date, &3 = DLs, &4 = desc, &5 = uploader
 043 |07|$D29 |&4
 ; File listing pause prompt
+; &1 = total files &1 = current file
 044 |CR|01[|10þ|01] |09Pause: |01(|07N|01)|09ext, |01(|07P|01)|09rev, |01(|07F|01)|09lag, |01(|07V|01)|09iew, or |01(|07Q|01)|09uit? |07
 ; Standard file list, ext desc: &4 = description
 045 |07|$D29 |&4

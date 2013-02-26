@@ -1,5 +1,5 @@
 // ====================================================================
-// Mystic BBS Software               Copyright 1997-2012 By James Coyle
+// Mystic BBS Software               Copyright 1997-2013 By James Coyle
 // ====================================================================
 //
 // This file is part of Mystic BBS.

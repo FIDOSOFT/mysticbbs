@@ -1,6 +1,6 @@
 {
  ===========================================================================
- Mystic BBS Software                  Copyright (C) 1997-2012 By James Coyle
+ Mystic BBS Software                  Copyright (C) 1997-2013 By James Coyle
  ===========================================================================
  File    | RECORDS.PAS
  Desc    | This file holds the data file records for all data files used
@@ -22,8 +22,9 @@
 
 Const
   mysSoftwareID  = 'Mystic';                                    // no idea
-  mysCopyYear    = '1997-2012';                                 // its been a long time!
-  mysVersion     = '1.10 A25';                                  // current version
+  mysCopyYear    = '1997-2013';                                 // its been a long time!
+  mysWebsite     = 'sourceforge.net/projects/mysticbbs';
+  mysVersion     = '1.10 A26';                                  // current version
   mysDataChanged = '1.10 A11';                                  // version of last records change
 
   {$IFDEF WIN32}
@@ -278,7 +279,8 @@ Type
  // UNSORTED
     inetTNHidden    : Boolean;
     ThemeOnStart    : Boolean;
-    Reserved        : Array[1..844] of Char;
+    StartCodePage   : Byte;
+    Reserved        : Array[1..843] of Char;
   End;
 
 Const
@@ -357,7 +359,8 @@ Type
     UseFullChat  : Boolean;               { use full screen teleconference }
     Credits      : LongInt;
     Protocol     : Char;
-    Reserved     : Array[1..389] of Byte;
+    CodePage     : Byte;                  // 0 = CP437, 1 = UTF8
+    Reserved     : Array[1..388] of Byte;
   End;
 
   // day of week

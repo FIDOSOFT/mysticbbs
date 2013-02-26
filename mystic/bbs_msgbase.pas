@@ -388,7 +388,6 @@ Var
   Count    : LongInt;
   Total    : Word;
   Old      : RecMessageBase;
-  Str      : String[5];
   Compress : Boolean;
 Begin
   Compress := Config.MCompress;
@@ -471,16 +470,17 @@ Begin
     Repeat
       Session.io.OutFull (Session.GetPrompt(102));
 
-      Str := Session.io.GetInput(5, 5, 12, '');
-
-      If Str = '?' Then Begin
-        Compress := Config.MCompress;
-        Total    := ListAreas(Compress);
-      End Else
+      Case Session.io.OneKeyRange(#13 + '?Q', 1, Total) of
+        '?': Begin
+               Compress := Config.MCompress;
+               Total    := ListAreas(Compress);
+             End;
+      Else
         Break;
+      End;
     Until False;
 
-    Count := strS2I(Str);
+    Count := Session.io.RangeValue;
 
     If (Count > 0) and (Count <= Total) Then Begin
       Reset (MBaseFile);
@@ -671,7 +671,7 @@ End;
 
 Procedure TMsgBase.MessageGroupChange (Ops : String; FirstBase, Intro : Boolean);
 Var
-  A      : Word;
+  Count  : Word;
   Total  : Word;
   tGroup : RecGroup;
   tMBase : RecMessageBase;
@@ -684,16 +684,16 @@ Begin
   If (Ops = '+') or (Ops = '-') Then Begin
     Reset (GroupFile);
 
-    A := Session.User.ThisUser.LastMGroup - 1;
+    Count := Session.User.ThisUser.LastMGroup - 1;
 
     Repeat
       Case Ops[1] of
-        '+' : Inc(A);
-        '-' : Dec(A);
+        '+' : Inc(Count);
+        '-' : Dec(Count);
       End;
 
       {$I-}
-      Seek (GroupFile, A);
+      Seek (GroupFile, Count);
       Read (GroupFile, Group);
       {$I+}
 
@@ -731,7 +731,7 @@ Begin
       Exit;
     End;
 
-    Seek (GroupFile, Data-1);
+    Seek (GroupFile, Data - 1);
     Read (GroupFile, Group);
 
     If Session.User.Access(Group.ACS) Then Begin
@@ -804,9 +804,11 @@ Begin
   Else Begin
     Session.io.OutFull (Session.GetPrompt(177));
 
-    A := strS2I(Session.io.GetInput(5, 5, 11, ''));
+    Session.io.OneKeyRange(#13 + 'Q', 1, Total);
 
-    If (A > 0) and (A <= Total) Then Begin
+    Count := Session.io.RangeValue;
+
+    If (Count > 0) and (Count <= Total) Then Begin
       Total := 0;
 
       Reset (GroupFile);
@@ -816,7 +818,7 @@ Begin
 
         If Not Group.Hidden And Session.User.Access(Group.ACS) Then Inc(Total);
 
-        If A = Total Then Break;
+        If Count = Total Then Break;
       Until False;
 
       Session.User.ThisUser.LastMGroup := FilePos(GroupFile);
@@ -2253,7 +2255,7 @@ Var
           'L' : Begin
                   Session.io.PausePtr   := 1;
                   Session.io.AllowPause := True;
-                  A          := MsgBase^.GetMsgNum;
+                  A                     := MsgBase^.GetMsgNum;
 
                   Session.io.OutFullLn(Session.GetPrompt(411));
 
@@ -2273,6 +2275,9 @@ Var
 
                   MsgBase^.SeekFirst(A);
                   MsgBase^.MsgStartup;
+
+                  Session.io.PromptInfo[1]  := strI2S(MsgBase^.GetMsgNum);
+                  Session.io.PromptInfo[2]  := strI2S(MsgBase^.GetHighMsgNum);
                 End;
           'M' : Begin
                   If MoveMessage(False) Then
@@ -2428,7 +2433,9 @@ Begin
 
     Session.io.OutFull (Session.GetPrompt(338));
 
-    MsgNum := strS2I(Session.io.GetInput(6, 6, 12, ''));
+    Session.io.OneKeyRange(#13, 1, MsgBase^.GetHighMsgNum);
+
+    MsgNum := Session.io.RangeValue;
   End;
 
   Set_Node_Action (Session.GetPrompt(348));

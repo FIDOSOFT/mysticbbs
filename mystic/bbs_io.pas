@@ -4,7 +4,7 @@ Unit BBS_IO;
 
 Interface
 
-{.$DEFINE UTF8}
+{.$DEFINE USEUTF8}
 
 Uses
   {$IFDEF WINDOWS}
@@ -122,56 +122,7 @@ Uses
   bbs_General,
   bbs_NodeInfo;
 
-Constructor TBBSIO.Create (Var Owner: Pointer);
-Begin
-  Core           := Owner;
-  FmtString      := False;
-  FmtLen         := 0;
-  FmtType        := 0;
-  InMacro        := False;
-  InMacroPos     := 0;
-  InMacroStr     := '';
-  AllowPause     := False;
-  AllowMCI       := True;
-  LocalInput     := False;
-  AllowArrow     := False;
-  IsArrow        := False;
-  UseInField     := True;
-  UseInLimit     := False;
-  UseInSize      := False;
-  InLimit        := 0;
-  InSize         := 0;
-  NoFile         := False;
-  Graphics       := 1;
-  PausePtr       := 1;
-  LastMCIValue   := '';
-  InputPos       := 0;
-  GetKeyCallBack := NIL;
-
-  FillChar(OutBuffer, SizeOf(OutBuffer), 0);
-
-  OutBufPos := 0;
-
-  {$IFDEF WINDOWS}
-    If Not TBBSCore(Core).LocalMode Then
-      SocketEvent := WSACreateEvent;
-  {$ENDIF}
-
-  Term := TTermAnsi.Create(Screen);
-End;
-
-Destructor TBBSIO.Destroy;
-Begin
-  {$IFDEF WINDOWS}
-    If Not TBBSCore(Core).LocalMode Then WSACloseEvent(SocketEvent);
-  {$ENDIF}
-
-  Term.Free;
-
-  Inherited Destroy;
-End;
-
-{$IFDEF UTF8}
+{$IFDEF USEUTF8}
 Function UTF8Encode(Ch : LongInt) : String;
 Const
   CP437_Map : Array[0..255] of LongInt = (
@@ -245,10 +196,59 @@ Begin
 
   Result := ' ';
 End;
+{$ENDIF}
 
+Constructor TBBSIO.Create (Var Owner: Pointer);
+Begin
+  Core           := Owner;
+  FmtString      := False;
+  FmtLen         := 0;
+  FmtType        := 0;
+  InMacro        := False;
+  InMacroPos     := 0;
+  InMacroStr     := '';
+  AllowPause     := False;
+  AllowMCI       := True;
+  LocalInput     := False;
+  AllowArrow     := False;
+  IsArrow        := False;
+  UseInField     := True;
+  UseInLimit     := False;
+  UseInSize      := False;
+  InLimit        := 0;
+  InSize         := 0;
+  NoFile         := False;
+  Graphics       := 1;
+  PausePtr       := 1;
+  LastMCIValue   := '';
+  InputPos       := 0;
+  GetKeyCallBack := NIL;
+
+  FillChar(OutBuffer, SizeOf(OutBuffer), 0);
+
+  OutBufPos := 0;
+
+  {$IFDEF WINDOWS}
+    If Not TBBSCore(Core).LocalMode Then
+      SocketEvent := WSACreateEvent;
+  {$ENDIF}
+
+  Term := TTermAnsi.Create(Screen);
+End;
+
+Destructor TBBSIO.Destroy;
+Begin
+  {$IFDEF WINDOWS}
+    If Not TBBSCore(Core).LocalMode Then WSACloseEvent(SocketEvent);
+  {$ENDIF}
+
+  Term.Free;
+
+  Inherited Destroy;
+End;
+
+{$IFDEF USEUTF8}
 Procedure TBBSIO.BufAddChar (Ch: Char);
-Const
-  ConvertUTF8 : Boolean = True;
 Var
   S : String;
   C : Byte;
@@ -257,7 +257,7 @@ Begin
     Term.Process(Ch);
   {$ENDIF}
 
-  If ConvertUTF8 Then Begin
+  If Session.User.ThisUser.CodePage = 1 Then Begin
     S := UTF8Encode(LongInt(Ch));
 
     For C := 1 to Length(S) Do Begin
@@ -286,13 +286,13 @@ End;
 {$ELSE}
 Procedure TBBSIO.BufAddChar (Ch: Char);
 Begin
+  Term.Process(Ch);
+
   OutBuffer[OutBufPos] := Ch;
 
   Inc (OutBufPos);
 
   If OutBufPos = TBBSIOBufferSize Then BufFlush;
-
-  Term.Process(Ch);
 End;
 {$ENDIF}
 
@@ -1622,14 +1622,24 @@ Function TBBSIO.OneKeyRange (Str: String; Lo, Hi: LongInt) : Char;
 Var
   Ch     : Char;
   CurStr : String = '';
-  LoStr  : String[10];
   HiStr  : String[10];
+  Field  : Byte;
+  xPos   : Byte;
 Begin
   PurgeInputBuffer;
 
   RangeValue := -1;
-  LoStr      := strI2S(Lo);
   HiStr      := strI2S(Hi);
+  Field      := Length(strI2S(Hi));
+  xPos       := Screen.CursorX;
+
+  If UseInField and (Graphics = 1) Then Begin
+    AnsiColor (TBBSCore(Core).Theme.FieldColor2);
+    BufAddStr (strRep(Session.Theme.FieldChar, Field));
+    AnsiColor (TBBSCore(Core).Theme.FieldColor1);
+    AnsiMoveX (xPos);
+  End Else
+    UseInField := False;
 
   Repeat
     Ch := UpCase(GetKey);
@@ -1637,39 +1647,46 @@ Begin
     If (Pos(Ch, Str) > 0) and (CurStr = '') Then Begin
       Result := Ch;
 
-      OutRawLn(Ch);
+      OutRaw(Ch);
 
-      Exit;
+      Break
     End Else
       Case Ch of
         #08 : If CurStr <> '' Then Begin
                 Dec    (CurStr[0]);
-                OutRaw (#08#32#08);
+
+                If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor2);
+                BufAddStr (#8 + Session.Theme.FieldChar + #8);
+                If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor1);
               End;
         #13 : If CurStr <> '' Then Begin
                 RangeValue := strS2I(CurStr);
                 Result     := #0;
 
-                OutRawLn('');
-
-                Exit;
+                Break;
+              End Else
+              If Pos(#13, Str) > 0 Then Begin
+                Result := #13;
+                Break;
               End;
         '0'..
         '9' : If (strS2I(CurStr + Ch) >= Lo) and (strS2I(CurStr + Ch) <= Hi) Then Begin
                 CurStr := CurStr + Ch;
 
                 If Length(CurStr) = Length(HiStr) Then Begin
-                  OutRawLn(Ch);
+                  OutRaw(Ch);
 
                   RangeValue := strS2I(CurStr);
                   Result     := #0;
 
-                  Exit;
+                  Break;
                 End Else
                   OutRaw (Ch);
               End;
       End;
   Until False;
+
+  OutFullLn ('|16');
 End;
 
 Function TBBSIO.GetInput (Field, Max, Mode: Byte; Default: String) : String;

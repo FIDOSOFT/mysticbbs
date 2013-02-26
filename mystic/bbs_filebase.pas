@@ -1646,7 +1646,7 @@ End;
 
 Procedure TFileBase.FileGroupChange (Ops: String; FirstBase, Intro: Boolean);
 Var
-  A      : Word;
+  Count  : Word;
   Total  : Word;
   tGroup : recGroup;
   tFBase : RecFileBase;
@@ -1659,16 +1659,16 @@ Begin
   If (Ops = '+') or (Ops = '-') Then Begin
     Reset (FGroupFile);
 
-    A := Session.User.ThisUser.LastFGroup - 1;
+    Count := Session.User.ThisUser.LastFGroup - 1;
 
     Repeat
       Case Ops[1] of
-        '+' : Inc(A);
-        '-' : Dec(A);
+        '+' : Inc(Count);
+        '-' : Dec(Count);
       End;
 
       {$I-}
-      Seek (FGroupFile, A);
+      Seek (FGroupFile, Count);
       Read (FGroupFile, FGroup);
       {$I+}
 
@@ -1771,9 +1771,11 @@ Begin
   Else Begin
     Session.io.OutFull (Session.GetPrompt(217));
 
-    A := strS2I(Session.io.GetInput(4, 4, 11, ''));
+    Session.io.OneKeyRange(#13 + 'Q', 1, Total);
 
-    If (A > 0) and (A <= Total) Then Begin
+    Count := Session.io.RangeValue;
+
+    If (Count > 0) and (Count <= Total) Then Begin
       Total := 0;
 
       Reset (FGroupFile);
@@ -1781,7 +1783,7 @@ Begin
       Repeat
         Read (FGroupFile, FGroup);
         If Not FGroup.Hidden And Session.User.Access(FGroup.ACS) Then Inc(Total);
-        If A = Total Then Break;
+        If Count = Total Then Break;
       Until False;
 
       Session.User.ThisUser.LastFGroup := FilePos(FGroupFile);
@@ -1858,7 +1860,6 @@ Var
   A        : Word;
   Total    : Word;
   Old      : RecFileBase;
-  Str      : String[5];
   Compress : Boolean;
 Begin
   Old      := FBase;
@@ -1929,16 +1930,17 @@ Begin
     Repeat
       Session.io.OutFull (Session.GetPrompt(36));
 
-      Str := Session.io.GetInput(5, 5, 12, '');
-
-      If Str = '?' Then Begin
-        Compress := Config.FCompress;
-        Total    := ListFileAreas(Compress);
-      End Else
+      Case Session.io.OneKeyRange(#13 + '?Q', 1, Total) of
+        '?': Begin
+               Compress := Config.FCompress;
+               Total    := ListFileAreas(Compress);
+             End;
+      Else
         Break;
+      End;
     Until False;
 
-    A := strS2I(Str);
+    A := Session.io.RangeValue;
 
     If (A > 0) and (A <= Total) Then Begin
       Reset (FBaseFile);
@@ -2611,11 +2613,75 @@ Var
   Procedure Ascii_List;
   Var
     A      : LongInt;
-    B      : LongInt;
     okSave : Byte;
     Keys   : String[20];
+    Files  : Cardinal;
+
+    Procedure FlagFile (Number: Integer);
+    Var
+      Count1 : Integer;
+      Count2 : Integer;
+    Begin
+      If Not Session.User.Access(FBase.DLACS) Then
+        Session.io.OutFullLn (Session.GetPrompt(224))
+      Else Begin
+        If BatchNum = mysMaxBatchQueue Then Begin
+          Session.io.OutFullLn (Session.GetPrompt(46));
+          Exit;
+        End;
+
+        If (Number < 1) or (Number > ListSize) Then Exit;
+
+        okSave := 0;
+
+        Seek (FDirFile, List[Number].RecPos);
+        Read (FDirFile, FDir);
+
+        For Count1 := 1 to BatchNum Do
+          If FDir.FileName = Batch[Count1].FileName Then Begin
+            Session.io.PromptInfo[1] := FDir.FileName;
+            Session.io.PromptInfo[2] := strComma(Batch[Count1].Size);
+
+            Session.io.OutFullLn (Session.GetPrompt(54));
+
+            For Count2 := Count1 to BatchNum Do
+              Batch[Count2] := Batch[Count2 + 1];
+
+            Dec (BatchNum);
+
+            okSave := 2;
+          End;
+
+        If okSave = 0 Then
+          Case CheckFileLimits(1, FDir.Size DIV 1024) of
+            0 : okSave := 1;
+            1 : Session.io.OutFullLn (Session.GetPrompt(224));
+            2 : Session.io.OutFullLn (Session.GetPrompt(58));
+            3 : Session.io.OutFullLn (Session.GetPrompt(211));
+          End;
+
+        If okSave = 1 Then Begin
+          Session.io.PromptInfo[1] := FDir.FileName;
+          Session.io.PromptInfo[2] := strComma(FDir.Size);
+
+          Session.io.OutFullLn (Session.GetPrompt(50));
+
+          Inc (BatchNum);
+
+          Batch[BatchNum].FileName := FDir.FileName;
+          Batch[BatchNum].Size     := FDir.Size;
+
+          If Mode = 1 Then
+            Batch[BatchNum].Area := Session.User.ThisUser.LastFBase
+          Else
+            Batch[BatchNum].Area := FilePos(FBaseFile);
+          End;
+        End;
+    End;
+
   Begin
     ListType := 0;
+    Files    := FileSize(FDirFile);
 
     strListFormat := Session.GetPrompt(42);
     strDesc       := Session.GetPrompt(43);
@@ -2634,9 +2700,17 @@ Var
     If Session.User.Access(FBase.SysopACS) Then Keys := Keys + 'E';
 
     Repeat
+      Session.io.PromptInfo[1] := strI2S(Files);
+      Session.io.PromptInfo[2] := strI2S(BotPage);
+
       Session.io.OutFull (Session.GetPrompt(44));
 
-      Case Session.io.OneKey(Keys, True) of
+      Case Session.io.OneKeyRange(Keys, 1, ListSize) of
+        #00 : Begin
+                FlagFile(Session.io.RangeValue);
+                DrawPage;
+                Continue;
+              End;
         'E' : Begin
                 DoEditor;
                 DrawPage;
@@ -2663,7 +2737,9 @@ Var
         'V' : Begin
                 Session.io.OutFull (Session.GetPrompt(358));
 
-                A := strS2I(Session.io.GetInput(2, 2, 12, ''));
+                Session.io.OneKeyRange('Q' + #13, 1, ListSize);
+
+                A := Session.io.RangeValue;
 
                 If (A > 0) and (A <= ListSize) Then
                   If Not ArchiveView (FBase.Path + List[A].FileName) Then
@@ -2671,67 +2747,19 @@ Var
 
                 DrawPage;
               End;
-        'F' : If Not Session.User.Access(FBase.DLACS) Then
-                Session.io.OutFullLn (Session.GetPrompt(224))
-              Else Begin
+        'F' : Begin
                 Repeat
-                  If BatchNum = mysMaxBatchQueue Then Begin
-                    Session.io.OutFullLn (Session.GetPrompt(46));
-                    Break;
-                  End;
-
                   Session.io.OutFull (Session.GetPrompt(357));
-                  A := strS2I(Session.io.GetInput(2, 2, 12, ''));
 
-                  If (A < 1) or (A > ListSize) Then Break;
-
-                  okSave := 0;
-
-                  Seek (FDirFile, List[A].RecPos);
-                  Read (FDirFile, FDir);
-
-                  For A := 1 to BatchNum Do
-                    If FDir.FileName = Batch[A].FileName Then Begin
-                      Session.io.PromptInfo[1] := FDir.FileName;
-                      Session.io.PromptInfo[2] := strComma(Batch[A].Size);
-                      Session.io.OutFullLn (Session.GetPrompt(54));
-
-                      For B := A to BatchNum Do
-                        Batch[B] := Batch[B + 1];
-
-                      Dec (BatchNum);
-
-                      okSave := 2;
-                    End;
-
-                  If okSave = 0 Then
-                    Case CheckFileLimits(1, FDir.Size DIV 1024) of
-                      0 : okSave := 1;
-                      1 : Session.io.OutFullLn (Session.GetPrompt(224));
-                      2 : Session.io.OutFullLn (Session.GetPrompt(58));
-                      3 : Session.io.OutFullLn (Session.GetPrompt(211));
-                    End;
-
-                  If okSave = 1 Then Begin
-                    Session.io.PromptInfo[1] := FDir.FileName;
-                    Session.io.PromptInfo[2] := strComma(FDir.Size);
-
-                    Session.io.OutFullLn (Session.GetPrompt(50));
-
-                    Inc (BatchNum);
-
-                    Batch[BatchNum].FileName := FDir.FileName;
-                    Batch[BatchNum].Size     := FDir.Size;
-
-                    If Mode = 1 Then
-                      Batch[BatchNum].Area := Session.User.ThisUser.LastFBase
-                    Else
-                      Batch[BatchNum].Area := FilePos(FBaseFile);
+                  Case Session.io.OneKeyRange('Q' + #13, 1, ListSize) of
+                    #00 : FlagFile(Session.io.RangeValue);
+                    'Q',
+                    #13 : Break;
                   End;
-              Until False;
+                Until False;
 
-              DrawPage;
-            End;
+                DrawPage;
+              End;
       End;
     Until False;
 

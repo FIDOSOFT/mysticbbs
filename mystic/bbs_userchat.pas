@@ -19,7 +19,6 @@ Uses
 
 Procedure PageUserForChat;
 Var
-  Str      : String;
   ToNode   : Byte;
   ReqType  : Byte = 8;
   TempChat : ChatRec;
@@ -27,13 +26,14 @@ Begin
   Repeat
     Session.io.OutFull (Session.GetPrompt(479));
 
-    Str := Session.io.GetInput(3, 3, 12, '');
-
-    If Str = '?' Then WhosOnline Else
-    If Str = 'Q' Then Exit Else Break;
+    Case Session.io.OneKeyRange('Q?', 1, Config.INetTNNodes) of
+      #00 : Break;
+      'Q' : Exit;
+      '?' : WhosOnline;
+    End;
   Until False;
 
-  ToNode := strS2I(Str);
+  ToNode := Session.io.RangeValue;
 
   If (Not GetChatRecord(ToNode, TempChat)) or (ToNode = Session.NodeNum) or
      (Not TempChat.Active) or (Not TempChat.Available) Then Begin

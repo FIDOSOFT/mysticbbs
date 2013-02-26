@@ -2431,3 +2431,90 @@
    a message number on the prompt to automatically jump to that message.
 
    <ALPHA 25 RELEASED>
+
+ ! After doing a list of message in the standard message reader, the
+   current message number on the prompt will no longer show the wrong
+   message number.
+
+ + Added two MCI codes to prompt #44: &1 total files in base &2 last listed
+   file number.
+
+ + In a standard generated menu you can now set the "display columns" to
+   zero which will cause the generated menu to only show the menu prompt.
+
+ + Added new menu command: -G.  This command shows the currently loaded
+   internally generated menu.  The optional data field will determine the
+   number of display columns to use to format the menu.  The -G command does
+   not display the menu prompt or execute "EVERY" menu commands.
+
+ + Added a new menu type that can be created in the menu editor.  You can
+   now set a "Lightbar/Prompt" type menu, which will allow you to create
+   menus similar to the old Searchlight style with a lightbar prompt.  Users
+   can scroll through commands with the arrow keys or also search by simply
+   typing in letters.  Our version supports commands with hotkeys that
+   contain more than one character among other things that Searchlight
+   didn't do.
+
+   If the user has hotkeys enabled, or the menu forces hotkeys, the command
+   will be executed as soon as a match of a hotkey is inputted from the user.
+
+   If the user has hotkeys disabled, or the menu forces longkeys, then the
+   user will always have to press enter to execute the selected command.
+
+   Each menu item is created similar to a standard type menu, with the the
+   following changes:
+
+      1. The "Lightbar Hi" text contains the look of the selected lightbar
+         command.  The location prompt will be generated where the cursor
+         is after the menu prompt is displayed.
+
+      2. The "Lightbar Lo" text contains the description that will be
+         displayed below the currently selected command.  If this is blank
+         the extended description will not be used.
+
+         The description will automatically be aligned below the lightbar
+         command, unless the "X" value of the command is defined.  If the X
+         is not equal to 0, Mystic will print the description at that X
+         column instead.
+
+   A new menu has been included with the default installation called
+   testlbprompt.mnu.  Please use this to experiment with these types of
+   menus if it interests you.
+
+ + The smart input used by the standard message base reader to jump between
+   messages now creates an input field according to the selected theme.  You
+   can of course turn it off for specific prompts using the IF MCI code if
+   you don't like it.
+
+ + The message base change command now uses the smart input function for
+   input while prompting to select a message base.
+
+ + The message group change command now uses the smart input function for
+   input while prompting to select a message group.
+
+ + The file base change command now uses the smart input function for input
+   while prompting to select a file base.
+
+ + The file group change command now uses the smart input function for input
+   while prompting to select a file group.
+
+ + Rewrote the file tagging system in the standard file listing.  The old
+   way still works, by pressing F to flag a file.  However, you can now
+   just type in the file number to add or remove a file from your batch
+   queue without every pressing the F key.
+
+ + The F flag command now uses smart input when prompting for the file number
+   to add/remove from queue (in standard file listing)
+
+ + The V view command now uses smart input when prompting for the file number
+   to view in the standard file listing.
+
+ + Sending a node message will now use the smart input function when
+   prompting for the node number.
+
+ + Paging a user for user/user chat now uses the smart input function.
+
+ + When selecting "Forward" reading, Mystic now uses the smart input
+   function to prompt for the message start number.
+
+   <ALPHA 26 RELEASED>

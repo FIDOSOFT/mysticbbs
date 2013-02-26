@@ -150,6 +150,7 @@ Begin
             Form.AddBol  ('X', ' Msg Index'   , 7, 11, 23, 11, 14,  3,  @U.UseLBIndex, Topic + 'Start reading at message index');
             Form.AddBol  ('I', ' Mail Index'  , 7, 12, 23, 12, 14,  3,  @U.UseLBMIdx, Topic + 'Start reading email at message index');
             Form.AddTog  ('N', ' Node Chat'   , 7, 13, 23, 13, 14,  8,  0,  1, 'Standard Full', @U.UseFullChat, Topic + 'User''s node chat type');
+            Form.AddTog  ('C', ' Code Page'   , 7, 14, 23, 14, 14,  5,  0,  1, 'CP437 UTF-8', @U.CodePage, Topic + 'User''s character translation');
           End;
       4 : Begin
             Form.Clear;

@@ -125,7 +125,6 @@ Var
   ToNode      : Byte;
   A, B, C     : Byte;
   Temp        : ChatRec;
-  Str         : String[3];
   NodeMsgFile : File of NodeMsgRec;
   NodeMsg     : NodeMsgRec;
   SkipCurrent : Boolean = False;
@@ -133,11 +132,15 @@ Begin
   If Data = '' Then Begin
     Repeat
       Session.io.OutFull (Session.GetPrompt(146));
-      Str := Session.io.GetInput(3, 3, 12, '');
-      If Str = '?' Then WhosOnline Else Break;
+
+      Case Session.io.OneKeyRange('?Q', 1, Config.INetTNNodes) of
+        #00 : Break;
+        '?' : WhosOnline;
+        'Q' : Break;
+      End;
     Until False;
 
-    ToNode := strS2I(Str);
+    ToNode := Session.io.RangeValue;
 
     If (ToNode < 0) or (ToNode > Config.INetTNNodes) Then Begin
       Session.io.OutFullLn (Session.GetPrompt(147));

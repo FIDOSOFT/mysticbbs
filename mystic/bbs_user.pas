@@ -108,6 +108,7 @@ Begin
   ThisUser.LastMGroup  := Config.StartMGroup;
   ThisUser.UseLBQuote  := True;
   ThisUser.UseFulLChat := True;
+  ThisUser.CodePage    := Config.StartCodePage;
 
   IgnoreGroup   := False;
   InChat        := False;
@@ -1193,11 +1194,11 @@ Begin
       Halt(0);
     End;
 
-//  Session.io.AnsiClear;
-//  Session.io.OutFullLn('|CR' + strPadC(mysSoftwareID + ' BBS v' + mysVersion + ' [' + OSID + '] : Node |ND', 79, ' '));
-//  Session.io.OutFullLn(strPadC(CopyID, 79, ' '));
+  //Session.io.OutFullLn('|CL|CR' + strPadC(mysSoftwareID + ' BBS Version ' + mysVersion + ' for ' + OSID, 79, ' '));
+  //Session.io.OutFullLn(strPadC(CopyID, 79, ' '));
+  //Session.io.OutFullLn('|CR' + strPadC(mysWebSite, 79, ' '));
 
-  Session.io.OutFullLn ('|CL' + mysSoftwareID + ' BBS v' + mysVersion + ' [' + OSID + '] : Node |ND');
+  Session.io.OutFullLn ('|CL' + mysSoftwareID + ' BBS Version ' + mysVersion + ' for ' + OSID + ' : Node |ND');
   Session.io.OutFullLn (CopyID);
 
   If Config.DefTermMode = 0 Then

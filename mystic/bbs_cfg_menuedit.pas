@@ -30,7 +30,7 @@ Type
   End;
 
 Const
-  Num_Cmds = 99;
+  Num_Cmds = 100;
   MenuCmds : Array[1..Num_Cmds] of CmdRec = (
     // AUTOSIG MENU COMMANDS
     (  Name: 'AE';   Desc: 'Autosig editor'               ),
@@ -138,6 +138,7 @@ Const
     // OTHER MENU COMMANDS
     (  Name: '-D';   Desc: 'Set access flags (set 2)'     ),
     (  Name: '-F';   Desc: 'Set access flags (set 1)'     ),
+    (  Name: '-G';   Desc: 'Show generated menu'          ),
     (  Name: '-I';   Desc: 'Set menu timer'               ),
     (  Name: '-K';   Desc: 'Add keys to input buffer'     ),
     (  Name: '-N';   Desc: 'Ask Yes/No (default No)'      ),
@@ -473,13 +474,13 @@ Begin
   Form.AddStr  ('D', ' Description' ,   9,  7, 24,  7, 13, 30, 30, @Menu.Info.Description, Topic + 'Description of menu');
   Form.AddStr  ('A', ' Access'      ,  14,  8, 24,  8,  8, 30, 30, @Menu.Info.Access, Topic + 'Security requirements to access this menu');
   Form.AddStr  ('B', ' Fallback'    ,  12,  9, 24,  9, 10, 20, 20, @Menu.Info.Fallback, Topic + 'Menu loaded if user has no access (Blank/Last)');
-  Form.AddTog  ('T', ' Menu Type'   ,  11, 10, 24, 10, 11, 13,  0, 2, 'Standard Lightbar Lightbar/Grid', @Menu.Info.MenuType, Topic + 'Type of menu');
+  Form.AddTog  ('T', ' Menu Type'   ,  11, 10, 24, 10, 11, 15,  0, 3, 'Standard Lightbar Lightbar/Grid Lightbar/Prompt', @Menu.Info.MenuType, Topic + 'Type of menu');
   Form.AddTog  ('I', ' Input Type'  ,  10, 11, 24, 11, 12, 12,  0, 2, 'User_Defined HotKey LongKey', @Menu.Info.InputType, Topic + 'Input type for this menu');
   Form.AddTog  ('C', ' Input Chars' ,   9, 12, 24, 12, 13,  9,  0, 2, 'Uppercase Lowercase Hidden', @Menu.Info.CharType, Topic + 'Input format display');
   Form.AddBol  ('G', ' Use Global'  ,  10, 13, 24, 13, 12,  3, @Menu.Info.Global, Topic + 'Include global menu options in this menu?');
   Form.AddStr  ('N', ' Node Status' ,   9, 14, 24, 14, 13, 30, 30, @Menu.Info.NodeStatus, Topic + 'Node/User status set when this menu is loaded');
   Form.AddStr  ('F', ' Display File',   8, 15, 24, 15, 14, 20, 20, @Menu.Info.DispFile, Topic + 'Display file shown instead of generated menu');
-  Form.AddTog  ('L', ' Display Cols',   8, 16, 24, 16, 14,  1,  1,  4, '1 2 3 4', @Menu.Info.DispCols, Topic + 'Number of columns in generated menu');
+  Form.AddTog  ('L', ' Display Cols',   8, 16, 24, 16, 14,  1,  0,  4, '0 1 2 3 4', @Menu.Info.DispCols, Topic + 'Number of columns in generated menu');
   Form.AddPipe ('H', ' Menu Header' ,   9, 17, 24, 17, 13, 50, 160, @Menu.Info.Header, Topic + 'Menu header displayed in generated menu');
   Form.AddPipe ('P', ' Menu Prompt' ,   9, 18, 24, 18, 13, 50, 160, @Menu.Info.Footer, Topic + 'Menu prompt displayed in generated menu');
   Form.AddByte ('X', ' X'           ,  19, 19, 24, 19,  3,  2,  0,  80, @Menu.Info.DoneX, Topic + 'Locate to X coordinate after lightbar menu');

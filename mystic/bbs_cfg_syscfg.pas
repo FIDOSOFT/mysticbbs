@@ -132,7 +132,7 @@ Begin
   Form.AddWord ('C', ' Password Change',     18,  9, 37,  9, 17,  5,  0, 65535, @Config.PWChange,       Topic + 'Days before forcing PW change (0/Disabled)');
   Form.AddBol  ('I', ' Password Inquiry',    17, 10, 37, 10, 18,  3,            @Config.PWInquiry,      Topic + 'Allow password inquiry e-mails?');
   Form.AddByte ('W', ' Password Attempts',   16, 11, 37, 11, 19,  2,  1, 99,    @Config.PWAttempts,     Topic + 'Max Password attempts');
-
+  Form.AddTog  ('O', ' Start Code Page',     18, 12, 37, 12, 17,  5,  0, 1, 'CP437 UTF-8', @Config.StartCodePage, Topic + 'Logging in user''s code page');
   Form.AddBol  ('U', ' Use Matrix Login',    17, 13, 37, 13, 18,  3,            @Config.UseMatrix,      Topic + 'Use Matrix login menu?');
   Form.AddStr  ('M', ' Matrix Menu',         22, 14, 37, 14, 13, 20, 20,        @Config.MatrixMenu,     Topic + 'Matrix menu file name');
   Form.AddPass ('P', ' Matrix Password',     18, 15, 37, 15, 17, 15, 15,        @Config.MatrixPW,       Topic + 'Matrix password to login (Blank/Disabled)');
