@@ -152,8 +152,9 @@ Begin
   X := Screen.CursorX;
 
   If (X + Offset) > 80 Then Begin
-    Screen.WriteChar(#10);  // force lf incase we have to scroll
-    Screen.CursorXY(X + Offset - 80, Screen.CursorY);
+     Screen.CursorXY (80, Screen.CursorY);
+//    Screen.WriteChar(#10);  // force lf incase we have to scroll
+//    Screen.CursorXY(X + Offset - 80, Screen.CursorY);
   End Else
     Screen.CursorXY (x + offset, Screen.CursorY);
 
