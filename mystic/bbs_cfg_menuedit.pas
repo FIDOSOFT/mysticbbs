@@ -496,7 +496,7 @@ Begin
   Form.Free;
 End;
 
-Procedure EditMenu;
+Procedure EditMenu (Var Theme: RecTheme);
 Var
   Box      : TAnsiMenuBox;
   List     : TAnsiMenuList;
@@ -506,7 +506,7 @@ Var
 Begin
   Menu := TMenuData.Create;
 
-  Menu.Load (False, Session.Theme.MenuPath + MenuName + '.mnu');
+  Menu.Load (False, Theme.MenuPath + MenuName + '.mnu');
 
   Box  := TAnsiMenuBox.Create;
   List := TAnsiMenuList.Create;
@@ -576,13 +576,13 @@ Begin
 
   If Changed Then
     If ShowMsgBox(1, 'Save changes to ' + MenuName + '?') Then
-      If Not Menu.Save(Session.Theme.MenuPath + MenuName + '.mnu') Then
+      If Not Menu.Save(Theme.MenuPath + MenuName + '.mnu') Then
         ShowMsgBox(0, 'Unable to save menu');
 
   Menu.Free;
 End;
 
-Function GetMenuName (OldName: String) : String;
+Function GetMenuName (Var Theme: RecTheme; OldName: String) : String;
 Var
   Box  : TAnsiMenuBox;
   List : TAnsiMenuList;
@@ -597,7 +597,7 @@ Var
   Begin
     Sort := TQuickSort.Create;
 
-    FindFirst (Session.Theme.MenuPath + '*.mnu', Archive, Dir);
+    FindFirst (Theme.MenuPath + '*.mnu', Archive, Dir);
 
     While DosError = 0 Do Begin
       Sort.Add(JustFileName(Dir.Name), 0);
@@ -611,7 +611,7 @@ Var
     List.Clear;
 
     For Count := 1 to Sort.Total Do Begin
-      Assign (MF, Session.Theme.MenuPath + Sort.Data[Count]^.Name + '.mnu');
+      Assign (MF, Theme.MenuPath + Sort.Data[Count]^.Name + '.mnu');
 
       {$I-} Reset (MF); {$I+}
 
@@ -638,13 +638,13 @@ Var
 
     If Str = '' Then Exit;
 
-    Str := Session.Theme.MenuPath + Str + '.mnu';
+    Str := Theme.MenuPath + Str + '.mnu';
 
     If FileExist(Str) Then
       If ShowMsgBox(1, JustFile(Str) + ' already exists. Overwrite?') Then
         FileErase(Str);
 
-    FileCopy(Session.Theme.MenuPath + Orig + '.mnu', Str);
+    FileCopy(Theme.MenuPath + Orig + '.mnu', Str);
   End;
 
   Procedure InsertMenu;
@@ -656,7 +656,7 @@ Var
 
     If Str = '' Then Exit;
 
-    OK := Not FileExist(Session.Theme.MenuPath + Str + '.mnu');
+    OK := Not FileExist(Theme.MenuPath + Str + '.mnu');
 
     If Not OK Then
       OK := ShowMsgBox(1, Str + ' already exists.  Overwrite?');
@@ -664,7 +664,7 @@ Var
     If OK Then Begin
       Menu := TMenuData.Create;
 
-      Menu.CreateNewMenu(Session.Theme.MenuPath + Str + '.mnu');
+      Menu.CreateNewMenu(Theme.MenuPath + Str + '.mnu');
 
       Menu.Free;
     End;
@@ -679,7 +679,7 @@ Begin
   List.NoWindow := True;
   List.LoChars  := #13#27#47;
   List.SearchY  := 21;
-  Box.Header    := ' Menu Editor (' + Session.Theme.Desc + ') ';
+  Box.Header    := ' Menu Editor (' + Theme.Desc + ') ';
 
   Box.Open (12, 5, 68, 21);
 
@@ -702,7 +702,7 @@ Begin
               'I' : InsertMenu;
               'D' : If List.ListMax > 0 Then
                       If ShowMsgBox(1, 'Delete menu: ' + strWordGet(1, List.List[List.Picked]^.Name, ' ')) Then
-                        FileErase (Session.Theme.MenuPath + strWordGet(1, List.List[List.Picked]^.Name, ' ') + '.mnu');
+                        FileErase (Theme.MenuPath + strWordGet(1, List.List[List.Picked]^.Name, ' ') + '.mnu');
             End;
       #13 : Begin
               If List.ListMax <> 0 Then
@@ -722,19 +722,36 @@ End;
 Procedure Configuration_MenuEditor;
 Var
   Saved : String;
+  Theme : RecTheme;
+  Found : Boolean;
 Begin
   Saved    := '';
   MenuName := Configuration_ThemeEditor(True);
 
   If MenuName = '' Then Exit;
 
+  Reset (Session.ThemeFile);
+
+  While Not Eof(Session.ThemeFile) Do Begin
+    Read (Session.ThemeFile, Theme);
+
+    If strUpper(Theme.FileName) = strUpper(MenuName) Then Begin
+      Found := True;
+      Break;
+    End;
+  End;
+
+  Close (Session.ThemeFile);
+
+  If Not Found Then Exit;
+
   Repeat
-    MenuName := GetMenuName(Saved);
+    MenuName := GetMenuName(Theme, Saved);
     Saved    := MenuName;
 
     If MenuName = '' Then Exit;
 
-    EditMenu;
+    EditMenu(Theme);
   Until False;
 End;
 

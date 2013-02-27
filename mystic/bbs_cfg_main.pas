@@ -255,7 +255,7 @@ Begin
               End;
           End;
       3 : Begin
-            BoxOpen      (38, 4, 64, 18);
+            BoxOpen      (38, 4, 64, 17);
             CoolBoxOpen  (39, 'Editors');
 
             Form.AddNone ('U', ' U User Editor',           39,  5, 39,  5, 25, '');
@@ -270,7 +270,7 @@ Begin
             Form.AddNone ('P', ' P Protocol Editor',       39, 14, 39, 14, 25, '');
             Form.AddNone ('E', ' E Event Editor',          39, 15, 39, 15, 25, '');
             Form.AddNone ('V', ' V Voting Editor',         39, 16, 39, 16, 25, '');
-            Form.AddNone ('L', ' L BBS List Editor',       39, 17, 39, 17, 25, '');
+//            Form.AddNone ('L', ' L BBS List Editor',       39, 17, 39, 17, 25, '');
 
             Res        := Form.Execute;
             MenuPos[3] := Form.ItemPos;

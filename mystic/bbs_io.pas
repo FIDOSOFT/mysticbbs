@@ -929,6 +929,47 @@ Begin
 End;
 
 Function TBBSIO.Pipe2Ansi (Color: Byte) : String;
+Begin
+  Result := '';
+
+  If Graphics = 0 Then Exit;
+
+  Case Color of
+    00: Result := #27 + '[0;30m';
+    01: Result := #27 + '[0;34m';
+    02: Result := #27 + '[0;32m';
+    03: Result := #27 + '[0;36m';
+    04: Result := #27 + '[0;31m';
+    05: Result := #27 + '[0;35m';
+    06: Result := #27 + '[0;33m';
+    07: Result := #27 + '[0;37m';
+    08: Result := #27 + '[1;30m';
+    09: Result := #27 + '[1;34m';
+    10: Result := #27 + '[1;32m';
+    11: Result := #27 + '[1;36m';
+    12: Result := #27 + '[1;31m';
+    13: Result := #27 + '[1;35m';
+    14: Result := #27 + '[1;33m';
+    15: Result := #27 + '[1;37m';
+  End;
+
+  If Color in [00..07] Then
+    Color := (Screen.TextAttr SHR 4) and 7 + 16;
+
+  Case Color of
+    16: Result := Result + #27 + '[40m';
+    17: Result := Result + #27 + '[44m';
+    18: Result := Result + #27 + '[42m';
+    19: Result := Result + #27 + '[46m';
+    20: Result := Result + #27 + '[41m';
+    21: Result := Result + #27 + '[45m';
+    22: Result := Result + #27 + '[43m';
+    23: Result := Result + #27 + '[47m';
+  End;
+End;
+
+(*
+Function TBBSIO.Pipe2Ansi (Color: Byte) : String;
 Var
   CurFG  : Byte;
   CurBG  : Byte;
@@ -992,6 +1033,7 @@ Begin
     End;
   End;
 End;
+*)
 
 Function TBBSIO.Attr2Ansi (Attr: Byte) : String;
 Begin

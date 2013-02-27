@@ -1123,7 +1123,7 @@ Begin
     Session.Msgs.MessageGroupChange ('+', True, False);
 
   If ThisUser.LastMBase > 0 Then
-    Session.Msgs.ChangeArea(strI2S(ThisUser.LastMBase - 1))
+    Session.Msgs.ChangeArea(strI2S(ThisUser.LastMBase))
   Else
     Session.Msgs.ChangeArea('+');
 

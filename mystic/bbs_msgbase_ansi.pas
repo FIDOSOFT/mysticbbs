@@ -240,8 +240,9 @@ Begin
   If Offset = 0 Then Offset := 1;
 
   If CurX + Offset > 80 Then Begin
-    NewPos := (CurX + Offset) - 80;
-    Inc (CurY);
+  NewPos := 80;
+//    NewPos := (CurX + Offset) - 80;
+//    Inc (CurY);
   End Else
     NewPos := CurX + Offset;
 

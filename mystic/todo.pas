@@ -211,3 +211,18 @@ FILE rating / comments system
 2. records already updated to allow for either
 
 -----------------------------------------------------------------------
+
+TANSILINEBUFFER:
+
+LoadToBuffer (Ansi file)
+SaveToFile   (Ansi file)
+SaveToBuffer (Linelength)
+
+WrapLine    (XPOS)
+InsertLine
+DeleteLine
+JoinLines
+InsertChar  (XPOS, Ch, Attr)
+ReplaceChar (XPOS, Ch, Attr
+ReplaceLine
+

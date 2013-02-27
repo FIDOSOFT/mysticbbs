@@ -131,7 +131,7 @@ Var
   CurLine      : Byte = 1;
   CurPageLines : Byte;
   TotalPrompt  : Integer;
-  SearchMask   : String;
+  SearchMask   : String = '';
   CopyStr      : String = '';
 
   Procedure DisposeStringData;

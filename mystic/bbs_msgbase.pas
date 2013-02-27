@@ -37,8 +37,10 @@ Type
     Procedure   AppendMessageText   (Var Msg: PMsgBaseABS; Lines: Integer; ReplyID: String);
     Procedure   AssignMessageData   (Var Msg: PMsgBaseABS);
     Function    GetBaseByNum        (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+    Function    GetBaseCompressed   (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Function    GetBaseByIndex      (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Procedure   GetMessageStats     (Var TempBase: RecMessageBase; Var Total, New, Yours: LongInt);
+    Function    GetTotalBases       (Compressed: Boolean) : LongInt;
     Function    GetTotalMessages    (Var TempBase: RecMessageBase) : LongInt;
     Procedure   PostTextFile        (Data: String; AllowCodes: Boolean);
     Function    SaveMessage         (mArea: RecMessageBase; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mLines: Integer) : Boolean;
@@ -172,6 +174,35 @@ Begin
   Close (F);
 End;
 
+Function TMsgBase.GetBaseCompressed (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+Var
+  F     : File;
+  Count : LongInt;
+Begin
+  If Not Config.MCompress Then Begin
+    Result := GetBaseByNum(Num, TempBase);
+    Exit;
+  End;
+
+  Result := False;
+
+  Assign (F, Config.DataPath + 'mbases.dat');
+
+  If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
+
+  Count := 0;
+
+  While Not Eof(F) And (Count <> Num) Do Begin
+    ioRead (F, TempBase);
+
+    If Session.User.Access(TempBase.ListACS) Then Inc(Count);
+  End;
+
+  Close (F);
+
+  Result := Count = Num;
+End;
+
 Function TMsgBase.GetBaseByIndex (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
 Var
   F : File;
@@ -188,6 +219,31 @@ Begin
     If TempBase.Index = Num Then Begin
       Result := True;
       Break;
+    End;
+  End;
+
+  Close (F);
+End;
+
+Function TMsgBase.GetTotalBases (Compressed: Boolean) : LongInt;
+Var
+  F        : File;
+  TempBase : RecMessageBase;
+Begin
+  Result := 0;
+
+  Assign (F, Config.DataPath + 'mbases.dat');
+
+  If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
+
+  If Not Compressed Then
+    Result := FileSize(F)
+  Else Begin
+    While Not Eof(F) Do Begin
+      ioRead (F, TempBase);
+
+      If Session.User.Access(TempBase.ListACS) Then
+        Inc (Result);
     End;
   End;
 
@@ -387,21 +443,10 @@ Procedure TMsgBase.ChangeArea (Data: String);
 Var
   Count    : LongInt;
   Total    : Word;
-  Old      : RecMessageBase;
-  Compress : Boolean;
+  TempBase : RecMessageBase;
 Begin
-  Compress := Config.MCompress;
-  Old      := MBase;
-
-  {$IFDEF LOGGING}
-    Session.SystemLog('MsgAreaChange: ' + Data);
-    Session.SystemLog('      CurArea: ' + strI2S(Session.User.ThisUser.LastMBase));
-  {$ENDIF}
-
   If (Data = '+') or (Data = '-') Then Begin
-    Reset (MBaseFile);
-
-    Count := Session.User.ThisUser.LastMBase - 1;
+    Count := Session.User.ThisUser.LastMBase;
 
     Repeat
       Case Data[1] of
@@ -409,112 +454,59 @@ Begin
         '-' : Dec(Count);
       End;
 
-      {$I-}
-      Seek (MBaseFile, Count);
-      Read (MBaseFile, MBase);
-      {$I+}
+      If Not GetBaseByNum(Count, TempBase) Then Exit;
 
-      If IoResult <> 0 Then Break;
+      If Session.User.Access(TempBase.ListACS) Then Begin
+        Session.User.ThisUser.LastMBase := Count;
+        MBase                           := TempBase;
 
-      If Session.User.Access(MBase.ListACS) Then Begin
-        Session.User.ThisUser.LastMBase := FilePos(MBaseFile);
-        Close (MBaseFile);
         Exit;
       End;
     Until False;
-
-    Close (MBaseFile);
-
-    MBase := Old;
-
-    Exit;
   End;
 
   Count := strS2I(Data);
 
-  {$IFDEF LOGGING}
-    Session.SystemLog('Numeric change converstion: ' + strI2S(Count));
-  {$ENDIF}
-
   If Count > 0 Then Begin
-    Inc (Count);
-
-    Reset (MBaseFile);
-
-    If Count <= FileSize(MBaseFile) Then Begin
-      Seek (MBaseFile, Count - 1);
-      Read (MBaseFile, MBase);
-
-      If Session.User.Access(MBase.ListACS) Then Begin
-        Session.User.ThisUser.LastMBase := FilePos(MBaseFile)
-      End Else
-        MBase := Old;
-    End;
-
-    Close (MBaseFile);
+    If GetBaseByNum (Count, TempBase) Then
+      If Session.User.Access(TempBase.ListACS) Then Begin
+        Session.User.ThisUser.LastMBase := Count;
+        MBase                           := TempBase;
+      End;
 
     Exit;
   End;
 
-  If Pos('NOLIST', strUpper(Data)) > 0 Then Begin
-    Reset (MBaseFile);
-    Total := FileSize(MBaseFile);
-    Close (MBaseFile);
-  End Else
-    Total := ListAreas(Compress);
+  If Pos('NOLIST', strUpper(Data)) > 0 Then
+    Total := GetTotalBases(Config.MCompress)
+  Else
+    Total := ListAreas(Config.MCompress);
 
   If Total = 0 Then Begin
     Session.io.OutFullLn (Session.GetPrompt(94));
-    MBase := Old;
-  End Else Begin
-    Repeat
-      Session.io.OutFull (Session.GetPrompt(102));
 
-      Case Session.io.OneKeyRange(#13 + '?Q', 1, Total) of
-        '?': Begin
-               Compress := Config.MCompress;
-               Total    := ListAreas(Compress);
-             End;
-      Else
-        Break;
-      End;
-    Until False;
-
-    Count := Session.io.RangeValue;
-
-    If (Count > 0) and (Count <= Total) Then Begin
-      Reset (MBaseFile);
-
-      If Not Compress Then Begin
-        Seek (MBaseFile, Count - 1);
-        Read (MBaseFile, MBase);
-
-        If Not Session.User.Access(MBase.ListACS) Then Begin
-          MBase := Old;
-          Close (MBaseFile);
-          Exit;
-        End;
-      End Else Begin
-        Total := 0;
-
-        While Not Eof(MBaseFile) And (Count <> Total) Do Begin
-          Read (MBaseFile, MBase);
-          If Session.User.Access(MBase.ListACS) Then Inc(Total);
-        End;
-
-        If Count <> Total Then Begin
-          Close (MBaseFile);
-          MBase := OLD;
-          Exit;
-        End;
-      End;
-
-      Session.User.ThisUser.LastMBase := FilePos(MBaseFile);
-
-      Close (MBaseFile);
-    End Else
-      MBase := Old;
+    Exit;
   End;
+
+  Repeat
+    Session.io.OutFull (Session.GetPrompt(102));
+
+    Case Session.io.OneKeyRange(#13 + '?Q', 1, Total) of
+      #13,
+      'Q': Exit;
+      '?': Total := ListAreas(Config.MCompress);
+    Else
+      Break;
+    End;
+  Until False;
+
+  Count := Session.io.RangeValue;
+
+  If GetBaseCompressed(Count, TempBase) Then
+    If Session.User.Access(MBase.ListACS) Then Begin
+      MBase                           := TempBase;
+      Session.User.ThisUser.LastMBase := Count;
+    End;
 End;
 
 Procedure TMsgBase.ToggleNewScan (QWK: Boolean; Data: String);
@@ -837,17 +829,22 @@ End;
 
 Function TMsgBase.ListAreas (Compress: Boolean) : Integer;
 Var
-  Total    : Word = 0;
-  Listed   : Word = 0;
+  Total    : LongInt = 0;
+  Listed   : LongInt = 0;
   TempBase : RecMessageBase;
+  TempFile : File;
 Begin
-  Reset (MBaseFile);
+  Result := 1;
+
+  Assign (TempFile, Config.DataPath + 'mbases.dat');
+
+  If Not ioReset(TempFile, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
   Session.io.PausePtr   := 1;
   Session.io.AllowPause := True;
 
-  While Not Eof(MBaseFile) Do Begin
-    Read (MBaseFile, TempBase);
+  While Not Eof(TempFile) Do Begin
+    ioRead (TempFile, TempBase);
 
     If Session.User.Access(TempBase.ListACS) Then Begin
       Inc (Listed);
@@ -858,7 +855,7 @@ Begin
       If Compress Then
         Inc (Total)
       Else
-        Total := FilePos(MBaseFile);
+        Total := FilePos(TempFile);
 
       Session.io.PromptInfo[1] := strI2S(Total);
       Session.io.PromptInfo[2] := TempBase.Name;
@@ -869,19 +866,19 @@ Begin
       If (Listed MOD Config.MColumns = 0) and (Listed > 0) Then Session.io.OutRawLn('');
     End;
 
-    If Eof(MBaseFile) and (Listed MOD Config.MColumns <> 0) Then Session.io.OutRawLn('');
+    If Eof(TempFile) and (Listed MOD Config.MColumns <> 0) Then Session.io.OutRawLn('');
 
     If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
       Case Session.io.MorePrompt of
         'N' : Begin
-                Total := FileSize(MBaseFile);
+                Total := FileSize(TempFile);
                 Break;
               End;
         'C' : Session.io.AllowPause := False;
       End;
   End;
 
-  Close (MBaseFile);
+  Close (TempFile);
 
   Result := Total;
 End;
@@ -1230,92 +1227,83 @@ Var
 
   Function MoveMessage (IsCopy: Boolean) : Boolean;
   Var
+    Total    : LongInt;
+    TempBase : RecMessageBase;
     MsgNew   : PMsgBaseABS;
     Str      : String;
-    TempBase : RecMessageBase;
-    Area     : Integer;
     Addr     : RecEchoMailAddr;
   Begin
-    Result := False;
+    Result                   := False;
     Session.User.IgnoreGroup := True;
 
     Repeat
+      Total := ListAreas(Config.MCompress);
+
       If IsCopy Then
         Session.io.OutFull (Session.GetPrompt(492))
       Else
         Session.io.OutFull (Session.GetPrompt(282));
 
-      Str := Session.io.GetInput(4, 4, 12, '');
+      Case Session.io.OneKeyRange('Q?', 1, Total) of
+        #00: If GetBaseCompressed(Session.io.RangeValue, TempBase) Then Begin
+               If Not Session.User.Access(TempBase.PostACS) Then Begin
+                 Session.io.OutFullLn (Session.GetPrompt(105));
+                 Break;
+               End;
 
-      If Str = '?' Then
-        ListAreas(False)
-      Else Begin
-        Reset (MBaseFile);
+               Session.io.PromptInfo[1] := TempBase.Name;
 
-        Area := strS2I(Str) - 1;
+               Session.io.OutFullLn (Session.GetPrompt(318));
 
-        If (Area > 0) and (Area < FileSize(MBaseFile) - 1) Then Begin
-          Seek  (MBaseFile, Area);
-          Read  (MBaseFile, TempBase);
-          Close (MBaseFile);
+               If Not OpenCreateBase(MsgNew, TempBase) Then Break;
 
-          If Not Session.User.Access(TempBase.PostACS) Then Begin
-            Session.io.OutFullLn (Session.GetPrompt(105));
-            Break;
-          End;
+               MsgNew^.StartNewMsg;
 
-          Session.io.PromptInfo[1] := TempBase.Name;
+               MsgNew^.SetFrom  (MsgBase^.GetFrom);
+               MsgNew^.SetLocal (True);
 
-          Session.io.OutFullLn (Session.GetPrompt(318));
+               Case TempBase.NetType of
+                 0 : MsgNew^.SetMailType(mmtNormal);
+                 3 : MsgNew^.SetMailType(mmtNetMail);
+               Else
+                 MsgNew^.SetMailType(mmtEchoMail);
+               End;
 
-          If Not OpenCreateBase(MsgNew, TempBase) Then Break;
+               MsgBase^.GetOrig (Addr);
+               MsgNew^.SetOrig  (Addr);
+               MsgNew^.SetPriv  (MsgBase^.IsPriv);
+               MsgNew^.SetDate  (MsgBase^.GetDate);
+               MsgNew^.SetTime  (MsgBase^.GetTime);
+               MsgNew^.SetTo    (MsgBase^.GetTo);
+               MsgNew^.SetSubj  (MsgBase^.GetSubj);
 
-          MsgNew^.StartNewMsg;
-          MsgNew^.SetFrom (MsgBase^.GetFrom);
-          MsgNew^.SetLocal (True);
+               MsgBase^.MsgTxtStartUp;
 
-          Case TempBase.NetType of
-            0 : MsgNew^.SetMailType(mmtNormal);
-            3 : MsgNew^.SetMailType(mmtNetMail);
-          Else
-            MsgNew^.SetMailType(mmtEchoMail);
-          End;
+               While Not MsgBase^.EOM Do Begin
+                 Str := MsgBase^.GetString(79);
 
-          MsgBase^.GetOrig(Addr);
-          MsgNew^.SetOrig(Addr);
-          MsgNew^.SetPriv(MsgBase^.IsPriv);
-          MsgNew^.SetDate(MsgBase^.GetDate);
-          MsgNew^.SetTime(MsgBase^.GetTime);
-          MsgNew^.SetTo(MsgBase^.GetTo);
-          MsgNew^.SetSubj(MsgBase^.GetSubj);
+                 MsgNew^.DoStringLn(Str);
+               End;
 
-          MsgBase^.MsgTxtStartUp;
+               MsgNew^.WriteMsg;
+               MsgNew^.CloseMsgBase;
 
-          While Not MsgBase^.EOM Do Begin
-            Str := MsgBase^.GetString(79);
-            MsgNew^.DoStringLn(Str);
-          End;
+               Dispose (MsgNew, Done);
 
-          MsgNew^.WriteMsg;
+               If IsCopy Then
+                 Session.SystemLog('Forward msg to ' + strStripMCI(TempBase.Name))
+               Else Begin
+                 Session.SystemLog('Moved msg to ' + strStripMCI(TempBase.Name));
 
-          MsgNew^.CloseMsgBase;
+                 MsgBase^.DeleteMsg;
+               End;
 
-          Dispose (MsgNew, Done);
+               Result := True;
 
-          If IsCopy Then
-            Session.SystemLog('Forward msg to ' + strStripMCI(TempBase.Name))
-          Else Begin
-            Session.SystemLog('Moved msg to ' + strStripMCI(TempBase.Name));
-            MsgBase^.DeleteMsg;
-          End;
-
-          Result := True;
-
-          Break;
-        End Else Begin
-          Close (MBaseFile);
-          Break;
-        End;
+               Break;
+             End;
+        #13,
+        'Q': Break;
       End;
     Until False;
 
@@ -2431,6 +2419,15 @@ Begin
   If Mode = 'F' Then Begin
     Session.io.PromptInfo[1] := strI2S(MsgBase^.GetHighMsgNum);
 
+    If Session.io.PromptInfo[1] = '0' Then Begin
+      Session.io.OutFullLn(Session.GetPrompt(114));
+
+      MsgBase^.CloseMsgBase;
+      Dispose (MsgBase, Done);
+
+      Exit;
+    End;
+
     Session.io.OutFull (Session.GetPrompt(338));
 
     Session.io.OneKeyRange(#13, 1, MsgBase^.GetHighMsgNum);
@@ -2813,7 +2810,7 @@ Begin
     UpdateBase;
 End;
 
-Procedure TMsgBase.MessageNewScan (Data : String);
+Procedure TMsgBase.MessageNewScan (Data: String);
 { menu data commands: }
 {    /P : scan for personal mail in all bases }
 {    /M : scan only mandatory bases           }
@@ -2874,7 +2871,7 @@ Begin
   Close (MBaseFile);
 
   Session.User.IgnoreGroup := False;
-  MBase            := OLD;
+  MBase                    := OLD;
 End;
 
 Procedure TMsgBase.GlobalMessageSearch (Mode : Char);

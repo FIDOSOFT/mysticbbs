@@ -2517,4 +2517,30 @@
  + When selecting "Forward" reading, Mystic now uses the smart input
    function to prompt for the message start number.
 
+ + Rewrote the message move and fowarding functions.  Both now make use of
+   compressed message base numbers when selecting the target message base,
+   and they both now use smart input.
+
+ ! Fixed a bug which could cause a crash after moving a message while doing
+   a newscan of message bases.
+
+ + Added sorting to the file bases configuration editor.  Use TAB to mark
+   and /S to sort just like message bases.
+
+ ! Fixed a bug when editing prompts using the theme editor when performing
+   a search.
+
+ ! The Menu editor was not properly using the theme selected when it was
+   started.
+
+ ! According to a document I saw, the ANSI-BBS C function to move the cursor
+   should hard stop at 80.  Mystic's ANSI parser wraps to the next line which
+   I think was added in a while back to increase ANSI compatibility.  For
+   now I changed it back to follow what this standard document is claiming,
+   even if it is sort of against my better judgement.
+
+ + If a message bases's data files actually exist, for but some reason the
+   highest message number is 0 (ie everything has been deleted), Mystic will
+   now display the "There are no messages in this base" prompt when reading.
+
    <ALPHA 26 RELEASED>

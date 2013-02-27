@@ -208,8 +208,7 @@ End;
 
 Procedure InitializeUnix;
 Var
-  Count : Word;
-  Info  : Stat;
+  Info : Stat;
 Begin
   If fpStat('mystic', Info) = 0 Then Begin
     fpSetGID (Info.st_GID);

@@ -5,9 +5,8 @@ Unit BBS_MenuData;
 Interface
 
 Uses
-  m_Strings;
-
-{$I RECORDS.PAS}
+  m_Strings,
+  BBS_Common;
 
 Type
   TMenuData = Class

@@ -12,10 +12,71 @@ Uses
   m_DateTime,
   m_Strings,
   m_FileIO,
+  m_QuickSort,
   bbs_Ansi_MenuBox,
   bbs_Ansi_MenuForm,
   bbs_Common,
   bbs_cfg_Common;
+
+Type
+  RecFileBaseFile = File of RecFileBase;
+
+Procedure SortFileBases (Var List: TAnsiMenuList; Var FBaseFile: RecFileBaseFile);
+Var
+  TempBase  : RecFileBase;
+  TempFile  : File of RecFileBase;
+  Sort      : TQuickSort;
+  SortFirst : Word;
+  SortLast  : Word;
+  Count     : Word;
+Begin
+  If Not GetSortRange(List, SortFirst, SortLast) Then Exit;
+
+  ShowMsgBox (3, ' Sorting... ');
+
+  Sort := TQuickSort.Create;
+
+  For Count := SortFirst to SortLast Do Begin
+    Seek (FBaseFile, Count - 1);
+    Read (FBaseFile, TempBase);
+
+    Sort.Add (strUpper(strStripPipe(TempBase.Name)), Count - 1);
+  End;
+
+  Sort.Sort (1, Sort.Total, qAscending);
+
+  Close  (FBaseFile);
+  ReName (FBaseFile, Config.DataPath + 'fbases.sortbak');
+
+  Assign (TempFile, Config.DataPath + 'fbases.sortbak');
+  Reset  (TempFile);
+
+  Assign  (FBaseFile, Config.DataPath + 'fbases.dat');
+  ReWrite (FBaseFile);
+
+  While FilePos(TempFile) < SortFirst - 1 Do Begin
+    Read  (TempFile, TempBase);
+    Write (FBaseFile, TempBase);
+  End;
+
+  For Count := 1 to Sort.Total Do Begin
+    Seek  (TempFile, Sort.Data[Count]^.Ptr);
+    Read  (TempFile, TempBase);
+    Write (FBaseFile, TempBase);
+  End;
+
+  Seek (TempFile, SortLast);
+
+  While Not Eof(TempFile) Do Begin
+    Read  (TempFile, TempBase);
+    Write (FBaseFile, TempBase);
+  End;
+
+  Close (TempFile);
+  Erase (TempFile);
+
+  Sort.Free;
+End;
 
 Procedure EditFileBase (Var FBase: RecFileBase);
 Var
@@ -164,7 +225,7 @@ Begin
     List.Close;
 
     Case List.ExitCode of
-      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
+      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|S-Sort|') of
               'I' : Begin
                       InsertRecord;
                       MakeList;
@@ -200,6 +261,7 @@ Begin
 
                       MakeList;
                     End;
+              'S' : SortFileBases (List, FBaseFile);
             End;
       #13 : If List.Picked < List.ListMax Then Begin
               Seek (FBaseFile, List.Picked - 1);

@@ -23,7 +23,6 @@
 Const
   mysSoftwareID  = 'Mystic';                                    // no idea
   mysCopyYear    = '1997-2013';                                 // its been a long time!
-  mysWebsite     = 'sourceforge.net/projects/mysticbbs';
   mysVersion     = '1.10 A26';                                  // current version
   mysDataChanged = '1.10 A11';                                  // version of last records change
 
@@ -82,6 +81,52 @@ Type
     Net,
     Node,
     Point : Word;
+  End;
+
+  RecEchoMailOpts = Record
+    SysLocation   : String[40];
+    SysFlags      : String[40];
+    IncomingPath  : String[mysMaxPathSize];
+    SIncomingPath : String[mysMaxPathSize];
+    OutboundPath  : String[mysMaxPathSize];
+    NodeListPath  : String[mysMaxPathSize];
+    ZoneMap       : String[128];
+    FTPPort       : Word;
+    BINKPPort     : Word;
+    Res           : Array[1..485] of Char;
+  End;
+
+  RecEchomailNodeFTP = Record
+    Host      : String[60];
+    Login     : String[30];
+    Password  : String[30];
+    Directory : String[80];
+  End;
+
+  RecEchomailNodeBINKP = Record
+    Host      : String[60];
+    TimeOut   : Word;
+    BlockSize : Word;
+    Res       : Array[1..10] of Byte;
+  End;
+
+  RecEchoMailNode = Record
+    Description : String[40];
+    Active      : Boolean;
+    AddrList    : String[250];
+    InType      : Byte;                                         // 0=Disabled 1=FTP 2=BINKP 3=EMAIL 4=DIRECTORY
+    OutType     : Byte;                                         // 0=Disabled 1=FTP 2=BINKP 3=EMAIL 4=DIRECTORY
+    FTPin       : RecEchoMailNodeFTP;
+    FTPout      : RecEchoMailNodeFTP;
+    BINKPin     : RecEchoMailNodeBINKP;
+    BINKPout    : RecEchoMailNodeBINKP;
+    LastRecv    : LongInt;
+    LastSent    : LongInt;
+    LastReset   : LongInt;
+    InFiles     : Cardinal;
+    InSize      : Cardinal;
+    OutFiles    : Cardinal;
+    OutSize     : Cardinal;
   End;
 
   RecSauceInfo = Packed Record
@@ -280,6 +325,13 @@ Type
     inetTNHidden    : Boolean;
     ThemeOnStart    : Boolean;
     StartCodePage   : Byte;
+
+    //inetSMTPRelay   : String[30];
+    //inetSMTPLogin   : String[30];
+    //inetSMTPPW      : String[30];
+    //EmailValidationLevel
+    //AllowEmailPWReset
+
     Reserved        : Array[1..843] of Char;
   End;
 

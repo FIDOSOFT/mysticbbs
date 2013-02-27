@@ -219,7 +219,7 @@
 113 |15No messages found.
 114 |CR|12There are no messages in |MB.|DE|DE|DE
 ; E-mail reader prompt
-115 |CR|09(A)gain, (P)revious, (N)ext, (R)eply, (D)elete, (J)ump, (Q)uit?
+115 |CR|09(A)gain, (P)revious, (N)ext, (R)eply, (D)elete, (J)ump, (Q)uit? |11
 ; Message read prompt.  &1 = Current Msg #   &2 = Total Messages
 116 |CR (|&1 of |&2) Reading Messages (?/Help): |XX
 117 |CR|12Delete this mail? |11
@@ -599,9 +599,9 @@
 ; UNUSED
 315 UNUSED
 ; Lightbar Y/N: YES text
-316 |09|17 Y|15es  |09|16 N|15o |16
+316 |09|17 Y|15es |09|16 N|15o |16
 ; Lightbar Y/N: NO text
-317 |09 Y|15es  |09|17 N|15o |16
+317 |09 Y|15es |09|17 N|15o |16
 ; Moving message. &1=base name
 318 |CR|14Moving message to |15|&1|14...
 ; nodechat broadcast text: &1 = user name
@@ -686,7 +686,7 @@
 ; Add BBS: BBS already exists
 362 |CR|12BBS already exists in list!
 ; Msg xport: local export path
-363 |CR|09Enter full path/filename to export to: |XX
+363 |CR|09Enter full path/filename to export to:|CR|XX
 ; info edit: address
 364 |CR|03Enter your street address.|CR|09:
 ; info edit: city/state
@@ -963,6 +963,6 @@
 ; 1=offline  2=failed  3=unvalidated  4=GB  5=MB  6=KB  7=B
 491 OFFLINE FAILED UNVALID GB MB KB B
 ; Forward msg: which base
-492 |CR|09Forward message to which base (?/List): |XX
+492 |CR|09Forward message to which base (|10?|09/|10List|09): |11
 ; Sysop password prompt
 493 |CR|09Sysop Password: |XX
