@@ -264,7 +264,7 @@ Begin
             #27 : State := 1;
             #9  : Screen.CursorXY (Screen.CursorX + 8, Screen.CursorY);
             #12 : Screen.ClearScreen;
-(*
+            {$IFDEF UNIX}
             #14,
             #15 : Begin
                     Screen.WriteChar('X');
@@ -272,7 +272,7 @@ Begin
                     State    := 0;
                     WasValid := True;
                   End;
-*)
+            {$ENDIF}
           Else
             Screen.WriteChar(Ch);
 
@@ -306,7 +306,7 @@ Begin
               #27 : State := 1;
               #9  : Screen.CursorXY (Screen.CursorX + 8, Screen.CursorY);
               #12 : Screen.ClearScreen;
-(*
+              {$IFDEF UNIX}
               #14,
               #15 : Begin
                       Screen.WriteChar('X');
@@ -314,7 +314,7 @@ Begin
                       State    := 0;
                       WasValid := True;
                     End;
-*)
+              {$ENDIF}
             Else
               Screen.WriteChar(Data[Count]);
               WasValid := True;
