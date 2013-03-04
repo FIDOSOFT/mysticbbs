@@ -62,7 +62,7 @@ Type
     Procedure   GlobalMessageSearch (Mode: Char);
     Procedure   SetMessagePointers;
     Procedure   ViewSentEmail;
-    Function    ResolveOrigin       (var mArea: RecMessageBase) : String;
+    Function    ResolveOrigin       (Var mArea: RecMessageBase) : String;
     // QWK and QWKE goodies
     Procedure   DownloadQWK         (Extended: Boolean; Data: String);
     Procedure   UploadREP;
@@ -366,7 +366,7 @@ Begin
   For A := 1 to Lines Do
     Msg^.DoStringLn(MsgText[A]);
 
-  If Session.User.ThisUser.SigUse and (Session.User.ThisUser.SigLength > 0) Then Begin
+  If (MBase.Flags AND MBAutoSigs <> 0) and Session.User.ThisUser.SigUse and (Session.User.ThisUser.SigLength > 0) Then Begin
 
     Assign (DF, Config.DataPath + 'autosig.dat');
     Reset  (DF, 1);
@@ -1483,6 +1483,18 @@ Var
     Session.io.OutRawLn('');
   End;
 
+  Procedure RemoveNewScan (PromptNumber: SmallInt);
+  Begin
+    GetMessageScan;
+
+    If MScan.NewScan = 1 Then
+      If Session.io.GetYN(Session.GetPrompt(PromptNumber), False) Then Begin
+        MScan.NewScan := 0;
+
+        SetMessageScan;
+      End;
+  End;
+
 (**************************************************************************)
 (**************************************************************************)
 (**************************************************************************)
@@ -1560,7 +1572,7 @@ Var
         MsgText[Lines] := MsgBase^.GetString(79);
 
         If MsgText[Lines][1] = #1 Then Begin
-          If Copy(MsgText[Lines], 1, 6) = #1 + 'MSGID' Then
+          If Copy(MsgText[Lines], 2, 5) = 'MSGID' Then
             ReplyID := Copy(MsgText[Lines], 9, Length(MsgText[Lines]));
 
           Dec (Lines);
@@ -1667,6 +1679,9 @@ Var
             'I' : Begin
                     LastRead          := MsgBase^.GetHighMsgNum;
                     Ansi_View_Message := True;
+
+                    RemoveNewScan(495);
+
                     Exit;
                   End;
             'J' : Begin
@@ -2077,6 +2092,9 @@ Var
             'G' : Break;
             'I' : Begin
                     LastRead := MsgBase^.GetHighMsgNum;
+
+                    RemoveNewScan(495);
+
                     Break;
                   End;
             '?' : Begin
@@ -2158,7 +2176,7 @@ Var
         Str := MsgBase^.GetString(79);
 
         If Str[1] = #1 Then Begin
-          If Copy(Str, 1, 6) = #1 + 'MSGID' Then
+          If Copy(Str, 2, 5) = 'MSGID' Then
             ReplyID := Copy(Str, 9, Length(Str));
         End Else
           Send_Msg_Text (Str);
@@ -2220,6 +2238,9 @@ Var
           'H' : LastRead := MsgBase^.GetMsgNum - 1;
           'I' : Begin
                   LastRead := MsgBase^.GetHighMsgNum;
+
+                  RemoveNewScan(494);
+
                   Exit;
                  End;
           'J' : Begin
@@ -2485,33 +2506,43 @@ End;
 
 Procedure TMsgBase.PostMessage (Email: Boolean; Data: String);
 Var
-  MsgTo    : String[30];
-  MsgSubj  : String[60];
-  MsgAddr  : String[20];
-  TempStr  : String;
-  DestAddr : RecEchoMailAddr;
-  A        : Integer;
-  Lines    : Integer;
-  Forced   : Boolean;
-  Old      : RecMessageBase;
+  MsgTo      : String[30];
+  MsgSubj    : String[60];
+  MsgAddr    : String[20];
+  TempStr    : String;
+  DestAddr   : RecEchoMailAddr;
+  A          : Integer;
+  Lines      : Integer;
+  Forced     : Boolean;
+  Old        : RecMessageBase;
+  SaveGroup  : Boolean;
 Begin
-  Old := MBase;
+  Old       := MBase;
+  SaveGroup := Session.User.IgnoreGroup;
 
   If Email Then Begin
     Reset (MBaseFile);
     Read  (MBaseFile, MBase);
     Close (MBaseFile);
+
+    Session.User.IgnoreGroup := True;
   End;
 
   If MBase.FileName = '' Then Begin
     Session.io.OutFullLn (Session.GetPrompt(110));
-    MBase := Old;
+
+    MBase                    := Old;
+    Session.User.IgnoreGroup := SaveGroup;
+
     Exit;
   End;
 
   If Not Session.User.Access(MBase.PostACS) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(105));
-    MBase := Old;
+
+    MBase                    := Old;
+    Session.User.IgnoreGroup := SaveGroup;
+
     Exit;
   End;
 
@@ -2582,7 +2613,9 @@ Begin
   End;
 
   If MsgTo = '' Then Begin
-    MBase := Old;
+    MBase                    := Old;
+    Session.User.IgnoreGroup := SaveGroup;
+
     Exit;
   End;
 
@@ -2596,7 +2629,9 @@ Begin
         If Forced Then
           Session.io.OutFull (Session.GetPrompt(307))
         Else Begin
-          MBase := Old;
+          MBase                    := Old;
+          Session.User.IgnoreGroup := SaveGroup;
+
           Exit;
         End;
     Until MsgSubj <> '';
@@ -2616,7 +2651,9 @@ Begin
     { also could be used in mass email rewrite and qwk .REP rewrite      }
 
     If Not OpenCreateBase(MsgBase, MBase) Then Begin
-      MBase := Old;
+      MBase                    := Old;
+      Session.User.IgnoreGroup := SaveGroup;
+
       Exit;
     End;
 
@@ -2669,7 +2706,8 @@ Begin
   End Else
     Session.io.OutFullLn (Session.GetPrompt(109));
 
-  MBase := Old;
+  MBase                    := Old;
+  Session.User.IgnoreGroup := SaveGroup;
 End;
 
 Procedure TMsgBase.CheckEMail;
@@ -3411,7 +3449,7 @@ Var
   Pick  : LongInt;
 Begin
   Result := '';
-  Loc    := Pos('@RANDOM=', mArea.Origin);
+  Loc    := Pos('@RANDOM=', strUpper(mArea.Origin));
 
   If Loc > 0 Then Begin
     FN := strStripB(Copy(mArea.Origin, Loc + 8, 255), ' ');

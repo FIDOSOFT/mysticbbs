@@ -2536,11 +2536,50 @@
  ! According to a document I saw, the ANSI-BBS C function to move the cursor
    should hard stop at 80.  Mystic's ANSI parser wraps to the next line which
    I think was added in a while back to increase ANSI compatibility.  For
-   now I changed it back to follow what this standard document is claiming,
-   even if it is sort of against my better judgement.
+   now I changed it back to follow what this standard document is claiming.
 
  + If a message bases's data files actually exist, for but some reason the
    highest message number is 0 (ie everything has been deleted), Mystic will
    now display the "There are no messages in this base" prompt when reading.
+
+ + When downloading a file or a batch, Mystic will now ask the user if they
+   would like to disconnect after the transfer.  Replace two prompts in your
+   language file:
+
+      ; Disconnect after download?
+      066 |CR|12Disconnect after file transfer? |11
+
+      ; Disconneting in 10 seconds, press a key to abort
+      067 |CR|09Disconnecting in 10 seconds: Press a key to abort.
+
+ ! Mystic wasn't properly checking the message base "auto signature" setting
+   before adding in the user's auto signature.
+
+ + Mystic will now ignore the group membership contraints in the ACS string
+   when using the MW (write email) menu command.
+
+ + Mystic now has an ACS setting to "see offline" files in the file bases.
+   This setting is found in System Config -> File Base Settings.
+
+ + If you select the I (Ignore all messages) option while reading message
+   bases, Mystic will now ask you if you want to remove the base from your
+   new message scan.  Two new prompts go along with this:
+
+      ; Normal msg reader: Remove from newscan? (after I command)
+      494 |CR|12Remove |15|MB |12from message newscan? |XX
+
+      ; Lightbar msg reader: Remove from newscan (after I command)
+      495 |CR|12Remove |15|MB |12from message newscan? |XX
+
+ ! MBBSUTIL -NOCHECK option was not bypassing the online user check.
+
+ ! MBBSUTIL -FCHECK was not properly marking some files OFFLINE when they
+   should have been.
+
+ + MBBSUTIL -FCHECK now has an optional command after it which will cause
+   missing files to be removed from the file listing, instead of marked
+   offline. Add KILL after fcheck to enable this function:
+
+      mbbsutil -fcheck kill
 
    <ALPHA 26 RELEASED>

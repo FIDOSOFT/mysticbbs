@@ -47,7 +47,7 @@ Var
   NI       : TNodeInfoRec;
 Begin
   For Count := 1 to NodeTotal Do Begin
-    GetNodeInfo(Count, NI);
+    GetNodeInfo (Count, NI);
 
     Assign (ChatFile, bbsConfig.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
 
@@ -61,7 +61,7 @@ Begin
     End Else
       NI.Busy := False;
 
-    SetNodeInfo(NI.Num, NI);
+    SetNodeInfo (NI.Num, NI);
   End;
 End;
 

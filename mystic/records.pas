@@ -59,7 +59,7 @@ Const
   mysMaxMenuCmds     = 25;                                      // Max menu commands per item
   mysMaxMenuInput    = 12;
   mysMaxMenuStack    = 8;
-  mysMaxThemeText    = 493;                                     // Total prompts in theme file
+  mysMaxThemeText    = 495;                                     // Total prompts in theme file
 
   fn_SemFileEcho = 'echomail.now';
   fn_SemFileNews = 'newsmail.now';
@@ -325,14 +325,14 @@ Type
     inetTNHidden    : Boolean;
     ThemeOnStart    : Boolean;
     StartCodePage   : Byte;
-
+    AcsSeeOffline   : String[mysMaxAcsSize];
     //inetSMTPRelay   : String[30];
     //inetSMTPLogin   : String[30];
     //inetSMTPPW      : String[30];
     //EmailValidationLevel
     //AllowEmailPWReset
 
-    Reserved        : Array[1..843] of Char;
+    Reserved        : Array[1..812] of Char;
   End;
 
 Const

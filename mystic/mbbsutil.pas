@@ -64,6 +64,7 @@ Const
   TrashFile    : String  = '';
   TempPath     : String  = '';
   AreasFile    : String  = '';
+  FCheckKill   : Boolean = False;
 
 Var
   ConfigFile : File of RecConfig;
@@ -119,7 +120,7 @@ Begin
   WriteLn ('-BKILL    <ID> <Days>       Delete BBSes which haven''t been verified in <DAYS>');
   WriteLn ('-BPACK                      Pack all BBS lists');
   WriteLn ('-BSORT    <ID> <Type>       Sorts and packs BBS list by <type>');
-  WriteLn ('-FCHECK                     Checks file entries for correct size and status');
+  WriteLn ('-FCHECK   <KILL>            Check filelist for correct size/status');
   WriteLn ('-FIXINDEX                   Fix broken permanent index for msg/file bases');
   WriteLn ('-FPACK                      Pack file bases');
   WriteLn ('-FSORT                      Sort file base entries by filename');
@@ -281,7 +282,7 @@ Var
   FDirFile  : File of RecFileList;
   FDir      : RecFileList;
   TFDirFile : File of RecFileList;
-  DF        : File of Byte;
+  DF        : File;
 Begin
   Write ('Checking File Bases  : ');
 
@@ -305,24 +306,27 @@ Begin
       While Not Eof(FDirFile) Do Begin
         Read (FDirFile, FDir);
 
-        If FDir.Flags And FDirDeleted = 0 Then Begin
-          Assign (DF, FBase.Path + FDir.FileName);
-          {$I-} Reset (DF); {$I+}
-          If IoResult <> 0 Then
-            FDir.Flags := FDir.Flags AND FDirOffline
-          Else Begin
-            FDir.Size := FileSize(DF);
+        If FDir.Flags AND FDirDeleted <> 0 Then Continue;
 
-            If FDir.Size = 0 Then
-              FDir.Flags := FDir.Flags OR FDirOffline
-            Else
-              FDir.Flags := FDir.Flags AND NOT FDirOffline;
+        Assign (DF, FBase.Path + FDir.FileName);
+        {$I-} Reset (DF, 1); {$I+}
 
-            Close (DF);
-          End;
+        If IoResult <> 0 Then
+          FDir.Flags := FDir.Flags OR FDirOffline
+        Else Begin
+          FDir.Size := FileSize(DF);
 
-          Write (TFDirFile, FDir);
+          If FDir.Size = 0 Then
+            FDir.Flags := FDir.Flags OR FDirOffline
+          Else
+            FDir.Flags := FDir.Flags AND NOT FDirOffline;
+
+          Close (DF);
         End;
+
+        If (FDir.Flags AND FDirOffline <> 0) and FCheckKill Then Continue;
+
+        Write (TFDirFile, FDir);
       End;
 
       Close (FDirFile); {delete backup file}
@@ -1130,7 +1134,13 @@ Begin
       End Else
         BBSSort := True;
     End;
-    If Temp = '-FCHECK' Then FileCheck := True;
+    If Temp = '-FCHECK' Then Begin
+      FileCheck := True;
+
+      FCheckKill := strUpper(ParamStr(A+1)) = 'KILL';
+
+      If FCheckKill Then Inc(A);
+    End;
     If Temp = '-FIXINDEX' Then FixIndex := True;
     If Temp = '-FPACK'  Then FilePack  := True;
     If Temp = '-FSORT'  Then FileSort  := True;
@@ -1161,6 +1171,7 @@ Begin
     End;
 
     If Temp = '-UPACK'  Then UserPack  := True;
+    If Temp = '-NOCHECK' Then NodeCheck := False;
 
     Inc (A);
   End;

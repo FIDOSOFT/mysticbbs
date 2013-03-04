@@ -287,7 +287,7 @@ Begin
   Box.Open (5, 5, 76, 21);
 
   VerticalLine (26, 7, 19);
-  VerticalLine (58, 7, 14);
+  VerticalLine (58, 7, 15);
 
   Form.AddBol  ('L', ' List Compression',    8,  7, 28,  7, 18,  3, @Config.FCompress, Topic + '');
   Form.AddTog  ('I', ' List Columns',       12,  8, 28,  8, 14,  1, 1, 2, '1 2', @Config.FColumns, Topic + '');
@@ -308,9 +308,10 @@ Begin
   Form.AddStr  ('N', ' DL Unvalidated',     42,  9, 60,  9, 16, 15, mysMaxAcsSize, @Config.AcsDLUnvalid, Topic + 'ACS to download unvalidated files');
   Form.AddStr  ('F', ' See Failed',         46, 10, 60, 10, 12, 15, mysMaxAcsSize, @Config.AcsSeeFailed, Topic + 'ACS to see failed files');
   Form.AddStr  (#0,  ' DL Failed',          47, 11, 60, 11, 11, 15, mysMaxAcsSize, @Config.AcsDLFailed, Topic + 'ACS to download failed files');
-  Form.AddLong ('C', ' Min Upload Space',   40, 12, 60, 12, 18,  9, 0, 999999999, @Config.FreeUL, Topic + 'Min space to allow uploads (kb)');
-  Form.AddLong ('-', ' Min CD-ROM Space',   40, 13, 60, 13, 18,  9, 0, 999999999, @Config.FreeCDROM, Topic + 'Min space for CD-ROM copy (kb)');
-  Form.AddChar (#0,  ' Default Protocol',   40, 14, 60, 14, 18,  32, 96, @Config.FProtocol, Topic + 'Default Protocol hotkey');
+  Form.AddStr  (#0,  ' See Offline',        45, 12, 60, 12, 13, 15, mysMaxAcsSize, @Config.AcsSeeOffline, Topic + 'ACS to see offline files');
+  Form.AddLong ('C', ' Min Upload Space',   40, 13, 60, 13, 18,  9, 0, 999999999, @Config.FreeUL, Topic + 'Min space to allow uploads (kb)');
+  Form.AddLong ('-', ' Min CD-ROM Space',   40, 14, 60, 14, 18,  9, 0, 999999999, @Config.FreeCDROM, Topic + 'Min space for CD-ROM copy (kb)');
+  Form.AddChar (#0,  ' Default Protocol',   40, 15, 60, 15, 18,  32, 96, @Config.FProtocol, Topic + 'Default Protocol hotkey');
 
   Form.Execute;
 

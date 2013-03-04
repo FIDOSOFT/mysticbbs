@@ -9,21 +9,21 @@ Uses
   BBS_Common;
 
 Type
-  PtrMessageLine = ^RecMessageLine;
-  RecMessageLine = Array[1..80] of Record
-                     Ch   : Char;
-                     Attr : Byte;
-                   End;
+  RecAnsiBufferChar = Record
+                        Ch   : Char;
+                        Attr : Byte;
+                      End;
 
-  RecMessageAnsi = Array[1..mysMaxMsgLines] of RecMessageLine;
-  // make this a pointer?
+  RecAnsiBufferLine = Array[1..80] of RecAnsiBufferChar;
+  RecAnsiBuffer     = Array[1..mysMaxMsgLines] of RecAnsiBufferLine;
 
   TMsgBaseAnsi = Class
     GotAnsi  : Boolean;
     GotPipe  : Boolean;
+    GotClear : Boolean;
     PipeCode : String[2];
     Owner    : Pointer;
-    Data     : RecMessageAnsi;
+    Data     : RecAnsiBuffer;
     Code     : String;
     Lines    : Word;
     CurY     : Word;
@@ -87,9 +87,10 @@ Begin
   Attr     := 7;
   GotAnsi  := False;
   GotPipe  := False;
+  GotClear := False;
   PipeCode := '';
 
-  FillChar (Data, SizeOf(Data), 0);
+  FillChar (Data, SizeOf(Data), #0);
 
   ResetControlCode;
 End;
@@ -353,7 +354,7 @@ Begin
           Case Ch of
             #27 : Escape := 1;
             #9  : MoveXY (CurX + 8, CurY);
-            #12 : {Edit.ClearScreenData};
+            #12 : GotClear := True;
           Else
             If Ch = '|' Then
               GotPipe := True

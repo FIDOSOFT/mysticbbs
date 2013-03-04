@@ -90,6 +90,7 @@ Type
     Function    ExportFileList        (NewFiles: Boolean; Qwk: Boolean) : Boolean;
     Function    ArchiveView           (FName : String) : Boolean;
     Procedure   FileGroupChange       (Ops: String; FirstBase, Intro : Boolean);
+    Procedure   XferDisconnect;
     Procedure   UploadFile;
     Procedure   DownloadBatch;
     Procedure   NewFileScan           (Mode: Char);
@@ -671,7 +672,7 @@ Begin
   Temp.NewScan := FBase.DefScan;
   Temp.LastNew := CurDateDos;
 
-  If Temp.NewScan = 2 Then Dec(Temp.NewScan);
+  If Temp.NewScan = 2 Then Dec (Temp.NewScan);
 
   Assign (FScanFile, Config.DataPath + FBase.FileName + '.scn');
   {$I-} Reset (FScanFile); {$I+}
@@ -1160,12 +1161,14 @@ Var
 
       If Session.User.Access(FBase.ListACS) Then Begin
         Inc (Total);
+
         Session.io.PromptInfo[1] := strI2S(Total);
         Session.io.PromptInfo[2] := FBase.Name;
 
         GetFileScan;
 
         Session.io.PromptInfo[3] := Session.io.OutYN(FScan.NewScan > 0);
+
         Session.io.OutFull (Session.GetPrompt(201));
 
         If (Total MOD Config.FColumns = 0) And (Total > 0) Then Session.io.OutRawLn('');
@@ -1188,25 +1191,33 @@ Var
     B : Word;
   Begin
     B := 0;
+
     Reset (FBaseFile);
+
     Repeat
       Read (FBaseFile, FBase);
+
       If Session.User.Access(FBase.ListACS) Then Inc(B);
+
       If A = B Then Break;
     Until False;
 
     GetFileScan;
+
     Session.io.PromptInfo[1] := FBase.Name;
 
     If FBase.DefScan = 2 Then Begin
       FScan.NewScan := 1;
+
       Session.io.OutFullLn (Session.GetPrompt(289));
     End Else
     If FScan.NewScan = 0 Then Begin
       FScan.NewScan := 1;
+
       Session.io.OutFullLn (Session.GetPrompt(204));
     End Else Begin
       FScan.NewScan := 0;
+
       Session.io.OutFullLn (Session.GetPrompt(203));
     End;
 
@@ -2014,6 +2025,7 @@ Var
     OkFile := False;
 
     If (FDir.Flags And FDirDeleted <> 0) Then Exit;
+    If (FDir.Flags AND FDirOffline <> 0) And (Not Session.User.Access(Config.AcsSeeOffline)) Then Exit;
     If (FDir.Flags And FDirInvalid <> 0) And (Not Session.User.Access(Config.AcsSeeUnvalid)) Then Exit;
     If (FDir.Flags And FDirFailed  <> 0) And (Not Session.User.Access(Config.AcsSeeFailed)) Then Exit;
 
@@ -3213,10 +3225,11 @@ End;
 
 Procedure TFileBase.DownloadFile;
 Var
-  FName : String[70];
-  Dir   : String[40];
-  Min   : Integer;
-  Sec   : Byte;
+  FName  : String[70];
+  Dir    : String[40];
+  Min    : Integer;
+  Sec    : Byte;
+  HangUp : Boolean;
 Begin
   If FBase.FileName = '' Then Begin
     Session.io.OutFullLn(Session.GetPrompt(38));
@@ -3267,6 +3280,8 @@ Begin
               Else
                 Dir := FBase.Path;
 
+              HangUp := Session.io.GetYN(Session.GetPrompt(66), False);
+
               If SendFile(Dir + FName) Then Begin
                 Session.SystemLog ('Downloaded: ' + FDir.FileName);
 
@@ -3284,6 +3299,8 @@ Begin
                 Session.SystemLog ('Download of ' + FDir.FileName + ' FAILED');
 
               FileErase(Session.TempPath + FName);
+
+              If HangUp Then XferDisconnect;
             End;
         1 : Session.io.OutFullLn (Session.GetPrompt(224));
         2 : Session.io.OutFullLn (Session.GetPrompt(58));
@@ -3300,14 +3317,32 @@ Begin
   Session.io.OutFullLn (Session.GetPrompt(51));
 End;
 
+Procedure TFileBase.XferDisconnect;
+Var
+  Timer : LongInt;
+Begin
+  Timer := TimerSet(1000);
+
+  Session.io.OutFull(Session.GetPrompt(67));
+
+  While Not TimerUp(Timer) Do
+    If Session.io.InKey(1000) <> #255 Then Begin
+      Session.io.OutRawLn('');
+      Exit;
+    End;
+
+  Halt(0);
+End;
+
 Procedure TFileBase.DownloadBatch;
 Var
-  A   : Byte;
-  K   : LongInt;
-  M   : Integer;
-  Dir : String[40];
-  Old : RecFileBase;
-  FL  : Text;
+  A      : Byte;
+  K      : LongInt;
+  M      : Integer;
+  Dir    : String[40];
+  Old    : RecFileBase;
+  FL     : Text;
+  Hangup : Boolean;
 Begin
   K := 0;
 
@@ -3323,6 +3358,8 @@ Begin
   Session.io.OutFullLn (Session.GetPrompt(79));
 
   If SelectProtocol(True, True) = 'Q' Then Exit;
+
+  HangUp := Session.io.GetYN(Session.GetPrompt(66), False);
 
   Assign  (FL, Session.TempPath + 'file.lst');
   ReWrite (FL);
@@ -3397,6 +3434,8 @@ Begin
   BatchNum := 0;
 
   DirClean (Session.TempPath, '');
+
+  If HangUp Then XferDisconnect;
 End;
 
 Procedure TFileBase.FileSearch;

@@ -151,8 +151,10 @@
 064 |01[|10Ч|01] |09Search all file groups? |11
 ; Start your file transfer now  &1=selected protocol
 065 |CR|12Start your |15|&1 |12transfer now...
-066 UNUSED
-067 UNUSED
+; Disconnect after download?
+066 |CR|12Disconnect after file transfer? |11
+; Disconneting in 10 seconds, press a key to abort
+067 |CR|09Disconnecting in 10 seconds: Press a key to abort.
 068 |CR|12You do not have access to upload here!
 069 |CR|12Illegal filename.|DE|DE|DE
 070 |CR|14Searching for duplicate files ...
@@ -345,7 +347,7 @@
 ; One Liner header
 188 |CL|09з|$D77д|01©|CR|09Ё|17 ╠ |15One Liners|$D64 |01|16Ё|CR|09ю|01|$D77ды|CR
 ; One liner prompt
-189 |CR |09|$D77д|CR |01[|10Ч|01] |09Add to the one liners?
+189 |CR |09|$D77д|CR |01[|10Ч|01] |09Add to the one liners? |XX
 190 |CR|01[|10Ч|01] |09Enter your one liner:|CR
 191 |CR|12Unable to view archive.
 ; Archive view header  &1 = Filename
@@ -966,3 +968,7 @@
 492 |CR|09Forward message to which base (|10?|09/|10List|09): |11
 ; Sysop password prompt
 493 |CR|09Sysop Password: |XX
+; Normal msg reader: Remove from newscan? (after I command)
+494 |CR|12Remove |15|MB |12from message newscan? |XX
+; Lightbar msg reader: Remove from newscan (after I command)
+495 |CR|12Remove |15|MB |12from message newscan? |XX

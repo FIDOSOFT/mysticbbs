@@ -569,6 +569,7 @@ Begin
         DirFile.Read(Dir);
 
         If (Dir.Flags And FDirDeleted <> 0) Then Continue;
+        If (Dir.Flags and FDirOffline <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeOffline)) Then Continue;
         If (Dir.Flags And FDirInvalid <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeUnvalid)) Then Continue;
         If (Dir.Flags And FDirFailed  <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeFailed)) Then Continue;
 

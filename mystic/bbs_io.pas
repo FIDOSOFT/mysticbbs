@@ -474,9 +474,9 @@ Begin
     FmtString := False;
 
     Case FmtType of
-      1 : Str := strPadR(Str, FmtLen, ' ');
-      2 : Str := strPadL(Str, FmtLen, ' ');
-      3 : Str := strPadC(Str, FmtLen, ' ');
+      1  : Str := strPadR(Str, FmtLen, ' ');
+      2  : Str := strPadL(Str, FmtLen, ' ');
+      3  : Str := strPadC(Str, FmtLen, ' ');
     End;
   End;
 
@@ -928,6 +928,7 @@ Begin
   BufAddStr (#27 + '[K');
 End;
 
+(*
 Function TBBSIO.Pipe2Ansi (Color: Byte) : String;
 Begin
   Result := '';
@@ -967,8 +968,8 @@ Begin
     23: Result := Result + #27 + '[47m';
   End;
 End;
+*)
 
-(*
 Function TBBSIO.Pipe2Ansi (Color: Byte) : String;
 Var
   CurFG  : Byte;
@@ -1033,7 +1034,6 @@ Begin
     End;
   End;
 End;
-*)
 
 Function TBBSIO.Attr2Ansi (Attr: Byte) : String;
 Begin
@@ -1054,6 +1054,8 @@ End;
 Procedure TBBSIO.AnsiGotoXY (X: Byte; Y: Byte);
 Begin
   If Graphics = 0 Then Exit;
+
+  If (X = Screen.CursorX) and (Y = Screen.CursorY) Then Exit;
 
   If X = 0 Then X := Screen.CursorX;
   If Y = 0 Then Y := Screen.CursorY;
@@ -1138,8 +1140,9 @@ Var
   End;
 
 Begin
-  Result := False;
-  NoFile := True;
+  Result   := False;
+  NoFile   := True;
+  FileMode := 66;
 
   If (Pos(PathSep, FName) > 0) Then Begin
     If Not FileExist(FName) Then
