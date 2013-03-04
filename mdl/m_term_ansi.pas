@@ -153,8 +153,8 @@ Begin
 
   If (X + Offset) > 80 Then Begin
      Screen.CursorXY (80, Screen.CursorY);
-//    Screen.WriteChar(#10);  // force lf incase we have to scroll
-//    Screen.CursorXY(X + Offset - 80, Screen.CursorY);
+    //Screen.WriteChar(#10);  // force lf incase we have to scroll
+    //Screen.CursorXY(X + Offset - 80, Screen.CursorY);
   End Else
     Screen.CursorXY (x + offset, Screen.CursorY);
 
@@ -264,6 +264,15 @@ Begin
             #27 : State := 1;
             #9  : Screen.CursorXY (Screen.CursorX + 8, Screen.CursorY);
             #12 : Screen.ClearScreen;
+(*
+            #14,
+            #15 : Begin
+                    Screen.WriteChar('X');
+
+                    State    := 0;
+                    WasValid := True;
+                  End;
+*)
           Else
             Screen.WriteChar(Ch);
 
@@ -297,6 +306,15 @@ Begin
               #27 : State := 1;
               #9  : Screen.CursorXY (Screen.CursorX + 8, Screen.CursorY);
               #12 : Screen.ClearScreen;
+(*
+              #14,
+              #15 : Begin
+                      Screen.WriteChar('X');
+
+                      State    := 0;
+                      WasValid := True;
+                    End;
+*)
             Else
               Screen.WriteChar(Data[Count]);
               WasValid := True;
