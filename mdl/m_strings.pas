@@ -273,7 +273,8 @@ Begin
   Count  := 1;
   Temp   := Str;
 
-  While Pos(Ch, Temp) = 1 Do Delete (Temp, 1, 1);
+  If Ch = ' ' Then
+    While Pos(Ch, Temp) = 1 Do Delete (Temp, 1, 1);
 
   While Count < Num Do Begin
     Start := Pos(Ch, Temp);
