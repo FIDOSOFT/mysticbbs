@@ -23,7 +23,7 @@
 Const
   mysSoftwareID  = 'Mystic';                                    // no idea
   mysCopyYear    = '1997-2013';                                 // its been a long time!
-  mysVersion     = '1.10 A26';                                  // current version
+  mysVersion     = '1.10 A27';                                  // current version
   mysDataChanged = '1.10 A11';                                  // version of last records change
 
   {$IFDEF WIN32}
@@ -59,7 +59,7 @@ Const
   mysMaxMenuCmds     = 25;                                      // Max menu commands per item
   mysMaxMenuInput    = 12;
   mysMaxMenuStack    = 8;
-  mysMaxThemeText    = 495;                                     // Total prompts in theme file
+  mysMaxThemeText    = 503;                                     // Total prompts in theme file
 
   fn_SemFileEcho = 'echomail.now';
   fn_SemFileNews = 'newsmail.now';

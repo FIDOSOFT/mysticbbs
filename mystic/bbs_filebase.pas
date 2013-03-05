@@ -314,7 +314,10 @@ Var
 
     Case Mode of
       0  : Protocol^.SetDestinationDirectory(JustPath(FName));
-      1  : Protocol^.AddFileToList(FileList, FName);
+      1  : Begin
+             Protocol^.SetDestinationDirectory(JustPath(FName));
+             Protocol^.AddFileToList(FileList, FName);
+           End;
       2  : Protocol^.AddFileToList(FileList, FName);
       3  : Begin
              Assign (T, Session.TempPath + 'file.lst');

@@ -452,8 +452,8 @@
 238 |CR|12Your .REP packet was not found.|CR|CR|PA
 ; Displayed if the wrong QWK packet is uploaded
 239 |CR|12Your .REP packet is not for this BBS.|CR|PA
-; Processing reply packet
-240 |CR|01[|10þ|01] |09Processing reply packet|01...
+; Processing QWK reply packet
+240 |CR|01[|10þ|01] |09Processing QWK reply packet|01: |XX
 ; Voting booth header
 241 |CL|08|$D79Ä|CR|14Voting Booth |12(* = New Question)|CR|08|$D79Ä
 ; Voting booth question list format
@@ -539,7 +539,7 @@
 ; Save this question?
 281 |CR|12Save this voting question? |11
 ; Move message to where?
-282 |CR|09Move to which base (?/List): |XX
+282 |CR|09Move to which base (|10?|09/|10List|09): |XX
 ; Add BBS list: enter phone number
 283 |03Enter BBS phone number: |XX
 ; Add BBS list: enter BBS name
@@ -646,7 +646,8 @@
 340 |$D34 |07+ Uploader: |&1
 ; Line editor quote mode:  &1 = line number      &2 = line text
 341 |10|&1|02: |11|$R74|&2
-342 |CR|09Enter destination address: |XX
+; Netmail destination address (if no nodelist data)
+342 |CR|09Enter destination netmail address: |XX
 ; Upload file name prompt
 343 |CR|09File Name|CR:
 ; Download file name prompt
@@ -972,3 +973,22 @@
 494 |CR|12Remove |15|MB |12from message newscan? |XX
 ; Lightbar msg reader: Remove from newscan (after I command)
 495 |CR|12Remove |15|MB |12from message newscan? |XX
+; Netmail send address prompt with active nodelist searching
+496 |CR|09Enter netmail address or search criteria (|10?|09/|10Help|09): |11
+; Nodelist browser prompt
+497 |CR|09Enter nodelist search criteria (|10?|09/|10Help|09): |11
+; Nodelist search results header
+498 |CR|15Node         System Name                Location           SysOp               |CR|09============ ========================== ================== ====================
+; Node list search results
+; &1=addr  &2=bbsname  &3=location  &4=sysop  &5=phone  &6=internet
+499 |10|$R12|&1 |15|$R26|&2 |11|$R18|&3 |09|$R20|&4
+; Node list single result
+500 |CR|03    Address: |14|&1|CR|03System Name: |11|&2|CR|03   Location: |11|&3|CR|03   Operator: |11|&4|CR|03      Phone: |11|&5|CR|03   Internet: |11|&6
+; Node list search  "found X matches"  &1=# of matches
+501 |CR|03Found |11|&1 |03matches.
+; Netmail send confirmation
+; &1=addr  &2=bbsname  &3=location  &4=sysop  &5=phone  &6=internet  &7=to
+502 |CR|12Send netmail to |15|&7|07 at |15|&1|12? |11
+; QWK .REP complete/results prompt
+; &1=msgs imported  &2=msgs failed  &3=bases added to scan  &4=bases removed
+503 |10SUCCESS|01.|CR|CR|11- |03Posted |11|&1 |03new messages (|11|&2 |03failed)|CR|11- |03Added |11|&3 |03bases to new scan (|11|&4 |03removed).|CR|CR|PA

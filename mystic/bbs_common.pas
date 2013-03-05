@@ -142,7 +142,7 @@ Begin
   B := Pos('/', S);
   C := Pos('.', S);
 
-  If (A = 0) or (B = 0) Then Exit;
+  If (A = 0) or (B <= A) Then Exit;
 
   If C = 0 Then Begin
     Point      := False;

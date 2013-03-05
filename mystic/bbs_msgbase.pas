@@ -44,6 +44,7 @@ Type
     Function    GetTotalMessages    (Var TempBase: RecMessageBase) : LongInt;
     Procedure   PostTextFile        (Data: String; AllowCodes: Boolean);
     Function    SaveMessage         (mArea: RecMessageBase; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mLines: Integer) : Boolean;
+    Function    NetmailLookup       (FromMenu: Boolean; MsgTo, DefAddr: String) : String;
     Function    ListAreas           (Compress: Boolean) : Integer;
     Procedure   ChangeArea          (Data: String);
     Procedure   SetMessageScan;
@@ -79,6 +80,7 @@ Uses
   bbs_Core,
   bbs_User,
   bbs_NodeInfo,
+  bbs_NodeList,
   bbs_cfg_UserEdit;
 
 Const
@@ -123,6 +125,142 @@ End;
 Destructor TMsgBase.Destroy;
 Begin
   Inherited Destroy;
+End;
+
+Function TMsgBase.NetmailLookup (FromMenu: Boolean; MsgTo, DefAddr: String) : String;
+
+  Procedure ShowNode (ShowType: Byte; NodeData: RecNodeSearch; Ext: Boolean);
+  Var
+    Str : String;
+  Begin
+    Case ShowType of
+      0  : Str := strAddr2Str(NodeData.Address);
+      1,
+      2  : If NodeData.Keyword = 'ZONE' Then
+             Str := 'ZONE' + strPadL(strI2S(NodeData.Address.Zone), 8, ' ')
+           Else
+           If NodeData.Keyword = 'REGION' Then
+             Str := 'REGION' + strPadL(strI2S(NodeData.Address.Net), 6, ' ')
+           Else
+           If NodeData.Keyword = 'HOST' Then
+             Str := 'NET' + strPadL(strI2S(NodeData.Address.Net), 9, ' ');
+    End;
+
+    Session.io.PromptInfo[1] := Str;
+    Session.io.PromptInfo[2] := NodeData.BBSName;
+    Session.io.PromptInfo[3] := NodeData.Location;
+    Session.io.PromptInfo[4] := NodeData.SysopName;
+    Session.io.PromptInfo[5] := NodeData.Phone;
+    Session.io.PromptInfo[6] := NodeData.Internet;
+
+    If Ext Then
+      Session.io.OutFullLn(Session.GetPrompt(500))
+    Else
+      Session.io.OutFullLn(Session.GetPrompt(499));
+  End;
+
+Var
+  NodeList  : TNodeListSearch;
+  FirstNode : RecNodeSearch;
+  NodeData  : RecNodeSearch;
+  Listed    : LongInt;
+  ListType  : Byte;
+  HasList   : Boolean;
+Begin
+  HasList  := FileExist(Config.DataPath + 'nodelist.txt');
+  NodeList := TNodeListSearch.Create;
+
+  If HasList Then
+    Session.io.OutFile ('nodesearch', False, 0);
+
+  Repeat
+    If FromMenu Then
+      Session.io.OutFull (Session.GetPrompt(497))
+    Else
+      If HasList Then
+        Session.io.OutFull (Session.GetPrompt(496))
+      Else
+        Session.io.OutFull (Session.GetPrompt(342));
+
+    Result := strUpper(Session.io.GetInput(25, 25, 11, DefAddr));
+
+    If Result = '' Then Break;
+
+    If (Result = '?') and HasList Then Begin
+      Session.io.OutFile('nodesearch', False, 0);
+
+      Continue;
+    End;
+
+    If Not HasList Then Break;
+
+    ListType := 0;
+
+    If Pos('LIST ZONE', Result) > 0 Then Begin
+      ListType := 1;
+      Result   := '?:?/?';
+    End;
+
+    If Pos('LIST NET', Result) > 0 Then Begin
+      ListType := 2;
+      Result   := strWordGet(3, Result, ' ') + ':?/?';
+    End;
+
+    Listed := 0;
+
+    Session.io.PausePtr   := 1;
+    Session.io.AllowPause := True;
+
+    NodeList.ResetSearch(Config.DataPath + 'nodelist.txt', Result);
+
+    While NodeList.FindNext(NodeData) Do Begin
+      Case ListType of
+        0 : If NodeData.Keyword <> '' Then Continue;
+        1 : If NodeData.Keyword <> 'ZONE' Then Continue;
+        2 : If (NodeData.Keyword <> 'ZONE') and (NodeData.Keyword <> 'REGION') and (NodeData.Keyword <> 'HOST') Then Continue;
+      End;
+
+      Inc (Listed);
+
+      If Listed = 1 Then
+        FirstNode := NodeData
+      Else Begin
+        If Listed = 2 Then Begin
+          Session.io.OutFullLn (Session.GetPrompt(498));
+
+          ShowNode (ListType, FirstNode, False);
+        End;
+
+        ShowNode (ListType, NodeData, False);
+      End;
+
+      If (Session.io.PausePtr >= Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
+        Case Session.io.MorePrompt of
+          'N' : Break;
+          'C' : Session.io.AllowPause := False;
+        End;
+    End;
+
+    If (Listed = 1) and (ListType = 0) Then Begin
+      ShowNode(ListType, FirstNode, True);
+
+      If FromMenu Then Continue;
+
+      Session.io.PromptInfo[7] := MsgTo;
+
+      If Session.io.GetYN(Session.GetPrompt(502), True) Then Begin
+        Result := strAddr2Str(NodeData.Address);
+
+        Break;
+      End;
+    End Else Begin
+      Session.io.PromptInfo[1] := strComma(Listed);
+
+      Session.io.OutFullLn(Session.GetPrompt(501));
+    End;
+  Until False;
+
+  NodeList.Free;
 End;
 
 Function TMsgBase.IsQuotedText (Str: String) : Boolean;
@@ -926,11 +1064,9 @@ Begin
   Until False;
 
   If MBase.NetType = 3 Then Begin
-    Session.io.OutFull (Session.GetPrompt(342));
-
     MsgBase^.GetOrig(Addr);
 
-    TempStr := Session.io.GetInput(20, 20, 12, strAddr2Str(Addr));
+    TempStr := NetmailLookup(False, ToWho, strAddr2Str(Addr));
 
     If Not strStr2Addr (TempStr, Addr) Then Exit;
   End;
@@ -2582,13 +2718,12 @@ Begin
       MsgTo := Session.io.GetInput (30, 30, 18, '');
     End;
 
-    If MsgAddr = '' Then Begin
-      Session.io.OutFull (Session.GetPrompt(342));
+    If MsgTo <> '' Then
+      If MsgAddr = '' Then Begin
+        MsgAddr := NetmailLookup(False, MsgTo, '');
 
-      MsgAddr := Session.io.GetInput (20, 20, 12, '');
-
-      If Not strStr2Addr(MsgAddr, DestAddr) Then MsgTo := '';
-    End;
+        If Not strStr2Addr(MsgAddr, DestAddr) Then MsgTo := '';
+      End;
   End Else
   If MBase.Flags and MBPrivate <> 0 Then Begin
     If MsgTo = '' Then Begin
@@ -3896,19 +4031,23 @@ End;
 
 Procedure TMsgBase.UploadREP;
 Var
-  DataFile   : File;
-  TempBase   : RecMessageBase;
-  OldBase    : RecMessageBase;
-  QwkHeader  : QwkDATHdr;
-  QwkBlock   : String[128];
-  Line       : String;
-  A          : SmallInt;
-  B          : SmallInt;
-  Chunks     : SmallInt;
-  LineCount  : SmallInt;
-  IsControl  : Boolean;
-  GotControl : Boolean;
-  ExtFile    : Text;
+  DataFile    : File;
+  TempBase    : RecMessageBase;
+  OldBase     : RecMessageBase;
+  QwkHeader   : QwkDATHdr;
+  QwkBlock    : String[128];
+  Line        : String;
+  A           : SmallInt;
+  B           : SmallInt;
+  Chunks      : SmallInt;
+  LineCount   : SmallInt;
+  IsControl   : Boolean;
+  GotControl  : Boolean;
+  ExtFile     : Text;
+  StatOK      : LongInt = 0;
+  StatFailed  : LongInt = 0;
+  StatBaseAdd : LongInt = 0;
+  StatBaseDel : LongInt = 0;
 
   Procedure QwkControl (Idx: LongInt; Mode: Byte);
   Begin
@@ -3918,6 +4057,9 @@ Var
       GetMessageScan;
 
       MScan.QwkScan := Mode;
+
+      If Mode = 0 Then Inc (StatBaseDel);
+      If Mode = 1 Then Inc (StatBaseAdd);
 
       SetMessageScan;
     End;
@@ -3945,9 +4087,8 @@ Begin
   End;
 
   Assign (DataFile, FileFind(Session.TempPath + Config.qwkBBSID + '.msg'));
-  {$I-} Reset (DataFile, 1); {$I+}
 
-  If IoResult <> 0 Then Begin
+  If Not ioReset(DataFile, 1, fmRWDN) Then Begin
     Session.io.OutFull (Session.GetPrompt(238));
     DirClean (Session.TempPath, '');
     Exit;
@@ -3963,11 +4104,12 @@ Begin
     Exit;
   End;
 
-  Session.io.OutFullLn (Session.GetPrompt(240));
+  Session.io.OutFull (Session.GetPrompt(240));
 
   While Not Eof(DataFile) Do Begin
     BlockRead (DataFile, QwkHeader, SizeOf(QwkHeader));
-    Move (QwkHeader.MsgNum, QwkBlock[1], 7);
+    Move      (QwkHeader.MsgNum, QwkBlock[1], 7);
+
     QwkBlock[0] := #7;
 
     If GetBaseByIndex(strS2I(QwkBlock), TempBase) Then Begin
@@ -4041,18 +4183,21 @@ Begin
           MsgBase^.DoStringLn (' * Origin: ' + ResolveOrigin(TempBase) + ' (' + strAddr2Str(Config.NetAddress[TempBase.NetAddr]) + ')');
         End;
 
-        If Not IsControl Then MsgBase^.WriteMsg;
-
-        MsgBase^.CloseMsgBase;
-
         If Not IsControl Then Begin
+          MsgBase^.WriteMsg;
+
+          Inc (StatOK);
           Inc (Session.User.ThisUser.Posts);
           Inc (Session.HistoryPosts);
         End;
 
+        MsgBase^.CloseMsgBase;
+
         Dispose (MsgBase, Done);
-      End;
-    End;
+      End Else
+        Inc (StatFailed);
+    End Else
+      Inc (StatFailed);
   End;
 
   Close (DataFile);
@@ -4076,6 +4221,13 @@ Begin
   End;
 
   DirClean (Session.TempPath, '');
+
+  Session.io.PromptInfo[1] := strI2S(StatOK);
+  Session.io.PromptInfo[2] := strI2S(StatFailed);
+  Session.io.PromptInfo[3] := strI2S(StatBaseAdd);
+  Session.io.PromptInfo[4] := strI2S(StatBaseDel);
+
+  Session.io.OutFullLn(Session.GetPrompt(503));
 End;
 
 End.

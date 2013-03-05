@@ -27,6 +27,8 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- Blind upload for single file upload (also message upload)
+- Email validation
 - Recode FCHECK into MUTIL, but also add the option to phsyically delete the
   file record instead of marking it offline.
 - Add ability to ignore files from a files.bbs import

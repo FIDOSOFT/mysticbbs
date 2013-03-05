@@ -2583,3 +2583,62 @@
       mbbsutil -fcheck kill
 
    <ALPHA 26 RELEASED>
+
+ ! WordGet will now trim spaces off the beginning of the string, but only
+   when space is used as a word separator.  When something other than a
+   space is used, it will not trim anything.  This fixes a problem that
+   could cause the result to be incorrect when using non-space separators.
+
+ + Mystic now has a node address lookup option when sending NetMail.  This
+   search allows wildcard search by address, or text seaching of the BBS
+   name, SysOp name, location, phone and Internet address.  In addition, it
+   also has functions to list zones and specific nets within a zone, rather
+   than just nodes themselves.
+
+   To enable this feature, simply copy a raw FTN-style nodelist into the
+   data directory and name it "nodelist.txt".  Mystic is using a raw
+   uncompiled nodelist, because of lack of compilers and advancement in CPU
+   speed makes it much more feasible these days.
+
+   A new display file called "nodesearch.xxx" will be displayed if it exists
+   before the netmail address prompt, and when the user selects ?/help at the
+   prompt.  A nodesearch.asc file has been included in the new default
+   install.
+
+   The following new prompts must be added:
+
+      ; Netmail send address prompt with active nodelist searching
+      496 |CR|09Enter netmail address or search criteria (|10?|09/|10Help|09): |11
+
+      ; Nodelist browser prompt
+      497 |CR|09Enter nodelist search criteria (|10?|09/|10Help|09): |11
+
+      ; Nodelist search results header
+      498 |CR|15Node         System Name                Location           SysOp               |CR|09============ ========================== ================== ====================
+
+      ; Node list search results
+      ; &1=addr  &2=bbsname  &3=location  &4=sysop  &5=phone  &6=internet
+      499 |10|$R12|&1 |15|$R26|&2 |11|$R18|&3 |09|$R20|&4
+
+      ; Node list single result
+      500 |CR|03    Address: |14|&1|CR|03System Name: |11|&2|CR|03   Location: |11|&3|CR|03   Operator: |11|&4|CR|03      Phone: |11|&5|CR|03   Internet: |11|&6
+
+      ; Node list search  "found X matches"  &1=# of matches
+      501 |CR|03Found |11|&1 |03matches.
+
+      ; Netmail send confirmation
+      ; &1=addr  &2=bbsname  &3=location  &4=sysop  &5=phone  &6=internet  &7=to
+      502 |CR|12Send netmail to |15|&7|07 at |15|&1|12? |11
+
+ ! Fixed a bug with internal Zmodem uploads which would cause the upload to
+   not be detected by Mystic.
+
+ + After uploading a QWK .REP reply packet, Mystic will now display some
+   basic statistics of messages posted, or of failed imports.  A new prompt
+   must be added to go with this:
+
+      ; QWK .REP complete/results prompt
+      ; &1=msgs imported  &2=msgs failed  &3=bases added to scan  &4=bases removed
+      503 |10SUCCESS|01.|CR|CR|11- |03Posted |11|&1 |03new messages (|11|&2 |03failed)|CR|11- |03Added |11|&3 |03bases to new scan (|11|&4 |03removed).|CR|CR|PA
+
+   <ALPHA 27 RELEASED>
