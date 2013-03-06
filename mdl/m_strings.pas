@@ -172,7 +172,7 @@ Begin
   While Num <> 0 Do Begin
     Ch := Chr(48 + Byte(Num) AND $0F);
 
-    If Ch > '9' Then Inc (Ch, 7);
+    If Ch > '9' Then Inc (Ch, 39);
 
     Result[Idx] := Ch;
     Dec (Idx);
