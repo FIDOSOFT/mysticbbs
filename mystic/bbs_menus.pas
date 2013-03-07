@@ -258,6 +258,7 @@ Begin
             'C' : Session.Msgs.CheckEMail;
             'D' : Session.Msgs.SetMessagePointers;
             'G' : Session.Msgs.MessageGroupChange (CmdData, True, True);
+            'L' : Session.Msgs.NetMailLookup (True, '', '');
             'M' : Session.Msgs.SendMassEmail;
             'N' : Session.Msgs.MessageNewScan (strUpper(CmdData));
             'P' : Session.Msgs.PostMessage (False, CmdData);

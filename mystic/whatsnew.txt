@@ -2584,7 +2584,7 @@
 
    <ALPHA 26 RELEASED>
 
- ! WordGet will now trim spaces off the beginning of the string, but only
+ ! MPL WordGet will now trim spaces off the beginning of the string, but only
    when space is used as a word separator.  When something other than a
    space is used, it will not trim anything.  This fixes a problem that
    could cause the result to be incorrect when using non-space separators.
@@ -2596,9 +2596,10 @@
    than just nodes themselves.
 
    To enable this feature, simply copy a raw FTN-style nodelist into the
-   data directory and name it "nodelist.txt".  Mystic is using a raw
-   uncompiled nodelist, because of lack of compilers and advancement in CPU
-   speed makes it much more feasible these days.
+   data directory and name it "nodelist.txt".  Mystic is using raw uncompiled
+   nodelists.  The reason for this is due to a lack of nodelist compilers,
+   standards that are behind the times, and when combined with faster CPUs
+   and shrinking nodelist size it seems to make the most sense.
 
    A new display file called "nodesearch.xxx" will be displayed if it exists
    before the netmail address prompt, and when the user selects ?/help at the
@@ -2640,5 +2641,20 @@
       ; QWK .REP complete/results prompt
       ; &1=msgs imported  &2=msgs failed  &3=bases added to scan  &4=bases removed
       503 |10SUCCESS|01.|CR|CR|11- |03Posted |11|&1 |03new messages (|11|&2 |03failed)|CR|11- |03Added |11|&3 |03bases to new scan (|11|&4 |03removed).|CR|CR|PA
+
+ + Added new menu command ML (Nodelist Browser).  This kicks off the new
+   nodelist browser, just in case someone would like to use it outside of
+   sending a netmail.
+
+ + Complete rewrote the MIS telnet server for Unix platforms.  It should be
+   much faster now.  There is no reason not to use MIS now at all and you
+   should switch to it as soon as possible - at least if you want to take
+   advantage of future features that will require MIS (new event system, FTN
+   mailer and tosser, etc).
+
+ ! Fixed all known issues with MIS and STDIO redirection.  DOSEMU works
+   great now, and is pretty easy to setup.  Check the new section in the
+   Linux installation document for a tutorial on how to set up a DOS door
+   in DOSEMU with Mystic!
 
    <ALPHA 27 RELEASED>

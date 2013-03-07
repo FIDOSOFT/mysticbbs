@@ -70,9 +70,7 @@ Var
   TopPage      : Integer;
   BarPos       : Integer;
   NodeData     : TNodeData;
-  {$IFDEF UNIX}
   DaemonMode   : Boolean = False;
-  {$ENDIF}
 
 {$I MIS_ANSIWFC.PAS}
 
@@ -89,9 +87,13 @@ Begin
     If DatLoc <> '' Then DatLoc := DirSlash(DatLoc);
 
     If Not FileConfig.Open(DatLoc + 'mystic.dat', fmOpen, fmReadWrite + fmDenyNone, SizeOf(RecConfig)) Then Begin
-      WriteLn;
-      WriteLn ('ERROR: Unable to read MYSTIC.DAT.  This file must exist in the same');
-      WriteLn ('directory as MIS');
+      If Not DaemonMode Then Begin
+        Console.WriteLine (#13#10 + 'ERROR: Unable to read MYSTIC.DAT.  This file must exist in the same');
+        Console.WriteLine ('directory as MIS');
+
+        Keyboard.Free;
+        Console.Free;
+      End;
 
       FileConfig.Free;
 

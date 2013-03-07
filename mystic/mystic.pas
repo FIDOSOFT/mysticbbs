@@ -23,8 +23,6 @@ Program Mystic;
 
 {$I M_OPS.PAS}
 
-{.$DEFINE EDITWORK}
-
 Uses
   {$IFDEF DEBUG}
     HeapTrc,
@@ -46,12 +44,12 @@ Uses
   bbs_Common,
   bbs_Core,
   bbs_NodeInfo,
-  {$IFDEF EDITWORK}
+  {$IFDEF NEWEDITOR}
   bbs_edit_ansi,
   {$ENDIF}
   bbs_Cfg_Main;
 
-{$IFDEF EDITWORK}
+{$IFDEF NEWEDITOR}
 Procedure TestEditor;
 Var
   T : TEditorANSI;
@@ -486,9 +484,9 @@ Begin
 
   Set_Node_Action (Session.GetPrompt(345));
 
-  {$IFDEF EDITWORK}
-  TestEditor;
-  Halt(0);
+  {$IFDEF NEWEDITOR}
+  //TestEditor;
+  //Halt(0);
   {$ENDIF}
 
   Session.User.UserLogon1 (UserName, Password, Script);

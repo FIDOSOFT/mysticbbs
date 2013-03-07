@@ -55,7 +55,6 @@ Type
     Procedure   WriteLine    (Line: Word; Flush: Boolean);
     Procedure   DrawLine     (Y, Line: Word; Flush: Boolean);
     Procedure   DrawPage     (pStart, pEnd, pLine: Word);
-    Function    GetLineText  (Line: Word) : String;
     Procedure   SetLineColor (Attr, Line: Word);
     Procedure   RemoveLine   (Line: Word);
   End;
@@ -241,9 +240,7 @@ Begin
   If Offset = 0 Then Offset := 1;
 
   If CurX + Offset > 80 Then Begin
-  NewPos := 80;
-//    NewPos := (CurX + Offset) - 80;
-//    Inc (CurY);
+    NewPos := 80;
   End Else
     NewPos := CurX + Offset;
 
@@ -457,18 +454,6 @@ Begin
   End;
 
   Session.io.BufFlush;
-End;
-
-Function TMsgBaseAnsi.GetLineText (Line: Word) : String;
-Var
-  Count : Word;
-Begin
-  Result := '';
-
-  If Line > Lines Then Exit;
-
-  For Count := 1 to 80 Do
-    Result := Result + Data[Line][Count].Ch;
 End;
 
 Procedure TMsgBaseAnsi.SetLineColor (Attr, Line: Word);

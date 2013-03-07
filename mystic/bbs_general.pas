@@ -12,7 +12,11 @@ Uses
     bbs_SysopChat,
   {$ENDIF}
   bbs_Common,
+  {$IFDEF NEWEDITOR}
+  bbs_Edit_ANSI,
+  {$ELSE}
   bbs_Edit_Full,
+  {$ENDIF}
   bbs_Edit_Line;
 
 Function  Editor (Var Lines: SmallInt; MaxLen, MaxLine: SmallInt; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
@@ -52,10 +56,38 @@ Uses
   bbs_MsgBase_Ansi,
   bbs_NodeInfo;
 
+{$IFDEF NEWEDITOR}
+Function AnsiEditor (Var Lines: SmallInt; WrapPos: Byte; MaxLines: SmallInt; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
+Var
+  Editor : TEditorANSI;
+  Count  : LongInt;
+Begin
+  Editor := TEditorANSI.Create(Pointer(Session));
+
+  For Count := 1 to Lines Do
+    Editor.SetLineText (Count, Session.Msgs.MsgText[Count]);
+
+  Result := Editor.Edit;
+
+  If Result Then Begin
+    For Count := 1 to Editor.LastLine Do
+      Session.Msgs.MsgText[Count] := Editor.GetLineText(Count);
+
+    Lines := Editor.LastLine;
+  End;
+
+  Editor.Free;
+End;
+{$ENDIF}
+
 Function Editor (Var Lines: SmallInt; MaxLen, MaxLine: SmallInt; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
 Begin
   If (Session.io.Graphics > 0) and ((Session.User.ThisUser.EditType = 1) or ((Session.User.ThisUser.EditType = 2) and Session.io.GetYN(Session.GetPrompt(106), True))) Then
+    {$IFDEF NEWEDITOR}
     Editor := AnsiEditor(Lines, MaxLen, MaxLine, Forced, Template, Subj)
+    {$ELSE}
+    Editor := FullEditor(Lines, MaxLen, MaxLine, Forced, Template, Subj)
+    {$ENDIF}
   Else
     Editor := LineEditor(Lines, MaxLen, MaxLine, False, Forced, Subj);
 End;

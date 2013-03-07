@@ -1,16 +1,26 @@
-{$I M_OPS.PAS}
-
 Unit MIS_Client_Telnet;
+
+{$I M_OPS.PAS}
 
 Interface
 
+{$IFDEF LINUX}
+  {$IFDEF CPU32}
+    {$LinkLib libutil.a}
+  {$ENDIF}
+  {$IFDEF CPU64}
+    {$LinkLib libutil_64.a}
+  {$ENDIF}
+{$ENDIF}
+
 Uses
-  {$IFDEF UNIX}
-    Unix,
-    Classes,
+  {$IFDEF DARWIN}
     Process,
-    SysUtils,
-    m_FileIO,
+    m_DateTime,
+  {$ENDIF}
+  {$IFDEF UNIX}
+    BaseUnix,
+    Unix,
   {$ENDIF}
   {$IFDEF WINDOWS}
     Windows,
@@ -23,13 +33,16 @@ Uses
   MIS_NodeData,
   MIS_Server;
 
+{$IFDEF LINUX}
+  function forkpty(__amaster:Plongint; __name:Pchar; __termp:Pointer; __winp:Pointer):longint;cdecl;external 'c' name 'forkpty';
+{$ENDIF}
+
 Function CreateTelnet (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
-{ must match server create or there will be access violations }
 
 Type
   TTelnetServer = Class(TServerClient)
-    ND       : TNodeData;
-//    Snooping : Boolean;
+    ND : TNodeData;
+
     Constructor Create (Owner: TServerManager; ND: TNodeData; CliSock: TIOSocket);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
@@ -46,8 +59,7 @@ Constructor TTelnetServer.Create (Owner: TServerManager; ND: TNodeData; CliSock:
 Begin
   Inherited Create(Owner, CliSock);
 
-  Self.ND  := ND;
-//  Snooping := False;
+  Self.ND := ND;
 End;
 
 {$IFDEF WINDOWS}
@@ -107,7 +119,87 @@ Begin
 End;
 {$ENDIF}
 
-{$IFDEF UNIX}
+{$IFDEF LINUX}
+Procedure TTelnetServer.Execute;
+Var
+  Num     : LongInt;
+  NI      : TNodeInfoRec;
+  PID     : LongInt;
+  PTYFD   : LongInt;
+  RDFDSET : TFDSet;
+  Count   : LongInt;
+  Buffer  : Array[1..8 * 1024] of Char;
+  MaxFD   : LongInt;
+Begin
+  Client.FTelnetServer := True;
+
+  Num := ND.GetFreeNode;
+
+  PID := ForkPTY (@PTYFD, NIL, NIL, NIL);
+
+  If PID = 0 Then Begin
+    fpSetSID;
+    //tcSetPGrp (0, fpGetPID);
+
+    fpExecLP ('./mystic', ['-n' + strI2S(Num), '-TID' + strI2S(Client.FSocketHandle), '-IP' + Client.FPeerIP, '-HOST' + Client.FPeerName]);
+
+    Exit;
+  End Else
+  If PID = -1 Then
+    Exit;
+
+  FillChar (NI, SizeOf(NI), 0);
+
+  NI.Num    := Num;
+  NI.Busy   := True;
+  NI.IP     := Client.FPeerIP;
+  NI.User   := 'Unknown';
+  NI.Action := 'Logging In';
+
+  ND.SetNodeInfo(Num, NI);
+
+  MaxFD := Client.FSocketHandle;
+
+  If PTYFD > Client.FSocketHandle Then MaxFD := PTYFD;
+
+  Repeat
+    fpFD_ZERO (RDFDSET);
+    fpFD_SET  (PTYFD, RDFDSET);
+    fpFD_SET  (Client.FSocketHandle, RDFDSET);
+
+    If fpSelect (MaxFD + 1, @RDFDSET, NIL, NIL, 3000) < 0 Then Break;
+
+    If fpFD_ISSET(PTYFD, RDFDSET) = 1 Then Begin
+      Count := fpRead (PTYFD, Buffer, SizeOf(Buffer));
+
+      If Count <= 0 Then Break;
+
+      Client.WriteBuf (Buffer, Count);
+    End;
+
+    If fpFD_ISSET(Client.FSocketHandle, RDFDSET) = 1 Then Begin
+      Count := Client.ReadBuf (Buffer, SizeOf(Buffer));
+
+      If Count < 0 Then Break;
+
+      If fpWrite (PTYFD, Buffer, Count) <> Count Then Break;
+    End;
+  Until False;
+
+  fpClose (PTYFD);
+
+  NI.Busy   := False;
+  NI.IP     := '';
+  NI.User   := '';
+  NI.Action := '';
+
+  ND.SetNodeInfo(Num, NI);
+
+  FileErase (bbsConfig.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
+End;
+{$ENDIF}
+
+{$IFDEF DARWIN}
 Procedure TTelnetServer.Execute;
 Var
   Cmd    : String;
@@ -152,7 +244,7 @@ Begin
         Proc.Input.Write(Buffer, bWrite);
       End;
     End Else
-      Sleep(10);
+      WaitMS(10);
   End;
 
   Proc.Free;

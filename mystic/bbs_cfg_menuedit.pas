@@ -30,7 +30,7 @@ Type
   End;
 
 Const
-  Num_Cmds = 100;
+  Num_Cmds = 101;
   MenuCmds : Array[1..Num_Cmds] of CmdRec = (
     // AUTOSIG MENU COMMANDS
     (  Name: 'AE';   Desc: 'Autosig editor'               ),
@@ -89,6 +89,7 @@ Const
     (  Name: 'MC';   Desc: 'Check e-mail'                 ),
     (  Name: 'MD';   Desc: 'Set msg newscan date'         ),
     (  Name: 'MG';   Desc: 'Message group change'         ),
+    (  Name: 'ML';   Desc: 'Nodelist browser'             ),
     (  Name: 'MM';   Desc: 'Send mass e-mail'             ),
     (  Name: 'MN';   Desc: 'Message new scan'             ),
     (  Name: 'MP';   Desc: 'Post a message'               ),

@@ -102,7 +102,7 @@
 041 |CL|09Ú|$D77Ä¿|CR³|17 ± |15File Listing|$L61|FB |16|01³|CR|09À|01|$D77ÄÙ
 ; Standard file list: #/filename:
 ; &1 = filenum, &2 = filename, &3 = tag char &4 = size &5 = date &6 = DLs
-042  |07|&1|12|&3|15|$R58|&2 |09|$L06|&4 |&5
+042  |07|&1|12|&3|15|$R57|&2 |09|$L07|&4 |&5
 ; Standard file list: description/info
 ; &1 = size, &2 = date, &3 = DLs, &4 = desc, &5 = uploader
 043 |07|$D29 |&4
@@ -823,7 +823,7 @@
 430
 ; Lightbar file list: #/filename:
 ; &1 = filenum, &2 = filename, &3 = tag char &4 = size &5 = date &6 = DLs
-431  |07|&1|12|&3|15|$R58|&2 |09|$L06|&4 |&5
+431  |07|&1|12|&3|15|$R57|&2 |09|$L07|&4 |&5
 ; Lightbar file list: highlight on: &1 = #, &2 = filename, &3 = tag char
 432 |16 |01|23|&1|16|12|&3
 ; Lightbar file list: highlight off: &1 = #, &2 = filename, &3 = tag char

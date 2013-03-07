@@ -4,7 +4,7 @@ Unit bbs_Edit_Full;
 
 Interface
 
-Function AnsiEditor (Var Lines: SmallInt; WrapPos: Byte; MaxLines: SmallInt; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
+Function FullEditor (Var Lines: SmallInt; WrapPos: Byte; MaxLines: SmallInt; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
 
 Implementation
 
@@ -18,7 +18,7 @@ Begin
   Session.io.BufAddStr(S + #13#10);
 End;
 
-Function AnsiEditor (Var Lines: Integer; WrapPos: Byte; MaxLines: Integer; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
+Function FullEditor (Var Lines: Integer; WrapPos: Byte; MaxLines: Integer; Forced: Boolean; Template: String; Var Subj: String) : Boolean;
 Const
   MaxCutText = 100;
 Type

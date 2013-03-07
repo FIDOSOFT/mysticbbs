@@ -2,16 +2,15 @@ Unit bbs_Edit_Ansi;
 
 {$I M_OPS.PAS}
 
-Interface
+// modes
+//   viewer
+//   msgedit
+//   ansiedit
 
-// Future online pipe/ansi editor and new full screen editor.
-// Will be the most badass editor to ever exist.
+Interface
 
 Uses
   bbs_MsgBase_ANSI;
-
-Const
-  MaxLines = 1000;
 
 Type
   TEditorANSI = Class
@@ -46,6 +45,8 @@ Type
     Procedure   TrimLine      (Var Line; LineSize: Byte);
     Procedure   DeleteLine    (Line: LongInt);
     Procedure   InsertLine    (Line: LongInt);
+    Function    GetLineText   (Line: Word) : String;
+    Procedure   SetLineText   (Line: LongInt; Str: String);
     Procedure   FindLastLine;
     Procedure   Reformat;
     Procedure   LocateCursor;
@@ -71,6 +72,7 @@ Implementation
 Uses
   m_Strings,
   bbs_Core,
+  bbs_Common,
   bbs_Ansi_MenuBox;
 
 Constructor TEditorANSI.Create (Var O: Pointer);
@@ -105,11 +107,33 @@ Begin
   ANSI.Free;
 End;
 
+Function TEditorANSI.GetLineText (Line: Word) : String;
+Var
+  Count : Word;
+Begin
+  Result := '';
+
+  For Count := 1 to GetLineLength(ANSI.Data[Line], RowSize) Do
+    Result := Result + ANSI.Data[Line][Count].Ch;
+End;
+
+Procedure TEditorANSI.SetLineText (Line: LongInt; Str: String);
+Var
+  Count : Byte;
+Begin
+  FillChar (ANSI.Data[Line], SizeOf(ANSI.Data[Line]), 0);
+
+  For Count := 1 to Length(Str) Do Begin
+    ANSI.Data[Line][Count].Ch   := Str[Count];
+    ANSI.Data[Line][Count].Attr := CurAttr;
+  End;
+End;
+
 Procedure TEditorANSI.FindLastLine;
 Var
   Count : LongInt;
 Begin
-  LastLine := MaxLines;
+  LastLine := mysMaxMsgLines;
 
   While (LastLine > 1) And IsBlankLine(ANSI.Data[LastLine], 80) Do
     Dec(LastLine);
@@ -176,10 +200,10 @@ Procedure TEditorANSI.DeleteLine (Line: LongInt);
 Var
   Count : LongInt;
 Begin
-  For Count := Line to MaxLines - 1 Do
+  For Count := Line to mysMaxMsgLines - 1 Do
     ANSI.Data[Count] := ANSI.Data[Count + 1];
 
-  FillChar (ANSI.Data[MaxLines], SizeOf(RecAnsiBufferLine), #0);
+  FillChar (ANSI.Data[mysMaxMsgLines], SizeOf(RecAnsiBufferLine), #0);
 
   If LastLine > 1 Then Dec(LastLine);
 End;
@@ -188,12 +212,12 @@ Procedure TEditorANSI.InsertLine (Line: LongInt);
 Var
   Count : LongInt;
 Begin
-  For Count := MaxLines DownTo Line + 1 Do
+  For Count := mysMaxMsgLines DownTo Line + 1 Do
     ANSI.Data[Count] := ANSI.Data[Count - 1];
 
   FillChar(ANSI.Data[Line], SizeOf(RecAnsiBufferLine), #0);
 
-  If LastLine < MaxLines Then Inc(LastLine);
+  If LastLine < mysMaxMsgLines Then Inc(LastLine);
 End;
 
 Function TEditorANSI.GetWrapPos (Var Line; LineSize: Byte; WrapPos: Byte) : Byte;
@@ -255,7 +279,7 @@ Begin
   StartY    := CurY;
   StartLine := Count;
 
-  While Count <= MaxLines Do Begin
+  While Count <= mysMaxMsgLines Do Begin
     If Count > LastLine Then LastLine := Count;
 
     FillChar (TempStr, SizeOf(TempStr), #0);
@@ -265,7 +289,7 @@ Begin
       If IsBlankLine(TempStr, 255) Then Begin
         If Count < LastLine Then Begin
           InsertLine(Count);
-          EndLine := MaxLines;
+          EndLine := mysMaxMsgLines;
         End Else
           EndLine := Count;
 
@@ -373,7 +397,7 @@ Begin
   CurY     := 1;
   ClearEOL := RowSize >= 79;
 
-  LoadANSI;
+  //LoadANSI;
   FindLastLine;
 
   DrawPage(1, WinSize, False);
@@ -457,7 +481,7 @@ Var
 Begin
   NewTop := TopLine + (WinSize DIV 2) + 1;
 
-  While NewTop >= MaxLines Do
+  While NewTop >= mysMaxMsgLines Do
     Dec (NewTop, 2);
 
   CurY    := CurLine - NewTop + 1;
@@ -488,7 +512,7 @@ Function TEditorANSI.LineDown (Reset: Boolean) : Boolean;
 Begin
   Result := False;
 
-  If CurLine >= MaxLines Then Exit;
+  If CurLine >= mysMaxMsgLines Then Exit;
 
   Inc (CurLine);
   Inc (CurY);
@@ -766,7 +790,7 @@ Procedure TEditorANSI.DoEnter;
 Var
   TempLine : RecAnsiBufferLine;
 Begin
-  If InsertMode and IsBlankLine(ANSI.Data[MaxLines], 80) Then Begin
+  If InsertMode and IsBlankLine(ANSI.Data[mysMaxMsgLines], 80) Then Begin
     If CurX > CurLength Then Begin
       InsertLine (CurLine + 1);
 
@@ -835,6 +859,8 @@ Begin
                  DoChar(Ch);
       End;
   End;
+
+  Result := True;
 End;
 
 End.

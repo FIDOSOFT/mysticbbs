@@ -74,10 +74,9 @@ Begin
   A := Pos(':', SearchStr);
   B := Pos('/', SearchStr);
 
-  If (A = 0) or (B <= A) Then
-    AddrSearch := False
-  Else Begin
-    AddrSearch := True;
+  AddrSearch := Not (A = 0) or (B <= A);
+
+  If AddrSearch Then Begin
     SearchZone := Copy(SearchStr, 1, A - 1);
     SearchNet  := Copy(SearchStr, A + 1, B - 1 - A);
     SearchNode := Copy(SearchStr, B + 1, 255);

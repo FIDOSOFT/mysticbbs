@@ -27,6 +27,12 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- Option for QuickScan that only prints a base if it has new messages.
+- QWK via email
+- Either add Public/Private fusion type message base or allow reply via
+  email or netmail option.
+- mUTIL scans MSGS directory and auto-creates anything that has data files
+  not related to a BBS message base
 - Blind upload for single file upload (also message upload)
 - Email validation
 - Recode FCHECK into MUTIL, but also add the option to phsyically delete the
