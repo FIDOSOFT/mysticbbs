@@ -6,15 +6,21 @@ Interface
 
 Uses
   Classes,
-  m_Socket_Class;
+  m_IO_Sockets;
+
+Const
+  MaxStatusText = 20;
 
 Type
   TServerManager    = Class;
   TServerClient     = Class;
-  TServerCreateProc = Function (Manager: TServerManager; Client: TSocketClass): TServerClient;
+  TServerCreateProc = Function (Manager: TServerManager; Client: TIOSocket): TServerClient;
 
   TServerManager = Class(TThread)
-    Server        : TSocketClass;
+    Critical      : TRTLCriticalSection;
+    Server        : TIOSocket;
+    ServerStatus  : TStringList;
+    StatusUpdated : Boolean;
     ClientList    : TList;
     NewClientProc : TServerCreateProc;
     ClientMax     : LongInt;
@@ -30,16 +36,16 @@ Type
     Destructor  Destroy; Override;
     Procedure   Execute; Override;
     Function    CheckIP (IP, Mask: String) : Boolean;
-    Function    IsBlockedIP (Var Client: TSocketClass) : Boolean;
-    Function    DuplicateIPs (Var Client: TSocketClass) : Byte;
-//    Procedure   Status (Str: String);
+    Function    IsBlockedIP (Var Client: TIOSocket) : Boolean;
+    Function    DuplicateIPs (Var Client: TIOSocket) : Byte;
+    Procedure   Status (Str: String);
   End;
 
   TServerClient = Class(TThread)
-    Client  : TSocketClass;
+    Client  : TIOSocket;
     Manager : TServerManager;
 
-    Constructor Create (Owner: TServerManager; CliSock: TSocketClass);
+    Constructor Create (Owner: TServerManager; CliSock: TIOSocket);
     Destructor  Destroy; Override;
   End;
 
@@ -58,6 +64,8 @@ Var
 Begin
   Inherited Create(False);
 
+  InitCriticalSection(Critical);
+
   Port          := PortNum;
   ClientMax     := Max;
   ClientRefused := 0;
@@ -66,9 +74,11 @@ Begin
   ClientActive  := 0;
   ClientMaxIPs  := 0;
   NewClientProc := CreateProc;
-  Server        := TSocketClass.Create;
+  Server        := TIOSocket.Create;
+  ServerStatus  := TStringList.Create;
   ClientList    := TList.Create;
   TextPath      := '';
+  StatusUpdated := False;
 
   For Count := 1 to ClientMax Do
     ClientList.Add(NIL);
@@ -76,17 +86,38 @@ Begin
   FreeOnTerminate := False;
 End;
 
-(*
 Procedure TServerManager.Status (Str: String);
+Var
+  Res : String;
 Begin
-  If Server.SocketStatus = NIL Then
-    While Server.SocketStatus = NIL Do Begin
-      WriteLn('ITS NIL');
-    End;
+  If ServerStatus = NIL Then Exit;
 
-  Server.Status(Str);
+  EnterCriticalSection(Critical);
+
+  Try
+    If ServerStatus.Count > MaxStatusText Then
+      ServerStatus.Delete(0);
+
+    Res := '(' + Copy(DateDos2Str(CurDateDos, 1), 1, 5) + ' ' + TimeDos2Str(CurDateDos, False) + ') ' + Str;
+
+    If Length(Res) > 74 Then Begin
+      ServerStatus.Add(Copy(Res, 1, 74));
+
+      If ServerStatus.Count > MaxStatusText Then
+        ServerStatus.Delete(0);
+
+      ServerStatus.Add(strRep(' ', 14) + Copy(Res, 75, 255));
+    End Else
+      ServerStatus.Add(Res);
+  Except
+    { ignore exceptions here -- happens when socketstatus is NIL}
+    { need to review criticals now that they are in FP's RTL}
+  End;
+
+  StatusUpdated := True;
+
+  LeaveCriticalSection(Critical);
 End;
-*)
 
 Function TServerManager.CheckIP (IP, Mask: String) : Boolean;
 Var
@@ -122,7 +153,7 @@ Begin
   End;
 End;
 
-Function TServerManager.IsBlockedIP (Var Client: TSocketClass) : Boolean;
+Function TServerManager.IsBlockedIP (Var Client: TIOSocket) : Boolean;
 Var
   TF  : Text;
   Str : String;
@@ -146,7 +177,7 @@ Begin
   Close (TF);
 End;
 
-Function TServerManager.DuplicateIPs (Var Client: TSocketClass) : Byte;
+Function TServerManager.DuplicateIPs (Var Client: TIOSocket) : Byte;
 Var
   Count : Byte;
 Begin
@@ -154,22 +185,22 @@ Begin
 
   For Count := 0 to ClientMax - 1 Do
     If ClientList[Count] <> NIL Then
-      If Client.PeerIP = TSocketClass(ClientList[Count]).PeerIP Then
+      If Client.PeerIP = TIOSocket(ClientList[Count]).PeerIP Then
         Inc(Result);
 End;
 
 Procedure TServerManager.Execute;
 Var
-  NewClient : TSocketClass;
+  NewClient : TIOSocket;
 Begin
   Repeat Until Server <> NIL;  // Synchronize with server class
-  Repeat Until Server.SocketStatus <> NIL; // Syncronize with status class
+  Repeat Until ServerStatus <> NIL; // Syncronize with status class
 
   Server.WaitInit(Port);
 
   If Terminated Then Exit;
 
-  Server.Status('Opening server socket on port ' + strI2S(Port));
+  Status('Opening server socket on port ' + strI2S(Port));
 
   Repeat
     NewClient := Server.WaitConnection;
@@ -178,30 +209,30 @@ Begin
 
     If (ClientMax > 0) And (ClientActive >= ClientMax) Then Begin
       Inc (ClientRefused);
-      Server.Status ('BUSY: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
+      Status ('BUSY: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
       If Not NewClient.WriteFile(TextPath + 'busy.txt') Then NewClient.WriteLine('BUSY');
       NewClient.Free;
     End Else
     If IsBlockedIP(NewClient) Then Begin
       Inc (ClientBlocked);
-      Server.Status('BLOCK: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
+      Status('BLOCK: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
       If Not NewClient.WriteFile(TextPath + 'blocked.txt') Then NewClient.WriteLine('BLOCKED');
       NewClient.Free;
     End Else
     If (ClientMaxIPs > 0) and (DuplicateIPs(NewClient) > ClientMaxIPs) Then Begin
       Inc (ClientRefused);
-      Server.Status('MULTI: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
+      Status('MULTI: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
       If Not NewClient.WriteFile(TextPath + 'dupeip.txt') Then NewClient.WriteLine('Only ' + strI2S(ClientMaxIPs) + ' connection(s) per user');
       NewClient.Free;
     End Else Begin
       Inc (ClientTotal);
       Inc (ClientActive);
-      Server.Status ('Connect: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
+      Status ('Connect: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
       NewClientProc(Self, NewClient);
     End;
   Until Terminated;
 
-  Server.Status ('Shutting down server...');
+  Status ('Shutting down server...');
 End;
 
 Destructor TServerManager.Destroy;
@@ -228,12 +259,13 @@ Begin
   End;
 
   ClientList.Free;
+  ServerStatus.Free;
   Server.Free;
 
   Inherited Destroy;
 End;
 
-Constructor TServerClient.Create (Owner: TServerManager; CliSock: TSocketClass);
+Constructor TServerClient.Create (Owner: TServerManager; CliSock: TIOSocket);
 Var
   Count : Byte;
 Begin
@@ -258,7 +290,7 @@ Begin
   Manager.ClientList[Manager.ClientList.IndexOf(Self)] := NIL;
 
   If Manager.Server <> NIL Then
-    Manager.Server.StatusUpdated := True;
+    Manager.StatusUpdated := True;
 
   Dec (Manager.ClientActive);
 
