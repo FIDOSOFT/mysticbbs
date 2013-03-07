@@ -647,11 +647,10 @@ Begin
     End;
 End;
 
+(*
 Procedure TMsgBase.ToggleNewScan (QWK: Boolean; Data: String);
-Var
-  Total: LongInt;
 
-  Procedure List_Bases;
+  Procedure NewScanListBases;
   Begin
     Session.io.PausePtr   := 1;
     Session.io.AllowPause := True;
@@ -679,9 +678,67 @@ Var
         GetMessageScan;
 
         If ((MScan.NewScan > 0) And Not QWK) or ((MScan.QwkScan > 0) And QWK) Then
-          Session.io.PromptInfo[3] := 'Yes'
+          Session.io.PromptInfo[3] := 'Yes' {++lang++}
         Else
-          Session.io.PromptInfo[3] := 'No';
+          Session.io.PromptInfo[3] := 'No'; {++lang++}
+
+        Session.io.OutFull (Session.GetPrompt(93));
+
+        If (Total MOD Config.MColumns = 0) And (Total > 0) Then Session.io.OutRawLn('');
+      End;
+
+      If EOF(MBaseFile) and (Total MOD Config.MColumns <> 0) Then Session.io.OutRawLn('');
+
+      If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
+        Case Session.io.MorePrompt of
+          'N' : Break;
+          'C' : Session.io.AllowPause := False;
+        End;
+    End;
+
+    Session.io.OutFull (Session.GetPrompt(430));
+  End;
+
+Begin
+End;
+*)
+
+Procedure TMsgBase.ToggleNewScan (QWK: Boolean; Data: String);
+Var
+  Total: LongInt;
+
+  Procedure List_Bases;
+  Begin
+    Session.io.PausePtr   := 1;
+    Session.io.AllowPause := True;
+
+    If QWK Then
+      Session.io.OutFullLn (Session.GetPrompt(90))
+    Else
+      Session.io.OutFullLn (Session.GetPrompt(91));
+
+    Session.io.OutFullLn (Session.GetPrompt(92));
+
+    Total    := 0;
+    FileMode := 66;
+
+    Reset (MBaseFile);
+
+    While Not Eof(MBaseFile) Do Begin
+      Read (MBaseFile, MBase);
+
+      If Session.User.Access(MBase.ListACS) Then Begin
+        Inc (Total);
+
+        Session.io.PromptInfo[1] := strI2S(Total);
+        Session.io.PromptInfo[2] := MBase.Name;
+
+        GetMessageScan;
+
+        If ((MScan.NewScan > 0) And Not QWK) or ((MScan.QwkScan > 0) And QWK) Then
+          Session.io.PromptInfo[3] := 'Yes' {++lang++}
+        Else
+          Session.io.PromptInfo[3] := 'No'; {++lang++}
 
         Session.io.OutFull (Session.GetPrompt(93));
 
@@ -704,7 +761,8 @@ Var
   Var
     B : Word;
   Begin
-    B := 0;
+    B        := 0;
+    FileMode := 66;
 
     Reset (MBaseFile);
 
@@ -3924,8 +3982,9 @@ Begin
   If Session.User.ThisUser.QwkFiles Then
     Session.FileBase.ExportFileList(True, True);
 
-  Old  := MBase;
-  Temp := strPadR('Produced By ' + mysSoftwareID + ' BBS v' + mysVersion + '. ' + CopyID, 128, ' ');
+  FileMode := 66;
+  Old      := MBase;
+  Temp     := strPadR('Produced By ' + mysSoftwareID + ' BBS v' + mysVersion + '. ' + CopyID, 128, ' ');
 
   Assign     (DataFile, Session.TempPath + 'messages.dat');
   ReWrite    (DataFile, 1);

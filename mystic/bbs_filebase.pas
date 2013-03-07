@@ -1156,6 +1156,7 @@ Var
     Session.io.OutFullLn (Session.GetPrompt(200));
 
     Total  := 0;
+    FileMode := 66;
 
     Reset (FBaseFile);
 
@@ -1195,6 +1196,7 @@ Var
   Begin
     B := 0;
 
+    FileMode := 66;
     Reset (FBaseFile);
 
     Repeat

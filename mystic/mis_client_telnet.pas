@@ -9,7 +9,7 @@ Interface
     {$LinkLib libutil.a}
   {$ENDIF}
   {$IFDEF CPU64}
-    {$LinkLib libutil_64.a}
+    {$LinkLib libutil.a}
   {$ENDIF}
 {$ENDIF}
 

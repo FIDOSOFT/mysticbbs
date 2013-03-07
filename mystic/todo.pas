@@ -8,6 +8,7 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
+! LBP menus arent scrolling correctly in Linux
 ! MUTIL FILESBBS import is not skipping FILES.BBS?
 ! Make sure MIS in Linux works with DOSEMU
 ! Node chat goes haywire at 1000 lines scrollback
@@ -28,11 +29,12 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
 - Option for QuickScan that only prints a base if it has new messages.
+- Option for quickscan to show information about the messages (from,subj)
 - QWK via email
 - Either add Public/Private fusion type message base or allow reply via
   email or netmail option.
 - mUTIL scans MSGS directory and auto-creates anything that has data files
-  not related to a BBS message base
+  not related to a BBS message base.. uses a template
 - Blind upload for single file upload (also message upload)
 - Email validation
 - Recode FCHECK into MUTIL, but also add the option to phsyically delete the

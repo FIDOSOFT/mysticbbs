@@ -82,6 +82,8 @@ Begin
     SearchNode := Copy(SearchStr, B + 1, 255);
   End;
 
+  FileMode := 66;
+
   Assign     (ListFile, NodeList);
   SetTextBuf (ListFile, ListBuffer);
   Reset      (ListFile);

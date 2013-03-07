@@ -345,6 +345,8 @@ Begin
 
   If Name = '' Then Exit;
 
+  FileMode := 66;
+
   Assign (BBSFile, Config.DataPath + Name + '.bbi');
   {$I-} Reset(BBSFile); {$I+}
   If IoResult <> 0 Then Begin
@@ -581,6 +583,8 @@ Begin
     MaxLen   := strS2I(Copy(Data, 1, A - 1));
     MaxField := strS2I(Copy(Data, A + 1, Length(Data)));
   End;
+
+  FileMode := 66;
 
   Assign (OneLineFile, Config.DataPath + 'oneliner.dat');
   {$I-} Reset (OneLineFile); {$I+}
