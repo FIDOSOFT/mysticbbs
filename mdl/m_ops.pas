@@ -28,6 +28,8 @@
   -------------------------------------------------------------------------
 }
 
+{.$DEFINE NEWEDITOR}
+
 {.$DEFINE DEBUG}
 {$DEFINE RELEASE}
 {.$DEFINE LOGGING}

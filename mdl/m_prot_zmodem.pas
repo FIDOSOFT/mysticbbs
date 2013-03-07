@@ -25,31 +25,31 @@ Const
   ZMaxBlk : Array[Boolean] of Word = (1024, 8192);
   ZMaxWrk : Array[Boolean] of Word = (2048, 16384);
 
-  ZPad       = '*';                  {Pad}
-  ZDle       = ^X;                   {Data link escape}
-  ZDleE      = 'X';                  {An escaped data link escape character}
-  ZBin       = 'A';                  {Binary header using Crc16}
-  ZHex       = 'B';                  {Hex header using Crc16}
-  ZBin32     = 'C';                  {Binary header using Crc32}
-  ZrQinit    = #0;                   {Request init7 (to receiver)}
-  ZrInit     = #1;                   {Init (to sender)}
-  ZsInit     = #2;                   {Init (to receiver) (optional)}
-  ZAck       = #3;                   {Acknowledge last frame}
-  ZFile      = #4;                   {File info frame (to receiver)}
-  ZSkip      = #5;                   {Skip to next file (to receiver)}
-  ZNak       = #6;                   {Error receiving last data subpacket}
-  ZAbort     = #7;                   {Abort protocol}
-  ZFin       = #8;                   {Finished protocol}
-  ZRpos      = #9;                   {Resume from this file position}
-  ZData      = #10;                  {Data subpacket(s) follows}
-  ZEof       = #11;                  {End of current file}
-  ZFerr      = #12;                  {Error reading or writing file}
-  ZCrc       = #13;                  {Request for file CRC (to receiver)}
-  ZChallenge = #14;                  {Challenge the sender}
-  ZCompl     = #15;                  {Complete}
-  ZCan       = #16;                  {Cancel requested (to either)}
-  ZFreeCnt   = #17;                  {Request diskfree}
-  ZCommand   = #18;                  {Execute this command (to receiver)}
+  ZPad       = '*';
+  ZDle       = ^X;
+  ZDleE      = 'X';
+  ZBin       = 'A';
+  ZHex       = 'B';
+  ZBin32     = 'C';
+  ZrQinit    = #0;
+  ZrInit     = #1;
+  ZsInit     = #2;
+  ZAck       = #3;
+  ZFile      = #4;
+  ZSkip      = #5;
+  ZNak       = #6;
+  ZAbort     = #7;
+  ZFin       = #8;
+  ZRpos      = #9;
+  ZData      = #10;
+  ZEof       = #11;
+  ZFerr      = #12;
+  ZCrc       = #13;
+  ZChallenge = #14;
+  ZCompl     = #15;
+  ZCan       = #16;
+  ZFreeCnt   = #17;
+  ZCommand   = #18;
 
 //  WriteNewerLonger = 1;          {Transfer if new, newer or longer}
 //  WriteCrc         = 2;          {Not supported, same as WriteNewer}
@@ -150,13 +150,13 @@ Type
     AllowResume      : Boolean;
     FinishWait       : Word;            {Wait time for ZFin response}
     FinishRetry      : Byte;            {Times to resend ZFin}
-    LastFrame        : Char;            {Holds last frame type for status}
-    EscapeAll        : Boolean;         {True when escaping all ctl chrs}
-    Use8KBlocks      : Boolean;         {True when using 8K blocks}
+    LastFrame        : Char;
+    EscapeAll        : Boolean;
+    Use8KBlocks      : Boolean;
     TookHit          : Boolean;         {True if we got ZrPos packet}
-    GoodAfterBad     : Word;            {Holds count of good blocks}
-    ZmodemState      : ZmodemStateType; {Current Zmodem state}
-    HeaderState      : HeaderStateType; {Current Header state}
+    GoodAfterBad     : Word;
+    ZmodemState      : ZmodemStateType;
+    HeaderState      : HeaderStateType;
     ReplyTimer       : LongInt;
     WorkSize         : LongInt;         {Index into working buffer}
     LastBlock        : Boolean;         {True if no more blocks}
@@ -164,7 +164,7 @@ Type
     HexByte          : Byte;            {Used to assemble hex byte}
     HexPending       : Boolean;         {True for next char in hex pair}
     EscapePending    : Boolean;         {True for next char in esc pair}
-    ControlCharSkip  : Boolean;         {True when skipping ctl chars} {!!.01}
+    ControlCharSkip  : Boolean;
     HeaderType       : Char;            {Current header type}
     HexHdrState      : HexHeaderStates; {Current hex header state}
     BinHdrState      : BinaryHeaderStates; {Current binary header state}
@@ -176,8 +176,8 @@ Type
     LastStatus       : Word;            {Status to set in zpReceiveBlock}
     OCnt             : Byte;            {Count of O's recvd (for 'OO')}
     DataInTransit    : Word;            {Bytes transmitted in window}
-    WasHex           : Boolean;         {True if last header was hex}  {!!.03}
-    DiscardCnt       : Word;            {Count chars before sendblock} {!!.03}
+    WasHex           : Boolean;         {True if last header was hex}
+    DiscardCnt       : Word;            {Count chars before sendblock}
     DataBlock        : ^DataBlockType;   {Standard data block}
     DataBlockLen     : Word;             {Count of valid data in DataBlock}
     WorkBlock        : ^WorkBlockType;   {Holds fully escaped data block}
@@ -192,27 +192,27 @@ Type
 
     Procedure SetFileMgmtOptions   (Override, SkipNoFile: Boolean; FOpt: Byte);
     Procedure SetFinishWait        (NewWait: Word; NewRetry: Byte);
-    procedure PrepareTransmitPart; Virtual;
-    function  ProtocolTransmitPart : ProtocolStateType; virtual;
-    procedure PrepareReceivePart;  Virtual;
-    function  ProtocolReceivePart  : ProtocolStateType; virtual;
-    procedure UpdateBlockCheck     (CurByte: Byte); virtual;
-    procedure SendBlockCheck;      Virtual;
-    function  VerifyBlockCheck     : Boolean; virtual;
-    procedure CancelTransfer;      Virtual;
-    procedure zpGetCharStripped    (Var C: Char);
-    procedure PutAttentionString;
-    procedure zpPutCharHex         (C: Char);
-    procedure zpPutHexHeader       (FrameType: Char);
-    procedure zpGetCharEscaped     (Var C: Char);
-    procedure zpGetCharHex         (Var C: Char);
-    function  zpCollectHexHeader   : Boolean;
-    function  zpCollectBinaryHeader (Crc32: Boolean) : Boolean;
-    procedure zpCheckForHeader;
-    procedure apPrepareWriting;    Virtual;
-    procedure apFinishWriting;     Virtual;
-    procedure zpWriteDataBlock;
-    function  zpReceiveBlock       (Var Block: DataBlockType; Var BlockSize: Word; Var Handshake: Char) : Boolean;
+    Procedure PrepareTransmitPart; Virtual;
+    Function  ProtocolTransmitPart : ProtocolStateType; virtual;
+    Procedure PrepareReceivePart;  Virtual;
+    Function  ProtocolReceivePart  : ProtocolStateType; virtual;
+    Procedure UpdateBlockCheck     (CurByte: Byte); virtual;
+    Procedure SendBlockCheck;      Virtual;
+    Function  VerifyBlockCheck     : Boolean; virtual;
+    Procedure CancelTransfer;      Virtual;
+    Procedure GetCharStripped      (Var C: Char);
+    Procedure PutAttentionString;
+    Procedure PutCharHex           (C: Char);
+    Procedure PutHexHeader         (FrameType: Char);
+    Procedure GetCharEscaped       (Var C: Char);
+    Procedure zpGetCharHex         (Var C: Char);
+    Function  zpCollectHexHeader   : Boolean;
+    Function  zpCollectBinaryHeader (Crc32: Boolean) : Boolean;
+    Procedure zpCheckForHeader;
+    Procedure apPrepareWriting;    Virtual;
+    Procedure apFinishWriting;     Virtual;
+    Procedure WriteDataBlock;
+    Function  ReceiveBlock         (Var Block: DataBlockType; Var BlockSize: Word; Var Handshake: Char) : Boolean;
     Procedure ExtractFileInfo;
     Procedure InsertFileInfo;      Virtual;
     Procedure ExtractReceiverInfo;
@@ -253,14 +253,14 @@ Const
   ZRub0      = 'l';                {Translate to $7F}
   ZRub1      = 'm';                {Translate to $FF}
 
-  ZF0 = 3;                         {Flag byte 3}
-  ZF1 = 2;                         {Flag byte 2}
-  ZF2 = 1;                         {Flag byte 1}
-  ZF3 = 0;                         {Flag byte 0}
-  ZP0 = 0;                         {Position byte 0}
-  ZP1 = 1;                         {Position byte 1}
-  ZP2 = 2;                         {Position byte 2}
-  ZP3 = 3;                         {Position byte 3}
+  ZF0 = 3;
+  ZF1 = 2;
+  ZF2 = 1;
+  ZF3 = 0;
+  ZP0 = 0;
+  ZP1 = 1;
+  ZP2 = 2;
+  ZP3 = 3;
 
   CanFdx  = $0001;
   CanOvIO = $0002;
@@ -301,14 +301,14 @@ Begin
   FinishRetry      := DefFinishRetry;
   EscapeAll        := False;
 
-  DataBlock := GetMem(ZMaxBlk[Use8KBlocks]);
-  WorkBlock := GetMem(ZMaxWrk[Use8KBlocks]);
+  DataBlock := GetMem (ZMaxBlk[Use8KBlocks]);
+  WorkBlock := GetMem (ZMaxWrk[Use8KBlocks]);
 End;
 
 Destructor ZmodemProtocol.Done;
 Begin
-  FreeMem(DataBlock, ZMaxBlk[Use8KBlocks]);
-  FreeMem(WorkBlock, ZMaxWrk[Use8KBlocks]);
+  FreeMem (DataBlock, ZMaxBlk[Use8KBlocks]);
+  FreeMem (WorkBlock, ZMaxWrk[Use8KBlocks]);
 
   AbstractProtocol.Done;
 End;
@@ -392,166 +392,160 @@ Begin
   ProtocolStatus := ecCancelRequested;
 End;
 
-  procedure ZmodemProtocol.zpGetCharStripped(var C : Char);
-    {-Get next char, strip hibit, discard Xon/Xoff}
-  begin
-    {Get a character, discard Xon and Xoff}
-    repeat
-      with APort do
-        if DataWaiting then
-          C := ReadChar
-        else
-          ProtocolStatus := ecBufferIsEmpty
-    until not (C in [cXon, cXoff]) or (ProtocolStatus <> ecOk) or not APort.connected;
-
-    {Strip the high-order bit}
-    C := Char(Ord(C) and Ord(#$7F));
-
-    {Handle cancels}
-    if C = cCan then begin
-      Inc(CanCount);
-      if CanCount >= 5 then
-        ProtocolStatus := ecCancelRequested;
-    end else
-      CanCount := 0;
-  end;
-
-  Procedure ZmodemProtocol.PutAttentionString;
-  Var
-    I : Word;
-  Begin
-    I := 1;
-
-    While AttentionStr[I] <> 0 Do Begin
-      Case AttentionStr[I] of
-        $DD : ;
-        $DE : WaitMS(1000);
+Procedure ZmodemProtocol.GetCharStripped (Var C: Char);
+Begin
+  Repeat
+    With APort Do
+      If DataWaiting Then
+        C := ReadChar
       Else
-        APort.BufWriteChar(Chr(AttentionStr[I]));
-      End;
-      Inc(I);
+        ProtocolStatus := ecBufferIsEmpty
+  Until Not (C in [cXon, cXoff]) or (ProtocolStatus <> ecOk) or not APort.Connected;
+
+  C := Char(Ord(C) and Ord(#$7F));
+
+  If C = cCan Then Begin
+    Inc (CanCount);
+
+    If CanCount >= 5 Then
+      ProtocolStatus := ecCancelRequested;
+  End Else
+    CanCount := 0;
+End;
+
+Procedure ZmodemProtocol.PutAttentionString;
+Var
+  Count : Word;
+Begin
+  Count := 1;
+
+  While AttentionStr[Count] <> 0 Do Begin
+    Case AttentionStr[Count] of
+      $DD : ;
+      $DE : WaitMS(1000);
+    Else
+      APort.BufWriteChar(Chr(AttentionStr[Count]));
     End;
 
-    APort.BufFlush;
+    Inc (Count);
   End;
 
-  procedure ZmodemProtocol.zpPutCharHex(C : Char);
-    {-Sends C as two hex ascii digits}
-  var
-    B : Byte absolute C;
-  begin
-    APort.BufWriteChar(HexDigits[B shr 4]);
-    APort.BufWriteChar(HexDigits[B and $0F]);
+  APort.BufFlush;
+End;
+
+Procedure ZmodemProtocol.PutCharHex (C: Char);
+Var
+  B : Byte Absolute C;
+Begin
+  APort.BufWriteChar(HexDigits[B shr 4]);
+  APort.BufWriteChar(HexDigits[B and $0F]);
+End;
+
+Procedure ZmodemProtocol.PutHexHeader (FrameType: Char);
+Var
+  Check     : Word;
+  Count     : Byte;
+  SaveCrc32 : Boolean;
+Begin
+  SaveCrc32      := UseCrc32;
+  UseCrc32       := False;
+  BlockCheck     := 0;
+  ProtocolStatus := ecOK;
+
+  APort.BufWriteStr (ZPAD + ZPAD + ZDLE + ZHEX);
+
+  PutCharHex       (FrameType);
+  UpdateBlockCheck (Ord(FrameType));
+
+  For Count := 0 to SizeOf(TransHeader) - 1 Do Begin
+    PutCharHex       (Char(TransHeader[Count]));
+    UpdateBlockCheck (TransHeader[Count]);
   end;
 
-  procedure ZmodemProtocol.zpPutHexHeader(FrameType : Char);
-    {-Sends a hex header}
-  const
-    HexHeaderStr = ZPad+ZPad+ZDle+ZHex;
-  var
-    Check : Word;
-    I : Byte;
-    C : Char;
-    SaveCrc32 : Boolean;
-  begin
-    SaveCrc32      := UseCrc32;
-    UseCrc32       := False;
-    BlockCheck     := 0;
-    ProtocolStatus := ecok;
+  UpdateBlockCheck (0);
+  UpdateBlockCheck (0);
 
-    APort.BufWriteStr(HexHeaderStr);
-    zpPutCharHex(FrameType);
-    UpdateBlockCheck(Ord(FrameType));
+  Check := Word(BlockCheck);
 
-    for I := 0 to SizeOf(TransHeader)-1 do begin
-      zpPutCharHex(Char(TransHeader[I]));
-      UpdateBlockCheck(TransHeader[I]);
-    end;
+  PutCharHex (Char(Hi(Check)));
+  PutCharHex (Char(Lo(Check)));
 
-    UpdateBlockCheck(0);
-    UpdateBlockCheck(0);
-    Check := Word(BlockCheck);
-    zpPutCharHex(Char(Hi(Check)));
-    zpPutCharHex(Char(Lo(Check)));
+  APort.BufWriteChar (cCR);
+  APort.BufWriteChar (Chr(Ord(cLF) or $80));
 
-    APort.BufWriteChar(cCR);
-    C := Chr(Ord(cLF) or $80);
-    APort.BufWriteChar(C);
+  If (FrameType <> ZFIN) and (FrameType <> ZACK) Then
+    APort.BufWriteChar (cXON);
 
-    if (FrameType <> ZFin) and (FrameType <> ZAck) then
-      APort.BufWriteChar(cXon);
+  LastFrame := FrameType;
+  UseCrc32  := SaveCrc32;
 
-    LastFrame := FrameType;
+  APort.BufFlush;
+End;
 
-    UseCrc32 := SaveCrc32;
+Procedure ZmodemProtocol.GetCharEscaped (Var C: Char);
+Label
+  Escape;
+Begin
+  ControlCharSkip := False;
+  ProtocolStatus  := ecOK;
 
-    APort.BufFlush;
-  end;
+  If EscapePending Then
+    Goto Escape;
 
-  procedure ZmodemProtocol.zpGetCharEscaped(var C : Char);
-  label
-    Escape;
-  begin
-    ControlCharSkip := False;
-    ProtocolStatus  := ecOK;
+  C := Aport.ReadChar;
 
-    if EscapePending then
-      goto Escape;
+  Case C of
+    cXON,
+    cXOFF,
+    cXONHI,
+    cXOFFHI : Begin
+                ControlCharSkip := True;
 
-    C := Aport.ReadChar;
+                Exit;
+              End;
+    ZDLE    : Begin
+                Inc (CanCount);
 
-    case C of
-      cXon,
-      cXoff,
-      cXonHi,
-      cXoffHi : begin
-                  ControlCharSkip := True;
+                If CanCount > 5 Then Begin
+                  ProtocolStatus := ecCancelRequested;
+
                   Exit;
-                end;
-      ZDle    : begin
-                  Inc(CanCount);
-                  if CanCount > 5 then begin
-                    ProtocolStatus := ecCancelRequested;
-                    Exit;
-                  end;
-                end;
-      else begin
-        CanCount := 0;
-        Exit;
-      end;
-    end;
+                End;
+              End;
+  Else
+    CanCount := 0;
+
+    Exit;
+  End;
 
 Escape:
-    if APort.DataWaiting then begin
-      EscapePending := False;
-      C := APort.ReadChar;
 
-      if C = cCan then begin
-        Inc(CanCount);
-        if CanCount >= 5 then
-          ProtocolStatus := ecCancelRequested;
-      end else begin
-        CanCount := 0;
-        case C of
-          ZCrcE : {Last DataSubpacket of file}
-            ProtocolStatus := ecGotCrcE;
-          ZCrcG : {Normal DataSubpacket, no response necessary}
-            ProtocolStatus := ecGotCrcG;
-          ZCrcQ : {ZAck or ZrPos requested}
-            ProtocolStatus := ecGotCrcQ;
-          ZCrcW : {DataSubpacket contains file information}
-            ProtocolStatus := ecGotCrcW;
-          ZRub0 :         {Ascii delete}
-            C := #$7F;
-          ZRub1 :         {Hibit Ascii delete}
-            C := #$FF;
-          else            {Normal escaped character}
-            C := Char(Ord(C) xor $40)
-        end;
-      end;
-    end else
-      EscapePending := True;
-  end;
+  If APort.DataWaiting Then Begin
+    EscapePending := False;
+    C             := APort.ReadChar;
+
+    If C = cCAN Then Begin
+      Inc (CanCount);
+
+      If CanCount >= 5 Then
+        ProtocolStatus := ecCancelRequested;
+    End Else Begin
+      CanCount := 0;
+
+      Case C of
+        ZCrcE: ProtocolStatus := ecGotCrcE;
+        ZCrcG: ProtocolStatus := ecGotCrcG;
+        ZCrcQ: ProtocolStatus := ecGotCrcQ;
+        ZCrcW: ProtocolStatus := ecGotCrcW;
+        ZRub0: C := #$7F;
+        ZRub1: C := #$FF;
+      Else
+        C := Char(Ord(C) xor $40)
+      End;
+    End;
+  End Else
+    EscapePending := True;
+End;
 
   procedure ZmodemProtocol.zpGetCharHex(var C : Char);
   label
@@ -651,7 +645,7 @@ Hex:
     zpCollectBinaryHeader := False;
 
     if APort.DataWaiting then begin
-      zpGetCharEscaped(C);
+      GetCharEscaped(C);
       if EscapePending or ControlCharSkip then                         {!!.01}
         Exit;
       if ProtocolStatus = ecCancelRequested then
@@ -715,7 +709,7 @@ Hex:
       case HeaderState of
         hsNone, hsGotZPad, hsGotZDle :
           begin
-            zpGetCharStripped(C);
+            GetCharStripped(C); // only used here
             if ProtocolStatus = ecCancelRequested then
               Exit;
           end;
@@ -737,7 +731,7 @@ Hex:
           case C of
             ZBin   :
               begin
-                WasHex := False;                                       {!!.03}
+                WasHex := False;
                 HeaderState := hsGotZBin;
                 BinHdrState := bhFrame;
                 EscapePending := False;
@@ -793,76 +787,75 @@ Hex:
     end;
   end;
 
-  function ZmodemProtocol.zpReceiveBlock(var Block : DataBlockType;
-                                         var BlockSize : Word;
-                                         var Handshake : Char) : Boolean;
-  var
-    C : Char;
-  begin
-    zpReceiveBlock := False;
+Function ZmodemProtocol.ReceiveBlock (Var Block: DataBlockType; Var BlockSize: Word; Var Handshake: Char) : Boolean;
+Var
+  C : Char;
+Begin
+  ReceiveBlock := False;
 
-    while APort.DataWaiting do begin
-      if (DataBlockLen = 0) and (RcvBlockState = rbData) then begin
-        if UseCrc32 then
-          BlockCheck := LongInt($FFFFFFFF)
-        else
-          BlockCheck := 0;
-      end;
+  While APort.DataWaiting Do Begin
+    If (DataBlockLen = 0) and (RcvBlockState = rbData) Then Begin
+      If UseCrc32 Then
+        BlockCheck := LongInt($FFFFFFFF)
+      Else
+        BlockCheck := 0;
+    End;
 
-      zpGetCharEscaped(C);
+    GetCharEscaped(C);
 
-      if EscapePending or ControlCharSkip then
-        Exit;
+    If EscapePending or ControlCharSkip Then
+      Exit;
 
-      if ProtocolStatus = ecCancelRequested then
-        Exit;
+    If ProtocolStatus = ecCancelRequested Then
+      Exit;
 
-      UpdateBlockCheck(Ord(C));
+    UpdateBlockCheck(Ord(C));
 
-      case RcvBlockState of
-        rbData :
-          case ProtocolStatus of
-            ecOk :     {Normal character}
-              begin
-                {Check for a long block}
-                Inc(DataBlockLen);
+    Case RcvBlockState of
+      rbData : Case ProtocolStatus of
+                 ecOk : Begin
+                          Inc (DataBlockLen);
 
-                if DataBlockLen > BlockLen then begin
-                  ProtocolStatus := ecLongPacket;
-                  Inc(TotalErrors);
-                  Inc(BlockErrors);
-                  zpReceiveBlock := True;
-                  Exit;
-                end;
-                {Store the character}
+                          If DataBlockLen > BlockLen Then Begin
+                            ProtocolStatus := ecLongPacket;
 
-                Block[DataBlockLen] := C;
-              end;
+                            Inc (TotalErrors);
+                            Inc (BlockErrors);
 
-            ecGotCrcE,
-            ecGotCrcG,
-            ecGotCrcQ,
-            ecGotCrcW : {End of DataSubpacket - get/check CRC}
-              begin
-                RcvBlockState := rbCrc;
-                CrcCnt := 0;
-                LastStatus := ProtocolStatus;
-              end;
-            ecCancelRequested :
-              Exit;
-            else begin
-              Inc(DataBlockLen);
+                            ReceiveBlock := True;
 
-              if DataBlockLen > BlockLen then begin
+                            Exit;
+                          End;
+
+                          Block[DataBlockLen] := C;
+                        End;
+
+                 ecGotCrcE,
+                 ecGotCrcG,
+                 ecGotCrcQ,
+                 ecGotCrcW : Begin
+                               RcvBlockState := rbCrc;
+                               CrcCnt        := 0;
+                               LastStatus    := ProtocolStatus;
+                             End;
+                 ecCancelRequested : Exit;
+            Else Begin
+              Inc (DataBlockLen);
+
+              If DataBlockLen > BlockLen Then Begin
                 ProtocolStatus := ecLongPacket;
-                Inc(TotalErrors);
-                Inc(BlockErrors);
-                zpReceiveBlock := True;
+
+                Inc (TotalErrors);
+                Inc (BlockErrors);
+
+                ReceiveBlock := True;
+
                 Exit;
-              end;
+              End;
+
               Block[DataBlockLen] := C;
-            end;
-          end;
+            End;
+          End;
 
         rbCrc :
           begin
@@ -874,11 +867,9 @@ Hex:
                 Inc(TotalErrors);
                 ProtocolStatus := ecBlockCheckError;
               end else
-                {Show proper status}
                 ProtocolStatus := LastStatus;
 
-              {Say block is ready for processing}
-              zpReceiveBlock := True;
+              ReceiveBlock := True;
               Exit;
             end;
           end;
@@ -1075,23 +1066,25 @@ ExitPoint:
     end;
   end;
 
-  procedure ZmodemProtocol.zpWriteDataBlock;
-  var
-    Failed     : Boolean;
-    TempStatus : Word;
-  begin
-    Failed := apWriteProtocolBlock(DataBlock^, DataBlockLen);
+Procedure ZmodemProtocol.WriteDataBlock;
+Var
+  Failed     : Boolean;
+  TempStatus : Word;
+Begin
+  Failed := apWriteProtocolBlock (DataBlock^, DataBlockLen);
 
-    if Failed then begin
-      TempStatus := ProtocolStatus;
-      CancelTransfer;
-      ProtocolStatus := TempStatus;
-    end else begin
-      Inc (FileOfs, DataBlockLen);
-      Dec (BytesRemaining, DataBlockLen);
-      Inc (BytesTransferred, DataBlockLen);
-    end;
-  end;
+  If Failed Then Begin
+    TempStatus := ProtocolStatus;
+
+    CancelTransfer;
+
+    ProtocolStatus := TempStatus;
+  End Else Begin
+    Inc (FileOfs,          DataBlockLen);
+    Dec (BytesRemaining,   DataBlockLen);
+    Inc (BytesTransferred, DataBlockLen);
+  End;
+End;
 
 Procedure ZmodemProtocol.PrepareReceivePart;
 Begin
@@ -1111,94 +1104,94 @@ Begin
   ProtocolStatus := ecOk;
 End;
 
-  function ZmodemProtocol.ProtocolReceivePart : ProtocolStateType;
-    {-Perform one "increment" of a protocol receive}
-  label
-    ExitPoint;
-  var
-    BlockSize : Word;
-    Handshake : Char;
-    C : Char;
-  begin
-    ProtocolStatus := SaveStatus;
+Function ZmodemProtocol.ProtocolReceivePart : ProtocolStateType;
+Label
+  ExitPoint;
+Var
+  BlockSize : Word;
+  Handshake : Char;
+  C         : Char;
+Begin
+  ProtocolStatus := SaveStatus;
 
-    If {ForceStatus or} TimerUp(StatusTimer) then begin
-      If Not APort.Connected or (apHandleAbort and (ProtocolStatus <> ecCancelRequested)) Then Begin
-        CancelTransfer;
+  If {ForceStatus or} TimerUp(StatusTimer) Then Begin
+    If Not APort.Connected or (apHandleAbort and (ProtocolStatus <> ecCancelRequested)) Then Begin
+      CancelTransfer;
 
-        ZmodemState := rzError;
+      ZmodemState := rzError;
+    End;
+
+    apUserStatus(False, False);
+
+    StatusTimer := TimerSet(StatusInterval);
+    ForceStatus := False;
+  End;
+
+  Case ZmodemState of
+    rzWaitFile,
+    rzStartData,
+    rzWaitEof    : Begin
+                     If Not APort.DataWaiting Then
+                       APort.WaitForData(1000);
+
+                     If APort.DataWaiting Then Begin
+                       zpCheckForHeader;
+
+                       If ProtocolStatus = ecCancelRequested Then
+                         ZmodemState := rzError;
+                     End Else If TimerUp(ReplyTimer) Then
+                       ProtocolStatus := ecTimeout
+                     Else
+                       ProtocolStatus := ecNoHeader;
+                   End;
+  End;
+
+//zlog('main rcv state loop: ' + strI2S(Ord(ZmodemState)));
+
+  Case ZmodemState of
+
+    rzRqstFile:
+
+      Begin
+        CanCount             := 0;
+        LongInt(TransHeader) := 0;
+        TransHeader[ZF0]     := CanFDX or CanOVIO or CanFc32;{ or CanBrk;}
+
+        WaitMS(500);
+
+        PutHexHeader(HeaderType);
+
+        ZmodemState := rzWaitFile;
+        HeaderState := hsNone;
+        ReplyTimer  := TimerSet(HandshakeWait);
       End;
 
-      apUserStatus(False, False);
+    rzSendBlockPrep:
 
-      StatusTimer := TimerSet(StatusInterval);
-      ForceStatus := False;
-    end;
+      If APort.DataWaiting then begin
+        C := APort.ReadChar;
 
-    case ZmodemState of
-      rzWaitFile,
-      rzStartData,
-      rzWaitEof : begin
-      if not aport.datawaiting then aport.waitfordata(1000);
-        {Header might be present, try to get one}
-        if APort.DataWaiting then begin
-          zpCheckForHeader;
-          if ProtocolStatus = ecCancelRequested then
-            ZmodemState := rzError;
-        end else if TimerUp(ReplyTimer) then
-          ProtocolStatus := ecTimeout
-        else
-          ProtocolStatus := ecNoHeader;
-      end;
-    end;
+        Inc (DiscardCnt);
 
-//    zlog('main rcv state loop: ' + strI2S(Ord(ZmodemState)));
+        If DiscardCnt = 2 Then
+          ZmodemState := rzSendBlock;
 
-    {Main state processor}
-    case ZmodemState of
-      rzRqstFile :
-        begin
-          CanCount := 0;
+      End Else
+      If TimerUp(ReplyTimer) Then Begin
+        Inc (BlockErrors);
+        Inc (TotalErrors);
 
-          {Init pos/flag bytes to zero}
-          LongInt(TransHeader) := 0;
+        If TotalErrors < HandshakeRetry Then
+          ZmodemState := rzRqstFile
+        Else
+          ZmodemState := rzCleanup;
+      End;
 
-          {Set our receive options}
-          TransHeader[ZF0] := CanFdx or     {Full duplex}
-                              CanOvIO or    {Overlap I/O}
-                              CanFc32;{ or
-                              CanBrk;}
+    rzSendBlock:
 
-          WaitMS(500);
+      if APort.DataWaiting then begin
 
-          zpPutHexHeader(HeaderType);
-
-          ZmodemState := rzWaitFile;
-          HeaderState := hsNone;
-          ReplyTimer  := TimerSet(HandshakeWait);
-        end;
-
-      rzSendBlockPrep :
-        if APort.DataWaiting then begin
-          {Discard the first two chars}
-          C := APort.ReadChar;
-          Inc(DiscardCnt);
-          if DiscardCnt = 2 then
-            ZmodemState := rzSendBlock;
-        end else if TimerUp(ReplyTimer) then begin
-          Inc(BlockErrors);
-          Inc(TotalErrors);
-          if TotalErrors < HandshakeRetry then
-            ZmodemState := rzRqstFile
-          else
-            ZmodemState := rzCleanup;
-        end;
-
-      rzSendBlock :
-        if APort.DataWaiting then begin
-          {Collect the data subpacket}
-
-          if zpReceiveBlock(DataBlock^, BlockSize, Handshake) then
+          if ReceiveBlock(DataBlock^, BlockSize, Handshake) then
             if ProtocolStatus = ecBlockCheckError then
               {Error receiving block, go try again}
               ZmodemState := rzRqstFile
@@ -1210,7 +1203,7 @@ End;
         end else if TimerUp(ReplyTimer) then begin
           Inc(BlockErrors);
           if BlockErrors < HandshakeRetry then begin
-            zpPutHexHeader(ZNak);
+            PutHexHeader(ZNak);
             ReplyTimer := TimerSet(HandshakeWait);
             ZmodemState := rzWaitFile;
             HeaderState := hsNone;
@@ -1224,7 +1217,7 @@ End;
 
           EscapeAll := (RcvHeader[ZF0] and EscAll) = EscAll;
 
-          zpPutHexHeader(ZAck);
+          PutHexHeader(ZAck);
           ZmodemState := rzWaitFile;
 
           ReplyTimer := TimerSet(HandshakeWait);
@@ -1278,12 +1271,12 @@ End;
                 ZFreeCnt : {Sender is requesting a count of our freespace}
                   begin
                     LongInt(TransHeader) := DiskFree(0);
-                    zpPutHexHeader(ZAck);
+                    PutHexHeader(ZAck);
                   end;
 
                 ZCommand : {Commands not implemented}
                   begin
-                    zpPutHexHeader(ZNak);
+                    PutHexHeader(ZNak);
                   end;
 
                 ZCompl,
@@ -1314,8 +1307,7 @@ End;
 
       rzCollectFile :
         if APort.DataWaiting then begin
-          {Collect the data subpacket}
-          if zpReceiveBlock(DataBlock^, BlockSize, Handshake) then
+          if ReceiveBlock(DataBlock^, BlockSize, Handshake) then
             if ProtocolStatus = ecBlockCheckError then
               {Error getting block, go try again}
               ZmodemState := rzRqstFile
@@ -1327,7 +1319,7 @@ End;
         end else if TimerUp(ReplyTimer) then begin
           Inc(BlockErrors);
           if BlockErrors < HandshakeRetry then begin
-            zpPutHexHeader(ZNak);
+            PutHexHeader(ZNak);
             ReplyTimer := TimerSet(HandshakeWait);
           end else
             ZmodemState := rzCleanup;
@@ -1391,7 +1383,7 @@ End;
 
           LongInt(TransHeader) := FileOfs;
 
-          zpPutHexHeader(ZrPos);
+          PutHexHeader(ZrPos);
 
           BytesRemaining   := SrcFileLen - FileOfs;
           BytesTransferred := FileOfs;
@@ -1403,27 +1395,32 @@ End;
         case ProtocolStatus of
           ecGotHeader :
             case RcvFrame of
-              ZData :  {One or more data subpackets follow}
+              ZData :
                 begin
                   if FileOfs <> LastFileOfs then begin
-                    Inc(BlockErrors);
-                    Inc(TotalErrors);
-                    if BlockErrors > MaxBadBlocks then begin
+                    Inc (BlockErrors);
+                    Inc (TotalErrors);
+
+                    If BlockErrors > MaxBadBlocks Then Begin
                       CancelTransfer;
+
                       ProtocolStatus := ecTooManyErrors;
-                      ZmodemState := rzError;
-                      goto ExitPoint;
-                    end;
+                      ZmodemState    := rzError;
+
+                      Goto ExitPoint;
+                    End;
+
                     PutAttentionString;
+
                     ZmodemState := rzSync;
-                  end else begin
-                    BlockErrors := 0;
-                    ZmodemState := rzCollectData;
-                    DataBlockLen := 0;
+                  End Else Begin
+                    BlockErrors   := 0;
+                    ZmodemState   := rzCollectData;
+                    DataBlockLen  := 0;
                     RcvBlockState := rbData;
-                    ReplyTimer := TimerSet(HandshakeWait);
-                  end;
-                end;
+                    ReplyTimer    := TimerSet(HandshakeWait);
+                  End;
+                End;
               ZNak : {Nak received}
                 begin
                   Inc(TotalErrors);
@@ -1481,7 +1478,7 @@ End;
           ReplyTimer := TimerSet(HandshakeWait);
           {Collect the data subpacket}
 
-          if zpReceiveBlock(DataBlock^, BlockSize, Handshake) then begin
+          if ReceiveBlock(DataBlock^, BlockSize, Handshake) then begin
             SaveStatus := ProtocolStatus;
             {Got a block or an error -- process it}
             case ProtocolStatus of
@@ -1490,11 +1487,11 @@ End;
               ecGotCrcW : {Send requests a wait}
                 begin
                   {Write this block}
-                  zpWriteDataBlock;
+                  WriteDataBlock;
                   if ProtocolStatus = ecOk then begin
                     {Acknowledge with the current file position}
                     LongInt(TransHeader) := FileOfs;
-                    zpPutHexHeader(ZAck);
+                    PutHexHeader(ZAck);
                     ZmodemState := rzStartData;
                     HeaderState := hsNone;
                   end else
@@ -1503,10 +1500,10 @@ End;
               ecGotCrcQ : {Zack requested}
                 begin
                   {Write this block}
-                  zpWriteDataBlock;
+                  WriteDataBlock;
                   if ProtocolStatus = ecOk then begin
                     LongInt(TransHeader) := FileOfs;
-                    zpPutHexHeader(ZAck);
+                    PutHexHeader(ZAck);
                     {Don't change state - will get next data subpacket}
                   end else
                     ZmodemState := rzError;
@@ -1514,14 +1511,14 @@ End;
               ecGotCrcG : {Normal subpacket - no response necessary}
                 begin
                   {Write this block}
-                  zpWriteDataBlock;
+                  WriteDataBlock;
                   if ProtocolStatus <> ecOk then
                     ZmodemState := rzError;
                 end;
               ecGotCrcE : {Last data subpacket}
                 begin
                   {Write this block}
-                  zpWriteDataBlock;
+                  WriteDataBlock;
                   if ProtocolStatus = ecOk then begin
                     ZmodemState := rzWaitEof;
                     HeaderState := hsNone;
@@ -1552,10 +1549,13 @@ End;
             ZmodemState := rzError
         end else if TimerUp(ReplyTimer) then begin
           Inc(BlockErrors);
+
           if BlockErrors < MaxBadBlocks then begin
             PutAttentionString;
+
             Inc(TotalErrors);
             Inc(BlockErrors);
+
             ZmodemState := rzSync;
           end else
             ZmodemState := rzError;
@@ -1628,7 +1628,7 @@ End;
         begin
           {Insert file position into header}
           LongInt(TransHeader) := FileOfs;
-          zpPutHexHeader(ZFin);
+          PutHexHeader(ZFin);
           ZmodemState := rzCollectFinish;
           ReplyTimer := TimerSet(FinishWait);
           OCnt := 0;
@@ -1738,8 +1738,6 @@ End;
     ExitPoint;
   const
     RZcommand : array[1..4] of Char = 'rz'+cCr+#0;
-  var
-    NewInterval : Word;
   begin
     ProtocolStatus := SaveStatus;
 
@@ -1792,7 +1790,7 @@ End;
 
           {Send ZrQinit header (requests receiver's ZrInit)}
           LongInt(TransHeader) := 0;
-          zpPutHexHeader(ZrQInit);
+          PutHexHeader(ZrQInit);
 
           ReplyTimer := TimerSet(HandshakeWait);
           ZmodemState := tzHandshake;
@@ -1817,14 +1815,14 @@ End;
               ZChallenge : {Receiver is challenging, respond with same number}
                 begin
                   TransHeader := RcvHeader;
-                  zpPutHexHeader(ZAck);
+                  PutHexHeader(ZAck);
                 end;
               ZCommand :   {Commands not supported}
-                zpPutHexHeader(ZNak);
+                PutHexHeader(ZNak);
               ZrQInit :    {Remote is trying to transmit also, do nothing}
                 ;
               else         {Unexpected reply, nak it}
-                zpPutHexHeader(ZNak);
+                PutHexHeader(ZNak);
             end;
           ecNoHeader :
             {Keep waiting for header} ;
@@ -1838,7 +1836,7 @@ End;
                 ProtocolStatus := ecFailedToHandshake;
                 ZmodemState := tzError;
               end else begin
-                zpPutHexHeader(ZrQInit);
+                PutHexHeader(ZrQInit);
                 ReplyTimer := TimerSet(HandshakeWait);
               end;
             end;
@@ -1917,7 +1915,7 @@ End;
               ZCrc :
                 begin
                   LongInt(TransHeader) := FileCRC32(PathName);
-                  zpPutHexHeader(ZCrc);
+                  PutHexHeader(ZCrc);
                 end;
               ZSkip :  {Receiver wants to skip this file}
                 begin
@@ -2201,7 +2199,7 @@ End;
       tzSendFinish :
         begin
           LongInt(TransHeader) := FileOfs;
-          zpPutHexHeader(ZFin);
+          PutHexHeader(ZFin);
           ReplyTimer := TimerSet(FinishWait);
           BlockErrors := 0;
           ZmodemState := tzCheckFinish;
