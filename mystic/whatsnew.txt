@@ -2669,4 +2669,6 @@
    newly created bases in a [ImportMessageBase] section.  See the default
    MUTIL.INI for an example.
 
+ + E-mail messages are now included in QWK packets.
+
    <ALPHA 28 RELEASED>
