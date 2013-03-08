@@ -28,6 +28,8 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- New Scan/Read message should have option to not update last read when
+  reading personal messages.
 - Option for QuickScan that only prints a base if it has new messages.
 - Option for quickscan to show information about the messages (from,subj)
 - QWK via email

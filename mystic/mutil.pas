@@ -23,15 +23,6 @@ Program MUTIL;
 
 {$I M_OPS.PAS}
 
-// MBBSUTIL replacement WIP
-//
-// Eventually all of MBBSUTIL stuff will be incorporated into this program.
-// MBBSUTIL and MYSTPACK will be phased out in favor of this program.
-//
-// The goal of this program is to have basically everything under the sun
-// all in one utility.  Eventually it may even have a full blown FIDO-style
-// tosser too.  TOP 10 generators, etc.  It's all planned for MUTIL.
-
 Uses
   {$IFDEF DEBUG}
     HeapTrc,
@@ -45,6 +36,7 @@ Uses
   mUtil_Common,
   mUtil_Status,
   mUtil_ImportNA,
+  mUtil_ImportMsgBase,
   mUtil_FileBone,
   mUtil_Upload,
   mUtil_TopLists,
@@ -174,6 +166,7 @@ Var
   DoMsgPurge   : Boolean;
   DoMsgPack    : Boolean;
   DoMsgPost    : Boolean;
+  DoImportMB   : Boolean;
 Begin
   ApplicationStartup;
 
@@ -182,6 +175,7 @@ Begin
   // Build process list
 
   DoImportNA   := CheckProcess(Header_IMPORTNA);
+  DoImportMB   := CheckProcess(Header_IMPORTMB);
   DoFileBone   := CheckProcess(Header_FILEBONE);
   DoMassUpload := CheckProcess(Header_UPLOAD);
   DoTopLists   := CheckProcess(Header_TOPLISTS);
@@ -204,6 +198,7 @@ Begin
   // We're good lets execute this stuff!
 
   If DoImportNA   Then uImportNA;
+  If DoImportMB   Then uImportMessageBases;
   If DoFileBone   Then uImportFileBone;
   If DoFilesBBS   Then uImportFilesBBS;
   If DoMassUpload Then uMassUpload;

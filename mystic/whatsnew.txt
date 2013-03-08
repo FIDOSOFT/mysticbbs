@@ -2658,3 +2658,15 @@
    in DOSEMU with Mystic!
 
    <ALPHA 27 RELEASED>
+
+ + Added a new function to MUTIL called ImportMessageBase.  This function
+   will scan the configured Message Base directory for existance of either
+   JAM or Squish datafiles.  For each message base MUTIL finds, it will
+   create a Message Base in Mystic if one does not already exist.
+
+   You must add "Import_MessageBase = true" to your GENERAL header in
+   mutil.ini, and then configure the template message base settings for
+   newly created bases in a [ImportMessageBase] section.  See the default
+   MUTIL.INI for an example.
+
+   <ALPHA 28 RELEASED>
