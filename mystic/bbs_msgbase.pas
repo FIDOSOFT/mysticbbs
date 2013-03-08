@@ -211,11 +211,11 @@ Begin
     Session.io.PausePtr   := 1;
     Session.io.AllowPause := True;
 
-    NodeList.ResetSearch(Config.DataPath + 'nodelist.txt', Result);
+    NodeList.ResetSearch (Config.DataPath + 'nodelist.txt', Result);
 
     While NodeList.FindNext(NodeData) Do Begin
       Case ListType of
-        0 : If NodeData.Keyword <> '' Then Continue;
+        0 : ;//If NodeData.Keyword <> '' Then Continue;
         1 : If NodeData.Keyword <> 'ZONE' Then Continue;
         2 : If (NodeData.Keyword <> 'ZONE') and (NodeData.Keyword <> 'REGION') and (NodeData.Keyword <> 'HOST') Then Continue;
       End;
@@ -3755,7 +3755,6 @@ Begin
   Write (tFile, TotalConf - 1, CRLF); {TOTAL CONF - 1}
 
   Reset (MBaseFile);
-  Read  (MBaseFile, MBase); {SKIP EMAIL BASE}
 
   While Not Eof(MBaseFile) Do Begin
     Read (MBaseFile, MBase);
@@ -3832,8 +3831,6 @@ Var
   End;
 
 Begin
-//  Inc (TotalConf);
-
   MsgAdded := 0;
 
   If Not OpenCreateBase(MsgBase, MBase) Then Exit;
@@ -3993,14 +3990,12 @@ Begin
 
   Assign  (QwkLRFile, Session.TempPath + 'qlr.dat');
   ReWrite (QwkLRFile);
-
-  Reset  (MBaseFile);
-  Read   (MBaseFile, MBase); {Skip Email base}
+  Reset   (MBaseFile);
 
   Session.io.OutFullLn (Session.GetPrompt(230));
 
-  TotalMsgs   := 0;
-  TotalConf   := 0;
+  TotalMsgs := 0;
+  TotalConf := 0;
 
   Session.User.IgnoreGroup := Pos('/ALLGROUP', strUpper(Data)) > 0;
 
@@ -4031,6 +4026,7 @@ Begin
   If TotalMsgs > 0 Then Begin
     Session.io.PromptInfo[1] := strI2S(TotalMsgs);
     Session.io.PromptInfo[2] := strI2S(TotalConf);
+
     Session.io.OutFullLn (Session.GetPrompt(233));
 
     Temp := Config.qwkBBSID + '.qwk';
