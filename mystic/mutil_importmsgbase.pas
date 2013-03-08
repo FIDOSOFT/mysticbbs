@@ -34,7 +34,7 @@ Begin
     BaseName := JustFileName(Info.Name);
     BaseExt  := strUpper(JustFileExt(Info.Name));
 
-    If ((BaseExt = 'JHR') or (BaseExt = 'SQD')) And Not IsDupeMBase(BaseName) Then Begin
+    If ((BaseExt = 'JHR') or (BaseExt = 'SQD')) And (BaseName <> '') And Not IsDupeMBase(BaseName) Then Begin
       ProcessStatus (BaseName, False);
 
       FillChar (MBase, SizeOf(MBase), #0);
