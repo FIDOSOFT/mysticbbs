@@ -19,6 +19,7 @@ Type
     SavedX  : Byte;
     SavedY  : Byte;
     Options : String;
+    LastCh  : Char;
 
     Procedure   CheckCode (Ch: Char);
     Function    ParseNumber : Integer;
@@ -250,8 +251,7 @@ Begin
   Else
     ResetState;
   End;
-END;
-
+End;
 
 Procedure TTermAnsi.Process (Ch : Char);
 Begin
@@ -263,15 +263,15 @@ Begin
             #0  : ;
             #27 : State := 1;
             #9  : Screen.CursorXY (Screen.CursorX + 8, Screen.CursorY);
+            #10 : Begin
+                    If LastCh <> #13 Then
+                      Screen.WriteChar(#13);
+                    Screen.WriteChar(#10);
+                  End;
             #12 : Screen.ClearScreen;
             {$IFDEF UNIX}
             #14,
-            #15 : Begin
-                    Screen.WriteChar('X');
-
-                    State    := 0;
-                    WasValid := True;
-                  End;
+            #15 : Screen.WriteChar('X');
             {$ENDIF}
           Else
             Screen.WriteChar(Ch);
@@ -289,6 +289,8 @@ Begin
    Else
      ResetState;
    End;
+
+   LastCh := Ch;
 End;
 
 Procedure TTermAnsi.ProcessBuf (Var Buf; BufLen : Word);
@@ -308,12 +310,7 @@ Begin
               #12 : Screen.ClearScreen;
               {$IFDEF UNIX}
               #14,
-              #15 : Begin
-                      Screen.WriteChar('X');
-
-                      State    := 0;
-                      WasValid := True;
-                    End;
+              #15 : Screen.WriteChar('X');
               {$ENDIF}
             Else
               Screen.WriteChar(Data[Count]);
