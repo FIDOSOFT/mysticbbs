@@ -1613,6 +1613,8 @@ Var
   Var
     NetAddr : RecEchoMailAddr;
   Begin
+    FillChar (Session.io.PromptInfo, SizeOf(Session.io.PromptInfo), 0);
+
     Session.io.PromptInfo[1] := MsgBase^.GetFrom;
 
     If MBase.NetType = 3 Then Begin
@@ -1644,6 +1646,8 @@ Var
     If MsgBase^.IsSent    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(4, TempStr, ',');
     If MsgBase^.IsRcvd    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(6, TempStr, ',');
     If MsgBase^.IsDeleted Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(5, TempStr, ',');
+
+    Session.io.PromptInfo[9] := strStripB(Session.io.PromptInfo[9], ' ');
   End;
 
   Procedure Send_Msg_Text (Str : String);
@@ -1869,7 +1873,11 @@ Var
             'H' : Begin
                     LastRead := CurMsg - 1;
 
+                    Session.io.PromptInfo[1] := strI2S(LastRead);
+
                     Session.io.OutFullLn(Session.GetPrompt(504));
+
+                    Break;
                   End;
             'I' : Begin
                     LastRead          := MsgBase^.GetHighMsgNum;
@@ -2235,6 +2243,7 @@ Var
                       Inc (PagePos)
                     Else Begin
                       MsgBase^.SeekFirst(MsgInfo[PageTotal].Num);
+
                       If Read_Page(False, False, False) Then PagePos := 1;
                     End;
                   End;
@@ -2338,9 +2347,15 @@ Var
 
       If Session.io.NoFile Then Begin
         Session.io.OutFullLn ('|CL|03From : |14|$R40|&1 |03Msg #    : |14|&5 |03of |14|&6');
+        Session.io.OutFullLn ('|03To   : |10|$R40|&2 |03Date     : |11|&4 |&0');
+        Session.io.OutFullLn ('|03Subj : |12|$R40|&3 |03Refer to : |10|&7');
+        Session.io.OutFullLn ('|03Stat : |13|$R40|&9 |03See Also : |12|&8');
+
+(*
         Session.io.OutFullLn ('|03To   : |10|$R40|&2 |03Refer to : |10|&7');
         Session.io.OutFullLn ('|03Subj : |12|$R40|&3 |03See Also : |12|&8');
-        Session.io.OutFullLn ('|03Date : |11|&4 |$R31|&0 |03Status   : |13|&9');
+        Session.io.OutFullLn ('|03Stat : |13|$R40|&9 |03Date     : |11|&4 |&0');
+*)
         Session.io.OutFullLn ('|03Base : |14|MB|CR');
       End;
 
@@ -2437,6 +2452,8 @@ Var
           'G' : Exit;
           'H' : Begin
                   LastRead := MsgBase^.GetMsgNum - 1;
+
+                  Session.io.PromptInfo[1] := strI2S(LastRead);
 
                   Session.io.OutFullLn(Session.GetPrompt(505));
 

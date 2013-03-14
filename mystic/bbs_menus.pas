@@ -735,12 +735,10 @@ Var
 
   Procedure DrawItem;
   Begin
-    If ItemY >= Session.User.ThisUser.ScreenSize {24} Then Begin
+    If ItemY >= Session.User.ThisUser.ScreenSize Then Begin
       Session.io.OutRawLn('');
 
-      //ItemY := Session.User.ThisUser.ScreenSize - 1;
-
-      Dec (ItemY);
+      ItemY := Session.User.ThisUser.ScreenSize - 1;
     End;
 
     If Data.Item[CurItem]^.TextLo <> '' Then Begin

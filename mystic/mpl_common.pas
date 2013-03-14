@@ -297,6 +297,7 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'msgeditor',      {$ENDIF} 'iIiiosS', iBool);    // 544
           AddProc    ({$IFDEF MPLPARSER} 'msgeditget',     {$ENDIF} 'i',       iString);  // 545
           AddProc    ({$IFDEF MPLPARSER} 'msgeditset',     {$ENDIF} 'is',      iNone);    // 546
+          AddProc    ({$IFDEF MPLPARSER} 'onekeyrange',    {$ENDIF} 'sll',     iChar);    // 547
 
 { END OF PROCEDURE DEFINITIONS }
 
@@ -314,6 +315,7 @@ Begin
           AddPointer ({$IFDEF MPLPARSER} 'allowmci',     {$ENDIF} iBool,      1, {$IFNDEF MPLPARSER} @Session.io.PausePtr                {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'userloginname',{$ENDIF} iString,   31, {$IFNDEF MPLPARSER} @Session.UserLoginName              {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'userloginpw',  {$ENDIF} iString,   16, {$IFNDEF MPLPARSER} @Session.UserLoginPW                {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'rangevalue',   {$ENDIF} iLongInt,   4, {$IFNDEF MPLPARSER} @Session.io.RangeValue              {$ELSE} NIL {$ENDIF});
 
           {$IFNDEF MPLPARSER} TInterpEngine(S).IdxVarDir := X + 1; {$ENDIF}
 

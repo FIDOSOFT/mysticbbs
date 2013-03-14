@@ -2823,12 +2823,15 @@
 
      ; Msg header flags text one word each separated by a comma
      ; 1=Local 2=Echo 3=Private 4=Sent 5=Delete, 6=Received
-     490 Local,Echo,Priv,Sent,Del,Read
+     490 Local,Echo,Private,Sent,Deleted,Read
 
  ! Echo flag was not displaying correctly in the message headers.
 
  ! Fixed a bug in the ANSI file viewer which was causing garbled ANSIs
    in the gallery and the viewer.
+
+ ! Fixed a bug in the ANSI file viewer that could be caused by falsely
+   recognizing pipe codes when they were not.
 
  + Pressing the SPACE bar in the ANSI viewer now displays the file
    "normally" with a screenpause at the end.
@@ -2848,8 +2851,8 @@
 
  + Added a different type of line check into the ANSI parsers.  If a line
    ends with a linefeed but didn't have carrage return before it (as is
-   standard), Mystic will now add the carrage return.  If this blows up
-   any existing ANSIs it will be changed back.
+   standard), Mystic will now add the carrage return.  This is an attempt to
+   auto-correct ANSI files that are incorrectly saved in Unix.
 
  ! Fixed a bug with pipe color code parsing in the ANSI viewer (GV)
 
@@ -2862,7 +2865,35 @@
  + Mystic will now perform text wrapping in the message editors based on
    the select theme's column size.
 
- + Abbreviated Mystic's copyright notice upon connect to be friendly to
-   40 column connections.
+ + Abbreviated Mystic's copyright notice upon connect to display within a
+   40 column terminal.
+
+ + Rearranged the built in message header a little bit to allow more space
+   for message flags.  Moved the date to the right side and the status
+   flags to the left side.
+
+ ! Fixed a random weird bug in the Matrix login that I don't feel like
+   explaining. :)
+
+ + Added a new MPL function called OneKeyRange.  This function works similar
+   to OneKey, except that it will also allow for a number input within a
+   certain range.  The number value is stored in a variable called
+   RangeValue and the function returns a #0 if a number was entered.  For
+   example:
+
+     Var
+       Ch : Char;
+     Begin
+       Write ('Enter letters A-G or a number between 1-50: ');
+
+       Ch := OneKeyRange('ABCDEFG', 1, 50);
+
+       If Ch = #0 Then
+         WriteLn ('You entered a number: ' + Int2Str(RangeValue))
+       Else
+         WriteLn ('You entered character: ' + Ch);
+     End.
+
+ + MPL errors when executing a MPX module are now logged in the SYSOP logs
 
  <ALPHA 29 RELEASED>

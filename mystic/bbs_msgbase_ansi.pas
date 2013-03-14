@@ -317,6 +317,7 @@ Begin
   End;
 End;
 
+(*
 Procedure TMsgBaseAnsi.ProcessChar (Ch: Char);
 Begin
   If GotPipe Then Begin
@@ -353,9 +354,9 @@ Begin
             #13 : CurX     := 1;
             #27 : Escape   := 1;
           Else
-//            If Ch = '|' Then
-//              GotPipe := True
-//            Else
+            If Ch = '|' Then
+              GotPipe := True
+            Else
               AddChar (Ch);
 
             ResetControlCode;
@@ -374,6 +375,72 @@ Begin
   End;
 
   LastChar := Ch;
+End;
+*)
+
+Procedure TMsgBaseAnsi.ProcessChar (Ch: Char);
+
+  Procedure OneChar (C: Char);
+  Begin
+    Case Escape of
+      0 : Begin
+            Case C of
+              #0  : ;
+              #9  : MoveXY (CurX + 8, CurY);
+              #12 : GotClear := True;
+              #13 : CurX     := 1;
+              #27 : Escape   := 1;
+            Else
+              If C = '|' Then
+                GotPipe := True
+              Else
+                AddChar (C);
+
+              ResetControlCode;
+            End;
+          End;
+      1 : If C = '[' Then Begin
+             Escape  := 2;
+             Code    := '';
+             GotAnsi := True;
+           End Else
+             Escape := 0;
+
+      2 : CheckCode(C);
+    Else
+      ResetControlCode;
+    End;
+
+    LastChar := C;
+  End;
+
+Begin
+  If GotPipe Then Begin
+    PipeCode := PipeCode + Ch;
+
+    If Length(PipeCode) = 2 Then Begin
+      If PipeCode = '00' Then
+        SetFore(0)
+      Else
+        Case strS2I(PipeCode) of
+          01..
+          15 : SetFore(strS2I(PipeCode));
+          16..
+          23 : SetBack(strS2I(PipeCode) - 16);
+        Else
+          AddChar('|');
+          OneChar(PipeCode[1]);
+          OneChar(PipeCode[2]);
+      End;
+
+      GotPipe  := False;
+      PipeCode := '';
+    End;
+
+    Exit;
+  End;
+
+  OneChar (Ch);
 End;
 
 Function TMsgBaseAnsi.ProcessBuf (Var Buf; BufLen: Word) : Boolean;

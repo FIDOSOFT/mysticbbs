@@ -351,6 +351,7 @@ End;
 Function TBBSUser.GetMatrixUser : Boolean;
 Var
   SavedNum : LongInt;
+  Str      : String;
 Begin
   Result := False;
 
@@ -361,9 +362,9 @@ Begin
 
   Session.io.OutFull (Session.GetPrompt(273));
 
-  ThisUser.Handle := Session.io.GetInput(30, 30, 18, '');
+  Str := Session.io.GetInput(30, 30, 18, '');
 
-  If Not FindUser(ThisUser.Handle, True) Then Exit;
+  If Not FindUser(Str, True) Then Exit;
 
   SavedNum := UserNum;
   UserNum  := -1;
@@ -1177,6 +1178,7 @@ Procedure TBBSUser.UserLogon1 (Var MPE: String);
 Var
   A     : Integer;
   Count : Byte;
+  Str   : String;
 Begin
   {$IFDEF LOGGING} Session.SystemLog('Logon1'); {$ENDIF}
 
@@ -1254,13 +1256,13 @@ Begin
 
       Session.io.OutFull (Session.GetPrompt(0));
 
-      ThisUser.Handle := strStripB(Session.io.GetInput(30, 30, 18, ''), ' ');
+      Str := strStripB(Session.io.GetInput(30, 30, 18, ''), ' ');
 
-      If Not FindUser(ThisUser.Handle, True) Then Begin
+      If Not FindUser(Str, True) Then Begin
         Session.io.OutFile ('newuser', True, 0);
 
         If Session.io.GetYN(Session.GetPrompt(1), False) Then Begin
-          CreateNewUser(ThisUser.Handle);
+          CreateNewUser(Str);
           UserLogon2;
           UserLogon3;
           Exit;

@@ -8,7 +8,6 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
-! Posting echomail via NNTP is not setting ECHO flag
 ! LBP menus arent scrolling correctly in Linux
 ! MUTIL FILESBBS import is not skipping FILES.BBS?
 ! Make sure MIS in Linux works with DOSEMU
@@ -242,3 +241,30 @@ InsertChar  (XPOS, Ch, Attr)
 ReplaceChar (XPOS, Ch, Attr
 ReplaceLine
 
+
+1.11
+====
+- Rewrite user login functions and MATRIX
+- Change temp directories.  Add MIS/MUTIL/FTN/NODE
+- User directories (research disk performance with a zillion dirs)
+      1. Ability to save file batch queues between sessions
+      2. Ability to save "draft" message posts between sessions
+      3. Accessible via /home in FTP (virtual dir) allows QWK/REP
+- New FS editor with DRAW MODE w/ inline ANSI/pipe editing
+- Option to send QWK packet by e-mail OR download it
+- Option to "upload" REP packet by sending email to BBS (qwk@yourbbs.com)?
+     - Needs additional research
+! POSSIBLE removal of local console in Windows and STDIO usage in Linux
+     ^ Massive performance increase possible here as well as:
+! POSSIBLE FTN tosser.
+! POSSIBLE FTN mailer (transx, FTP, binkP)
+! MIS event system (possible 1.10)
+! Password reset via email (possible 1.10)
+! Email verification system (for access upgrades) (possible 1.10)
+- New message reader functions allows inline ANSI
+- Msg editor can "post process" ANSIs to be 79 columns max in stored line
+  length (bbs friendly)
+- Rewrite of MBBSWEB or integrated HTML server?  still need a good designer
+  that actually will put a lot of time into it
+- Rewrite of ANSI template system (.ini files or mystic2 format?)
+! Revamp logging system and add additional logging to MIS

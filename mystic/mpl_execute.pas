@@ -1928,6 +1928,11 @@ Begin
           End;
     546 : If (Param[1].I > 0) and (Param[1].I <= mysMaxMsgLines) Then
              Session.Msgs.MsgText[Param[1].I] := Param[2].S;
+    547 : Begin
+            TempStr[1] := Session.io.OneKeyRange(Param[1].S, Param[2].L, Param[3].L);
+
+            Store (TempStr[1], 1);
+          End;
   End;
 End;
 
@@ -2074,6 +2079,7 @@ Begin
 
   Repeat
     MoveToPos (StartPos);
+
     If ExecuteBlock (CurVarNum) = 1 Then Begin
       EvaluateBoolean;
       Break;
@@ -2136,6 +2142,7 @@ Begin
     Else
       Repeat
         Inc (NumberPos);
+
         Numbers[NumberPos].Num := EvaluateNumber;
 
         NextChar;
@@ -2417,12 +2424,17 @@ End;
 Function ExecuteMPL (Owner: Pointer; Str: String) : Byte;
 Var
   Script : TInterpEngine;
+  ErrStr : String;
 Begin
   Script := TInterpEngine.Create(Owner);
   Result := Script.Execute(Str);
 
-  If Script.ErrNum > 0 Then
-    Session.io.OutFullLn ('|CR|12MPX ERROR: ' + Script.GetErrorMsg);
+  If Script.ErrNum > 0 Then Begin
+    ErrStr := 'MPX ERROR: ' + Script.GetErrorMsg;
+
+    Session.SystemLog(ErrStr + '(' + Str + ')');
+    Session.io.OutFullLn ('|CR|12' + ErrStr);
+  End;
 
   Script.Free;
 End;
