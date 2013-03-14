@@ -475,6 +475,7 @@ Begin
   Start := strS2I(Session.io.GetInput(3, 3, 11, ''));
 
   Session.io.OutFull (Session.GetPrompt(160));
+
   Finish := strS2I(Session.io.GetInput(3, 3, 11, ''));
 
   If (Start > 0) and (Start <= NumLines) and (Finish <= NumLines) Then Begin

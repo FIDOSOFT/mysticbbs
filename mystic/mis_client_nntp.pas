@@ -184,7 +184,8 @@ Begin
           1 : MsgBase := New(PMsgBaseSquish, Init);
         End;
 
-        MsgBase^.SetMsgPath (TempBase.Path + TempBase.FileName);
+        MsgBase^.SetMsgPath  (TempBase.Path + TempBase.FileName);
+        MsgBase^.SetTempFile (TempPath + 'msgbuf.');
 
         If MsgBase^.OpenMsgBase Then Begin
           Low    := 1;
@@ -264,7 +265,8 @@ Begin
           1 : MsgBase := New(PMsgBaseSquish, Init);
         End;
 
-        MsgBase^.SetMsgPath (TempBase.Path + TempBase.FileName);
+        MsgBase^.SetMsgPath  (TempBase.Path + TempBase.FileName);
+        MsgBase^.SetTempFile (TempPath + 'msgbuf.');
 
         If MsgBase^.OpenMsgBase Then Begin
           LowMessage  := 1;
@@ -283,6 +285,7 @@ Begin
   ClientWriteLine('.');
 End;
 
+(*
 Procedure TNNTPServer.cmd_POST;
 Var
   MsgBase   : PMsgBaseABS;
@@ -408,6 +411,196 @@ Begin
   End;
 
   MsgBase^.SetMsgPath (TempBase.Path + TempBase.FileName);
+  // set tmpbuf
+
+  If Not MsgBase^.OpenMsgBase Then
+    If Not MsgBase^.CreateMsgBase (TempBase.MaxMsgs, TempBase.MaxAge) Then Begin
+      Dispose(MsgBase, Done);
+      MsgText.Free;
+      Client.WriteLine('441 Cannot save');
+      Exit;
+    End Else
+      If Not MsgBase^.OpenMsgBase Then Begin
+        Dispose(MsgBase, Done);
+        MsgText.Free;
+        Client.WriteLine('411 Cannot save');
+        Exit;
+      End;
+
+  MsgBase^.StartNewMsg;
+
+  MsgBase^.SetLocal (True);
+  MsgBase^.SetDate  (FormatDateTime('mm/dd/yy', Now));
+  MsgBase^.SetTime  (FormatDateTime('hh:nn', Now));
+  MsgBase^.SetTo    ('All');
+  MsgBase^.SetSubj  (Subject);
+
+  If TempBase.Flags And MBRealNames <> 0 Then
+    MsgBase^.SetFrom(User.RealName)
+  Else
+    MsgBase^.SetFrom(User.Handle);
+
+  If TempBase.NetType > 0 Then Begin
+    MsgBase^.SetMailType(mmtEchoMail);
+
+    Case TempBase.NetType of
+      1 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileEcho);
+      2 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileNews);
+    End;
+
+    ReWrite (SemFile);
+    Close   (SemFile);
+  End Else
+    MsgBase^.SetMailType(mmtNormal);
+
+  MsgBase^.SetPriv (TempBase.Flags and MBPrivate <> 0);
+
+  For Count := 1 to MsgText.Count Do Begin
+    InData := MsgText.Strings[Count - 1];
+
+    If Length(InData) > 79 Then InData[0] := #79;
+
+    MsgBase^.DoStringLn(InData);
+  End;
+
+  MsgBase^.WriteMsg;
+  MsgBase^.CloseMsgBase;
+
+  Dispose (MsgBase, Done);
+
+  MsgText.Free;
+
+  ClientWriteLine ('240 Article posted ok');
+End;
+*)
+
+Procedure TNNTPServer.cmd_POST;
+Var
+  MsgBase   : PMsgBaseABS;
+  MBaseFile : File of RecMessageBase;
+  TempBase  : RecMessageBase;
+  MsgText   : TStringList;
+  Subject   : String;
+  Newsgroup : String;
+  InData    : String;
+  HackCount : LongInt;
+  Count     : LongInt;
+  GotStart  : Boolean;
+  Found     : Boolean;
+  SemFile   : File;
+Begin
+  If Not LoggedIn Then Begin
+    ClientWriteLine(re_AuthReq);
+    Exit;
+  End;
+
+  ClientWriteLine('340 Send article to be posted.  End with <CRLF>.<CRLF>');
+
+  Subject   := '';
+  Newsgroup := '';
+  GotStart  := False;
+  MsgText   := TStringList.Create;
+
+  Repeat
+    Client.ReadLine(InData);
+
+    If InData = '.' Then Break;
+
+    If Not GotStart And (Pos('Newsgroups:', InData) > 0) Then Begin
+      Newsgroup := Copy(InData, 13, 255);
+
+      Continue;
+    End;
+
+    If Not GotStart And (Pos('Subject:', InData) > 0) Then Begin
+      Subject := Copy(InData, 10, 255);
+
+      Continue;
+    End;
+
+    If (InData = '') And Not GotStart Then Begin
+      GotStart := True;
+      Continue;
+    End;
+
+    If MsgText.Count >= mysMaxMsgLines Then Begin
+      HackCount := 0;
+
+      While Not Terminated And (InData <> '.') Do Begin
+        Client.ReadLine(InData);
+
+        Inc (HackCount);
+
+        If HackCount >= HackThreshold Then Begin
+          EndSession := True;   // someone is being a douchebag
+
+          Server.Status('Flood attempt from ' + Client.PeerIP + '. Goodbye');
+
+          MsgText.Free;
+
+          Exit;
+        End;
+      End;
+
+      Break;
+    End;
+
+    If GotStart Then MsgText.Add(InData);
+  Until Terminated;
+
+  If Terminated Then Exit;
+
+  If (Subject = '') Then Begin
+    MsgText.Free;
+
+    ClientWriteLine('441 No subject; message not posted');
+
+    Exit;
+  End;
+
+  Found     := False;
+
+  Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
+
+  If ioReset(MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then Begin
+    ioRead (MBaseFile, TempBase);
+
+    While Not EOF(MBaseFile) Do Begin
+      ioRead (MBaseFile, TempBase);
+
+      If TempBase.NewsName = Newsgroup Then Begin
+        Found := True;
+
+        Break;
+      End;
+    End;
+  End;
+
+  Close (MBaseFile);
+
+  If Not Found or (Newsgroup = '') Then Begin
+    MsgText.Free;
+
+    ClientWriteLine('441 No newsgroup selected');
+
+    Exit;
+  End;
+
+  If Not CheckAccess(User, True, TempBase.PostACS) or (TempBase.NetType = 3) Then Begin
+    MsgText.Free;
+
+    ClientWriteLine('441 No post access');
+
+    Exit;
+  End;
+
+  Case TempBase.BaseType of
+    0 : MsgBase := New(PMsgBaseJAM, Init);
+    1 : MsgBase := New(PMsgBaseSquish, Init);
+  End;
+
+  MsgBase^.SetMsgPath  (TempBase.Path + TempBase.FileName);
+  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
 
   If Not MsgBase^.OpenMsgBase Then
     If Not MsgBase^.CreateMsgBase (TempBase.MaxMsgs, TempBase.MaxAge) Then Begin
@@ -493,7 +686,8 @@ Begin
     1 : MsgBase := New(PMsgBaseSquish, Init);
   End;
 
-  MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
+  MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
+  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
 
   If Not MsgBase^.OpenMsgBase Then Begin
     ClientWriteLine('423 No such article');
@@ -577,7 +771,8 @@ Begin
     1 : MsgBase := New(PMsgBaseSquish, Init);
   End;
 
-  MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
+  MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
+  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
 
   If Not MsgBase^.OpenMsgBase Then Begin
     ClientWriteLine('420 No article(s) selected');

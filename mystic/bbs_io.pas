@@ -72,30 +72,30 @@ Type
     Procedure   BufAddChar       (Ch: Char);
     Procedure   BufAddStr        (Str: String);
     Procedure   BufFlush;
-    Function    ParseMCI         (Display : Boolean; Code: String) : Boolean;
+    Function    ParseMCI         (Display: Boolean; Code: String) : Boolean;
     Function    StrMci           (Str: String) : String;
     Function    Attr2Ansi        (Attr: Byte) : String;
-    Function    Pipe2Ansi        (Color : Byte) : String;
-    Procedure   AnsiGotoXY       (X : Byte; Y:Byte);
-    Procedure   AnsiMoveX        (X : Byte);
-    Procedure   AnsiMoveY        (Y : Byte);
-    Procedure   AnsiColor        (A : Byte);
+    Function    Pipe2Ansi        (Color: Byte) : String;
+    Procedure   AnsiGotoXY       (X: Byte; Y:Byte);
+    Procedure   AnsiMoveX        (X: Byte);
+    Procedure   AnsiMoveY        (Y: Byte);
+    Procedure   AnsiColor        (A: Byte);
     Procedure   AnsiClear;
     Procedure   AnsiClrEOL;
     Procedure   OutPipe          (Str: String);
     Procedure   OutPipeLn        (Str: String);
-    Procedure   OutRaw           (Str : String);
+    Procedure   OutRaw           (Str: String);
     Procedure   OutRawLn         (Str: String);
-    Procedure   OutBS            (Num : Byte; Del: Boolean);
-    Procedure   OutFull          (Str : String);
-    Procedure   OutFullLn        (Str : String);
-    Function    OutFile          (FName : String; DoPause: Boolean; Speed: Byte) : Boolean;
-    Function    OutYN            (Y : Boolean) : String;
-    Function    OutON            (O : Boolean) : String;
+    Procedure   OutBS            (Num: Byte; Del: Boolean);
+    Procedure   OutFull          (Str: String);
+    Procedure   OutFullLn        (Str: String);
+    Function    OutFile          (FName: String; DoPause: Boolean; Speed: Byte) : Boolean;
+    Function    OutYN            (Y: Boolean) : String;
+    Function    OutON            (O: Boolean) : String;
     Procedure   PauseScreen;
     Function    MorePrompt       : Char;
-    Function    DrawPercent      (Bar : RecPercent; Part, Whole : SmallInt; Var Percent : SmallInt) : String;
-    Function    GetInput         (Field, Max, Mode: Byte; Default : String) : String;
+    Function    DrawPercent      (Bar: RecPercent; Part, Whole: SmallInt; Var Percent : SmallInt) : String;
+    Function    GetInput         (Field, Max, Mode: Byte; Default: String) : String;
     Function    InXY             (X, Y, Field, Max, Mode: Byte; Default: String) : String;
     Function    InKey            (Wait: LongInt) : Char;
     Function    GetYNL           (Str: String; Yes: Boolean) : Boolean;
@@ -1821,12 +1821,13 @@ Var
 
 Begin
   If UseInLimit Then Begin
-    Field := InLimit;
+    Field      := InLimit;
     UseInLimit := False;
   End;
 
   If UseInSize Then Begin
     UseInSize := False;
+
     If InSize <= Max Then Max := InSize;
   End;
 
@@ -1880,6 +1881,7 @@ Begin
     Ch := GetKey;
 
     If IsArrow Then Begin
+
       Case Ch of
         #71 : If StrPos > 1 Then Begin
                 StrPos := 1;
@@ -1939,6 +1941,7 @@ Begin
               End;
       End;
     End Else
+
       Case Ch of
         #02 : ReDraw;
         #08 : If StrPos > 1 Then Begin
@@ -2058,7 +2061,7 @@ Var
 Begin
   Attr := Screen.TextAttr;
 
-  Screen.TextAttr := 0;  // kludge to force it to return full ansi codes
+//  Screen.TextAttr := 0;  // kludge to force it to return full ansi codes
 
   If Part > Whole Then Part := Whole;
 
@@ -2072,7 +2075,7 @@ Begin
 
   Result := Attr2Ansi(Bar.HiAttr) + strRep(Bar.HiChar, FillSize) +
             Attr2Ansi(Bar.LoAttr) + strRep(Bar.LoChar, Bar.BarLength - FillSize) +
-            Attr2Ansi(Attr);
+            Pipe2Ansi(16) + Attr2Ansi(Attr);
 End;
 
 {$IFDEF UNIX}

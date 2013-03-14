@@ -834,7 +834,7 @@ Begin
         #77 : If CurX <= RowSize Then Inc(CurX);
         #73 : PageUp;
         #81 : PageDown;
-        #83      : DoDelete;
+        #83 : DoDelete;
       End;
     End Else
       Case Ch of

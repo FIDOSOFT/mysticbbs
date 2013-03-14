@@ -1754,12 +1754,14 @@
    mentioning it just in case.
 
  + New MPL function: GetMBaseStats.  This can be used as a function or a
-   procedure (returning true if successful).  It takes 4 parameters.
+   procedure (returning true if successful).  It takes 6 parameters.
 
       #1: Message base number
-      #2: Total messages (this is a VAR parameter)
-      #3: New messages (this is a VAR parameter)
-      #4: New messages to you (this is a VAR parameter)
+      #2: Exclude messages FROM the current user in stats
+      #3: Exclude messages TO the current user that have already been read
+      #4: Total messages (this is a VAR parameter)
+      #5: New messages (this is a VAR parameter)
+      #6: New messages to you (this is a VAR parameter)
 
    Example:
 
@@ -1771,7 +1773,7 @@
         count := 1;  //start @1 to skip email base
 
         while getmbase(count) do begin
-          getmbasestats(count, total, new, yours);
+          getmbstats(count, true, true, total, new, yours);
 
           writeln('base       : ' + mbasename);
           writeln('total msgs : ' + int2str(total));
@@ -2671,4 +2673,196 @@
 
  + E-mail messages are now included in QWK packets.
 
-   <ALPHA 28 RELEASED>
+ + Added additional support for the QWKE packets.  Mystic will now generate
+   the appropriate QWKE data to tell the reader if the message base is
+   public or private, if reading is forced, if real names or handles should
+   be used, and whether or not they have access to post/reply to the area.
+
+ + Rewrote the status bar on the local console (in Windows) to use the color
+   values set in the configuration.
+
+ + Message QuickScan (MQ) menu command now has two new options:
+
+      /YOU - Only show base if it has messages address to you
+      /NEW - Only show base if it has new messages
+
+ ! Fixed a bug which caused the nodelist text search to not work.
+
+ + The "startup" MPL program that is executed if it exists after ANSI
+   detection and theme assignment can now set the user login and password
+   to bypass the internal login functions.  You must set to two variables:
+
+      UserLoginName
+      UserLoginPW
+
+   So for example if I had a startup.mpx that simply did this:
+
+      Begin
+        UserLoginName := 'g00r00';
+        UserLoginPW   := 'mypassword';
+      End;
+
+   It would automatically log in as g00r00 and bypass the normal login/pw
+   stuff.  This combined with newuserapp.mpx allows you to completely
+   rewrite login and newuser functions in MPL if you'd like to.
+
+ + The Read Messages menu command (MR) now has the option to pass /NOLR
+   in the optional data.  If this is found, Mystic will not update the
+   users last read pointers after reading.
+
+   You MUST still supply the read type as the first character.  So for
+   example:
+
+           Command: MR
+     Optional data: Y /NOLR
+
+   Would read all messages addressed specifically to that user, but would
+   not set their last read pointers.
+
+ + The Message New Scan (MN) now has the option to supply /NOLR which will
+   cause the users last read pointers to NOT get updated during this
+   message scan.
+
+ + New Menu Command -R will set the value of the "OK" acs flag.  The
+   optional data of 0 will set the OK flag to return false, or 1 will set
+   it to return true.
+
+ + New ACS function: ON.  This returns true if the last performed message
+   "Quick scan" found new messages or if the last performed Email check
+   found unread emails.
+
+ + New ACS function: OY.  This returns true if the last performed message
+   "Quick scan" found new messages addressed to the user.
+
+ + The Message New Scan (MN) now has the option to supply /NOFROM which
+   will skip over any messages FROM the user.  This works in ALL reading
+   modes.
+
+ + The Read Messages (MR) now has the option to supply /NOFROM which
+   will skip over any messages FROM the user.  This works in ALL reading
+   modes.
+
+ + The Message Quick Scan (MQ) command now has the option to supply
+   /NOFROM which will not count any messages FROM the user in the scan.
+
+ + Added a new menu "personalscan.mnu" into the default install menu
+   directory which demonstrates many of the new message reading/scanning
+   functions.
+
+ - MPL GetMBaseStats has changed in a few ways.  First, it has been renamed
+   to "getmbstats" and now has two additional parameters:
+
+      #1: Message base number
+      #2: Exclude messages FROM the current user in stats? T/F
+      #3: Exclude personal messages that have already been read?  T/F
+      #4: Total messages (this is a VAR parameter)
+      #5: New messages (this is a VAR parameter)
+      #6: New messages to you (this is a VAR parameter)
+
+ + Mystic now tracks if ANY message (public or private) has been read by
+   the user the message is addressed to.  You MUST replace your old
+   message header flags prompt with the new one to include the received
+   flag at the end:
+
+      ; Msg header flags text one word each separated by a space
+      ; 1=Local 2=Echo 3=Private 4=Sent 5=Delete 6=Received
+      490 Local Echo Private Sent Deleted Rcvd
+
+ ! Fixed a bug that could cause private messages to not be marked as private
+   when uploading a QWKE REP packet.
+
+ + Two new prompt info codes added to prompt #127 (read email? prompt):
+
+     &1 = number of emails
+     &2 = number of unread emails
+
+   In addition, the Yes/No prompt defaults to NO if they do not have any
+   unread emails, or YES if they do.
+
+ + The Read Messages command (RM) now allows for the option /NOREAD which
+   will skip over any message marked as received.  A received message is
+   classified as a message addressed to the current user that has already
+   been read.
+
+ + The Message New Scan (MN) command now allows for the /NOREAD option.
+
+ + The QuickScan command (MQ) now allows for the /NOREAD option.
+
+ - Removed QuickScan header prompt and /NOHEAD option.  It was pointless and
+   could easily be done in a menu if yo someone wanted it.
+
+ + Added prompts that will be displayed when setting the last read pointer
+   within the message readers.  The two new prompts are:
+
+      ; Standard message reader: Lastread pointer set &1 = msg number
+      504 |CR|11Last read pointer has been set to message number |&1.|CR|CR|PA
+
+      ; Lightbar reader: Lastread pointer set &1 = msg number
+      505 |CR|11Last read pointer has been set to message number |&1.|CR|CR|PA
+
+ + Added a /LIST option to the QuickScan which will list out messages based
+   on the options presented.  The following new prompts need to be added:
+
+      ; QuickScan message list header    &2=basename
+      506 |15From            Base                 Subject|CR|09=============== ==================== ==========================================
+
+      ; QuickScan message list middle
+      ; &1=msg#  &2=basename  &3=from  &4=to  &5=subject  &6=date
+
+      507 |10|$R15|&3 |09|$R20|&2 |11|$R42|&5
+      ; QuicScan message list footer
+
+      508 |09|$D79=|CR
+
+ <ALPHA 28 RELEASED>
+
+ + Prompt #490 has been changed to separate message header flags by comma
+   instead of space.  This allows the ability to completely exclude certain
+   flags (ie if you never want a Local flag you can just remove it and leave
+   the comma)
+
+     ; Msg header flags text one word each separated by a comma
+     ; 1=Local 2=Echo 3=Private 4=Sent 5=Delete, 6=Received
+     490 Local,Echo,Priv,Sent,Del,Read
+
+ ! Echo flag was not displaying correctly in the message headers.
+
+ ! Fixed a bug in the ANSI file viewer which was causing garbled ANSIs
+   in the gallery and the viewer.
+
+ + Pressing the SPACE bar in the ANSI viewer now displays the file
+   "normally" with a screenpause at the end.
+
+ + The ansi viewer now has a help file option.  The format of the optional
+   data has changed for the GV menu command so you will need to change it
+   if you are using it.
+
+      <template><helpfile><displayspeed><filename>
+
+      IE:
+        Command: GV
+           Data: ansiviewer;ansivhelp;0;myansi
+
+ ! Fixed a bug in Zmodem that could cause a locked node if carrier was
+   dropped at a certain point during Zmodem upload initialization.
+
+ + Added a different type of line check into the ANSI parsers.  If a line
+   ends with a linefeed but didn't have carrage return before it (as is
+   standard), Mystic will now add the carrage return.  If this blows up
+   any existing ANSIs it will be changed back.
+
+ ! Fixed a bug with pipe color code parsing in the ANSI viewer (GV)
+
+ ! The ANSI art gallery would crash if the directory passed to it did not
+   exist.
+
+ + Mystic now allows the column size to be defined within a theme.  Valid
+   values are 40 or 80 columns.
+
+ + Mystic will now perform text wrapping in the message editors based on
+   the select theme's column size.
+
+ + Abbreviated Mystic's copyright notice upon connect to be friendly to
+   40 column connections.
+
+ <ALPHA 29 RELEASED>

@@ -23,7 +23,7 @@
 Const
   mysSoftwareID  = 'Mystic';                                    // no idea
   mysCopyYear    = '1997-2013';                                 // its been a long time!
-  mysVersion     = '1.10 A27';                                  // current version
+  mysVersion     = '1.10 A29';                                  // current version
   mysDataChanged = '1.10 A11';                                  // version of last records change
 
   {$IFDEF WIN32}
@@ -59,13 +59,15 @@ Const
   mysMaxMenuCmds     = 25;                                      // Max menu commands per item
   mysMaxMenuInput    = 12;
   mysMaxMenuStack    = 8;
-  mysMaxThemeText    = 503;                                     // Total prompts in theme file
+  mysMaxThemeText    = 508;
 
   fn_SemFileEcho = 'echomail.now';
   fn_SemFileNews = 'newsmail.now';
   fn_SemFileNet  = 'netmail.now';
   fn_tplMsgEdit  = 'ansiedit';
   fn_tplTextEdit = 'ansitext';
+
+  ColumnValue : Array[0..1] of Byte = (80, 40);
 
 Type
   SmallWord = System.Word;
@@ -706,7 +708,8 @@ Type
     MGroupBar    : RecPercent;
     MAreaList    : RecPercent;
     Colors       : Array[0..9] of Byte;
-    Reserved     : Array[1..199] of Byte;
+    ColumnSize   : Byte;
+    Reserved     : Array[1..198] of Byte;
   End;
 
   BBSListRec = Record

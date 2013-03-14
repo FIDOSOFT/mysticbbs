@@ -65,7 +65,7 @@ Var
     Count     : Cardinal;
     Addr      : RecEchoMailAddr;
   Begin
-  FileMode := 66;
+    FileMode  := 66;
     BaseKills := 0;
 
     Inc (BaseTotal);
@@ -150,8 +150,8 @@ Var
           3    : NewData^.SetMailType(mmtNetMail);
         End;
 
-        NewData^.SetOrig(MsgData^.GetOrigAddr);
-        NewData^.SetDest(MsgData^.GetDestAddr);
+        NewData^.SetOrig (MsgData^.GetOrigAddr);
+        NewData^.SetDest (MsgData^.GetDestAddr);
 
         MsgData^.MsgTxtStartUp;
 

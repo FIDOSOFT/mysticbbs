@@ -32,11 +32,12 @@ Type
     SavedY   : Byte;
     CurX     : Byte;
     Attr     : Byte;
+    LastChar : Char;
 
     Procedure   SetFore (Color: Byte);
     Procedure   SetBack (Color: Byte);
     Procedure   ResetControlCode;
-    Function    ParseNumber (Var Line: String) : Integer;
+    Function    ParseNumber : Integer;
     Function    AddChar (Ch: Char) : Boolean;
     Procedure   MoveXY (X, Y: Word);
     Procedure   MoveUP;
@@ -130,28 +131,21 @@ Begin
   End;
 End;
 
-Function TMsgBaseAnsi.ParseNumber (Var Line: String) : Integer;
+Function TMsgBaseAnsi.ParseNumber : Integer;
 Var
-  A    : Integer;
-  B    : LongInt;
-  Str1 : String;
-  Str2 : String;
+  Res : LongInt;
+  Str : String;
 Begin
-  Str1 := Line;
+  Val(Code, Result, Res);
 
-  Val(Str1, A, B);
-
-  If B = 0 Then
-    Str1 := ''
+  If Res = 0 Then
+    Code := ''
   Else Begin
-    Str2 := Copy(Str1, 1, B - 1);
+    Str := Copy(Code, 1, Pred(Res));
 
-    Delete (Str1, 1, B);
-    Val    (Str2, A, B);
+    Delete (Code, 1, Res);
+    Val    (Str, Result, Res);
   End;
-
-  Line        := Str1;
-  ParseNumber := A;
 End;
 
 Procedure TMsgBaseAnsi.MoveXY (X, Y: Word);
@@ -168,11 +162,13 @@ Var
   X : Byte;
   Y : Byte;
 Begin
-  X := ParseNumber(Code);
-  Y := ParseNumber(Code);
+  Y := ParseNumber;
+
+  If Y = 0 Then Y := 1;
+
+  X := ParseNumber;
 
   If X = 0 Then X := 1;
-  If Y = 0 Then Y := 1;
 
   MoveXY (X, Y);
 
@@ -184,7 +180,7 @@ Var
   NewPos : Integer;
   Offset : Integer;
 Begin
-  Offset := ParseNumber (Code);
+  Offset := ParseNumber;
 
   If Offset = 0 Then Offset := 1;
 
@@ -202,7 +198,7 @@ Procedure TMsgBaseAnsi.MoveDOWN;
 Var
   NewPos : Byte;
 Begin
-  NewPos := ParseNumber (Code);
+  NewPos := ParseNumber;
 
   If NewPos = 0 Then NewPos := 1;
 
@@ -216,7 +212,7 @@ Var
   NewPos : Integer;
   Offset : Integer;
 Begin
-  Offset := ParseNumber (Code);
+  Offset := ParseNumber;
 
   If Offset = 0 Then Offset := 1;
 
@@ -235,7 +231,7 @@ Var
   NewPos : Integer;
   Offset : Integer;
 Begin
-  Offset := ParseNumber(Code);
+  Offset := ParseNumber;
 
   If Offset = 0 Then Offset := 1;
 
@@ -278,7 +274,7 @@ Begin
     'h' : ResetControlCode;
     'm' : Begin
             While Length(Code) > 0 Do Begin
-              Case ParseNumber(Code) of
+              Case ParseNumber of
                 0 : Attr := 7;
                 1 : Attr := Attr OR $08;
                 5 : Attr := Attr OR $80;
@@ -327,16 +323,18 @@ Begin
     PipeCode := PipeCode + Ch;
 
     If Length(PipeCode) = 2 Then Begin
-
-      Case strS2I(PipeCode) of
-        00..
-        15 : SetFore(strS2I(PipeCode));
-        16..
-        23 : SetBack(strS2I(PipeCode) - 16);
+      If PipeCode = '00' Then
+        SetFore(0)
       Else
-        AddChar('|');
-        AddChar(PipeCode[1]);
-        AddChar(PipeCode[2]);
+        Case strS2I(PipeCode) of
+          01..
+          15 : SetFore(strS2I(PipeCode));
+          16..
+          23 : SetBack(strS2I(PipeCode) - 16);
+        Else
+          AddChar('|');
+          AddChar(PipeCode[1]);
+          AddChar(PipeCode[2]);
       End;
 
       GotPipe  := False;
@@ -349,13 +347,15 @@ Begin
   Case Escape of
     0 : Begin
           Case Ch of
-            #27 : Escape := 1;
+            #0  : ;
             #9  : MoveXY (CurX + 8, CurY);
             #12 : GotClear := True;
+            #13 : CurX     := 1;
+            #27 : Escape   := 1;
           Else
-            If Ch = '|' Then
-              GotPipe := True
-            Else
+//            If Ch = '|' Then
+//              GotPipe := True
+//            Else
               AddChar (Ch);
 
             ResetControlCode;
@@ -372,6 +372,8 @@ Begin
   Else
     ResetControlCode;
   End;
+
+  LastChar := Ch;
 End;
 
 Function TMsgBaseAnsi.ProcessBuf (Var Buf; BufLen: Word) : Boolean;
@@ -383,14 +385,18 @@ Begin
 
   For Count := 1 to BufLen Do Begin
     If CurY > Lines Then Lines := CurY;
+
     Case Buffer[Count] of
       #10 : If CurY = mysMaxMsgLines Then Begin
               Result  := True;
               GotAnsi := False;
+
               Break;
-            End Else
+            End Else Begin
               Inc (CurY);
-      #13 : CurX := 1;
+
+              If LastChar <> #13 Then CurX := 1;
+            End;
       #26 : Begin
               Result := True;
               Break;

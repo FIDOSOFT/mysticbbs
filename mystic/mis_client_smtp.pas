@@ -188,12 +188,16 @@ Begin
         // todo: what happens if they never send an EOL... could still flood
 
         Client.ReadLine(InData);
+
         Inc (HackCount);
 
         If HackCount >= SMTPHackThresh Then Begin
           EndSession := True;   // someone is being a douchebag
+
           Server.Status('Flood attempt from ' + FromName + ' (' + Client.PeerIP + '); Goodbye');
+
           MsgText.Free;
+
           Exit;
         End;
       End;
@@ -214,7 +218,8 @@ Begin
     1 : MsgBase := New(PMsgBaseSquish, Init);
   End;
 
-  MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
+  MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
+  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
 
   If Not MsgBase^.OpenMsgBase Then
     If Not MsgBase^.CreateMsgBase (MBase.MaxMsgs, MBase.MaxAge) Then Begin

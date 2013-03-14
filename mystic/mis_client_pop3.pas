@@ -55,6 +55,7 @@ Type
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
 
+    Function    IsUser (Str: String) : Boolean;
     Procedure   ResetSession;
     Procedure   CreateMailBoxData;
     Procedure   DeleteMessages;
@@ -103,6 +104,12 @@ Begin
 
   Server   := Owner;
   MailSize := 0;
+End;
+
+Function TPOP3Server.IsUser (Str: String) : Boolean;
+Begin
+  Str    := strUpper(Str);
+  Result := LoggedIn and ((strUpper(User.RealName) = Str) or (strUpper(User.Handle) = Str));
 End;
 
 Procedure TPOP3Server.ResetSession;
@@ -185,41 +192,45 @@ Begin
     1 : MsgBase := New(PMsgBaseSquish, Init);
   End;
 
-  MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
+  MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
+  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
 
   If Not MsgBase^.OpenMsgBase Then Begin
     Dispose (MsgBase, Done);
     Exit;
   End;
 
-  MsgBase^.YoursFirst(User.RealName, User.Handle);
+  MsgBase^.SeekFirst(1);
 
-  While MsgBase^.YoursFound Do Begin
+  While MsgBase^.SeekFound Do Begin
     MsgBase^.MsgStartup;
-    MsgBase^.MsgTxtStartup;
 
-    Inc (MailSize);
+    if IsUser(MsgBase^.GetTo) Then Begin
+      MsgBase^.MsgTxtStartup;
 
-    New (MailInfo[MailSize]);
+      Inc (MailSize);
 
-    MailInfo[MailSize].Text := TStringList.Create;
+      New (MailInfo[MailSize]);
 
-    AddLine ('Date: ' + ParseDateTime(MsgBase^.GetDate, MsgBase^.GetTime));
-    AddLine ('From: ' + MsgBase^.GetFrom + ' <' + strReplace(MsgBase^.GetFrom, ' ', '_') + '@' + bbsConfig.inetDomain + '>');
-    AddLine ('X-Mailer: Mystic BBS ' + mysVersion);
-    AddLine ('To: ' + MsgBase^.GetTo + ' <' + strReplace(MsgBase^.GetTo, ' ', '_') + '@' + bbsConfig.inetDomain + '>');
-    AddLine ('Subject: ' + MsgBase^.GetSubj);
-    AddLine ('Content-Type: text/plain; charset=us-ascii');
-    AddLine ('');
+      MailInfo[MailSize].Text := TStringList.Create;
 
-    While Not MsgBase^.EOM Do
-      AddLine(MsgBase^.GetString(79));
+      AddLine ('Date: ' + ParseDateTime(MsgBase^.GetDate, MsgBase^.GetTime));
+      AddLine ('From: ' + MsgBase^.GetFrom + ' <' + strReplace(MsgBase^.GetFrom, ' ', '_') + '@' + bbsConfig.inetDomain + '>');
+      AddLine ('X-Mailer: Mystic BBS ' + mysVersion);
+      AddLine ('To: ' + MsgBase^.GetTo + ' <' + strReplace(MsgBase^.GetTo, ' ', '_') + '@' + bbsConfig.inetDomain + '>');
+      AddLine ('Subject: ' + MsgBase^.GetSubj);
+      AddLine ('Content-Type: text/plain; charset=us-ascii');
+      AddLine ('');
 
-    MailInfo[MailSize].MD5     := GetMessageUID(MsgBase);
-    MailInfo[MailSize].GotRETR := False;
-    MailInfo[MailSize].Deleted := False;
+      While Not MsgBase^.EOM Do
+        AddLine(MsgBase^.GetString(79));
 
-    MsgBase^.YoursNext;
+      MailInfo[MailSize].MD5     := GetMessageUID(MsgBase);
+      MailInfo[MailSize].GotRETR := False;
+      MailInfo[MailSize].Deleted := False;
+    End;
+
+    MsgBase^.SeekNext;
   End;
 
   MsgBase^.CloseMsgBase;
@@ -246,7 +257,8 @@ Begin
     1 : MsgBase := New(PMsgBaseSquish, Init);
   End;
 
-  MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
+  MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
+  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
 
   If Not MsgBase^.OpenMsgBase Then Begin
     Dispose (MsgBase, Done);
@@ -255,17 +267,18 @@ Begin
 
   For Count := 1 to MailSize Do Begin
     If MailInfo[Count].Deleted or (MailInfo[Count].GotRETR and bbsConfig.inetPOP3Delete) Then Begin
-      MsgBase^.YoursFirst(User.RealName, User.Handle);
+      MsgBase^.SeekFirst(1);
 
-      While MsgBase^.YoursFound Do Begin
+      While MsgBase^.SeekFound Do Begin
         MsgBase^.MsgStartUp;
 
-        If GetMessageUID(MsgBase) = MailInfo[Count].MD5 Then Begin
-          MsgBase^.DeleteMsg;
-          Break;
-        End;
+        If IsUser(MsgBase^.GetTo) Then
+          If GetMessageUID(MsgBase) = MailInfo[Count].MD5 Then Begin
+            MsgBase^.DeleteMsg;
+            Break;
+          End;
 
-        MsgBase^.YoursNext;
+        MsgBase^.SeekNext;
       End;
     End;
   End;

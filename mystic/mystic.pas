@@ -362,11 +362,9 @@ Begin
 End;
 
 Var
-  Count    : Byte;
-  Temp     : String[120];
-  UserName : String[30];
-  Password : String[15];
-  Script   : String[120];
+  Count  : Byte;
+  Temp   : String[120];
+  Script : String[120];
 Begin
   {$IFDEF DEBUG}
     SetHeapTraceOutput('mystic.mem');
@@ -411,10 +409,10 @@ Begin
       Session.UserHostInfo := Copy(ParamStr(Count), 6, Length(Temp))
     Else
     If Copy(Temp, 1, 2) = '-U' Then
-      UserName := strReplace(Copy(Temp, 3, Length(Temp)), '_', ' ')
+      Session.UserLoginName := strReplace(Copy(Temp, 3, Length(Temp)), '_', ' ')
     Else
     If Copy(Temp, 1, 2) = '-P' Then
-      Password := Copy(Temp, 3, Length(Temp))
+      Session.UserLoginPW := Copy(Temp, 3, Length(Temp))
     Else
     If Copy(Temp, 1, 2) = '-X' Then
       Script := strReplace(Copy(ParamStr(Count), 3, Length(Temp)), '_', ' ')
@@ -489,7 +487,7 @@ Begin
   //Halt(0);
   {$ENDIF}
 
-  Session.User.UserLogon1 (UserName, Password, Script);
+  Session.User.UserLogon1 (Script);
 
   If Session.TimeOffset > 0 Then
     Session.TimeSaved := Session.User.ThisUser.TimeLeft;

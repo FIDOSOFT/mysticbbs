@@ -335,6 +335,8 @@ Begin
 
   Configuration_EditUser (Session.User.ThisUser);
 
+  Screen.WriteXY (1, 24, 7, strRep(' ', 80));
+
   Session.InUserEdit := False;
   Session.LocalMode  := SavedLocal;
 

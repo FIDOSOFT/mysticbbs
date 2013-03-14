@@ -87,9 +87,12 @@ Function LineEditor (Var Lines : Integer; MaxLen: Byte; MaxLine: Integer; TEdit,
   Begin
     Done := False;
     Save := False;
+
     Repeat
       Session.io.OutFull (Session.GetPrompt(166));
+
       Ch := Session.io.OneKey ('?ACQRSU', True);
+
       Case Ch of
         '?' : Session.io.OutFullLn (Session.GetPrompt(167));
         'A' : If Forced Then Begin
@@ -144,9 +147,13 @@ Function LineEditor (Var Lines : Integer; MaxLen: Byte; MaxLine: Integer; TEdit,
                 Dec(Session.Msgs.MsgText[CurLine][0]);
               End Else If CurLine > 1 Then Begin
                 Dec(CurLine);
+
                 Session.io.PromptInfo[1] := strI2S(CurLine);
+
                 Session.io.OutFullLn (Session.GetPrompt(165));
+
                 Session.io.OutRaw (Session.Msgs.MsgText[CurLine]);
+
                 If Session.Msgs.MsgText[CurLine] <> '' Then Begin
                   Session.io.OutBS(1, True);
                   Dec(Session.Msgs.MsgText[CurLine][0]);
@@ -155,6 +162,7 @@ Function LineEditor (Var Lines : Integer; MaxLen: Byte; MaxLine: Integer; TEdit,
         #13 : Begin
                 If CurLine < MaxLine Then Begin
                   Inc(CurLine);
+
                   Session.io.OutRaw (#13#10);
                 End;
               End;
@@ -163,15 +171,18 @@ Function LineEditor (Var Lines : Integer; MaxLen: Byte; MaxLine: Integer; TEdit,
           Commands;
           If (Not Save) and (Not Done) Then FullReDraw;
         End Else
-                                If Ch in [#32..#254] Then Begin
+        If Ch in [#32..#254] Then Begin
           If Length(Session.Msgs.MsgText[Curline]) < MaxLen Then Begin
             Session.Msgs.MsgText[CurLine] := Session.Msgs.MsgText[CurLine] + Ch;
+
             Session.io.BufAddChar (Ch);
           End;
           If (Length(Session.Msgs.MsgText[CurLine]) > MaxLen-1) and (CurLine < MaxLine) Then Begin
             strWrap (Session.Msgs.MsgText[CurLine], Session.Msgs.MsgText[Succ(CurLine)], MaxLen);
-            Inc(CurLine);
-            Session.io.OutBS (Length(Session.Msgs.MsgText[CurLine]), True);
+
+            Inc (CurLine);
+
+            Session.io.OutBS    (Length(Session.Msgs.MsgText[CurLine]), True);
             Session.io.OutRawLn ('');
             Session.io.OutRaw   (Session.Msgs.MsgText[CurLine]);
           End;
@@ -196,7 +207,7 @@ Begin
   GetText;
 
   If Save Then Begin
-    Lines := CurLine - 1;
+    Lines      := CurLine - 1;
     LineEditor := True;
   End Else
     LineEditor := False;

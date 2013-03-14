@@ -27,7 +27,7 @@ Uses
 
 Const
   WinConsoleTitle = mysSoftwareID + ' Node ';
-  CopyID          = 'Copyright (C) ' + mysCopyYear + ' By James Coyle.  All Rights Reserved.';
+  CopyID          = 'Copyright (C) ' + mysCopyYear + ' By James Coyle';
   DateTypeStr : Array[1..4] of String[8] = ('MM/DD/YY', 'DD/MM/YY', 'YY/DD/MM', 'Ask     ');
 
 Var
@@ -44,6 +44,7 @@ Var
   Config      : RecConfig;
   StatusPtr   : Byte = 1;
 
+Function  DrawAccessFlags (Var Flags: AccessFlagType) : String;
 Procedure KillRecord      (Var dFile; RecNum: LongInt; RecSize: Word);
 Procedure AddRecord       (var dFile; RecNum: LongInt; RecSize: Word);
 Function  Bool_Search     (Mask: String; Str: String) : Boolean;
@@ -67,6 +68,19 @@ Uses
   bbs_cfg_UserEdit,
   bbs_General,
   MPL_Execute;
+
+Function DrawAccessFlags (Var Flags: AccessFlagType) : String;
+Var
+  Ch : Char;
+Begin
+  Result := '';
+
+  For Ch := 'A' to 'Z' Do
+    If Ord(Ch) - 64 in Flags Then
+      Result := Result + Ch
+    Else
+      Result := Result + '-';
+End;
 
 Procedure AddRecord (var dFile; RecNum: LongInt; RecSize: Word);
 Var
@@ -239,58 +253,36 @@ End;
 
 {$IFNDEF UNIX}
 Procedure UpdateStatusLine (Mode: Byte; Str: String);
-
-  Function DrawAccessFlags (Var Flags : AccessFlagType) : String;
-  Var
-    S  : String;
-    Ch : Char;
-  Begin
-    S := '';
-
-    For Ch := 'A' to 'Z' Do
-      If Ord(Ch) - 64 in Flags Then S := S + Ch Else S := S + '-';
-
-    Result := S;
-  End;
-
 Begin
   If Not Config.UseStatusBar Then Exit;
 
   Screen.SetWindow (1, 1, 80, 25, False);
 
   Case Mode of
-    0 : Screen.WriteXY (1, 25, 120, strPadC(Str, 80, ' '));
+    0 : Screen.WriteXY (1, 25, Config.StatusColor3, strPadC(Str, 80, ' '));
     1 : Begin
-          Screen.WriteXY ( 1, 25, 112, ' [Alias]                                [Baud]          [Sec]       [Time]      ');
-          Screen.WriteXY (10, 25, 112, Session.User.ThisUser.Handle);
-          Screen.WriteXY (48, 25, 112, strI2S(Session.Baud));
-          Screen.WriteXY (63, 25, 112, strI2S(Session.User.ThisUser.Security));
-          Screen.WriteXY (76, 25, 112, strI2S(Session.TimeLeft));
+          Screen.WriteXY ( 1, 25, Config.StatusColor1, ' Alias ' + strRep(' ', 35) + 'Age       SecLevel      TimeLeft      ');
+          Screen.WriteXY ( 8, 25, Config.StatusColor2, Session.User.ThisUser.Handle);
+          Screen.WriteXY (47, 25, Config.StatusColor2, Session.User.ThisUser.Gender + '/' + strI2S(DaysAgo(Session.User.ThisUser.Birthday, 1) DIV 365));
+          Screen.WriteXY (62, 25, Config.StatusColor2, strI2S(Session.User.ThisUser.Security));
+          Screen.WriteXY (76, 25, Config.StatusColor2, strI2S(Session.TimeLeft));
         End;
     2 : Begin
-          Screen.WriteXY ( 1, 25, 112, ' [Name]                                [Flag1]                                  ');
-          Screen.WriteXY ( 9, 25, 112, Session.User.ThisUser.RealName);
-          Screen.WriteXY (48, 25, 112, DrawAccessFlags(Session.User.ThisUser.AF1));
+          Screen.WriteXY ( 1, 25, Config.StatusColor1, ' Email ' + strRep(' ', 35) + ' Location ' + strRep(' ', 27) + ' ');
+          Screen.WriteXY ( 8, 25, Config.StatusColor2, strPadR(Session.User.ThisUser.Email, 36, ' '));
+          Screen.WriteXY (53, 25, Config.StatusColor2, strPadR(Session.User.ThisUser.City, 27, ' '));
         End;
     3 : Begin
-          Screen.WriteXY ( 1, 25, 112, ' [Address]                                                                      ');
-          Screen.WriteXY (12, 25, 112, Session.User.ThisUser.Address);
-          Screen.WriteXY (43, 25, 112, Session.User.ThisUser.City);
-          Screen.WriteXY (69, 25, 112, Session.User.ThisUser.ZipCode);
+          Screen.WriteXY ( 1, 25, Config.StatusColor1, ' IP ' + strRep(' ', 19) + ' Host ' + strRep(' ', 49) + ' ');
+          Screen.WriteXY ( 5, 25, Config.StatusColor2, Session.UserIPInfo);
+          Screen.WriteXY (31, 25, Config.StatusColor2, strPadR(Session.UserHostInfo, 49, ' '));
         End;
     4 : Begin
-          Screen.WriteXY ( 1, 25, 112, ' [BDay]           [Sex]     [Home PH]                 [Data PH]                 ');
-          Screen.WriteXY ( 9, 25, 112, DateDos2Str(Session.User.ThisUser.Birthday, Session.User.ThisUser.DateType));
-          Screen.WriteXY (25, 25, 112, Session.User.ThisUser.Gender);
-          Screen.WriteXY (39, 25, 112, Session.User.ThisUser.HomePhone);
-          Screen.WriteXY (65, 25, 112, Session.User.ThisUser.DataPhone);
+          Screen.WriteXY ( 1, 25, Config.StatusColor1, ' Flags 1 ' + strRep(' ', 35) + ' Flags 2 ');
+          Screen.WriteXY (10, 25, Config.StatusColor2, DrawAccessFlags(Session.User.ThisUser.AF1));
+          Screen.WriteXY (54, 25, Config.StatusColor2, DrawAccessFlags(Session.User.ThisUser.AF2));
         End;
-    5 : Begin
-          Screen.WriteXY ( 1, 25, 112, ' [Email]                                     [Flag2]                           ');
-          Screen.WriteXY (10, 25, 112, Session.User.ThisUser.Email);
-          Screen.WriteXY (54, 25, 112, DrawAccessFlags(Session.User.ThisUser.AF2));
-        End;
-    6 : Screen.WriteXY ( 1, 25, 112, ' ALT (C)hat  (S)plit  (E)dit  (H)angup  (J) DOS  (U)pgrade  (B) Status Bar      ');
+    5 : Screen.WriteXY (1, 25, Config.StatusColor3, '  ALTS/C Chat ALTE Edit ALTH Hangup ALT+/- Time ALTB Info ALTT Bar ALTV Screen  ');
   End;
 
   Screen.SetWindow (1, 1, 80, 24, False);
@@ -323,7 +315,7 @@ Begin
           Else
             Session.io.LocalScreenEnable;
 {B} #48 : Begin
-            If StatusPtr < 6 Then
+            If StatusPtr < 5 Then
               Inc (StatusPtr)
             Else
               StatusPtr := 1;

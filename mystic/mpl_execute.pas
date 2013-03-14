@@ -92,7 +92,7 @@ Type
 
     Procedure GetMBaseVars    (Var M: RecMessageBase);
     Function  GetMBaseRecord  (Num: LongInt) : Boolean;
-    Function  GetMBaseStats   (Num: LongInt; Var Total, New, Yours: LongInt) : Boolean;
+    Function  GetMBaseStats   (Num: LongInt; SkipFrom, SkipRead: Boolean; Var Total, New, Yours: LongInt) : Boolean;
 
     Procedure GetMGroupVars   (Var G: RecGroup);
     Function  GetMGroupRecord (Num: LongInt) : Boolean;
@@ -244,14 +244,15 @@ Begin
   Move (M.SysopACS, VarData[IdxVarMBase + 5 ]^.Data^, SizeOf(M.SysopACS));
 End;
 
-Function TInterpEngine.GetMBaseStats (Num: LongInt; Var Total, New, Yours: LongInt) : Boolean;
+Function TInterpEngine.GetMBaseStats (Num: LongInt; SkipFrom, SkipRead: Boolean; Var Total, New, Yours: LongInt) : Boolean;
 Var
   M : RecMessageBase;
+  T : LongInt;
 Begin
   Result := Session.Msgs.GetBaseByNum(Num, M);
 
   If Result Then
-    Session.Msgs.GetMessageStats(M, Total, New, Yours);
+    Session.Msgs.GetMessageStats(False, False, False, T, M, SkipFrom, SkipRead, Total, New, Yours);
 End;
 
 Function TInterpEngine.GetMBaseRecord (Num: LongInt) : Boolean;
@@ -1903,7 +1904,7 @@ Begin
             Store (TempBool, 1);
           End;
     541 : Begin
-            TempBool := GetMBaseStats(Param[1].L, LongInt(Pointer(Param[2].vData)^), LongInt(Pointer(Param[3].vData)^), LongInt(Pointer(Param[4].vData)^));
+            TempBool := GetMBaseStats(Param[1].L, Param[2].O, Param[3].O, LongInt(Pointer(Param[3].vData)^), LongInt(Pointer(Param[4].vData)^), LongInt(Pointer(Param[5].vData)^));
             Store (TempBool, 1);
           End;
     542 : WriteXY (Param[1].B, Param[2].B, Param[3].B, Param[4].S);

@@ -109,6 +109,12 @@ Begin
     Halt(1);
   End;
 
+  TempPath := bbsConfig.SystemPath + 'temp0' + PathChar;
+
+  {$I-} MkDir (TempPath); {$I+}
+
+  If IoResult <> 0 Then;
+
   DirChange(bbsConfig.SystemPath);
 End;
 

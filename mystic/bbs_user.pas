@@ -62,7 +62,7 @@ Type
     Procedure   GetOption2         (Edit: Boolean);
     Procedure   GetOption3         (Edit: Boolean);
     Procedure   GetTheme;
-    Procedure   UserLogon1         (Var UN, PW, MPE : String);
+    Procedure   UserLogon1         (Var MPE : String);
     Procedure   UserLogon2;
     Procedure   UserLogon3;
     Procedure   CreateNewUser      (DefName: String);
@@ -163,6 +163,7 @@ Var
               'A' : Res := Chat.Available;
               'I' : Res := Chat.Invisible;
               'K' : Res := AcsOkFlag;
+              'N' : Res := Session.LastScanHadNew;
               'M' : Begin
                       Res := Access(Session.Msgs.MBase.SysopACS);
 
@@ -175,6 +176,7 @@ Var
                       Res := (Temp2 >= Temp1);
                     End Else
                       Res := True;
+              'Y' : Res := Session.LastScanHadYou;
             End;
       'S' : Res := ThisUser.Security >= strS2I(Data);
       'T' : Res := Session.TimeLeft > strS2I(Data);
@@ -1171,7 +1173,7 @@ Begin
   {$ENDIF}
 End;
 
-Procedure TBBSUser.UserLogon1 (Var UN, PW, MPE : String);
+Procedure TBBSUser.UserLogon1 (Var MPE: String);
 Var
   A     : Integer;
   Count : Byte;
@@ -1182,7 +1184,7 @@ Begin
 
   Session.io.Graphics := 0;
 
-  Session.systemLog ('-');
+  Session.SystemLog ('-');
   Session.SystemLog ('Connect from ' + Session.UserIPInfo + ' (' + Session.UserHostInfo + ')');
 
   Session.HistoryHour := strS2I(Copy(TimeDos2Str(CurDateDos, False), 1, 2));
@@ -1194,11 +1196,7 @@ Begin
       Halt(0);
     End;
 
-  //Session.io.OutFullLn('|CL|CR' + strPadC(mysSoftwareID + ' BBS Version ' + mysVersion + ' for ' + OSID, 79, ' '));
-  //Session.io.OutFullLn(strPadC(CopyID, 79, ' '));
-  //Session.io.OutFullLn('|CR' + strPadC(mysWebSite, 79, ' '));
-
-  Session.io.OutFullLn ('|CL' + mysSoftwareID + ' BBS Version ' + mysVersion + ' for ' + OSID + ' : Node |ND');
+  Session.io.OutFullLn ('|CL' + mysSoftwareID + ' BBS v' + mysVersion + ' for ' + OSID + ' Node |ND');
   Session.io.OutFullLn (CopyID);
 
   If Config.DefTermMode = 0 Then
@@ -1213,9 +1211,6 @@ Begin
 
   If Config.ThemeOnStart Then GetTheme;
 
-  If FileExist(Config.ScriptPath + 'startup.mpx') Then
-    ExecuteMPL(NIL, 'startup');
-
   If (Session.Theme.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(321));
     Session.SystemLog ('ASCII login disabled');
@@ -1227,11 +1222,14 @@ Begin
     Halt(0);
   End;
 
-  If UN <> '' Then Begin
-    If Not FindUser(UN, True) Then
+  If FileExist(Config.ScriptPath + 'startup.mpx') Then
+    ExecuteMPL(NIL, 'startup');
+
+  If Session.UserLoginName <> '' Then Begin
+    If Not FindUser(Session.UserLoginName, True) Then
       Halt;
 
-    If strUpper(PW) <> TempUser.Password Then Begin
+    If strUpper(Session.UserLoginPW) <> TempUser.Password Then Begin
       UserNum := -1;
       Halt;
     End;

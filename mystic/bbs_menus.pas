@@ -145,6 +145,7 @@ Begin
             'N' : Session.User.AcsOkFlag := Session.io.GetYN(CmdData, False);
             'P' : Session.User.AcsOkFlag := Session.io.GetPW(Copy(CmdData, 1, Pos(';', CmdData) - 1), Session.GetPrompt(417),
                                                 strUpper(Copy(CmdData, Pos(';', CmdData) + 1, Length(CmdData))));
+            'R' : Session.User.AcsOkFlag := Boolean(Ord(strS2I(CmdData)));
             'S' : Session.SystemLog(CmdData);
             'Y' : Session.User.AcsOkFlag := Session.io.GetYN(CmdData, True);
           End;
@@ -255,7 +256,7 @@ Begin
           End;
     'M' : Case Cmd[2] of
             'A' : Session.Msgs.ChangeArea(CmdData);
-            'C' : Session.Msgs.CheckEMail;
+            'C' : Session.Msgs.CheckEMail(CmdData);
             'D' : Session.Msgs.SetMessagePointers;
             'G' : Session.Msgs.MessageGroupChange (CmdData, True, True);
             'L' : Session.Msgs.NetMailLookup (True, '', '');
@@ -266,7 +267,7 @@ Begin
             'R' : Begin
                     If CmdData = '' Then CmdData := ' ';
 
-                    Session.Msgs.ReadMessages(UpCase(CmdData[1]), '');
+                    Session.Msgs.ReadMessages(UpCase(CmdData[1]), Copy(CmdData, 3, 255), '');
                   End;
             'S' : Session.Msgs.GlobalMessageSearch(UpCase(CmdData[1]));
             'V' : Session.Msgs.ViewSentEmail;

@@ -74,7 +74,11 @@ Begin
   A := Pos(':', SearchStr);
   B := Pos('/', SearchStr);
 
-  AddrSearch := Not (A = 0) or (B <= A);
+  If (A = 0) or (B <= A) Then
+    AddrSearch := False
+  Else
+    AddrSearch := True;
+//  AddrSearch := Not (A = 0) or (B <= A);
 
   If AddrSearch Then Begin
     SearchZone := Copy(SearchStr, 1, A - 1);

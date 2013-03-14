@@ -291,7 +291,7 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'putthisuser',    {$ENDIF} '',        iNone);    // 538
           AddProc    ({$IFDEF MPLPARSER} 'putuser',        {$ENDIF} 'l',       iNone);    // 539
           AddProc    ({$IFDEF MPLPARSER} 'isuser',         {$ENDIF} 's',       iBool);    // 540
-          AddProc    ({$IFDEF MPLPARSER} 'getmbasestats',  {$ENDIF} 'lLLL',    iBool);    // 541
+          AddProc    ({$IFDEF MPLPARSER} 'getmbstats',     {$ENDIF} 'looLLL',  iBool);    // 541
           AddProc    ({$IFDEF MPLPARSER} 'writexy',        {$ENDIF} 'bbbs',    iNone);    // 542
           AddProc    ({$IFDEF MPLPARSER} 'writexypipe',    {$ENDIF} 'bbbis',   iNone);    // 543
           AddProc    ({$IFDEF MPLPARSER} 'msgeditor',      {$ENDIF} 'iIiiosS', iBool);    // 544
@@ -312,6 +312,8 @@ Begin
           AddPointer ({$IFDEF MPLPARSER} 'ignoregroups', {$ENDIF} iBool,      1, {$IFNDEF MPLPARSER} @Session.User.IgnoreGroup           {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'pausepos',     {$ENDIF} iByte,      1, {$IFNDEF MPLPARSER} @Session.io.PausePtr                {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'allowmci',     {$ENDIF} iBool,      1, {$IFNDEF MPLPARSER} @Session.io.PausePtr                {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'userloginname',{$ENDIF} iString,   31, {$IFNDEF MPLPARSER} @Session.UserLoginName              {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'userloginpw',  {$ENDIF} iString,   16, {$IFNDEF MPLPARSER} @Session.UserLoginPW                {$ELSE} NIL {$ENDIF});
 
           {$IFNDEF MPLPARSER} TInterpEngine(S).IdxVarDir := X + 1; {$ENDIF}
 

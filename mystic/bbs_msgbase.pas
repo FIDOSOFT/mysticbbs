@@ -35,11 +35,11 @@ Type
     Function    IsQuotedText        (Str: String) : Boolean;
     Function    OpenCreateBase      (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
     Procedure   AppendMessageText   (Var Msg: PMsgBaseABS; Lines: Integer; ReplyID: String);
-    Procedure   AssignMessageData   (Var Msg: PMsgBaseABS);
+    Procedure   AssignMessageData   (Var Msg: PMsgBaseABS; Var TempBase: RecMessageBase);
     Function    GetBaseByNum        (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Function    GetBaseCompressed   (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Function    GetBaseByIndex      (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
-    Procedure   GetMessageStats     (Var TempBase: RecMessageBase; Var Total, New, Yours: LongInt);
+    Procedure   GetMessageStats     (List, ShowPrompt, ShowYou: Boolean; Var ListPtr: LongInt; Var TempBase: RecMessageBase; NoFrom, NoRead: Boolean; Var Total, New, Yours: LongInt);
     Function    GetTotalBases       (Compressed: Boolean) : LongInt;
     Function    GetTotalMessages    (Var TempBase: RecMessageBase) : LongInt;
     Procedure   PostTextFile        (Data: String; AllowCodes: Boolean);
@@ -53,11 +53,11 @@ Type
     Procedure   MessageUpload       (Var CurLine: SmallInt);
     Procedure   ReplyMessage        (Email: Boolean; ListMode: Byte; ReplyID: String);
     Procedure   EditMessage;
-    Function    ReadMessages        (Mode : Char; SearchStr: String) : Boolean;
+    Function    ReadMessages        (Mode: Char; CmdData, SearchStr: String) : Boolean;
     Procedure   ToggleNewScan       (QWK: Boolean; Data: String);
     Procedure   MessageGroupChange  (Ops: String; FirstBase, Intro : Boolean);
     Procedure   PostMessage         (Email: Boolean; Data: String);
-    Procedure   CheckEMail;
+    Procedure   CheckEMail          (CmdData: String);
     Procedure   MessageNewScan      (Data: String);
     Procedure   MessageQuickScan    (Data: String);
     Procedure   GlobalMessageSearch (Mode: Char);
@@ -215,7 +215,6 @@ Begin
 
     While NodeList.FindNext(NodeData) Do Begin
       Case ListType of
-        0 : ;//If NodeData.Keyword <> '' Then Continue;
         1 : If NodeData.Keyword <> 'ZONE' Then Continue;
         2 : If (NodeData.Keyword <> 'ZONE') and (NodeData.Keyword <> 'REGION') and (NodeData.Keyword <> 'HOST') Then Continue;
       End;
@@ -405,10 +404,9 @@ Begin
   End;
 End;
 
-Procedure TMsgBase.GetMessageStats (Var TempBase: RecMessageBase; Var Total, New, Yours: LongInt);
+Procedure TMsgBase.GetMessageStats (List, ShowPrompt, ShowYou: Boolean; Var ListPtr: LongInt; Var TempBase: RecMessageBase; NoFrom, NoRead: Boolean; Var Total, New, Yours: LongInt);
 Var
   TempMsg : PMsgBaseABS;
-  MsgTo   : String[40];
 Begin
   Total := 0;
   New   := 0;
@@ -422,13 +420,53 @@ Begin
     TempMsg^.SeekFirst(TempMsg^.GetLastRead(Session.User.UserNum) + 1);
 
     While TempMsg^.SeekFound Do Begin
-      Inc (New);
-
       TempMsg^.MsgStartUp;
 
-      MsgTo := strUpper(TempMsg^.GetTo);
+      If NoFrom And Session.User.IsThisUser(TempMsg^.GetFrom) Then Begin
+        TempMsg^.SeekNext;
 
-      If (MsgTo = strUpper(Session.User.ThisUser.Handle)) or (MsgTo = strUpper(Session.User.ThisUser.RealName)) Then
+        Continue;
+      End;
+
+      If NoRead And Session.User.IsThisUser(TempMsg^.GetTo) And TempMsg^.IsRcvd Then Begin
+        TempMsg^.SeekNext;
+
+        Continue;
+      End;
+
+      If List Then Begin
+        If (ShowYou And Not Session.User.IsThisUser(TempMsg^.GetTo)) Then Begin
+          TempMsg^.SeekNext;
+
+          Continue;
+        End;
+
+        If ShowPrompt Then
+          Session.io.OutBS(Screen.CursorX, True);
+
+        Inc (ListPtr);
+
+        Session.io.PromptInfo[1] := strI2S(ListPtr);
+        Session.io.PromptInfo[2] := TempBase.Name;
+        Session.io.PromptInfo[3] := TempMsg^.GetFrom;
+        Session.io.PromptInfo[4] := TempMsg^.GetTo;
+        Session.io.PromptInfo[5] := TempMsg^.GetSubj;
+        Session.io.PromptInfo[6] := DateDos2Str(DateStr2Dos(TempMsg^.GetDate), Session.User.ThisUser.DateType);
+
+        If ListPtr = 1 Then
+          Session.io.OutFullLn(Session.GetPrompt(506));
+
+        Session.io.OutFullLn(Session.GetPrompt(507));
+
+        If ShowPrompt Then
+          Session.io.OutFull(Session.GetPrompt(487));
+
+        Session.io.BufFlush;
+      End;
+
+      Inc (New);
+
+      If Session.User.IsThisUser(TempMsg^.GetTo) Then
         Inc(Yours);
 
       TempMsg^.SeekNext;
@@ -469,6 +507,8 @@ Procedure TMsgBase.GetMessageScan;
 Begin
   MScan.NewScan := MBase.DefNScan;
   MScan.QwkScan := MBase.DefQScan;
+
+  FileMode := 66;
 
   Assign (MScanFile, MBase.Path + MBase.FileName + '.scn');
   {$I-} Reset (MScanFile); {$I+}
@@ -527,31 +567,31 @@ Begin
   End;
 End;
 
-Procedure TMsgBase.AssignMessageData (Var Msg: PMsgBaseABS);
+Procedure TMsgBase.AssignMessageData (Var Msg: PMsgBaseABS; Var TempBase: RecMessageBase);
 Var
   Addr    : RecEchoMailAddr;
   SemFile : Text;
 Begin
   Msg^.StartNewMsg;
 
-  If MBase.Flags And MBRealNames <> 0 Then
+  If TempBase.Flags And MBRealNames <> 0 Then
     Msg^.SetFrom(Session.User.ThisUser.RealName)
   Else
     Msg^.SetFrom(Session.User.ThisUser.Handle);
 
   Msg^.SetLocal (True);
 
-  If MBase.NetType > 0 Then Begin
-    If MBase.NetType = 3 Then
+  If TempBase.NetType > 0 Then Begin
+    If TempBase.NetType = 3 Then
       Msg^.SetMailType(mmtNetMail)
     Else
       Msg^.SetMailType(mmtEchoMail);
 
-    Addr := Config.NetAddress[MBase.NetAddr];
+    Addr := Config.NetAddress[TempBase.NetAddr];
 
     Msg^.SetOrig(Addr);
 
-    Case MBase.NetType of
+    Case TempBase.NetType of
       1 : Begin
             Assign (SemFile, Config.SemaPath + fn_SemFileEcho);
             If Session.ExitLevel > 5 Then Session.ExitLevel := 7 Else Session.ExitLevel := 5;
@@ -572,7 +612,7 @@ Begin
   End Else
     Msg^.SetMailType(mmtNormal);
 
-  Msg^.SetPriv (MBase.Flags and MBPrivate <> 0);
+  Msg^.SetPriv (TempBase.Flags and MBPrivate <> 0);
   Msg^.SetDate (DateDos2Str(CurDateDos, 1));
   Msg^.SetTime (TimeDos2Str(CurDateDos, False));
 End;
@@ -647,62 +687,6 @@ Begin
     End;
 End;
 
-(*
-Procedure TMsgBase.ToggleNewScan (QWK: Boolean; Data: String);
-
-  Procedure NewScanListBases;
-  Begin
-    Session.io.PausePtr   := 1;
-    Session.io.AllowPause := True;
-
-    If QWK Then
-      Session.io.OutFullLn (Session.GetPrompt(90))
-    Else
-      Session.io.OutFullLn (Session.GetPrompt(91));
-
-    Session.io.OutFullLn (Session.GetPrompt(92));
-
-    Total := 0;
-
-    Reset (MBaseFile);
-
-    While Not Eof(MBaseFile) Do Begin
-      Read (MBaseFile, MBase);
-
-      If Session.User.Access(MBase.ListACS) Then Begin
-        Inc (Total);
-
-        Session.io.PromptInfo[1] := strI2S(Total);
-        Session.io.PromptInfo[2] := MBase.Name;
-
-        GetMessageScan;
-
-        If ((MScan.NewScan > 0) And Not QWK) or ((MScan.QwkScan > 0) And QWK) Then
-          Session.io.PromptInfo[3] := 'Yes' {++lang++}
-        Else
-          Session.io.PromptInfo[3] := 'No'; {++lang++}
-
-        Session.io.OutFull (Session.GetPrompt(93));
-
-        If (Total MOD Config.MColumns = 0) And (Total > 0) Then Session.io.OutRawLn('');
-      End;
-
-      If EOF(MBaseFile) and (Total MOD Config.MColumns <> 0) Then Session.io.OutRawLn('');
-
-      If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
-        Case Session.io.MorePrompt of
-          'N' : Break;
-          'C' : Session.io.AllowPause := False;
-        End;
-    End;
-
-    Session.io.OutFull (Session.GetPrompt(430));
-  End;
-
-Begin
-End;
-*)
-
 Procedure TMsgBase.ToggleNewScan (QWK: Boolean; Data: String);
 Var
   Total: LongInt;
@@ -769,7 +753,8 @@ Var
     Repeat
       Read (MBaseFile, MBase);
 
-      If Session.User.Access(MBase.ListACS) Then Inc(B);
+      If Session.User.Access(MBase.ListACS) Then
+        Inc(B);
 
       If A = B Then Break;
     Until False;
@@ -1192,13 +1177,12 @@ Begin
 
   Session.io.PromptInfo[1] := ToWho;
 
-  If Editor(Lines, 78, mysMaxMsgLines, False, fn_tplMsgEdit, Subj) Then Begin
-
+  If Editor(Lines, ColumnValue[Session.Theme.ColumnSize] - 2, mysMaxMsgLines, False, fn_tplMsgEdit, Subj) Then Begin
     Session.io.OutFull (Session.GetPrompt(107));
 
     If Not OpenCreateBase(MsgNew, MBase) Then Exit;
 
-    AssignMessageData(MsgNew);
+    AssignMessageData(MsgNew, MBase);
 
     Case MBase.NetType of
       2 : MsgNew^.SetTo('All');
@@ -1321,7 +1305,7 @@ Begin
       '!' : Begin
               Temp1 := MsgBase^.GetSubj;
 
-              If Editor(Lines, 78, mysMaxMsgLines, False, fn_tplMsgEdit, Temp1) Then
+              If Editor(Lines, ColumnValue[Session.Theme.ColumnSize] - 2, mysMaxMsgLines, False, fn_tplMsgEdit, Temp1) Then
                 MsgBase^.SetSubj(Temp1)
               Else
                 ReadText;
@@ -1393,9 +1377,11 @@ Begin
   Session.io.PromptInfo[2] := T2;
 End;
 
-Function TMsgBase.ReadMessages (Mode : Char; SearchStr : String) : Boolean;
+Function TMsgBase.ReadMessages (Mode: Char; CmdData, SearchStr: String) : Boolean;
 Var
   ReadRes   : Boolean;
+  NoFrom    : Boolean;
+  NoRead    : Boolean;
   ScanMode  : Byte;
   ValidKeys : String;
   HelpFile  : String[8];
@@ -1404,7 +1390,7 @@ Var
   ReplyID   : String[31];
   TempStr   : String;
 
-  Procedure Set_Message_Security;
+  Procedure SetMessageSecurity;
   Begin
     If Mode = 'E' Then Begin
       ValidKeys := 'ADJLNPQRX?'#13;
@@ -1504,7 +1490,7 @@ Var
     Session.User.IgnoreGroup := False;
   End;
 
-  Procedure Export_Message;
+  Procedure ExportMessage;
   Var
     FN   : String;
     Temp : String;
@@ -1602,6 +1588,12 @@ Var
         4 : Res := Session.User.IsThisUser(MsgBase^.GetFrom);
       End;
 
+      If NoFrom And Session.User.IsThisUser(MsgBase^.GetFrom) Then
+        Res := False;
+
+      If NoRead And Session.User.IsThisUser(MsgBase^.GetTo) And MsgBase^.IsRcvd Then
+        Res := False;
+
       If Not Res Then
         If Back Then
           MsgBase^.SeekPrior
@@ -1617,7 +1609,7 @@ Var
     SeekNextMsg := Res;
   End;
 
-  Procedure Assign_Header_Info;
+  Procedure AssignHeaderInfo;
   Var
     NetAddr : RecEchoMailAddr;
   Begin
@@ -1646,10 +1638,12 @@ Var
 
     TempStr := Session.GetPrompt(490);
 
-    If MsgBase^.IsLocal   Then Session.io.PromptInfo[9] := strWordGet(1, TempStr, ' ') Else Session.io.PromptInfo[9] := strWordGet(2, TempStr, ' ');
-    If MsgBase^.IsPriv    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(3, TempStr, ' ');
-    If MsgBase^.IsSent    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(4, TempStr, ' ');
-    If MsgBase^.IsDeleted Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(5, TempStr, ' ');
+    If MsgBase^.IsLocal   Then Session.io.PromptInfo[9] := strWordGet(1, TempStr, ',');
+    If MsgBase^.IsEchoed  Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(2, TempStr, ',');
+    If MsgBase^.IsPriv    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(3, TempStr, ',');
+    If MsgBase^.IsSent    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(4, TempStr, ',');
+    If MsgBase^.IsRcvd    Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(6, TempStr, ',');
+    If MsgBase^.IsDeleted Then Session.io.PromptInfo[9] := Session.io.PromptInfo[9] + ' ' + strWordGet(5, TempStr, ',');
   End;
 
   Procedure Send_Msg_Text (Str : String);
@@ -1748,9 +1742,14 @@ Var
     Repeat
       Set_Node_Action (Session.GetPrompt(348));
 
-      Set_Message_Security;
+      SetMessageSecurity;
 
       If MsgBase^.GetMsgNum > LastRead Then LastRead := MsgBase^.GetMsgNum;
+
+      If Session.User.IsThisUser(MsgBase^.GetTo) And Not MsgBase^.IsRcvd Then Begin
+        MsgBase^.SetRcvd(True);
+        MsgBase^.ReWriteHDR;
+      End;
 
       CurMsg    := MsgBase^.GetMsgNum;
       Lines     := 0;
@@ -1773,7 +1772,7 @@ Var
         End;
       End;
 
-      Assign_Header_Info;
+      AssignHeaderInfo;
 
       Session.io.ScreenInfo[4].Y := 0;
       Session.io.ScreenInfo[5].Y := 0;
@@ -1869,6 +1868,8 @@ Var
                   End;
             'H' : Begin
                     LastRead := CurMsg - 1;
+
+                    Session.io.OutFullLn(Session.GetPrompt(504));
                   End;
             'I' : Begin
                     LastRead          := MsgBase^.GetHighMsgNum;
@@ -1972,7 +1973,7 @@ Var
                     Break;
                   End;
             'X' : Begin
-                    Export_Message;
+                    ExportMessage;
 
                     Break;
                   End;
@@ -2357,8 +2358,13 @@ Var
 
       If MsgBase^.GetMsgNum > LastRead Then LastRead := MsgBase^.GetMsgNum;
 
-      Set_Message_Security;
-      Assign_Header_Info;
+      If Session.User.IsThisUser(MsgBase^.GetTo) And Not MsgBase^.IsRcvd Then Begin
+        MsgBase^.SetRcvd(True);
+        MsgBase^.ReWriteHDR;
+      End;
+
+      SetMessageSecurity;
+      AssignHeaderInfo;
       Display_Header;
 
       MsgBase^.MsgTxtStartUp;
@@ -2429,7 +2435,13 @@ Var
                   Break;
                 End;
           'G' : Exit;
-          'H' : LastRead := MsgBase^.GetMsgNum - 1;
+          'H' : Begin
+                  LastRead := MsgBase^.GetMsgNum - 1;
+
+                  Session.io.OutFullLn(Session.GetPrompt(505));
+
+                  Break;
+                End;
           'I' : Begin
                   LastRead := MsgBase^.GetHighMsgNum;
 
@@ -2449,6 +2461,7 @@ Var
 
                     If Not SeekNextMsg(True, False) Then Begin
                       MsgBase^.SeekFirst(B);
+
                       SeekNextMsg(True, False);
                     End;
                   End;
@@ -2463,7 +2476,7 @@ Var
                   Session.io.OutFullLn(Session.GetPrompt(411));
 
                   While SeekNextMsg(False, False) Do Begin
-                    Assign_Header_Info;
+                    AssignHeaderInfo;
 
                     Session.io.OutFullLn (Session.GetPrompt(412));
 
@@ -2531,7 +2544,7 @@ Var
 
                   SetMessageScan;
                 End;
-          'X' : Export_Message;
+          'X' : ExportMessage;
           '?' : Session.io.OutFile(HelpFile, True, 0);
           '[' : If MsgBase^.GetRefer > 0 Then Begin
                   MsgBase^.SeekFirst(MsgBase^.GetRefer);
@@ -2560,12 +2573,16 @@ Var
   P = Global personal scan  B = By You         T = Global text search }
 
 Var
-  MsgNum : LongInt;
+  MsgNum     : LongInt;
+  NoLastRead : Boolean;
 Begin
   ReadMessages := True;
   ReadRes      := True;
   WereMsgs     := False;
   ReplyID      := '';
+  NoLastRead   := Pos('/NOLR', strUpper(CmdData)) > 0;
+  NoFrom       := Pos('/NOFROM', strUpper(CmdData)) > 0;
+  NoRead       := Pos('/NOREAD', strUpper(CmdData)) > 0;
 
   If MBase.FileName = '' Then Begin
     Session.io.OutFullLn (Session.GetPrompt(110));
@@ -2595,6 +2612,8 @@ Begin
           End;
   End;
 
+{ start here opencreate... }
+
   Case MBase.BaseType of
     0 : MsgBase := New(PMsgBaseJAM, Init);
     1 : MsgBase := New(PMsgbaseSquish, Init);
@@ -2613,6 +2632,8 @@ Begin
 
     Exit;
   End;
+
+  {end here }
 
   If Mode = 'E' Then
     ScanMode := 1
@@ -2657,7 +2678,7 @@ Begin
   Else
     MsgBase^.SeekFirst(LastRead + 1);
 
-  Set_Message_Security;
+  SetMessageSecurity;
 
   Reading := True;
 
@@ -2669,9 +2690,11 @@ Begin
     Ascii_Read_Messages;
   End;
 
-  If Not (Mode in ['E', 'S', 'T']) Then MsgBase^.SetLastRead (Session.User.UserNum, LastRead);
+  If Not (Mode in ['E', 'S', 'T']) And Not NoLastRead Then
+    MsgBase^.SetLastRead (Session.User.UserNum, LastRead);
 
   MsgBase^.CloseMsgBase;
+
   Dispose (MsgBase, Done);
 
   Reading := False;
@@ -2834,7 +2857,7 @@ Begin
   Session.io.PromptInfo[1] := MsgTo;
 //  Session.io.PromptInfo[2] := MsgSubj;
 
-  If Editor(Lines, 78, mysMaxMsgLines, Forced, fn_tplMsgEdit, MsgSubj) Then Begin
+  If Editor(Lines, ColumnValue[Session.Theme.ColumnSize] - 2, mysMaxMsgLines, Forced, fn_tplMsgEdit, MsgSubj) Then Begin
     Session.io.OutFull (Session.GetPrompt(107));
 
     { all of this below should be replaced with a SaveMessage function   }
@@ -2850,7 +2873,7 @@ Begin
       Exit;
     End;
 
-    AssignMessageData(MsgBase);
+    AssignMessageData(MsgBase, MBase);
 
     MsgBase^.SetTo   (MsgTo);
     MsgBase^.SetSubj (MsgSubj);
@@ -2903,78 +2926,70 @@ Begin
   Session.User.IgnoreGroup := SaveGroup;
 End;
 
-Procedure TMsgBase.CheckEMail;
+Procedure TMsgBase.CheckEMail (CmdData: String);
 Var
-  Old     : RecMessageBase;
-  Total   : Integer;
+  MsgBase  : PMsgBaseABS;
+  TempBase : RecMessageBase;
+  Total    : Integer;
+  UnRead   : Integer;
 Begin
+  TempBase := MBase;
+  Total    := 0;
+  UnRead   := 0;
+  FileMode := 66;
+
   Session.io.OutFull (Session.GetPrompt(123));
-
   Session.io.BufFlush;
-
-  Old := MBase;
 
   Reset (MBaseFile);
   Read  (MBaseFile, MBase);
   Close (MBaseFile);
 
-  Case MBase.BaseType of
-    0 : MsgBase := New(PMsgBaseJAM, Init);
-    1 : MsgBase := New(PMsgBaseSquish, Init);
-  End;
+  If OpenCreateBase (MsgBase, MBase) Then Begin
+    MsgBase^.SeekFirst (1);
 
-  MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
-
-  If Not MsgBase^.OpenMsgBase Then Begin
-    Session.io.OutFullLn (Session.GetPrompt(124));
-    Dispose (MsgBase, Done);
-    MBase := Old;
-    Exit;
-  End;
-
-  Total := 0;
-
-  MsgBase^.YoursFirst(Session.User.ThisUser.RealName, Session.User.ThisUser.Handle);
-
-  If MsgBase^.YoursFound Then Begin
-    Session.io.OutFullLn (Session.GetPrompt(125));
-
-    Total := 0;
-
-    While MsgBase^.YoursFound Do Begin
+    While MsgBase^.SeekFound Do Begin
       MsgBase^.MsgStartUp;
 
-      Inc (Total);
+      If Session.User.IsThisUser(MsgBase^.GetTo) Then Begin
+        Inc (Total);
 
-      Session.io.PromptInfo[1] := strI2S(Total);
-      Session.io.PromptInfo[2] := MsgBase^.GetFrom;
-      Session.io.PromptInfo[3] := MsgBase^.GetSubj;
-      Session.io.PromptInfo[4] := MsgBase^.GetDate;
+        If Not MsgBase^.IsRcvd Then Inc (UnRead);
 
-      Session.io.OutFullLn (Session.GetPrompt(126));
+        If Total = 1 Then
+          Session.io.OutFullLn (Session.GetPrompt(125));
 
-      MsgBase^.YoursNext;
+        Session.io.PromptInfo[1] := strI2S(Total);
+        Session.io.PromptInfo[2] := MsgBase^.GetFrom;
+        Session.io.PromptInfo[3] := MsgBase^.GetSubj;
+        Session.io.PromptInfo[4] := MsgBase^.GetDate;
+
+        Session.io.OutFullLn (Session.GetPrompt(126));
+      End;
+
+      MsgBase^.SeekNext;
     End;
 
-    If Session.io.GetYN (Session.GetPrompt(127), True) Then Begin
-      MsgBase^.CloseMsgBase;
-      Dispose (MsgBase, Done);
+    MsgBase^.CloseMsgBase;
 
-      ReadMessages('E', '');
+    Dispose (MsgBase, Done);
+  End;
+
+  Session.LastScanHadNew := UnRead > 0;
+
+  If Total = 0 Then
+    Session.io.OutFullLn (Session.GetPrompt(124))
+  Else Begin
+    Session.io.PromptInfo[1] := strI2S(Total);
+    Session.io.PromptInfo[2] := strI2S(UnRead);
+
+    If Session.io.GetYN (Session.GetPrompt(127), UnRead > 0) Then Begin
+      ReadMessages('E', '', '');
 
       Session.io.OutFullLn (Session.GetPrompt(118));
-
-      MBase := Old;
-      Exit;
     End;
-  End Else
-    Session.io.OutFullLn (Session.GetPrompt(124));
-
-  MsgBase^.CloseMsgBase;
-
-  Dispose (MsgBase, Done);
-
-  MBase := Old;
+  End;
+  MBase := TempBase;
 End;
 
 Procedure TMsgBase.SetMessagePointers;
@@ -2999,6 +3014,7 @@ Var
 
       While MsgBase^.SeekFound Do Begin
         MsgBase^.MsgStartUp;
+
         If DateStr2Dos(MsgBase^.GetDate) >= NewDate Then Begin
           MsgBase^.SetLastRead(Session.User.UserNum, MsgBase^.GetMsgNum - 1);
           Found := True;
@@ -3047,12 +3063,14 @@ Procedure TMsgBase.MessageNewScan (Data: String);
 {    /M : scan only mandatory bases           }
 {    /G : scan all bases in all groups        }
 Var
-  Old  : RecMessageBase;
-  Mode : Char;
-  Mand : Boolean;
+  Old     : RecMessageBase;
+  Mode    : Char;
+  Mand    : Boolean;
+  CmdData : String;
 Begin
-  Old  := MBase;
-  Mand := False;
+  Old      := MBase;
+  Mand     := False;
+  FileMode := 66;
 
   Reset (MBaseFile);
 
@@ -3072,6 +3090,12 @@ Begin
   Session.User.IgnoreGroup := Pos('/G', Data) > 0;
   WereMsgs                 := False;
 
+  CmdData := '';
+
+  If Pos('/NOLR', Data) > 0   Then CmdData := '/NOLR';
+  If Pos('/NOFROM', Data) > 0 Then CmdData := CmdData + '/NOFROM';
+  If Pos('/NOREAD', Data) > 0 Then CmdData := CmdData + '/NOREAD';
+
   Session.io.OutRawLn ('');
 
   While Not Eof(MBaseFile) Do Begin
@@ -3085,7 +3109,7 @@ Begin
         Session.io.OutFull (Session.GetPrompt(130));
         Session.io.BufFlush;
 
-        If Not ReadMessages(Mode, '') Then Begin
+        If Not ReadMessages(Mode, CmdData, '') Then Begin
           Session.io.OutRawLn('');
           Break;
         End;
@@ -3126,12 +3150,12 @@ Begin
   Session.User.IgnoreGroup := Mode = 'A';
 
   If Mode = 'C' Then
-    ReadMessages('S', SearchStr)
+    ReadMessages('S', '', SearchStr)
   Else Begin
     Session.io.OutRawLn ('');
 
     Reset (MBaseFile);
-    Read  (MBaseFile, MBase); {skip email base}
+    Read  (MBaseFile, MBase);
 
     While Not Eof(MBaseFile) Do Begin
       Read (MBaseFile, MBase);
@@ -3140,7 +3164,7 @@ Begin
         GetMessageScan;
 
         If MScan.NewScan > 0 Then Begin
-          If Not ReadMessages('T', SearchStr) Then Begin
+          If Not ReadMessages('T', '', SearchStr) Then Begin
             Session.io.OutRawLn('');
             Break;
           End;
@@ -3151,6 +3175,7 @@ Begin
     End;
 
     Session.io.OutFull (Session.GetPrompt(311));
+
     Close (MBaseFile);
   End;
 
@@ -3177,7 +3202,7 @@ Var
   Begin
     Session.SystemLog ('Sending mass mail to ' + MsgTo);
 
-    AssignMessageData(MsgBase);
+    AssignMessageData (MsgBase, MBase);
 
     MsgBase^.SetFrom (MsgFrom);
     MsgBase^.SetTo   (MsgTo);
@@ -3277,7 +3302,7 @@ Begin
 
   Lines := 0;
 
-  If Editor(Lines, 78, mysMaxMsgLines, False, fn_tplMsgEdit, MsgSubj) Then Begin
+  If Editor(Lines, ColumnValue[Session.Theme.ColumnSize] - 2, mysMaxMsgLines, False, fn_tplMsgEdit, MsgSubj) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(394));
 
     OLD := MBase;
@@ -3350,32 +3375,38 @@ Begin
   Read  (MBaseFile, MBase);
   Close (MBaseFile);
 
-  ReadMessages('B', '');
+  ReadMessages('B', '', '');
 
   MBase := Old;
 End;
 
 Procedure TMsgBase.MessageQuickScan (Data: String);
-// defaults to ALL groups/bases
+// Defaults to ALL groups/bases
 //   /CURRENT = scan only current message base
 //   /GROUP   = scan only current group bases
-// options:
-//   /NOSCAN  = do not show "scanning" prompt
-//   /NOFOOT  = do not show "end of scan" prompt
-//   /NOHEAD  = do not show "starting quickscan" prompt
-// Only scans bases that they have selected in Newscan, of course
-Const
-  Global_CurBase    : LongInt = 1;
-  Global_TotalBases : LongInt = 1;
-  Global_TotalMsgs  : LongInt = 0;
-  Global_NewMsgs    : LongInt = 0;
-  Global_YourMsgs   : LongInt = 0;
-  ShowIfNew         : Boolean = False;
-  ShowIfYou         : Boolean = False;
-  ShowScanPrompt    : Boolean = True;
-  ShowHeadPrompt    : Boolean = True;
-  ShowFootPrompt    : Boolean = True;
-  Mode              : Char    = 'A';
+// other options:
+//   /LIST   = List messages
+//   /NEW    = only show/list if base has new or msg is new
+//   /YOU    = only show/list if base has your msgs or is your msg
+//   /NOFOOT = dont show footer prompt
+//   /NOSCAN = do not show "scanning" prompt
+//   /NOFROM = bypass messages posted FROM the user
+//   /NOREAD = bypass messages addressed to, and read by, the user
+Var
+  NoFrom            : Boolean;
+  NoRead            : Boolean;
+  ShowIfNew         : Boolean;
+  ShowIfYou         : Boolean;
+  ShowScanPrompt    : Boolean;
+  ShowFootPrompt    : Boolean;
+  ShowMessage       : Boolean;
+  ShowMessagePTR    : LongInt;
+  Global_CurBase    : LongInt;
+  Global_TotalBases : LongInt;
+  Global_TotalMsgs  : LongInt;
+  Global_NewMsgs    : LongInt;
+  Global_YourMsgs   : LongInt;
+  Mode              : Char;
 
   Procedure ScanBase;
   Var
@@ -3393,10 +3424,11 @@ Const
 
     If ShowScanPrompt Then Begin
       Session.io.OutFull(Session.GetPrompt(487));
+
       Session.io.BufFlush;
     End;
 
-    GetMessageStats(MBase, TotalMsgs, NewMsgs, YourMsgs);
+    GetMessageStats(ShowMessage, ShowScanPrompt, ShowIfYou, ShowMessagePTR, MBase, NoFrom, NoRead, TotalMsgs, NewMsgs, YourMsgs);
 
     Inc (Global_TotalMsgs, TotalMsgs);
     Inc (Global_NewMsgs,   NewMsgs);
@@ -3412,6 +3444,7 @@ Const
     If ShowScanPrompt Then
       Session.io.OutBS(Screen.CursorX, True);
 
+      If Not ShowMessage Then
     If (ShowIfNew And (NewMsgs > 0)) or (ShowIfYou And (YourMsgs > 0)) or (Not ShowIfNew And Not ShowIfYou) Then Begin
       Session.io.OutFullLn(Session.GetPrompt(488));
       Session.io.BufFlush;
@@ -3421,26 +3454,39 @@ Const
 Var
   Old : RecMessageBase;
 Begin
+  Session.LastScanHadNew := False;
+  Session.LastScanHadYou := False;
+
+  Global_CurBase    := 1;
+  Global_TotalBases := 1;
+  Global_TotalMsgs  := 0;
+  Global_NewMsgs    := 0;
+  Global_YourMsgs   := 0;
+  ShowMessagePTR    := 0;
+  Mode              := 'A';
+
   FillChar(Session.io.PromptInfo, SizeOf(Session.io.PromptInfo), 0);
 
   If Pos('/GROUP',   Data) > 0 Then Mode := 'G';
   If Pos('/CURRENT', Data) > 0 Then Mode := 'C';
 
-  ShowScanPrompt := Pos('/NOSCAN', Data) = 0;
-  ShowHeadPrompt := Pos('/NOHEAD', Data) = 0;
+  ShowMessage    := Pos('/LIST',   Data) > 0;
   ShowFootPrompt := Pos('/NOFOOT', Data) = 0;
+  ShowScanPrompt := Pos('/NOSCAN', Data) = 0;
+  ShowIfNew      := Pos('/NEW',    Data) > 0;
+  ShowIfYou      := Pos('/YOU',    Data) > 0;
+  NoFrom         := Pos('/NOFROM', Data) > 0;
+  NoRead         := Pos('/NOREAD', Data) > 0;
 
   Old                      := MBase;
   Session.User.IgnoreGroup := Mode = 'A';
 
-  If ShowHeadPrompt Then
-    Session.io.OutFullLn (Session.GetPrompt(486));
+  FileMode := 66;
 
   If Mode = 'C' Then
     ScanBase
   Else Begin
     Reset (MBaseFile);
-    Read  (MBaseFile, MBase); {skip email base}
 
     Global_TotalBases := FileSize(MBaseFile);
 
@@ -3458,6 +3504,16 @@ Begin
 
     Close (MBaseFile);
   End;
+
+  Session.LastScanHadNew := Global_NewMsgs  > 0;
+  Session.LastScanHadYou := Global_YourMsgs > 0;
+
+  Session.io.PromptInfo[1] := strComma(Global_TotalMsgs);
+  Session.io.PromptInfo[2] := strComma(Global_NewMsgs);
+  Session.io.PromptInfo[3] := strComma(Global_YourMsgs);
+
+  If ShowMessagePTR > 0 Then
+    Session.io.OutFull(Session.GetPrompt(508));
 
   If ShowFootPrompt Then
     Session.io.OutFullLn(Session.GetPrompt(489));
@@ -3724,11 +3780,44 @@ Const
   CRLF = #13#10;
 Var
   tFile : Text;
+  Flags : String;
 Begin
   Assign  (tFile, Session.TempPath + 'toreader.ext');
   ReWrite (tFile);
+  Write   (tFile, 'ALIAS ' + Session.User.ThisUser.Handle + CRLF);
 
-  Write (tFile, 'ALIAS ' + Session.User.ThisUser.Handle + CRLF);
+  Reset (MBaseFile);
+
+  While Not Eof(MBaseFile) Do Begin
+    Read (MBaseFile, MBase);
+
+    If Session.User.Access(MBase.ReadACS) Then Begin
+      Flags := ' ';
+
+      If MBase.Flags AND MBPrivate = 0 Then
+        Flags := Flags + 'aO'
+      Else
+        Flags := Flags + 'pP';
+
+      If MBase.Flags AND MBRealNames = 0 Then
+        Flags := Flags + 'H';
+
+      If Not Session.User.Access(MBase.PostACS) Then
+        Flags := Flags + 'BRZ';
+
+      Case MBase.NetType of
+        0 : Flags := Flags + 'L';
+        1 : Flags := Flags + 'E';
+        2 : Flags := Flags + 'U';
+        3 : Flags := Flags + 'N';
+      End;
+
+      If MBase.DefQScan = 2 Then
+        Flags := Flags + 'F';
+
+      Write (tFile, 'AREA ' + strI2S(MBase.Index) + Flags, CRLF);
+    End;
+  End;
 
   Close (tFile);
 End;
@@ -3853,11 +3942,11 @@ Begin
 
     MsgBase^.MsgStartUp;
 
-    If MsgBase^.IsPriv Then
-      If Not ((MsgBase^.GetTo = Session.User.ThisUser.RealName) or (MsgBase^.GetTo = Session.User.ThisUser.Handle)) Then Begin
-        MsgBase^.SeekNext;
-        Continue;
-      End;
+    If MsgBase^.IsPriv And Not Session.User.IsThisUser(MsgBase^.GetTo) Then Begin
+      MsgBase^.SeekNext;
+
+      Continue;
+    End;
 
     Inc (MsgAdded);
     Inc (TotalMsgs);
@@ -4171,7 +4260,7 @@ Begin
 
       If OpenCreateBase(MsgBase, TempBase) Then Begin
 
-        AssignMessageData(MsgBase);
+        AssignMessageData(MsgBase, TempBase);
 
         QwkBlock[0] := #25;
         Move (QwkHeader.UpTo, QwkBlock[1], 25);

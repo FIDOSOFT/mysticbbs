@@ -30,7 +30,7 @@ Type
   End;
 
 Const
-  Num_Cmds = 101;
+  Num_Cmds = 102;
   MenuCmds : Array[1..Num_Cmds] of CmdRec = (
     // AUTOSIG MENU COMMANDS
     (  Name: 'AE';   Desc: 'Autosig editor'               ),
@@ -145,6 +145,7 @@ Const
     (  Name: '-N';   Desc: 'Ask Yes/No (default No)'      ),
     (  Name: '-P';   Desc: 'Prompt for a password'        ),
     (  Name: '-S';   Desc: 'Add text to Sysop log'        ),
+    (  Name: '-R';   Desc: 'Reset OK ACS flags'           ),
     (  Name: '-Y';   Desc: 'Ask Yes/No (default Yes)'     ),
 
     // SYSOP/EDITORS MENU COMMANDS

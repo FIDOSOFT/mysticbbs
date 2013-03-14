@@ -691,11 +691,11 @@ Begin
   Box   := TAnsiMenuBox.Create;
   Form  := TAnsiMenuForm.Create;
 
-  Box.Open (5, 5, 75, 17);
+  Box.Open (5, 5, 75, 18);
 
   Box.Header := ' Theme Edit ';
 
-  VerticalLine (23, 7, 15);
+  VerticalLine (23, 7, 16);
 
   Form.AddStr  ('F', ' File Name'      , 12,  7, 25,  7, 11, 20, 20, @Theme.FileName, Topic + 'Root theme filename');
   Form.AddStr  ('D', ' Description'    , 10,  8, 25,  8, 13, 30, 40, @Theme.Desc, Topic + 'Theme description');
@@ -706,6 +706,7 @@ Begin
   Form.AddBits ('F', ' Allow Fallback' ,  7, 13, 25, 13, 16, ThmFallback, @Theme.Flags, Topic + 'Allow fallback to default paths?');
   Form.AddBits ('C', ' Allow ASCII'    , 10, 14, 25, 14, 13, ThmAllowASCII, @Theme.Flags, Topic + 'Allow ASCII users to use this theme?');
   Form.AddBits ('N', ' Allow ANSI'     , 11, 15, 25, 15, 12, ThmAllowANSI, @Theme.Flags, Topic + 'Allow ANSI users to use this theme?');
+  Form.AddTog  ('O', ' Column Size'    , 10, 16, 25, 16, 13, 9, 0, 1, '80_Column 40_Column', @Theme.ColumnSize, Topic + 'Column size of this theme');
 
   Form.AddNone ('1', ' 1: Prompts'     , 57,  7, 57, 7, 17, Topic + 'Edit prompts for this theme');
   Form.AddNone ('2', ' 2: Options'     , 57,  8, 57, 8, 17, Topic + 'Edit general options for this theme');

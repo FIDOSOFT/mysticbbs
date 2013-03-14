@@ -637,11 +637,13 @@ Begin
   If Not Session.io.GetYN (Session.GetPrompt(275), True) Then Exit;
 
   Reset (Session.VoteFile);
+
   If FileSize (Session.VoteFile) = mysMaxVoteQuestion Then Begin
     Close (Session.VoteFile);
     Session.io.OutFull (Session.GetPrompt(276));
     Exit;
   End;
+
   Close (Session.VoteFile);
 
   Session.io.OutFull (Session.GetPrompt(277));
@@ -657,11 +659,14 @@ Begin
     Session.io.PromptInfo[1] := strI2S(A);
     Session.io.OutFull (Session.GetPrompt(279));
     Session.Vote.Answer[A].Text := Session.io.GetInput(40, 40, 11, '');
+
     If Session.Vote.Answer[A].Text = '' Then Begin
       Dec (A);
       Break;
     End;
+
     Session.Vote.Answer[A].Votes := 0;
+
     Inc(A);
   End;
 
@@ -697,10 +702,13 @@ Begin
 
   While Not Eof(Session.VoteFile) Do Begin
     Read (Session.VoteFile, Session.Vote);
+
     If Session.User.Access(Session.Vote.ACS) Then Begin
       Inc (Total);
+
       Session.io.PromptInfo[1] := strI2S(Total);
       Session.io.PromptInfo[2] := Session.Vote.Question;
+
       If Session.User.ThisUser.Vote[FilePos(Session.VoteFile)] = 0 Then
         Session.io.PromptInfo[3] := '*'  //++lang
       Else
@@ -708,9 +716,11 @@ Begin
       Session.io.OutFullLn (Session.GetPrompt(242));
     End;
   End;
+
   Close (Session.VoteFile);
 
   If Total = 0 Then Session.io.OutFullLn (Session.GetPrompt(243));
+
   Voting_List := Total;
 End;
 
@@ -727,6 +737,7 @@ Begin
     Close (Session.VoteFile);
   End Else Begin
     A := Voting_List;
+
     If A = 0 Then Exit;
 
     Repeat
@@ -748,11 +759,14 @@ Begin
 
   Session.io.PromptInfo[1] := Session.Vote.Question;
   Session.io.PromptInfo[2] := strI2S(Session.Vote.Votes);
+
   Session.io.OutFullLn (Session.GetPrompt(249));
+
   For A := 1 to Session.Vote.AnsNum Do Begin
     Session.io.PromptInfo[1] := strI2S(A);
     Session.io.PromptInfo[2] := Session.Vote.Answer[A].Text;
     Session.io.PromptInfo[3] := strI2S(Session.Vote.Answer[A].Votes);
+
     If Session.Vote.Votes = 0 Then Begin
       Session.io.PromptInfo[4] := '0';
       Session.io.PromptInfo[5] := '';
@@ -760,8 +774,10 @@ Begin
       Session.io.PromptInfo[5] := Session.io.DrawPercent(Session.Theme.VotingBar, Session.Vote.Answer[A].Votes, Session.Vote.Votes, P);
       Session.io.PromptInfo[4] := strI2S(P);
     End;
+
     Session.io.OutFullLn (Session.GetPrompt(250));
   End;
+
   Session.io.OutFull (Session.GetPrompt(251));
 End;
 
@@ -771,6 +787,7 @@ Var
   Pos     : Byte;
 Begin
   Reset (Session.VoteFile);
+
   While Not Eof(Session.VoteFile) Do Begin
     Read (Session.VoteFile, Session.Vote);
     If Session.User.Access(Session.Vote.ACS) Then
@@ -778,6 +795,7 @@ Begin
     Else
       NewQues[FilePos(Session.VoteFile)] := False;
   End;
+
   Close (Session.VoteFile);
 
   For Pos := 1 to mysMaxVoteQuestion Do
@@ -794,6 +812,7 @@ Begin
 
   If Not Forced And (Num = 0) Then Begin
     Total := Voting_List;
+
     If Total = 0 Then Exit;
 
     Repeat
@@ -1258,6 +1277,8 @@ Begin
   UseFull := Not (strUpper(strWordGet(3, Data, ';')) = 'DISPLAY');
   CurPath := Root;
 
+  If Not DirExists(Root) Then Exit;
+
   BuildDirectory(CurPath);
 
   FullReDraw;
@@ -1381,7 +1402,7 @@ Begin
                 Session.io.AnsiClear;
 
                 If UseFull Then
-                  AnsiViewer (Session.Theme.ViewerBar, 'ansigalv;dummy;' + CurPath + DirList[CurPos]^.Desc)
+                  AnsiViewer (Session.Theme.ViewerBar, 'ansigalv;ansigalh;' + strI2S(Speed) + ';' + CurPath + DirList[CurPos]^.Desc)
                 Else Begin
                   Session.io.OutFile (CurPath + DirList[CurPos]^.Desc, False, Speed);
                   Session.io.PauseScreen;
@@ -1485,6 +1506,7 @@ Var
   FN       : String;
   Template : String;
   HelpFile : String;
+  Speed    : Byte;
   Str      : String;
   Sauce    : RecSauceInfo;
 
@@ -1503,10 +1525,30 @@ Var
     Ansi.DrawPage (Session.io.ScreenInfo[1].Y, Session.io.ScreenInfo[2].Y, TopLine);
   End;
 
+  Procedure ReDraw;
+  Begin
+    Session.io.AllowArrow      := True;
+    Session.io.ScreenInfo[3].X := 0;
+
+    Session.io.OutFile(Template, False, 0);
+
+    WinSize := Session.io.ScreenInfo[2].Y - Session.io.ScreenInfo[1].Y + 1;
+
+    If strUpper(strWordGet(4, Data, ';')) = 'END' Then Begin
+      TopLine := Ansi.Lines - WinSize + 1;
+
+      If TopLine < 1 Then TopLine := 1;
+    End Else
+      TopLine := 1;
+
+    Update;
+  End;
+
 Begin
   Template := strWordGet(1, Data, ';');
   HelpFile := strWordGet(2, Data, ';');
-  FN       := strWordGet(3, Data, ';');
+  Speed    := strS2I(strWordGet(3, Data, ';'));
+  FN       := strWordGet(4, Data, ';');
 
   If Pos(PathChar, FN) = 0 Then
     FN := Session.Theme.TextPath + FN;
@@ -1542,21 +1584,7 @@ Begin
 
   Close (AFile);
 
-  Session.io.AllowArrow      := True;
-  Session.io.ScreenInfo[3].X := 0;
-
-  Session.io.OutFile(Template, False, 0);
-
-  WinSize := Session.io.ScreenInfo[2].Y - Session.io.ScreenInfo[1].Y + 1;
-
-  If strUpper(strWordGet(4, Data, ';')) = 'END' Then Begin
-    TopLine := Ansi.Lines - WinSize + 1;
-
-    If TopLine < 1 Then TopLine := 1;
-  End Else
-    TopLine := 1;
-
-  Update;
+  ReDraw;
 
   While Not Session.ShutDown Do Begin
     Ch := UpCase(Session.io.GetKey);
@@ -1594,7 +1622,20 @@ Begin
       End;
     End Else
       Case Ch of
-        #32,
+        '?' : Begin
+                Session.io.OutFile(HelpFile, True, 0);
+
+                If Not Session.io.NoFile Then
+                  ReDraw;
+              End;
+        #32 : Begin
+                Session.io.AnsiColor(7);
+                Session.io.AnsiClear;
+                Session.io.OutFile(FN, False, Speed);
+                Session.io.PauseScreen;
+
+                ReDraw;
+              End;
         #13 : If TopLine < Ansi.Lines - WinSize Then Begin
                 Inc (TopLine, WinSize);
 

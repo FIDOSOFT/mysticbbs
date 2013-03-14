@@ -219,9 +219,9 @@ Type
 //    Function    IsEchoed       : Boolean; Virtual; {Msg should be echoed}
     Function    GetMsgLoc      : LongInt; Virtual; {Msg location}
     Procedure   SetMsgLoc      (ML: LongInt); Virtual; {Msg location}
-    Procedure   YoursFirst     (Name: String; Handle: String); Virtual; {Seek your mail}
-    Procedure   YoursNext;     Virtual; {Seek next your mail}
-    Function    YoursFound     : Boolean; Virtual; {Message found}
+//    Procedure   YoursFirst     (Name: String; Handle: String); Virtual; {Seek your mail}
+//    Procedure   YoursNext;     Virtual; {Seek next your mail}
+//    Function    YoursFound     : Boolean; Virtual; {Message found}
     Procedure   StartNewMsg;   Virtual;
     Function    OpenMsgBase    : Boolean; Virtual;
     Procedure   CloseMsgBase;  Virtual;
@@ -246,7 +246,7 @@ Type
     Function    ReReadIdx      (Var IdxLoc : LongInt) : Word;
   End;
 
-Function JamStrCrc(St: String): LongInt;
+Function JamStrCrc (St: String): LongInt;
 
 Implementation
 
@@ -298,7 +298,7 @@ Begin
   If TxtBuf <> Nil Then Dispose(TxtBuf);
 End;
 
-Function JamStrCrc(St: String): LongInt;
+Function JamStrCrc (St: String): LongInt;
 Var
   i: Word;
   crc: LongInt;
@@ -311,7 +311,7 @@ Begin
   JamStrCrc := Crc;
 End;
 
-Procedure TMsgBaseJAM.SetMsgPath(St: String);
+Procedure TMsgBaseJAM.SetMsgPath (St: String);
 Begin
   JM^.MsgPath := Copy(St, 1, 124);
 End;
@@ -326,52 +326,52 @@ Begin
   JM^.Dest := Addr;
 End;
 
-Procedure TMsgBaseJAM.SetOrig(Addr: RecEchoMailAddr);
+Procedure TMsgBaseJAM.SetOrig (Addr: RecEchoMailAddr);
 Begin
   JM^.Orig := Addr;
 End;
 
-Procedure TMsgBaseJAM.SetFrom(Name: String);
+Procedure TMsgBaseJAM.SetFrom (Name: String);
 Begin
   JM^.MsgFrom := Name;
 End;
 
-Procedure TMsgBaseJAM.SetTo(Name: String);
+Procedure TMsgBaseJAM.SetTo (Name: String);
 Begin
   JM^.MsgTo := Name;
 End;
 
-Procedure TMsgBaseJAM.SetSubj(Str: String);
+Procedure TMsgBaseJAM.SetSubj (Str: String);
 Begin
   JM^.MsgSubj := Str;
 End;
 
-Procedure TMsgBaseJAM.SetCost(SCost: Word);
+Procedure TMsgBaseJAM.SetCost (SCost: Word);
 Begin
   MsgHdr^.JamHdr.Cost := SCost;
 End;
 
-Procedure TMsgBaseJAM.SetRefer(SRefer: LongInt);
+Procedure TMsgBaseJAM.SetRefer (SRefer: LongInt);
 Begin
   MsgHdr^.JamHdr.ReplyTo := SRefer;
 End;
 
-Procedure TMsgBaseJAM.SetSeeAlso(SAlso: LongInt);
+Procedure TMsgBaseJAM.SetSeeAlso (SAlso: LongInt);
 Begin
   MsgHdr^.JamHdr.ReplyFirst := SAlso;
 End;
 
-Procedure TMsgBaseJAM.SetDate(SDate: String);
+Procedure TMsgBaseJAM.SetDate (SDate: String);
 Begin
   JM^.MsgDate := SDate;
 End;
 
-Procedure TMsgBaseJAM.SetTime(STime: String);
+Procedure TMsgBaseJAM.SetTime (STime: String);
 Begin
   JM^.MsgTime := STime;
 End;
 
-Procedure TMsgBaseJAM.SetAttr1(Mask: LongInt; St: Boolean);
+Procedure TMsgBaseJAM.SetAttr1 (Mask: LongInt; St: Boolean);
   Begin
   If St Then
     MsgHdr^.JamHdr.Attr1 := MsgHdr^.JamHdr.Attr1 Or Mask
@@ -379,67 +379,67 @@ Procedure TMsgBaseJAM.SetAttr1(Mask: LongInt; St: Boolean);
     MsgHdr^.JamHdr.Attr1 := MsgHdr^.JamHdr.Attr1 And (Not Mask);
   End;
 
-Procedure TMsgBaseJAM.SetLocal(LS: Boolean);
+Procedure TMsgBaseJAM.SetLocal (LS: Boolean);
 Begin
   SetAttr1(Jam_Local, LS);
 End;
 
-Procedure TMsgBaseJAM.SetRcvd(RS: Boolean);
+Procedure TMsgBaseJAM.SetRcvd (RS: Boolean);
 Begin
   SetAttr1(Jam_Rcvd, RS);
 End;
 
-Procedure TMsgBaseJAM.SetPriv(PS: Boolean);
+Procedure TMsgBaseJAM.SetPriv (PS: Boolean);
 Begin
   SetAttr1(Jam_Priv, PS);
 End;
 
-Procedure TMsgBaseJAM.SetHold(SS: Boolean);
+Procedure TMsgBaseJAM.SetHold (SS: Boolean);
 Begin
   SetAttr1 (Jam_Hold, SS);
 End;
 
-Procedure TMsgBaseJAM.SetCrash(SS: Boolean);
+Procedure TMsgBaseJAM.SetCrash (SS: Boolean);
 Begin
   SetAttr1(Jam_Crash, SS);
 End;
 
-Procedure TMsgBaseJAM.SetKillSent(SS: Boolean);
+Procedure TMsgBaseJAM.SetKillSent (SS: Boolean);
 Begin
   SetAttr1(Jam_KillSent, SS);
 End;
 
-Procedure TMsgBaseJAM.SetSent(SS: Boolean);
+Procedure TMsgBaseJAM.SetSent (SS: Boolean);
 Begin
   SetAttr1(Jam_Sent, SS);
 End;
 
-Procedure TMsgBaseJAM.SetFAttach(SS: Boolean);
+Procedure TMsgBaseJAM.SetFAttach (SS: Boolean);
 Begin
   SetAttr1(Jam_FAttch, SS);
 End;
 
-Procedure TMsgBaseJAM.SetReqRct(SS: Boolean);
+Procedure TMsgBaseJAM.SetReqRct (SS: Boolean);
 Begin
   SetAttr1(Jam_RcptReq, SS);
 End;
 
-Procedure TMsgBaseJAM.SetReqAud(SS: Boolean);
+Procedure TMsgBaseJAM.SetReqAud (SS: Boolean);
 Begin
   SetAttr1(Jam_ConfmReq, SS);
 End;
 
-Procedure TMsgBaseJAM.SetRetRct(SS: Boolean);
+Procedure TMsgBaseJAM.SetRetRct (SS: Boolean);
 Begin
 End;
 
-Procedure TMsgBaseJAM.SetFileReq(SS: Boolean);
+Procedure TMsgBaseJAM.SetFileReq (SS: Boolean);
 Begin
   SetAttr1(Jam_Freq, SS);
 End;
 
 
-Procedure TMsgBaseJAM.DoString(Str: String);
+Procedure TMsgBaseJAM.DoString (Str: String);
 Var
   i: Word;
 Begin
@@ -1354,7 +1354,7 @@ Procedure TMsgBaseJAM.SetMsgLoc(ML: LongInt); {Msg location}
   Begin
   JM^.CurrMsgNum := ML;
   End;
-
+(*
 Procedure TMsgBaseJAM.YoursFirst (Name: String; Handle: String);
 Begin
   JM^.YourName   := Name;
@@ -1422,6 +1422,7 @@ Function TMsgBaseJAM.YoursFound: Boolean;
 Begin
   YoursFound := ((JM^.CurrMsgNum >= JM^.BaseHdr.BaseMsgNum) and (JM^.CurrMsgNum <= GetHighMsgNum));
 End;
+*)
 
 Procedure TMsgBaseJAM.StartNewMsg;
 Begin

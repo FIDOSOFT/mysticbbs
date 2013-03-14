@@ -196,7 +196,7 @@
 ; &1 = base number      &2 = base name      &3 = scan base? (Yes or No)
 093  |07|$R04|&1|15|$R03|&3  |07|$R29|&2
 094 |CR|12There are no available message bases!
-095  |09|$D77д|CR |09Selection |01[|10##|01]|09, |01[|10##|01-|10##|01]|09, |01[|10?|01/|10List|01]|09, or |01[|10Q|01]|09uit: |XX
+095 |09Selection |01[|10##|01]|09, |01[|10##|01-|10##|01]|09, |01[|10?|01/|10List|01]|09, or |01[|10Q|01]|09uit: |XX
 ; For strings 096 - 099: &1 = message base name
 096 |CR |11|&1 will NOT be scanned in QWK packets!|CR
 097 |CR |11|&1 will be scanned in QWK packets!|CR
@@ -223,7 +223,7 @@
 ; E-mail reader prompt
 115 |CR|09(A)gain, (P)revious, (N)ext, (R)eply, (D)elete, (J)ump, (Q)uit? |11
 ; Message read prompt.  &1 = Current Msg #   &2 = Total Messages
-116 |CR (|&1 of |&2) Reading Messages (?/Help): |XX
+116 |CR|01[|09|&1 of |&2|01] |09Reading Messages (|10?|09/|10Help|09): |11
 117 |CR|12Delete this mail? |11
 118 |CR|15End of messages.
 ; Post message TO:
@@ -241,7 +241,8 @@
 ; &1 = email number     &2 = email from
 ; &3 = email subject    &4 = email date
 126  |07|$R05|&1|15|$R32|&2|10|$R32|&3|11|&4
-127  |01|$D77д |CR |01[|10Ч|01] |09Read waiting mail? |11
+; Read new email? &1 = total &2 = unread
+127  |01|$D77д |CR |01[|10Ч|01] |09You have |11|&1 |09messages (|11|&2 |09unread|09). Read them now? |11
 ; First message in thread prompt
 128 |CR|11This is the first message in the thread.
 ; User lockout message.
@@ -372,7 +373,7 @@
 ; &1 = File base number      &2 = File base name      &3 = Scan? (Yes or No)
 201  |07|$R04|&1|15|$R03|&3  |07|$R29|&2
 ; Select scanned file bases prompt
-202  |09|$D77д|CR |09Selection |01[|10##|01]|09, |01[|10##|01-|10##|01]|09, |01[|10?|01/|10List|01]|09, or |01[|10Q|01]|09uit: |XX
+202 |09Selection |01[|10##|01]|09, |01[|10##|01-|10##|01]|09, |01[|10?|01/|10List|01]|09, or |01[|10Q|01]|09uit: |XX
 ; &1 = File base name
 203 |CR |11|&1 will NOT be scanned in new file scan!|CR
 ; &1 = File base name
@@ -395,7 +396,7 @@
 ; Lightbar file list: Access to file denied.
 212 |12File is not available.|PN
 ; Read Message personal prompt.  &1 = Current Msg #     &2 = Total Messages
-213 |CR|09[|&1 of |&2] Reading Messages (?/Help): |XX
+213 |CR|01[|09|&1 of |&2|01] |09Reading Messages (|10?|09/|10Help|09): |11
 ; File group list header
 214 |CL|CR|$D13 |09з|$D54д|01©|CR|$D13 |09Ё|17 ╠ |15File Groups|$D40 |16|01Ё|CR|$D13 |09ю|01|$D54ды|CR|$D14 |10#|02#   |10F|02ile |10G|02roup |10N|02ame|07|$D29 |02A|10reas|CR|$D14 |09|$D54д
 ; File group list format
@@ -772,7 +773,7 @@
 ; Ansi msg read: delete msg
 402 |CR|12Delete this mail? |11
 ; Ansi msg read: jump to msg: &1 = cur msg num  &2 = high msg num
-403 |CR|09Jump to which message? (1-|&2): |XX
+403 |CR|09Jump to which message? (|101|09-|10|&2|09): |11
 ; Ansi msg read: scan toggle  &1 = message base name
 404 |CR|11|&1 will NOT be scanned in new message scan!
 405 |CR|11|&1 will be scanned in new message scan!
@@ -820,7 +821,7 @@
 ; new user: use lightbar message index?
 429 |CR|12Use lightbar message index? |11
 ; msg scan setting footer
-430
+430 |09|$D77д|CR
 ; Lightbar file list: #/filename:
 ; &1 = filenum, &2 = filename, &3 = tag char &4 = size &5 = date &6 = DLs
 431  |07|&1|12|&3|15|$R57|&2 |09|$L07|&4 |&5
@@ -860,7 +861,7 @@
 ; info edit: option 3
 448 |CR|09Enter optional field 3: |XX
 ; file new scan setting footer
-449
+449 |09|$D77д|CR
 ; private post (email) TO:
 450 |CR|09To: |XX
 ; reply msg SUBJ
@@ -947,11 +948,11 @@
 484 |16|CL|09|17 ╟ |15Chat mode end.|$X79 |16|DE|DE
 ; User2User accept chat page request? &1=user &2=Node
 485 |16|CL|15|&1 is requesting private user chat.  Accept? |11
-; MsgBase quickscan header prompt
-486 |CR|12Starting Quick Scan|CR
+;
+486 UNUSED
 ; MsgBase quickscan Scanning prompt
 ; &1=basename  &2=current base#  &3=total bases#
-487 Scanning |&1 [|&2 of |&3]...
+487 |03Scanning |11|&1 |03[|11|&2 |03of |11|&3|03]|08...
 ; MsgBase quickscan base list prompt
 ; &4=msgs in base    &5=new messages  &6=your messages  &7=global total msg
 ; &8=global new msgs &9=global your msgs
@@ -959,9 +960,9 @@
 ; MsgBase quickscan footer prompt
 ; &7=global total msg   &8=global new msgs   &9=global your msgs
 489 |CRQuick Scan complete. |CR|CR|PA
-; Msg header flags text one word each separated by a space
-; 1=Local 2=Echo 3=Private 4=Sent 5=Delete
-490 Local Echo Private Sent Deleted
+; Msg header flags text one word each separated by a comma
+; 1=Local 2=Echo 3=Private 4=Sent 5=Delete, 6=Received
+490 Local,Echo,Priv,Sent,Del,Read
 ; File base filesize flags one word separated by a space
 ; 1=offline  2=failed  3=unvalidated  4=GB  5=MB  6=KB  7=B
 491 OFFLINE FAILED UNVALID GB MB KB B
@@ -992,3 +993,14 @@
 ; QWK .REP complete/results prompt
 ; &1=msgs imported  &2=msgs failed  &3=bases added to scan  &4=bases removed
 503 |10SUCCESS|01.|CR|CR|11- |03Posted |11|&1 |03new messages (|11|&2 |03failed)|CR|11- |03Added |11|&3 |03bases to new scan (|11|&4 |03removed).|CR|CR|PA
+; Standard message reader: Lastread pointer set &1 = msg number
+504 |CR|11Last read pointer has been set to message number |&1.|CR|CR|PA
+; Lightbar reader: Lastread pointer set &1 = msg number
+505 |CR|11Last read pointer has been set to message number |&1.|CR|CR|PA
+; QuickScan message list header    &2=basename
+506 |15From            Base                 Subject|CR|09=============== ==================== ==========================================
+; QuickScan message list middle
+; &1=msg#  &2=basename  &3=from  &4=to  &5=subject  &6=date
+507 |10|$R15|&3 |09|$R20|&2 |11|$R42|&5
+; QuicScan message list footer
+508 |09|$D79=|CR

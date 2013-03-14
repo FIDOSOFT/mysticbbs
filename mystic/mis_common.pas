@@ -12,6 +12,7 @@ Uses
 
 Var
   bbsConfig : RecConfig;
+  TempPath  : String;
   Console   : TOutput;
   Term      : TTermAnsi;
 

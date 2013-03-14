@@ -8,6 +8,7 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
+! Posting echomail via NNTP is not setting ECHO flag
 ! LBP menus arent scrolling correctly in Linux
 ! MUTIL FILESBBS import is not skipping FILES.BBS?
 ! Make sure MIS in Linux works with DOSEMU
@@ -28,6 +29,9 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- MUTIL create FILES.BBS in the file base directory
+- MUTILs new DIR import of msg bases could have optional config to reference
+  a series of .NA files to get the name/description of bases.
 - New Scan/Read message should have option to not update last read when
   reading personal messages.
 - Option for QuickScan that only prints a base if it has new messages.

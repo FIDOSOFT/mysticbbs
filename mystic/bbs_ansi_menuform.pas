@@ -70,7 +70,6 @@ Type
   Private
     Procedure EditPercentBar  (Var Bar: RecPercent);
     Function  GetColorAttr    (C: Byte) : Byte;
-    Function  DrawAccessFlags (Var Flags: TMenuFormFlagsRec) : String;
     Procedure EditAccessFlags (Var Flags: TMenuFormFlagsRec);
     Procedure AddBasic        (HK: Char; D: String; X, Y, FX, FY, DS, FS, MS: Byte; I: FormItemType; P: Pointer; H: String);
     Procedure BarON;
@@ -219,19 +218,6 @@ Begin
 
   Form.Free;
   Box.Free;
-End;
-
-Function TAnsiMenuForm.DrawAccessFlags (Var Flags: TMenuFormFlagsRec) : String;
-Var
-  Str : String;
-  Ch  : Char;
-Begin
-  Str := '';
-
-  For Ch := 'A' to 'Z' Do
-    If Ord(Ch) - 64 in Flags Then Str := Str + Ch Else Str := Str + '-';
-
-  Result := Str;
 End;
 
 Procedure TAnsiMenuForm.EditAccessFlags (Var Flags: TMenuFormFlagsRec);
@@ -552,7 +538,7 @@ Begin
       ItemByte    : WriteXY (FieldX, FieldY, cData, strPadR(strI2S(B^), FieldSize, ' '));
       ItemWord    : WriteXY (FieldX, FieldY, cData, strPadR(strI2S(W^), FieldSize, ' '));
       ItemLong    : WriteXY (FieldX, FieldY, cData, strPadR(strI2S(L^), FieldSize, ' '));
-      ItemToggle  : WriteXY (FieldX, FieldY, cData, StrPadR(strWordGet(B^ + 1 - MinNum, Toggle, ' '), FieldSize, ' '));
+      ItemToggle  : WriteXY (FieldX, FieldY, cData, StrPadR(strReplace(strWordGet(B^ + 1 - MinNum, Toggle, ' '), '_', ' '), FieldSize, ' '));
       ItemChar    : WriteXY (FieldX, FieldY, cData, C^);
       ItemAttr    : WriteXY (FieldX, FieldY, B^, ' Sample ');
       ItemFlags   : WriteXY (FieldX, FieldY, cData, DrawAccessFlags(F^));

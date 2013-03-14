@@ -262,9 +262,9 @@ Type
     Function        GetMsgLoc: LongInt; Virtual; {To allow reseeking to message}
     Procedure SetMsgLoc(ML: LongInt); Virtual; {Reseek to message}
     Function        IdxHighest: LongInt; Virtual; { *** }
-    Procedure YoursFirst(Name: String; Handle: String); Virtual; {Seek your mail}
-    Procedure YoursNext; Virtual; {Seek next your mail}
-    Function        YoursFound: Boolean; Virtual; {Message found}
+//    Procedure YoursFirst(Name: String; Handle: String); Virtual; {Seek your mail}
+//    Procedure YoursNext; Virtual; {Seek next your mail}
+//    Function        YoursFound: Boolean; Virtual; {Message found}
     Function        GetMsgDisplayNum: LongInt; Virtual; {Get msg number to display}
     Function        GetTxtPos: LongInt; Virtual; {Get indicator of msg text position}
     Procedure SetTxtPos(TP: LongInt); Virtual; {Set text position}
@@ -1513,6 +1513,7 @@ Begin
   SeekFirst(ML);
 End;
 
+(*
 Procedure TMsgBaseSquish.YoursFirst (Name: String; Handle: String);
 Begin
   SqInfo^.CurrIdx := 0;
@@ -1554,7 +1555,7 @@ Function TMsgBaseSquish.YoursFound: Boolean;
 Begin
   YoursFound := SqInfo^.CurrIdx <= SqInfo^.SqBase.NumMsg;
 End;
-
+*)
 Function TMsgBaseSquish.GetMsgDisplayNum: LongInt;
 Begin
   GetMsgDisplayNum := SqInfo^.CurrIdx;

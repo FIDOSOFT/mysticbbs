@@ -98,9 +98,9 @@ Type
     Procedure SeekNext; Virtual; {Find next matching msg}
     Procedure SeekPrior; Virtual; {Prior msg}
     Function  SeekFound: Boolean; Virtual; {Msg was found}
-    Procedure YoursFirst(Name: String; Handle: String); Virtual; {Seek your mail}
-    Procedure YoursNext; Virtual; {Seek next your mail}
-    Function  YoursFound: Boolean; Virtual; {Message found}
+//    Procedure YoursFirst(Name: String; Handle: String); Virtual; {Seek your mail}
+//    Procedure YoursNext; Virtual; {Seek next your mail}
+//    Function  YoursFound: Boolean; Virtual; {Message found}
     Function  GetHighMsgNum: LongInt; Virtual; {Get highest msg number}
     Procedure SetMailType(MT: MsgMailType); Virtual; {Set message base type}
 //    Function  GetSubArea: Word; Virtual; {Get sub area number}
@@ -496,6 +496,7 @@ Procedure TMsgBaseABS.MsgTxtStartUp;
 Begin
 End;
 
+(*
 Procedure TMsgBaseABS.YoursFirst(Name: String; Handle: String);
 Begin
 End;
@@ -507,7 +508,7 @@ End;
 Function TMsgBaseABS.YoursFound: Boolean;
 Begin
 End;
-
+*)
 Function TMsgBaseABS.CreateMsgBase(MaxMsg: Word; MaxDays: Word): Boolean;
 Begin
 End;
