@@ -73,6 +73,8 @@ Begin
   Region.Bottom := YPos - 1;
 
   WriteConsoleOutput(ConOut, @Line, BufSize, BufCoord, Region);
+
+  Buffer[YPos] := Line;
 End;
 
 Procedure TOutputWindows.SetWindow (X1, Y1, X2, Y2 : Byte; Home: Boolean);
