@@ -23,7 +23,7 @@
 Const
   mysSoftwareID  = 'Mystic';                                    // no idea
   mysCopyYear    = '1997-2013';                                 // its been a long time!
-  mysVersion     = '1.10 A29';                                  // current version
+  mysVersion     = '1.10 A30';                                  // current version
   mysDataChanged = '1.10 A11';                                  // version of last records change
 
   {$IFDEF WIN32}
@@ -78,6 +78,56 @@ Type
 
   AccessFlagType = Set of 1..26;
 
+Const
+  pktPrivate    = $0001;
+  pktCrash      = $0002;
+  pktReceived   = $0004;
+  pktSent       = $0008;
+  pktFileAttach = $0010;
+  pktInTransit  = $0020;
+  pktOrphan     = $0040;
+  pktKillSent   = $0080;
+  pktLocal      = $0100;
+  pktHold       = $0200;
+  pktUnused     = $0400;
+  pktFileReq    = $0800;
+  pktReturnReq  = $1000;
+  pktIsReceipt  = $2000;
+  pktAuditReq   = $4000;
+  pktFileUpdate = $8000;
+
+Type
+  RecPKTMessageHdr = Record
+    MsgType,
+    OrigNode  : System.Word;
+    DestNode  : System.Word;
+    OrigNet   : System.Word;
+    DestNet   : System.Word;
+    Attribute : System.Word;
+    Cost      : System.Word;
+    DateTime  : String[19];
+  End;
+
+  RecPKTHeader = Record
+    OrigNode : System.Word;
+    DestNode : System.Word;
+    Year     : System.Word;
+    Month    : System.Word;
+    Day      : System.Word;
+    Hour     : System.Word;
+    Minute   : System.Word;
+    Second   : System.Word;
+    Baud     : System.Word;
+    PKTType  : System.Word;
+    OrigNet  : System.Word;
+    DestNet  : System.Word;
+    ProdCode : System.Word; // Apply to FTSC for code?
+    Password : Array[1..8] of Char;
+    OrigZone : System.Word;
+    DestZone : System.Word;
+    Filler   : Array[1..20] of Char;
+  End;
+
   RecEchoMailAddr = Record
     Zone,
     Net,
@@ -85,6 +135,9 @@ Type
     Point : Word;
   End;
 
+  RecEchoMailExport = LongInt;
+
+  (*
   RecEchoMailOpts = Record
     SysLocation   : String[40];
     SysFlags      : String[40];
@@ -111,17 +164,20 @@ Type
     BlockSize : Word;
     Res       : Array[1..10] of Byte;
   End;
+*)
 
   RecEchoMailNode = Record
-    Description : String[40];
+    Index       : LongInt;
+    Description : String[35];
     Active      : Boolean;
-    AddrList    : String[250];
-    InType      : Byte;                                         // 0=Disabled 1=FTP 2=BINKP 3=EMAIL 4=DIRECTORY
-    OutType     : Byte;                                         // 0=Disabled 1=FTP 2=BINKP 3=EMAIL 4=DIRECTORY
-    FTPin       : RecEchoMailNodeFTP;
-    FTPout      : RecEchoMailNodeFTP;
-    BINKPin     : RecEchoMailNodeBINKP;
-    BINKPout    : RecEchoMailNodeBINKP;
+    Address     : RecEchoMailAddr;
+    ArcType     : String[4];
+//    InType      : Byte;                                         // 0=Disabled 1=FTP 2=BINKP 3=EMAIL 4=DIRECTORY
+//    OutType     : Byte;                                         // 0=Disabled 1=FTP 2=BINKP 3=EMAIL 4=DIRECTORY
+//    FTPin       : RecEchoMailNodeFTP;
+//    FTPout      : RecEchoMailNodeFTP;
+//    BINKPin     : RecEchoMailNodeBINKP;
+//    BINKPout    : RecEchoMailNodeBINKP;
     LastRecv    : LongInt;
     LastSent    : LongInt;
     LastReset   : LongInt;
@@ -159,10 +215,10 @@ Type
     ScriptPath      : String[mysMaxPathSize];
     QwkPath         : String[mysMaxPathSize];
     SemaPath        : String[mysMaxPathSize];
-    TemplatePath    : String[mysMaxPathSize];
+    InboundPath     : String[mysMaxPathSize];
     MenuPath        : String[mysMaxPathsize];
     TextPath        : String[mysMaxPathSize];
-    WebPath         : String[mysMaxPathSize];
+    OutboundPath    : String[mysMaxPathSize];
  // GENERAL SETTINGS
     BBSName         : String[30];
     SysopName       : String[30];
@@ -522,7 +578,8 @@ Type
     Index     : Word;                                           // permanent index
     Flags     : LongInt;                                        // MB flag bits see above
     Created   : LongInt;
-    Res       : Array[1..76] of Byte;                           // RESERVED
+    EchoTag   : String[40];                                     // EchoMail Tag
+    Res       : Array[1..35] of Byte;                           // RESERVED
   End;
 
   FScanRec = Record                    { <Data Path> *.SCN               }

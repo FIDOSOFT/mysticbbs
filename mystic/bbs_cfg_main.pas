@@ -26,11 +26,12 @@ Uses
   bbs_cfg_SecLevel,
   bbs_cfg_Theme,
   bbs_cfg_UserEdit,
+  bbs_cfg_EchoMail,
+  bbs_cfg_MenuEdit,
 
   // old shit to rewrite
   bbs_cfg_events,
-  bbs_cfg_vote,
-  bbs_cfg_menuedit;
+  bbs_cfg_vote;
 
 Procedure Configuration_ExecuteEditor (Mode: Char);
 Var
@@ -40,7 +41,7 @@ Begin
 
   Case Mode of
     'A' : Configuration_ArchiveEditor;
-    'B' : Configuration_MessageBaseEditor;
+    'B' : Configuration_MessageBaseEditor(True);
     'F' : Configuration_FileBaseEditor;
     'G' : Configuration_GroupEditor(True);
     'L' : Configuration_SecurityEditor(True);
@@ -177,7 +178,7 @@ Begin
               End;
           End;
       1 : Begin
-            BoxOpen      (4, 4, 33, 16);
+            BoxOpen      (4, 4, 33, 17);
             CoolBoxOpen  (3, 'Configuration');
 
             Form.AddNone ('S', ' S System Paths',             5,  5, 5,  5, 28, '');
@@ -188,9 +189,10 @@ Begin
             Form.AddNone ('3', ' 3 New User Optional Fields', 5, 10, 5, 10, 28, '');
             Form.AddNone ('F', ' F File Base Settings',       5, 11, 5, 11, 28, '');
             Form.AddNone ('M', ' M Message Base Settings',    5, 12, 5, 12, 28, '');
-            Form.AddNone ('E', ' E Echomail Networks',        5, 13, 5, 13, 28, '');
-            Form.AddNone ('O', ' O Offline Mail Settings',    5, 14, 5, 14, 28, '');
-            Form.AddNone ('C', ' C Console Settings',         5, 15, 5, 15, 28, '');
+            Form.AddNone ('E', ' E EchoMail Addresses',       5, 13, 5, 13, 28, '');
+            Form.AddNone ('N', ' N EchoMail Nodes',           5, 14, 5, 14, 28, '');
+            Form.AddNone ('O', ' O Offline Mail Settings',    5, 15, 5, 15, 28, '');
+            Form.AddNone ('C', ' C Console Settings',         5, 16, 5, 16, 28, '');
 
             Res        := Form.Execute;
             MenuPos[1] := Form.ItemPos;
@@ -208,6 +210,7 @@ Begin
                 'G' : Configuration_GeneralSettings;
                 'L' : Configuration_LoginMatrix;
                 'E' : Configuration_EchoMailAddress(True);
+                'N' : Configuration_EchoMailNodes(True);
                 '3' : Configuration_OptionalFields;
                 'F' : Configuration_FileSettings;
                 'M' : Configuration_MessageSettings;
@@ -285,7 +288,7 @@ Begin
             End Else Begin
               Case Res of
                 'A' : Configuration_ArchiveEditor;
-                'B' : Configuration_MessageBaseEditor;
+                'B' : Configuration_MessageBaseEditor(True);
                 'F' : Configuration_FileBaseEditor;
                 'G' : Configuration_GroupEditor(True);
                 'M' : Configuration_MenuEditor;

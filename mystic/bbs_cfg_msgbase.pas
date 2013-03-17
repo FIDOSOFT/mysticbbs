@@ -4,7 +4,7 @@ Unit bbs_cfg_MsgBase;
 
 Interface
 
-Procedure Configuration_MessageBaseEditor;
+Function Configuration_MessageBaseEditor (Edit: Boolean) : LongInt;
 
 Implementation
 
@@ -17,7 +17,7 @@ Uses
   bbs_Ansi_MenuBox,
   bbs_Ansi_MenuForm,
   bbs_Cfg_Common,
-  bbs_Cfg_SysCfg,
+  bbs_Cfg_EchoMail,
   bbs_Common;
 
 Type
@@ -97,33 +97,36 @@ Var
   Box   : TAnsiMenuBox;
   Form  : TAnsiMenuForm;
   Topic : String;
+  Links : LongInt;
 Begin
   Topic := '|03(|09Message Base Edit|03) |01-|09> |15';
   Box   := TAnsiMenuBox.Create;
   Form  := TAnsiMenuForm.Create;
 
+  Box.Shadow := False;
   Box.Header := ' Index ' + strI2S(MBase.Index) + ' ';
 
-  Box.Open (3, 5, 77, 21);
+  Box.Open (3, 5, 77, 22);
 
-  VerticalLine (17,  6, 20);
-  VerticalLine (66,  6, 20);
+  VerticalLine (17,  6, 21);
+  VerticalLine (66,  6, 21);
 
   Form.AddStr  ('N', ' Name'        , 11,  6, 19,  6,  6, 30, 40, @MBase.Name, Topic + 'Message base description');
   Form.AddStr  ('W', ' Newsgroup'   ,  6,  7, 19,  7, 11, 30, 60, @MBase.NewsName, Topic + 'Newsgroup name');
   Form.AddStr  ('Q', ' QWK Name'    ,  7,  8, 19,  8, 10, 13, 13, @MBase.QwkName, Topic + 'Qwk Short name');
-  Form.AddStr  ('F', ' File Name'   ,  6,  9, 19,  9, 11, 30, 40, @MBase.FileName, Topic + 'Message base storage file name');
-  Form.AddPath ('P', ' Path'        , 11, 10, 19, 10,  6, 30, 80, @MBase.Path, Topic + 'Message base storage path');
-  Form.AddStr  ('L', ' List ACS'    ,  7, 11, 19, 11, 10, 30, 30, @MBase.ListACS, Topic + 'Access required to see in base list');
-  Form.AddStr  ('R', ' Read ACS'    ,  7, 12, 19, 12, 10, 30, 30, @MBase.ReadACS, Topic + 'Access required to read messages');
-  Form.AddStr  ('C', ' Post ACS'    ,  7, 13, 19, 13, 10, 30, 30, @MBase.PostACS, Topic + 'Access required to post messages');
-  Form.AddStr  ('Y', ' Sysop ACS'   ,  6, 14, 19, 14, 11, 30, 30, @MBase.SysopACS, Topic + 'Access required for Sysop access');
-  Form.AddNone ('D', ' Net Address' ,  4, 15, 19, 15, 13, Topic + 'NetMail Address');
-  Form.AddStr  ('I', ' Origin'      ,  9, 16, 19, 16,  8, 30, 50, @MBase.Origin, Topic + 'Message base origin line');
-  Form.AddStr  ('S', ' Sponsor'     ,  8, 17, 19, 17,  9, 30, 30, @MBase.Sponsor, Topic + 'User name of base''s sponser');
-  Form.AddStr  ('H', ' Header'      ,  9, 18, 19, 18,  8, 20, 20, @MBase.Header, Topic + 'Display file name of msg header');
-  Form.AddStr  ('T', ' R Template'  ,  5, 19, 19, 19, 12, 20, 20, @MBase.RTemplate, Topic + 'Template for full screen reader');
-  Form.AddStr  ('M', ' L Template'  ,  5, 20, 19, 20, 12, 20, 20, @MBase.ITemplate, Topic + 'Template for lightbar message list');
+  Form.AddStr  ('8', ' Echo Tag'    ,  7,  9, 19,  9, 10, 30, 40, @MBase.EchoTag, Topic + 'FTN EchoTag');
+  Form.AddStr  ('F', ' File Name'   ,  6, 10, 19, 10, 11, 30, 40, @MBase.FileName, Topic + 'Message base storage file name');
+  Form.AddPath ('P', ' Path'        , 11, 11, 19, 11,  6, 30, 80, @MBase.Path, Topic + 'Message base storage path');
+  Form.AddStr  ('L', ' List ACS'    ,  7, 12, 19, 12, 10, 30, 30, @MBase.ListACS, Topic + 'Access required to see in base list');
+  Form.AddStr  ('R', ' Read ACS'    ,  7, 13, 19, 13, 10, 30, 30, @MBase.ReadACS, Topic + 'Access required to read messages');
+  Form.AddStr  ('C', ' Post ACS'    ,  7, 14, 19, 14, 10, 30, 30, @MBase.PostACS, Topic + 'Access required to post messages');
+  Form.AddStr  ('Y', ' Sysop ACS'   ,  6, 15, 19, 15, 11, 30, 30, @MBase.SysopACS, Topic + 'Access required for Sysop access');
+  Form.AddNone ('D', ' Net Address' ,  4, 16, 19, 16, 13, Topic + 'NetMail Address');
+  Form.AddNone ('7', ' Export To'   ,  6, 17, 19, 17, 11, Topic + 'Export messages to these nodes');
+  Form.AddStr  ('I', ' Origin'      ,  9, 18, 19, 18,  8, 30, 50, @MBase.Origin, Topic + 'Message base origin line');
+  Form.AddStr  ('S', ' Sponsor'     ,  8, 19, 19, 19,  9, 30, 30, @MBase.Sponsor, Topic + 'User name of base''s sponser');
+  Form.AddStr  ('T', ' R Template'  ,  5, 20, 19, 20, 12, 20, 20, @MBase.RTemplate, Topic + 'Template for full screen reader');
+  Form.AddStr  ('M', ' L Template'  ,  5, 21, 19, 21, 12, 20, 20, @MBase.ITemplate, Topic + 'Template for lightbar message list');
 
   Form.AddAttr ('Q', ' Quote Color' , 53,  6, 68,  6, 13, @MBase.ColQuote, Topic + 'Color for quoted text');
   Form.AddAttr ('X', ' Text Color'  , 54,  7, 68,  7, 12, @MBase.ColText, Topic + 'Color for message text');
@@ -140,12 +143,24 @@ Begin
   Form.AddBits ('V', ' Private'     , 57, 18, 68, 18,  9, MBPrivate, @MBase.Flags, Topic + 'Is this a private base?');
   Form.AddTog  ('A', ' Base Type'   , 55, 19, 68, 19, 11,  9,  0, 3, 'Local EchoMail Newsgroup Netmail', @MBase.NetType, Topic + 'Message base type');
   Form.AddTog  ('B', ' Base Format' , 53, 20, 68, 20, 13,  6,  0, 1, 'JAM Squish', @MBase.BaseType, Topic + 'Message base storage format');
+  Form.AddStr  ('H', ' Header'      , 58, 21, 68, 21,  8,  9, 20, @MBase.Header, Topic + 'Display file name of msg header');
+
 
   Repeat
-    WriteXY (19, 15, 113, strPadR(strAddr2Str(Config.NetAddress[MBase.NetAddr]), 19, ' '));
+    WriteXY (19, 16, 113, strPadR(strAddr2Str(Config.NetAddress[MBase.NetAddr]), 19, ' '));
+
+    Links := FileByteSize(MBase.Path + MBase.FileName + '.lnk');
+
+    If Links <> -1 Then
+      Links := Links DIV SizeOf(RecEchoMailExport)
+    Else
+      Links := 0;
+
+    WriteXY (19, 17, 113, strI2S(Links) + ' node(s)');
 
     Case Form.Execute of
       'D' : MBase.NetAddr := Configuration_EchoMailAddress(False);
+      '7' : Configuration_NodeExport (MBase);
       #27 : Break;
     End;
   Until False;
@@ -158,7 +173,7 @@ Begin
   Box.Free;
 End;
 
-Procedure Configuration_MessageBaseEditor;
+Function Configuration_MessageBaseEditor (Edit: Boolean) : LongInt;
 Var
   Box       : TAnsiMenuBox;
   List      : TAnsiMenuList;
@@ -366,6 +381,8 @@ Var
   End;
 
 Begin
+  Result := -1;
+
   Assign (MBaseFile, Config.DataPath + 'mbases.dat');
 
   If Not ioReset(MBaseFile, SizeOf(MBase), fmRWDN) Then
@@ -395,7 +412,8 @@ Begin
     List.Close;
 
     Case List.ExitCode of
-      '/' : Case GetCommandOption(8, 'I-Insert|D-Delete|C-Copy|P-Paste|G-Global|S-Sort|') of
+      '/' : If Edit Then
+            Case GetCommandOption(8, 'I-Insert|D-Delete|C-Copy|P-Paste|G-Global|S-Sort|') of
               'I' : If List.Picked > 1 Then Begin
                       AssignRecord(False);
                       MakeList;
@@ -416,6 +434,7 @@ Begin
                           FileErase (MBase.Path + MBase.FileName + '.sqi');
                           FileErase (MBase.Path + MBase.FileName + '.sql');
                           FileErase (MBase.Path + MBase.FileName + '.scn');
+                          FileErase (MBase.Path + MBase.FileName + '.lnk');
                         End;
 
                         MakeList;
@@ -453,10 +472,16 @@ Begin
               Seek (MBaseFile, List.Picked - 1);
               Read (MBaseFile, MBase);
 
-              EditMessageBase (MBase);
+              If Edit Then Begin
+                EditMessageBase (MBase);
 
-              Seek  (MBaseFile, List.Picked - 1);
-              Write (MBaseFile, MBase);
+                Seek  (MBaseFile, List.Picked - 1);
+                Write (MBaseFile, MBase);
+              End Else Begin
+                Result := MBase.Index;
+
+                Break;
+              End;
             End;
       #27 : Break;
     End;

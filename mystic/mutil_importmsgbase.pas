@@ -28,7 +28,7 @@ Begin
   ProcessName   ('Import Message Bases', True);
   ProcessResult (rWORKING, False);
 
-  FindFirst ('*', AnyFile, Info);
+  FindFirst (bbsConfig.MsgsPath + '*', AnyFile, Info);
 
   While DosError = 0 Do Begin
     BaseName := JustFileName(Info.Name);

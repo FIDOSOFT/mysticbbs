@@ -8,7 +8,6 @@ Procedure Configuration_SysPaths;
 Procedure Configuration_GeneralSettings;
 Procedure Configuration_LoginMatrix;
 Procedure Configuration_OptionalFields;
-Function  Configuration_EchomailAddress (Edit: Boolean) : Byte;
 Procedure Configuration_FileSettings;
 Procedure Configuration_QWKSettings;
 Procedure Configuration_Internet;
@@ -43,9 +42,9 @@ Begin
 
   Box.Header := ' System Directories ';
 
-  Box.Open (5, 6, 75, 18);
+  Box.Open (5, 6, 75, 20);
 
-  VerticalLine (26, 8, 16);
+  VerticalLine (26, 8, 18);
 
   Form.AddPath ('S', ' System Path',       13,  8, 28,  8, 13, 45, mysMaxPathSize, @Config.SystemPath,   Topic + 'Root Mystic BBS directory');
   Form.AddPath ('D', ' Data File Path',    10,  9, 28,  9, 16, 45, mysMaxPathSize, @Config.DataPath,     Topic + 'Data file directory');
@@ -55,8 +54,9 @@ Begin
   Form.AddPath ('E', ' Semaphore Path',    10, 13, 28, 13, 16, 45, mysMaxPathSize, @Config.SemaPath,     Topic + 'Semaphore file directory');
   Form.AddPath ('U', ' Menu File Path',    10, 14, 28, 14, 16, 45, mysMaxPathSize, @Config.MenuPath,     Topic + 'Default menu file directory');
   Form.AddPath ('T', ' Text File Path',    10, 15, 28, 15, 16, 45, mysMaxPathSize, @Config.TextPath,     Topic + 'Default display file directory');
-//  Form.AddPath ('P', ' Template Path',     11, 16, 29, 16, 15, 45, mysMaxPathSize, @Config.TemplatePath, Topic + 'Default template file directory');
   Form.AddPath ('R', ' Script Path',       13, 16, 28, 16, 13, 45, mysMaxPathSize, @Config.ScriptPath,   Topic + 'Default script (MPL) directory');
+  Form.AddPath ('I', ' Inbound EchoMail',   8, 17, 28, 17, 18, 45, mysMaxPathSize, @Config.InboundPath,  Topic + 'Inbound Echomail directory');
+  Form.AddPath ('O', ' Outbound EchoMail',  7, 18, 28, 18, 19, 45, mysMaxPathSize, @Config.OutboundPath, Topic + 'Outbound Echomail directory');
 
   Form.Execute;
 
@@ -176,98 +176,6 @@ Begin
 
   Box.Close;
   Form.Free;
-  Box.Free;
-End;
-
-Function Configuration_EchomailAddress (Edit: Boolean) : Byte;
-
-  Procedure EditAddress (Num: Byte);
-  Var
-    Box   : TAnsiMenuBox;
-    Form  : TAnsiMenuForm;
-    Topic : String;
-  Begin
-    Topic := '|03(|09Echomail Network|03) |01-|09> |15';
-    Box   := TAnsiMenuBox.Create;
-    Form  := TAnsiMenuForm.Create;
-
-    Box.Open (14, 6, 66, 17);
-
-    VerticalLine (29,  9, 12);
-    VerticalLine (29, 14, 15);
-    VerticalLine (54,  9, 12);
-
-    WriteXY (21, 8, 112, 'Address');
-    WriteXY (47, 8, 112, 'Uplink');
-
-    Form.AddWord ('Z', ' Zone'       , 23,  9, 31,  9,  6,  5,  0, 65535, @Config.NetAddress[Num].Zone, Topic + 'Network Zone');
-    Form.AddWord ('N', ' Net'        , 24, 10, 31, 10,  5,  5,  0, 65535, @Config.NetAddress[Num].Net, Topic + 'Network Net');
-    Form.AddWord ('O', ' Node'       , 23, 11, 31, 11,  6,  5,  0, 65535, @Config.NetAddress[Num].Node, Topic + 'Network Node');
-    Form.AddWord ('P', ' Point'      , 22, 12, 31, 12,  7,  5,  0, 65535, @Config.NetAddress[Num].Point, Topic + 'Network Point');
-
-    Form.AddStr  ('M', ' Domain',      21, 14, 31, 14,  8,  8,  8, @Config.NetDomain[Num], Topic + 'Network domain');
-    Form.AddStr  ('D', ' Description', 16, 15, 31, 15, 13, 25, 25, @Config.NetDesc[Num], Topic + 'Network description');
-
-    Form.AddWord ('Z', ' Zone'       , 48,  9, 56,  9,  6,  5,  0, 65535, @Config.NetUplink[Num].Zone, Topic + 'Uplink Zone');
-    Form.AddWord ('N', ' Net'        , 49, 10, 56, 10,  5,  5,  0, 65535, @Config.NetUplink[Num].Net, Topic + 'Uplink Net');
-    Form.AddWord ('O', ' Node'       , 48, 11, 56, 11,  6,  5,  0, 65535, @Config.NetUplink[Num].Node, Topic + 'Uplink Node');
-    Form.AddWord ('P', ' Point'      , 47, 12, 56, 12,  7,  5,  0, 65535, @Config.NetUplink[Num].Point, Topic + 'Uplink Point');
-
-    Form.Execute;
-
-    Box.Close;
-
-    Form.Free;
-    Box.Free;
-  End;
-
-Var
-  Box  : TAnsiMenuBox;
-  List : TAnsiMenuList;
-
-  Procedure CreateList;
-  Var
-    A : Byte;
-  Begin
-    List.Clear;
-
-    For A := 1 to 30 Do
-      List.Add(strPadL(strAddr2Str(Config.NetAddress[A]), 23, ' ') + ' ' + strPadL(Config.NetDesc[A], 20, ' '), 0);
-  End;
-
-Begin
-  Result := 0;
-
-  Box  := TAnsiMenuBox.Create;
-  List := TAnsiMenuList.Create;
-
-  List.NoWindow := True;
-
-  Box.Open (17, 5, 64, 20);
-
-  WriteXY (27, 6, 112, 'Network Address          Description');
-  WriteXY (19, 7, 112, strRep('Ä', 44));
-
-  Repeat
-    CreateList;
-
-    List.Open (17, 7, 64, 20);
-
-    Case List.ExitCode of
-      #13 : If Edit Then
-              EditAddress(List.Picked)
-            Else Begin
-              Result := List.Picked;
-              Break;
-            End;
-      #27 : Break;
-    End;
-  Until False;
-
-  List.Close;
-  Box.Close;
-
-  List.Free;
   Box.Free;
 End;
 

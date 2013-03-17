@@ -307,7 +307,7 @@ Begin
     'X' : Case Cmd[2] of
             'A' : Begin
                     Session.io.OutFile('newuser', True, 0);
-                    If Session.io.GetYN(Session.GetPrompt(269), True) Then Begin
+                    If Session.io.GetYN(Session.GetPrompt(269), False) Then Begin
                       Session.User.CreateNewUser('');
                       Session.User.UserLogon2;
 
@@ -323,8 +323,10 @@ Begin
                       Session.io.OutFull (Session.GetPrompt(271));
                   End;
             'L' : If Session.io.GetPW (Session.GetPrompt(272), Session.GetPrompt(423), Config.MatrixPW) Then Begin
-                    Session.User.MatrixOK := True;
-                    Result                := True;
+//                    If Session.User.GetMatrixUser Then Begin
+                      Session.User.MatrixOK := True;
+                      Result                := True;
+//                    End;
                   End;
             'P' : {$IFNDEF UNIX} If Session.User.GetMatrixUser Then
                     PageForSysopChat (Pos('/F', strUpper(CmdData)) > 0) {$ENDIF};

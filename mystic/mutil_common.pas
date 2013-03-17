@@ -27,17 +27,18 @@ Var
   LogLevel     : Byte = 1;
 
 Const
-  Header_GENERAL  = 'General';
-  Header_IMPORTNA = 'Import_FIDONET.NA';
-  Header_IMPORTMB = 'Import_MessageBase';
-  Header_FILEBONE = 'Import_FILEBONE.NA';
-  Header_FILESBBS = 'Import_FILES.BBS';
-  Header_UPLOAD   = 'MassUpload';
-  Header_TOPLISTS = 'GenerateTopLists';
-  Header_ALLFILES = 'GenerateAllFiles';
-  Header_MSGPURGE = 'PurgeMessageBases';
-  Header_MSGPACK  = 'PackMessageBases';
-  Header_MSGPOST  = 'PostTextFiles';
+  Header_GENERAL    = 'General';
+  Header_IMPORTNA   = 'Import_FIDONET.NA';
+  Header_IMPORTMB   = 'Import_MessageBase';
+  Header_ECHOEXPORT = 'ExportEchoMail';
+  Header_FILEBONE   = 'Import_FILEBONE.NA';
+  Header_FILESBBS   = 'Import_FILES.BBS';
+  Header_UPLOAD     = 'MassUpload';
+  Header_TOPLISTS   = 'GenerateTopLists';
+  Header_ALLFILES   = 'GenerateAllFiles';
+  Header_MSGPURGE   = 'PurgeMessageBases';
+  Header_MSGPACK    = 'PackMessageBases';
+  Header_MSGPOST    = 'PostTextFiles';
 
 Procedure Log                (Level: Byte; Code: Char; Str: String);
 Function  strAddr2Str        (Addr : RecEchoMailAddr) : String;
@@ -53,6 +54,10 @@ Procedure ExecuteArchive     (FName: String; Temp: String; Mask: String; Mode: B
 Function  GetMBaseByIndex    (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
 Function  MessageBaseOpen    (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
 Function  SaveMessage        (mArea: RecMessageBase; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mText: RecMessageText; mLines: Integer) : Boolean;
+Function  GetFTNPKTName      : String;
+Function  GetFTNArchiveName  (Orig, Dest: RecEchoMailAddr) : String;
+Function  GetFTNFlowName     (Dest: RecEchoMailAddr) : String;
+Function  GetNodeByIndex     (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
 
 Implementation
 
@@ -255,7 +260,10 @@ Var
   Count   : LongInt;
   Str     : String;
 Begin
-  Temp := strUpper(JustFileExt(FName));
+  If Temp <> '' Then
+    Temp := strUpper(Temp)
+  Else
+    Temp := strUpper(JustFileExt(FName));
 
   Assign (ArcFile, bbsConfig.DataPath + 'archive.dat');
   {$I-} Reset (ArcFile); {$I+}
@@ -377,9 +385,9 @@ Begin
     Msg^.SetOrig(bbsConfig.NetAddress[mArea.NetAddr]);
 
     Case mArea.NetType of
-      1 : Assign (SemFile, Config.SemaPath + fn_SemFileEcho);
-      2 : Assign (SemFile, Config.SemaPath + fn_SemFileNews);
-      3 : Assign (SemFile, Config.SemaPath + fn_SemFileNet);
+      1 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileEcho);
+      2 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileNews);
+      3 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileNet);
     End;
 
     ReWrite (SemFile);
@@ -399,7 +407,7 @@ Begin
 
   If mArea.NetType > 0 Then Begin
     Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ')');
-    Msg^.DoStringLn (' * Origin: ' + mArea.Origin + ' (' + strAddr2Str(Config.NetAddress[mArea.NetAddr]) + ')');
+    Msg^.DoStringLn (' * Origin: ' + mArea.Origin + ' (' + strAddr2Str(bbsConfig.NetAddress[mArea.NetAddr]) + ')');
   End;
 
   Msg^.WriteMsg;
@@ -408,6 +416,59 @@ Begin
   Dispose (Msg, Done);
 
   Result := True;
+End;
+
+Function GetFTNPKTName : String;
+Var
+  Hour, Min, Sec, hSec  : Word;
+  Year, Month, Day, DOW : Word;
+Begin
+  GetTime (Hour, Min, Sec, hSec);
+  GetDate (Year, Month, Day, DOW);
+
+  Result := strZero(Day) + strZero(Hour) + strZero(Min) + strZero(Sec);
+End;
+
+Function GetFTNArchiveName (Orig, Dest: RecEchoMailAddr) : String;
+Var
+  Net  : LongInt;
+  Node : LongInt;
+Begin
+  Net  := Orig.Net  - Dest.Net;
+  Node := Orig.Node - Dest.Node;
+
+  If Net  < 0 Then Net  := 65536 + Net;
+  If Node < 0 Then Node := 65536 + Node;
+
+  Result := strI2H((Net SHL 16) OR Node);
+End;
+
+Function GetFTNFlowName (Dest: RecEchoMailAddr) : String;
+Begin
+  Result := strI2H((Dest.Net SHL 16) OR Dest.Node);
+End;
+
+Function GetNodeByIndex (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, bbsConfig.DataPath + 'echonode.dat');
+
+  If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
+
+  While Not Eof(F) Do Begin
+    ioRead(F, TempNode);
+
+    If TempNode.Index = Num Then Begin
+      Result := True;
+
+      Break;
+    End;
+  End;
+
+  Close (F);
 End;
 
 End.

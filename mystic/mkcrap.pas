@@ -146,60 +146,68 @@ Begin
    End;
 End;
 
-Function FormattedDate(DT: DateTime; Mask: String): String;
+Function FormattedDate (DT: DateTime; Mask: String) : String;
 Var
-        DStr            : String[2];
-        MStr            : String[2];
-        MNStr   : String[3];
-        YStr            : String[4];
-        HourStr : String[2];
-        MinStr  : String[2];
-        SecStr  : String[2];
-        TmpStr  : String;
-        CurrPos : Word;
-        i                       : Word;
+  DStr    : String[2];
+  MStr    : String[2];
+  MNStr   : String[3];
+  YStr    : String[4];
+  HourStr : String[2];
+  MinStr  : String[2];
+  SecStr  : String[2];
+  TmpStr  : String;
+  CurrPos : Word;
+  i       : Word;
 Begin
-        TmpStr  := Mask;
-        Mask            := strUpper(Mask);
-        DStr            := Copy(strPadL(strI2S(Dt.Day),         2, '0'),  1, 2);
-        MStr            := Copy(strPadL(strI2S(Dt.Month), 2, '0'),  1, 2);
-        YStr            := Copy(strPadL(strI2S(Dt.Year),  4, '0'),  1, 4);
-        HourStr := Copy(strPadL(strI2S(Dt.Hour),  2, ' '),  1, 2);
-        MinStr  := Copy(strPadL(strI2S(Dt.Min),         2, '0'),  1, 2);
-        SecStr  := Copy(strPadL(strI2S(Dt.Sec),         2, '0'),  1, 2);
-        MNStr   := MonthStr(Dt.Month);
-        If (Pos('YYYY', Mask) = 0) Then YStr := Copy(YStr,3,2);
-        CurrPos := Pos('DD', Mask);
-        If CurrPos > 0 Then
-                For i := 1 to Length(DStr) Do
-                        TmpStr[CurrPos + i - 1] := DStr[i];
-        CurrPos := Pos('YY', Mask);
-        If CurrPos > 0 Then
-                For i := 1 to Length(YStr) Do
-                        TmpStr[CurrPos + i - 1] := YStr[i];
-        CurrPos := Pos('MM', Mask);
-        If CurrPos > 0 Then
-                For i := 1 to Length(MStr) Do
-                        TmpStr[CurrPos + i - 1] := MStr[i];
-        CurrPos := Pos('HH', Mask);
-        If CurrPos > 0 Then
-                For i := 1 to Length(HourStr) Do
-                        TmpStr[CurrPos + i - 1] := HourStr[i];
-        CurrPos := Pos('SS', Mask);
-        If CurrPos > 0 Then
-                For i := 1 to Length(SecStr) Do
-                        TmpStr[CurrPos + i - 1] := SecStr[i];
-        CurrPos := Pos('II', Mask);
-        If CurrPos > 0 Then
-                For i := 1 to Length(MinStr) Do
-                        TmpStr[CurrPos + i - 1] := MinStr[i];
-        CurrPos := Pos('NNN', Mask);
-        If CurrPos > 0 Then
-                For i := 1 to Length(MNStr) Do
-                        TmpStr[CurrPos + i - 1] := MNStr[i];
-        FormattedDate := TmpStr;
-        End;
+  TmpStr  := Mask;
+  Mask    := strUpper(Mask);
+  DStr    := Copy(strPadL(strI2S(Dt.Day),   2, '0'),  1, 2);
+  MStr    := Copy(strPadL(strI2S(Dt.Month), 2, '0'),  1, 2);
+  YStr    := Copy(strPadL(strI2S(Dt.Year),  4, '0'),  1, 4);
+  HourStr := Copy(strPadL(strI2S(Dt.Hour),  2, ' '),  1, 2);
+  MinStr  := Copy(strPadL(strI2S(Dt.Min),   2, '0'),  1, 2);
+  SecStr  := Copy(strPadL(strI2S(Dt.Sec),   2, '0'),  1, 2);
+  MNStr   := MonthStr(Dt.Month);
 
+  If (Pos('YYYY', Mask) = 0) Then YStr := Copy(YStr,3,2);
+
+  CurrPos := Pos('DD', Mask);
+  If CurrPos > 0 Then
+    For i := 1 to Length(DStr) Do
+      TmpStr[CurrPos + i - 1] := DStr[i];
+
+  CurrPos := Pos('YY', Mask);
+  If CurrPos > 0 Then
+    For i := 1 to Length(YStr) Do
+      TmpStr[CurrPos + i - 1] := YStr[i];
+
+  CurrPos := Pos('MM', Mask);
+  If CurrPos > 0 Then
+    For i := 1 to Length(MStr) Do
+      TmpStr[CurrPos + i - 1] := MStr[i];
+
+  CurrPos := Pos('HH', Mask);
+  If CurrPos > 0 Then
+    For i := 1 to Length(HourStr) Do
+      TmpStr[CurrPos + i - 1] := HourStr[i];
+
+  CurrPos := Pos('SS', Mask);
+  If CurrPos > 0 Then
+    For i := 1 to Length(SecStr) Do
+      TmpStr[CurrPos + i - 1] := SecStr[i];
+
+  CurrPos := Pos('II', Mask);
+  If CurrPos > 0 Then
+    For i := 1 to Length(MinStr) Do
+      TmpStr[CurrPos + i - 1] := MinStr[i];
+
+  CurrPos := Pos('NNN', Mask);
+  If CurrPos > 0 Then
+    For i := 1 to Length(MNStr) Do
+      TmpStr[CurrPos + i - 1] := MNStr[i];
+
+   FormattedDate := TmpStr;
+End;
 
 Function LoadFilePos(FN: String; Var Rec; FS: Word; FPos: LongInt): Word;
 Var

@@ -45,6 +45,7 @@ Uses
   mUtil_MsgPurge,
   mUtil_MsgPack,
   mUtil_MsgPost,
+  mUtil_EchoExport,
   bbs_Common;
 
 {$I MUTIL_ANSI.PAS}
@@ -133,7 +134,7 @@ Begin
     Halt(1);
   End;
 
-  TempPath := bbsConfig.SystemPath + 'temp0' + PathChar;
+  TempPath := bbsConfig.SystemPath + 'temputil' + PathChar;
 
   GetDIR (0, StartPath);
 
@@ -163,6 +164,7 @@ Var
   DoMassUpload : Boolean;
   DoTopLists   : Boolean;
   DoAllFiles   : Boolean;
+  DoEchoExport : Boolean;
   DoMsgPurge   : Boolean;
   DoMsgPack    : Boolean;
   DoMsgPost    : Boolean;
@@ -181,6 +183,7 @@ Begin
   DoTopLists   := CheckProcess(Header_TOPLISTS);
   DoFilesBBS   := CheckProcess(Header_FILESBBS);
   DoAllFiles   := CheckProcess(Header_ALLFILES);
+  DoEchoExport := CheckProcess(Header_ECHOEXPORT);
   DoMsgPurge   := CheckProcess(Header_MSGPURGE);
   DoMsgPack    := CheckProcess(Header_MSGPACK);
   DoMsgPost    := CheckProcess(Header_MSGPOST);
@@ -204,6 +207,7 @@ Begin
   If DoMassUpload Then uMassUpload;
   If DoTopLists   Then uTopLists;
   If DoAllFiles   Then uAllFilesList;
+  If DoEchoExport Then uEchoExport;
   If DoMsgPurge   Then uPurgeMessageBases;
   If DoMsgPack    Then uPackMessageBases;
   If DoMsgPost    Then uPostMessages;
