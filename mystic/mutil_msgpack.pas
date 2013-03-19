@@ -194,6 +194,7 @@ Var
       If (Link.OldNum <> NewData^.GetRefer) or (Link.NewNum <> NewData^.GetSeeAlso) Then Begin
         NewData^.SetRefer   (Link.OldNum);
         NewData^.SetSeeAlso (Link.NewNum);
+
         NewData^.ReWriteHdr;
       End;
 

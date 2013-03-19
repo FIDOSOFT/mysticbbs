@@ -292,7 +292,7 @@ Begin
   If Str = '-' Then
     WriteLn (tLOG, strRep('-', 40))
   Else
-    WriteLn (tLOG, DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, False) + ' ' + Str);
+    WriteLn (tLOG, DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, 0) + ' ' + Str);
 
   Close (tLOG);
 End;

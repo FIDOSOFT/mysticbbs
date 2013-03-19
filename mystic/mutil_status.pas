@@ -37,6 +37,8 @@ Begin
 
     BarOne.Reset;
 
+    Console.WriteXY (71, 10, 8,  strPadL('(' + strI2S(ProcessPos) + '/' + strI2S(ProcessTotal) + ')', 7, ' '));
+
     Log (1, '+', 'Process: ' + Str);
   End;
 End;

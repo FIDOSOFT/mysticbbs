@@ -8,6 +8,7 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
+! GE option 32 (change def protocol) might be broken
 ! LBP menus arent scrolling correctly in Linux
 ! MUTIL FILESBBS import is not skipping FILES.BBS?
 ! Make sure MIS in Linux works with DOSEMU
@@ -28,6 +29,9 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- Amiga .readme and .TIC processing (similar)
+- New files list to MUTIL based X number of days
+- All/new file list template files like TOP XX
 - MUTIL create FILES.BBS in the file base directory
 - MUTILs new DIR import of msg bases could have optional config to reference
   a series of .NA files to get the name/description of bases.

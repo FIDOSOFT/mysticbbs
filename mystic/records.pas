@@ -78,56 +78,6 @@ Type
 
   AccessFlagType = Set of 1..26;
 
-Const
-  pktPrivate    = $0001;
-  pktCrash      = $0002;
-  pktReceived   = $0004;
-  pktSent       = $0008;
-  pktFileAttach = $0010;
-  pktInTransit  = $0020;
-  pktOrphan     = $0040;
-  pktKillSent   = $0080;
-  pktLocal      = $0100;
-  pktHold       = $0200;
-  pktUnused     = $0400;
-  pktFileReq    = $0800;
-  pktReturnReq  = $1000;
-  pktIsReceipt  = $2000;
-  pktAuditReq   = $4000;
-  pktFileUpdate = $8000;
-
-Type
-  RecPKTMessageHdr = Record
-    MsgType,
-    OrigNode  : System.Word;
-    DestNode  : System.Word;
-    OrigNet   : System.Word;
-    DestNet   : System.Word;
-    Attribute : System.Word;
-    Cost      : System.Word;
-    DateTime  : String[19];
-  End;
-
-  RecPKTHeader = Record
-    OrigNode : System.Word;
-    DestNode : System.Word;
-    Year     : System.Word;
-    Month    : System.Word;
-    Day      : System.Word;
-    Hour     : System.Word;
-    Minute   : System.Word;
-    Second   : System.Word;
-    Baud     : System.Word;
-    PKTType  : System.Word;
-    OrigNet  : System.Word;
-    DestNet  : System.Word;
-    ProdCode : System.Word; // Apply to FTSC for code?
-    Password : Array[1..8] of Char;
-    OrigZone : System.Word;
-    DestZone : System.Word;
-    Filler   : Array[1..20] of Char;
-  End;
-
   RecEchoMailAddr = Record
     Zone,
     Net,

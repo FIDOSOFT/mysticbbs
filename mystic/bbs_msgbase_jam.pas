@@ -1444,7 +1444,7 @@ Begin
   FillChar(JM^.Dest, SizeOf(JM^.Dest), #0);
 
   JM^.MsgDate := DateDos2Str(CurDateDos, 1);
-  JM^.MsgTime := TimeDos2Str(CurDateDos, False);
+  JM^.MsgTime := TimeDos2Str(CurDateDos, 0);
 End;
 
 
@@ -1541,18 +1541,18 @@ Begin
     TmpHdr^.BaseMsgNum   := 1;
     TmpHdr^.Created      := ToUnixDate(CurDateDos);
     TmpHdr^.PwdCrc       := -1;
-    CreateError          := SaveFile(JM^.MsgPath + '.jhr', TmpHdr^, SizeOf(TmpHdr^));
+    CreateError          := SaveFilePos(JM^.MsgPath + '.jhr', TmpHdr^, SizeOf(TmpHdr^), 0);
 
     Dispose(TmpHdr);
 
     If CreateError = 0 Then
-      CreateError := SaveFile(JM^.MsgPath + '.jlr', CreateError, 0);
+      CreateError := SaveFilePos(JM^.MsgPath + '.jlr', CreateError, 0, 0);
 
     If CreateError = 0 Then
-      CreateError := SaveFile(JM^.MsgPath + '.jdt', CreateError, 0);
+      CreateError := SaveFilePos(JM^.MsgPath + '.jdt', CreateError, 0, 0);
 
     If CreateError = 0 Then
-      CreateError := SaveFile(JM^.MsgPath + '.jdx', CreateError , 0);
+      CreateError := SaveFilePos(JM^.MsgPath + '.jdx', CreateError , 0, 0);
 
     If IoResult <> 0 Then;
   End;

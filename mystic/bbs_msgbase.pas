@@ -614,7 +614,7 @@ Begin
 
   Msg^.SetPriv (TempBase.Flags and MBPrivate <> 0);
   Msg^.SetDate (DateDos2Str(CurDateDos, 1));
-  Msg^.SetTime (TimeDos2Str(CurDateDos, False));
+  Msg^.SetTime (TimeDos2Str(CurDateDos, 0));
 End;
 
 Procedure TMsgBase.ChangeArea (Data: String);
@@ -3580,7 +3580,7 @@ Begin
 
   Msg^.SetPriv (mArea.Flags And MBPrivate <> 0);
   Msg^.SetDate (DateDos2Str(CurDateDos, 1));
-  Msg^.SetTime (TimeDos2Str(CurDateDos, False));
+  Msg^.SetTime (TimeDos2Str(CurDateDos, 0));
   Msg^.SetFrom (mFrom);
   Msg^.SetTo   (mTo);
   Msg^.SetSubj (mSubj);
@@ -3853,7 +3853,7 @@ Begin
   Write (tFile, CRLF);
   Write (tFile, Config.SysopName + CRLF);
   Write (tFile, '0,' + Config.qwkBBSID + CRLF);
-  Write (tFile, DateDos2Str(CurDateDos, 1), ',', TimeDos2Str(CurDateDos, False) + CRLF);
+  Write (tFile, DateDos2Str(CurDateDos, 1), ',', TimeDos2Str(CurDateDos, 0) + CRLF);
   Write (tFile, strUpper(Session.User.ThisUser.Handle) + CRLF);
   Write (tFile, CRLF);
   Write (tFile, '0' + CRLF);

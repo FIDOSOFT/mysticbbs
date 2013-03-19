@@ -156,8 +156,8 @@ Var
               Exit;
             End Else
               Res := ThisUser.LastMGroup = strS2I(Data);
-      'H' : Res := strS2I(Data) < strS2I(Copy(TimeDos2Str(CurDateDos, False), 1, 2));
-      'M' : Res := strS2I(Data) < strS2I(Copy(TimeDos2Str(CurDateDos, False), 4, 2));
+      'H' : Res := strS2I(Data) < strS2I(Copy(TimeDos2Str(CurDateDos, 0), 1, 2));
+      'M' : Res := strS2I(Data) < strS2I(Copy(TimeDos2Str(CurDateDos, 0), 4, 2));
       'N' : Res := strS2I(Data) = Session.NodeNum;
       'O' : Case Data[1] of
               'A' : Res := Chat.Available;
@@ -1189,7 +1189,7 @@ Begin
   Session.SystemLog ('-');
   Session.SystemLog ('Connect from ' + Session.UserIPInfo + ' (' + Session.UserHostInfo + ')');
 
-  Session.HistoryHour := strS2I(Copy(TimeDos2Str(CurDateDos, False), 1, 2));
+  Session.HistoryHour := strS2I(Copy(TimeDos2Str(CurDateDos, 0), 1, 2));
 
   If Config.SystemPW <> '' Then
     If Not Session.io.GetPW(Session.GetPrompt(4), Session.GetPrompt(417), Config.SystemPW) Then Begin

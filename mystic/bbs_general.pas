@@ -507,7 +507,7 @@ Begin
     Session.io.PromptInfo[2]  := strI2S(LastOn.Node);
     Session.io.PromptInfo[3]  := LastOn.City;
     Session.io.PromptInfo[4]  := DateDos2Str(LastOn.DateTime, Session.User.ThisUser.DateType);
-    Session.io.PromptInfo[5]  := TimeDos2Str(LastOn.DateTime, True);
+    Session.io.PromptInfo[5]  := TimeDos2Str(LastOn.DateTime, 1);
     Session.io.PromptInfo[7]  := strI2S(LastOn.CallNum);
     Session.io.PromptInfo[8]  := LastOn.Address;
     Session.io.PromptInfo[9]  := LastOn.UserInfo;
@@ -1105,7 +1105,7 @@ Var
     Session.io.PromptInfo[1] := DirList[BarPos]^.Desc;
     Session.io.PromptInfo[2] := strComma(DirList[BarPos]^.Size);
     Session.io.PromptInfo[3] := DateDos2Str(DirList[BarPos]^.Date, Session.User.ThisUser.DateType);
-    Session.io.PromptInfo[7] := TimeDos2Str(DirList[BarPos]^.Date, True);
+    Session.io.PromptInfo[7] := TimeDos2Str(DirList[BarPos]^.Date, 1);
 
     If DirList[BarPos]^.IsDir Then Begin
       Session.io.PromptInfo[4] := '';

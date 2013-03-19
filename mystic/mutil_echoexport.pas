@@ -16,10 +16,43 @@ Uses
   m_DateTime,
   mUtil_Common,
   mUtil_Status,
+  mUtil_EchoCore,
   bbs_Common,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
   bbs_MsgBase_Squish;
+
+Procedure AddToFLOQueue (FloName, PacketFN: String);
+Var
+  T   : Text;
+  Str : String;
+Begin
+  FileMode := 66;
+
+  {$I-}
+
+  Assign (T, FloName);
+  Reset (T);
+
+  If IoResult <> 0 Then
+    ReWrite(T);
+
+  While Not Eof(T) Do Begin
+    ReadLn (T, Str);
+
+    If strUpper(Str) = '^' + strUpper(PacketFN) Then Begin
+      Close (T);
+      Exit;
+    End;
+  End;
+
+  log(3, '+', 'flo close and append');
+
+  Close   (T);
+  Append  (T);
+  WriteLn (T, '^' + PacketFN);
+  Close   (T);
+End;
 
 Procedure BundleMessages;
 Var
@@ -34,8 +67,6 @@ Var
   FLOName    : String;
   OrigAddr   : RecEchoMailAddr;
 Begin
-  //update/create .FLO or whatever... need to research
-
   FindFirst (TempPath + '*', AnyFile, DirInfo);
 
   While DosError = 0 Do Begin
@@ -56,7 +87,7 @@ Begin
       OrigAddr.Net  := PH.OrigNet;
       OrigAddr.Node := PH.OrigNode;
 
-      // TODO: if crash etc change char F in FLO extension
+      // if echonode.echomail.crash etc change char F in FLO extension
 
       FLOName    := bbsConfig.OutboundPath + GetFTNFlowName(EchoNode.Address) + '.flo';
       BundleName := bbsConfig.OutboundPath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + DayString[DayOfWeek(CurDateDos)];
@@ -67,15 +98,7 @@ Begin
 
       FileErase (TempPath + PKTName);
 
-      {$I-}
-
-      Assign (T, FLOName);
-      Append (T);
-
-      If IoResult <> 0 Then ReWrite(T);
-
-      WriteLn (T, '^' + BundleName);
-      Close   (T);
+      AddToFLOQueue (FLOName, BundleName);
     End;
 
     FindNext (DirInfo);
@@ -86,14 +109,15 @@ End;
 
 Procedure uEchoExport;
 Var
-  TotalMessages : LongInt;
-  MBaseFile     : File of RecMessageBase;
-  MBase         : RecMessageBase;
-  ExportFile    : File of RecEchoMailExport;
-  ExportIndex   : RecEchoMailExport;
-  EchoNode      : RecEchoMailNode;
-  PKTBase       : String;
-  MsgBase       : PMsgBaseABS;
+  TotalEcho   : LongInt;
+  TotalNet    : LongInt;
+  MBaseFile   : File of RecMessageBase;
+  MBase       : RecMessageBase;
+  ExportFile  : File of RecEchoMailExport;
+  ExportIndex : RecEchoMailExport;
+  EchoNode    : RecEchoMailNode;
+  PKTBase     : String;
+  MsgBase     : PMsgBaseABS;
 
   Procedure ExportMessage;
   Var
@@ -117,19 +141,37 @@ Var
     End;
 
   Var
-    TempStr : String;
+    TempStr1 : String;
+    TempStr2 : String;
   Begin
-    Inc (TotalMessages);
+    If (EchoNode.Address.Zone = MsgBase^.GetOrigAddr.Zone) and
+       (EchoNode.Address.Net  = MsgBase^.GetOrigAddr.Net)  and
+       (EchoNode.Address.Node = MsgBase^.GetOrigAddr.Node) Then Exit;
 
     Log (2, '+', '      Export Msg #' + strI2S(MsgBase^.GetMsgNum) + ' to ' + strAddr2Str(EchoNode.Address));
 
-    GetDate  (DT.Year, DT.Month, DT.Day, Temp);
-    GetTime  (DT.Hour, DT.Min, DT.Sec, Temp);
+    GetDate (DT.Year, DT.Month, DT.Day, Temp);
+    GetTime (DT.Hour, DT.Min,   DT.Sec, Temp);
 
-    Assign (F, TempPath + PKTBase + '.' + strI2S(EchoNode.Index));
+    If MBase.NetType = 3 Then Begin
+      TempStr1 := bbsConfig.OutboundPath + GetFTNFlowName(EchoNode.Address) + '.out';
+      TempStr2 := bbsConfig.OutboundPath + GetFTNFlowName(EchoNode.Address) + '.flo';
+
+      // change extensions based on crash etc from echonode
+
+      Assign (F, TempStr1);
+
+      AddToFloQueue (TempStr2, TempStr1);
+
+      Inc (TotalNet);
+    End Else Begin
+      Assign (F, TempPath + PKTBase + '.' + strI2S(EchoNode.Index));
+
+      Inc (TotalEcho);
+    End;
 
     If ioReset(F, 1, fmRWDN) Then Begin
-      ioSeek (F, FileSize(F));
+      ioSeek (F, FileSize(F) - 2);  // we want to overwrite packet term chars
     End Else Begin
       ioReWrite (F, 1, fmRWDN);
 
@@ -156,14 +198,14 @@ Var
 
     FillChar (MH, SizeOf(MH), 0);
 
-    MH.MsgType  := $0200;
+    MH.MsgType  := 2;
     MH.OrigNode := bbsConfig.NetAddress[MBase.NetAddr].Node;
     MH.DestNode := EchoNode.Address.Node;
     MH.OrigNet  := bbsConfig.NetAddress[MBase.NetAddr].Net;
     MH.DestNet  := EchoNode.Address.Net;
 
-    TempStr := FormattedDate(DT, 'DD NNN YY  HH:MM:SS');
-    Move (TempStr[1], MH.DateTime[0], 19);
+    TempStr1 := FormattedDate(DT, 'DD NNN YY  HH:MM:SS') + #0;
+    Move (TempStr1[1], MH.DateTime[0], 20);
 
     If MsgBase^.IsLocal    Then MH.Attribute := MH.Attribute OR pktLocal;
     If MsgBase^.IsCrash    Then MH.Attribute := MH.Attribute OR pktCrash;
@@ -176,7 +218,9 @@ Var
     WriteStr (MsgBase^.GetTo,   #0);
     WriteStr (MsgBase^.GetFrom, #0);
     WriteStr (MsgBase^.GetSubj, #0);
-    WriteStr ('AREA:' + MBase.EchoTag, #13);
+
+    If MBase.NetType <> 3 Then
+      WriteStr ('AREA:' + MBase.EchoTag, #13);
 
     WriteStr (#1 + 'INTL ' + strAddr2Str(EchoNode.Address) + ' ' + strAddr2Str(bbsConfig.NetAddress[MBase.NetAddr]), #13);
     WriteStr (#1 + 'TID: Mystic BBS ' + mysVersion, #13);
@@ -186,16 +230,26 @@ Var
     While Not MsgBase^.EOM Do
       WriteStr (MsgBase^.GetString(79), #13);
 
-    WriteStr('', #0);
+    TempStr1 := 'SEEN-BY: ' + strI2S(bbsConfig.NetAddress[MBase.NetAddr].Net) + '/' + strI2S(bbsConfig.NetAddress[MBase.NetAddr].Node) + ' ';
+
+    If bbsConfig.NetAddress[MBase.NetAddr].Net <> EchoNode.Address.Net Then
+      TempStr1 := TempStr1 + strI2S(EchoNode.Address.Net) + '/';
+
+    TempStr1 := TempStr1 + strI2S(EchoNode.Address.Node);
+
+    WriteStr (TempStr1, #13);
+    WriteStr (#1 + 'PATH: ' + strI2S(bbsConfig.NetAddress[MBase.NetAddr].Net) + '/' + strI2S(bbsConfig.NetAddress[MBase.NetAddr].Node), #13);
+    WriteStr (#0#0, #0);
 
     Close (F);
   End;
 
 Begin
-  TotalMessages := 0;
-  PKTBase       := GetFTNPKTName;
+  TotalEcho := 0;
+  TotalNet  := 0;
+  PKTBase   := GetFTNPKTName;
 
-  ProcessName   ('Exporting Echomail', True);
+  ProcessName   ('Exporting EchoMail', True);
   ProcessResult (rWORKING, False);
 
   DirClean (TempPath, '');
@@ -207,7 +261,7 @@ Begin
     Exit;
   End;
 
-  Assign  (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
+  Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
 
   If ioReset(MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then Begin
     While Not Eof(MBaseFile) Do Begin
@@ -232,7 +286,7 @@ Begin
       While MsgBase^.SeekFound Do Begin
         MsgBase^.MsgStartUp;
 
-        If MsgBase^.IsLocal And Not MsgBase^.IsSent Then Begin
+        If {MsgBase^.IsLocal And } Not MsgBase^.IsSent Then Begin
           Assign (ExportFile, MBase.Path + MBase.FileName + '.lnk');
 
           If ioReset(ExportFile, SizeOf(RecEchoMailExport), fmRWDN) Then Begin
@@ -264,7 +318,7 @@ Begin
 
   BundleMessages;
 
-  ProcessStatus ('Exported |15' + strI2S(TotalMessages) + ' |07msgs', True);
+  ProcessStatus ('Total |15' + strI2S(TotalEcho) + ' |07echo |15' + strI2S(TotalNet) + ' |07net', True);
   ProcessResult (rDONE, True);
 End;
 

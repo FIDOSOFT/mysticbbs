@@ -87,8 +87,8 @@ Var
               Exit;
             End Else
               Res := User.LastMGroup = strS2I(Data);
-      'H' : Res := strS2I(Data) < strS2I(Copy(TimeDos2Str(CurDateDos, False), 1, 2));
-      'M' : Res := strS2I(Data) < strS2I(Copy(TimeDos2Str(CurDateDos, False), 4, 2));
+      'H' : Res := strS2I(Data) < strS2I(Copy(TimeDos2Str(CurDateDos, 0), 1, 2));
+      'M' : Res := strS2I(Data) < strS2I(Copy(TimeDos2Str(CurDateDos, 0), 4, 2));
       'N' : Res := True;
       'O' : Case Data[1] of
               'A' : Res := True;

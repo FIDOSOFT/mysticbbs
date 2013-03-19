@@ -377,7 +377,7 @@ Begin
     mpxInvalidFile    : Result := 'Invalid executable: ' + ErrStr;
     mpxVerMismatch    : Result := 'Version mismatch: ' + ErrStr + ' / ' + mplVersion;
     mpxUnknownOp      : Result := 'Unknown Token: ' + ErrStr;
-    mpxMultiInit      : Result := 'Unable to initialize variable';
+    mpxBadInit        : Result := 'Unable to initialize variable';
     mpxDivisionByZero : Result := 'Division by zero';
     mpxMathematical   : Result := 'Parsing error';
   End;
@@ -1110,7 +1110,7 @@ Begin
         NextWord;
 
         If FindVariable(W) > 0 Then Begin
-          Error (mpxMultiInit, '');
+          Error (mpxBadInit, '');
           Exit;
         End;
 
@@ -1627,7 +1627,7 @@ Begin
             Store (TempBool, 1);
           End;
     56  : Begin
-            TempStr := TimeDos2Str(Param[1].L, Param[2].O);
+            TempStr := TimeDos2Str(Param[1].L, Ord(Param[2].O));
             Store (TempStr, 256);
           End;
     57  : Begin
@@ -1953,7 +1953,7 @@ Begin
   NextWord; { procedure var id }
 
   If FindVariable(W) > 0 Then Begin  /// ????????????????????
-    Error (mpxMultiInit, '');
+    Error (mpxBadInit, '');
     Exit;
   End;
 
@@ -2430,7 +2430,7 @@ Begin
   Result := Script.Execute(Str);
 
   If Script.ErrNum > 0 Then Begin
-    ErrStr := 'MPX ERROR: ' + Script.GetErrorMsg;
+    ErrStr := strStripLow('MPX ERROR: ' + Script.GetErrorMsg);
 
     Session.SystemLog(ErrStr + '(' + Str + ')');
     Session.io.OutFullLn ('|CR|12' + ErrStr);

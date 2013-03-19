@@ -1002,7 +1002,7 @@ Begin
       Session.io.PromptInfo[2] := strComma(SR.Size);
 
     Session.io.PromptInfo[3] := DateDos2Str(SR.Time, Session.User.ThisUser.DateType);
-    Session.io.PromptInfo[4] := TimeDos2Str(SR.Time, True);
+    Session.io.PromptInfo[4] := TimeDos2Str(SR.Time, 1);
 
     Session.io.OutFullLn (Session.GetPrompt(193));
 
@@ -1092,7 +1092,7 @@ Begin
                 ExecuteArchive (FName, '', Mask, 2);
 
                 If FileExist(Session.TempPath + Mask) Then Begin
-                  Case CheckFileLimits (1, GetFileSize(Session.TempPath + Mask) DIV 1024) of
+                  Case CheckFileLimits (1, FileByteSize(Session.TempPath + Mask) DIV 1024) of
                     0 : If SendFile (Session.TempPath + Mask) Then Begin;
                           Session.SystemLog ('Download from ' + FName + ': ' + Mask);
 

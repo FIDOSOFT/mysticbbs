@@ -2898,3 +2898,17 @@
 
  <ALPHA 29 RELEASED>
 
+ + Added new INBOUND and OUTBOUND echomail directories into the System
+   Configuration.
+
+ + Added new Echomail node editor.  This allows you to configure nodes which
+   you are going to exchange echomail from, either an uplink or downlink.
+
+ + Message bases now have a echomail TAG option which is intended to include
+   the bases's echomail tag from the .NA files.
+
+ + Message bases now have an "Export To" option where up to 2 million
+   echomail nodes can be linked to each message base.
+
+ + The echomail node editor now has an editor where message bases can be
+   list, linked, and unlinked from each configured node.

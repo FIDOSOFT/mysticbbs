@@ -178,7 +178,7 @@ Var
       Read (MBaseFile, MBase);
 
       If IsExportNode(MBase, Node.Index) Then
-        List.Add(strPadR(strI2S(MBase.Index), 6, ' ') + ' ' + strPadR(strStripPipe(MBase.Name), 40, ' '), 0);
+        List.Add(strPadR(strI2S(MBase.Index), 6, ' ') + ' ' + strPadR('(' + MBase.EchoTag + ') ' + strStripPipe(MBase.Name), 40, ' '), 0);
     End;
   End;
 

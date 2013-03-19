@@ -31,6 +31,7 @@ Const
   Header_IMPORTNA   = 'Import_FIDONET.NA';
   Header_IMPORTMB   = 'Import_MessageBase';
   Header_ECHOEXPORT = 'ExportEchoMail';
+  Header_ECHOIMPORT = 'ImportEchoMail';
   Header_FILEBONE   = 'Import_FILEBONE.NA';
   Header_FILESBBS   = 'Import_FILES.BBS';
   Header_UPLOAD     = 'MassUpload';
@@ -52,6 +53,8 @@ Procedure AddFileBase        (Var FBase: RecFileBase);
 Function  ShellDOS           (ExecPath: String; Command: String) : LongInt;
 Procedure ExecuteArchive     (FName: String; Temp: String; Mask: String; Mode: Byte);
 Function  GetMBaseByIndex    (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+Function  GetMBaseByTag      (Tag: String; Var TempBase: RecMessageBase) : Boolean;
+Function  GetMBaseByNetZone  (Zone: Word; Var TempBase: RecMessageBase) : Boolean;
 Function  MessageBaseOpen    (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
 Function  SaveMessage        (mArea: RecMessageBase; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mText: RecMessageText; mLines: Integer) : Boolean;
 Function  GetFTNPKTName      : String;
@@ -75,22 +78,15 @@ Procedure Log (Level: Byte; Code: Char; Str: String);
 Var
   T : Text;
 Begin
-  If LogFile = '' Then Exit;
-
-  If LogLevel < Level Then Exit;
-
-  FileMode := 66;
+  If (LogLevel < Level) or (LogFile = '') Then Exit;
 
   Assign (T, LogFile);
   Append (T);
 
-  If IoResult <> 0 Then
-    If IoResult = 5 Then Exit Else ReWrite(T);
-
   If Str = '' Then
     WriteLn (T, '')
   Else
-    WriteLn (T, Code + ' ' + DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, False) + ' ' + Str);
+    WriteLn (T, Code + ' ' + DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, 2) + ' ' + Str);
 
   Close (T);
 End;
@@ -334,6 +330,50 @@ Begin
   Close (F);
 End;
 
+Function GetMBaseByTag (Tag: String; Var TempBase: RecMessageBase) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, bbsConfig.DataPath + 'mbases.dat');
+
+  If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
+
+  While Not Eof(F) Do Begin
+    ioRead(F, TempBase);
+
+    If Tag = strUpper(TempBase.EchoTag) Then Begin
+      Result := True;
+      Break;
+    End;
+  End;
+
+  Close (F);
+End;
+
+Function GetMBaseByNetZone (Zone: Word; Var TempBase: RecMessageBase) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, bbsConfig.DataPath + 'mbases.dat');
+
+  If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
+
+  While Not Eof(F) Do Begin
+    ioRead(F, TempBase);
+
+    If (Zone = bbsConfig.NetAddress[TempBase.NetAddr].Zone) and (TempBase.NetType = 3) Then Begin
+      Result := True;
+      Break;
+    End;
+  End;
+
+  Close (F);
+End;
+
 Function MessageBaseOpen (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
 Begin
   Result := False;
@@ -397,7 +437,7 @@ Begin
 
   Msg^.SetPriv (mArea.Flags And MBPrivate <> 0);
   Msg^.SetDate (DateDos2Str(CurDateDos, 1));
-  Msg^.SetTime (TimeDos2Str(CurDateDos, False));
+  Msg^.SetTime (TimeDos2Str(CurDateDos, 0));
   Msg^.SetFrom (mFrom);
   Msg^.SetTo   (mTo);
   Msg^.SetSubj (mSubj);

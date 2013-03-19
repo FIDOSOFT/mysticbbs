@@ -46,6 +46,7 @@ Uses
   mUtil_MsgPack,
   mUtil_MsgPost,
   mUtil_EchoExport,
+  mUtil_EchoImport,
   bbs_Common;
 
 {$I MUTIL_ANSI.PAS}
@@ -59,7 +60,7 @@ Begin
 
     Log (2, '+', '   EXEC ' + pName);
   End Else
-    Log (2, '+', '   SKIP ' + pName);
+    Log (3, '+', '   SKIP ' + pName);
 End;
 
 Procedure ApplicationShutdown;
@@ -86,6 +87,7 @@ Procedure ApplicationStartup;
 Var
   FN : String;
   CF : File of RecConfig;
+  F  : File;
 Begin
   ExitProc := @ApplicationShutdown;
   Console  := TOutput.Create(strUpper(ParamStr(2)) <> '-NOSCREEN');
@@ -155,6 +157,12 @@ Begin
 
   BarOne := TStatusBar.Create(3);
   BarAll := TStatusBar.Create(6);
+
+  If LogFile <> '' Then Begin
+    Assign (F, LogFile);
+    If Not ioReset(F, 1, fmRWDN) Then ReWrite(F);
+    Close (F);
+  End;
 End;
 
 Var
@@ -165,6 +173,7 @@ Var
   DoTopLists   : Boolean;
   DoAllFiles   : Boolean;
   DoEchoExport : Boolean;
+  DoEchoImport : Boolean;
   DoMsgPurge   : Boolean;
   DoMsgPack    : Boolean;
   DoMsgPost    : Boolean;
@@ -184,6 +193,7 @@ Begin
   DoFilesBBS   := CheckProcess(Header_FILESBBS);
   DoAllFiles   := CheckProcess(Header_ALLFILES);
   DoEchoExport := CheckProcess(Header_ECHOEXPORT);
+  DoEchoImport := CheckProcess(Header_ECHOIMPORT);
   DoMsgPurge   := CheckProcess(Header_MSGPURGE);
   DoMsgPack    := CheckProcess(Header_MSGPACK);
   DoMsgPost    := CheckProcess(Header_MSGPOST);
@@ -201,14 +211,15 @@ Begin
   // We're good lets execute this stuff!
 
   If DoImportNA   Then uImportNA;
-  If DoImportMB   Then uImportMessageBases;
   If DoFileBone   Then uImportFileBone;
   If DoFilesBBS   Then uImportFilesBBS;
   If DoMassUpload Then uMassUpload;
   If DoTopLists   Then uTopLists;
   If DoAllFiles   Then uAllFilesList;
   If DoEchoExport Then uEchoExport;
+  If DoEchoImport Then uEchoImport;
   If DoMsgPurge   Then uPurgeMessageBases;
   If DoMsgPack    Then uPackMessageBases;
   If DoMsgPost    Then uPostMessages;
+  If DoImportMB   Then uImportMessageBases;
 End.

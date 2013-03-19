@@ -718,7 +718,7 @@ Begin
             'B' : LastMCIValue := strI2S(TBBSCore(Core).User.ThisUser.TimeBank);
             'C' : LastMCIValue := strI2S(Config.SystemCalls);
             'E' : If Graphics = 1 Then LastMCIValue := 'Ansi' Else LastMCIValue := 'Ascii'; //++lang
-            'I' : LastMCIValue := TimeDos2Str(CurDateDos, True);
+            'I' : LastMCIValue := TimeDos2Str(CurDateDos, 1);
             'L' : LastMCIValue := strI2S(TBBSCore(Core).TimeLeft);
             'O' : LastMCIValue := strI2S(TBBSCore(Core).ElapsedTime);
           End;

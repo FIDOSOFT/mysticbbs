@@ -190,15 +190,15 @@ Begin
   Write (tFile, Config.MsgsPath + Ending);
   Write (tFile, Config.SysopName + Ending);
   Write (tFile, Session.User.ThisUser.Handle + Ending);
-  Write (tFile, TimeDos2Str(Session.NextEvent.ExecTime, False) + Ending); {next event start time hh:mm}
+  Write (tFile, TimeDos2Str(Session.NextEvent.ExecTime, 0) + Ending); {next event start time hh:mm}
   Write (tFile, 'Y' + Ending); {error-free connection}
   Write (tFile, 'N' + Ending); {ansi in NG mode}
   Write (tFile, 'Y' + Ending); {record locking}
   Write (tFile, '3' + Ending); {default BBS color}
   Write (tFile, '0' + Ending); {time credits per minute}
   Write (tFile, '00/00/00' + Ending); {last new filescan date}
-  Write (tFile, TimeDos2Str(Session.User.ThisUser.LastOn, False) + Ending); {time of this call}
-  Write (tFile, TimeDos2Str(Session.User.ThisUser.LastOn, False) + Ending); {time of last call}
+  Write (tFile, TimeDos2Str(Session.User.ThisUser.LastOn, 0) + Ending); {time of this call}
+  Write (tFile, TimeDos2Str(Session.User.ThisUser.LastOn, 0) + Ending); {time of last call}
   Write (tFile, '32768' + Ending); {max daily files (??) }
   Write (tFile, Session.User.ThisUser.DLsToday, Ending);
   Write (tFile, Session.User.ThisUser.ULk, Ending);

@@ -108,7 +108,7 @@ Const
    mpxInvalidFile     = 2;
    mpxVerMismatch     = 3;
    mpxUnknownOp       = 4;
-   mpxMultiInit       = 5;
+   mpxBadInit         = 5;
    mpxDivisionByZero  = 6;
    mpxMathematical    = 7;
 {$ELSE}

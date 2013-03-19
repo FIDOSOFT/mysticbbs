@@ -421,10 +421,10 @@ Begin
     SqInfo^.SqBase.KeepDays := MaxDays;
     SqInfo^.SqBase.EndFrame := SqInfo^.SqBase.Len;
 
-    CreateMsgBase := (SaveFile(SqInfo^.FN + '.sqd', SqInfo^.SqBase, SqInfo^.SqBase.Len) = 0);
+    CreateMsgBase := (SaveFilePos(SqInfo^.FN + '.sqd', SqInfo^.SqBase, SqInfo^.SqBase.Len, 0) = 0);
 
-    SaveFile (SqInfo^.FN + '.sqi', SqInfo^.SqBase, 0);
-    SaveFile (SqInfo^.FN + '.sql', SqInfo^.SqBase, 0);
+    SaveFilePos (SqInfo^.FN + '.sqi', SqInfo^.SqBase, 0, 0);
+    SaveFilePos (SqInfo^.FN + '.sql', SqInfo^.SqBase, 0, 0);
   End Else
     CreateMsgBase := False;
 End;
@@ -556,7 +556,7 @@ Var
   TmpDate: LongInt;
 Begin
   TmpDate := (SqInfo^.MsgHdr.DateWritten shr 16) + ((SqInfo^.MsgHdr.DateWritten and $ffff) shl 16);
-  GetTime := TimeDos2Str(TmpDate, False);
+  GetTime := TimeDos2Str(TmpDate, 0);
 End;
 
 Procedure TMsgBaseSquish.SetDate(Str: String);
@@ -1483,7 +1483,7 @@ Function TMsgBaseSquish.NumberOfMsgs: LongInt;
 Var
   TmpBase: SqBaseType;
 Begin
-   If LoadFile(SqInfo^.FN + '.sqd', TmpBase, SizeOf(TmpBase)) = 0 Then
+   If LoadFilePos(SqInfo^.FN + '.sqd', TmpBase, SizeOf(TmpBase), 0) = 0 Then
      NumberOfMsgs := TmpBase.NumMsg
    Else
      NumberOfMsgs := 0;
@@ -1497,7 +1497,7 @@ End;
 
 Procedure TMsgBaseSquish.SetLastRead (UNum: LongInt; LR: LongInt);
 Begin
-  If ((UNum + 1) * SizeOf(LR)) > GetFileSize(SqInfo^.FN + '.sql') Then
+  If ((UNum + 1) * SizeOf(LR)) > FileByteSize(SqInfo^.FN + '.sql') Then
     ExtendFile (SqInfo^.FN + '.sql', (UNum + 1) * SizeOf(LR));
 
   SaveFilePos (SqInfo^.FN + '.sql', LR, SizeOf(LR), UNum * SizeOf(LR));

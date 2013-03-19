@@ -269,7 +269,7 @@ Begin
     If IoResult <> 0 Then ReWrite (tFile);
 
     WriteLn (tFile, '');
-    WriteLn (tFile, 'Chat recorded ' + DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, True) +
+    WriteLn (tFile, 'Chat recorded ' + DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, 1) +
                     ' with ' + Session.User.ThisUser.Handle);
     WriteLn (tFile, strRep('-', 70));
   End;

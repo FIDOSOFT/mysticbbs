@@ -1,6 +1,6 @@
-{$I M_OPS.PAS}
+Unit MKCRAP;
 
-Unit mkcrap;
+{$I M_OPS.PAS}
 
 // this is various functions and procedures used by JAM/Squish...
 // these should be removed and/or incorporated into mystic's code base as
@@ -8,24 +8,21 @@ Unit mkcrap;
 
 // CHANGE JAM TEMP BUFFER.. ADD SETBUFFERFILE METHOD TO MSGBASE OBJECTS!!!!
 
-interface
+Interface
 
-uses
- dos;
+Uses
+  DOS;
 
-Function ToUnixDate(FDate: LongInt): LongInt;
-Function DTToUnixDate(DT: DateTime): LongInt;
-Procedure UnixToDT(SecsPast: LongInt; Var Dt: DateTime);
-Function SaveFile(FN: String; Var Rec; FS: Word): Word;
-Procedure Str2Az(Str: String; MaxLen: Byte; Var AZStr); {Convert string to asciiz}
-Function FormattedDate(DT: DateTime; Mask: String): String;
-Function LoadFile(FN: String; Var Rec; FS: Word): Word;
-Function LoadFilePos(FN: String; Var Rec; FS: Word; FPos: LongInt): Word;
-Function GetFileSize (FN : String) : LongInt;
-Function ExtendFile(FN: String; ToSize: LongInt): Word;
-Function SaveFilePos(FN: String; Var Rec; FS: Word; FPos: LongInt): Word;
+Function  ToUnixDate    (FDate: LongInt): LongInt;
+Function  DTToUnixDate  (DT: DateTime): LongInt;
+Procedure UnixToDT      (SecsPast: LongInt; Var Dt: DateTime);
+Procedure Str2Az        (Str: String; MaxLen: Byte; Var AZStr); {Convert string to asciiz}
+Function  FormattedDate (DT: DateTime; Mask: String): String;
+Function  LoadFilePos   (FN: String; Var Rec; FS: Word; FPos: LongInt): Word;
+Function  ExtendFile    (FN: String; ToSize: LongInt): Word;
+Function  SaveFilePos   (FN: String; Var Rec; FS: Word; FPos: LongInt): Word;
 
-implementation
+Implementation
 
 Uses
   m_FileIO,
@@ -38,7 +35,7 @@ Const
 //  DATED1    =  146097;
 //  DATED2    = 1721119;
 
-Function DTToUnixDate(DT: DateTime): LongInt;
+Function DTToUnixDate (DT: DateTime): LongInt;
 Var
   SecsPast, DaysPast: LongInt;
 Begin
@@ -51,15 +48,16 @@ Begin
   DTToUnixDate := SecsPast;
 End;
 
-Function ToUnixDate(FDate: LongInt): LongInt;
+Function ToUnixDate (FDate: LongInt): LongInt;
 Var
   DT: DateTime;
 Begin
   UnpackTime(Fdate, DT);
-  ToUnixDate := DTToUnixDate(Dt);
+
+  ToUnixDate := DTToUnixDate(DT);
 End;
 
-Procedure UnixToDT(SecsPast: LongInt; Var Dt: DateTime);
+Procedure UnixToDT (SecsPast: LongInt; Var DT: DateTime);
 Var
   DateNum : LongInt;  //might be able to remove this
 Begin
@@ -76,21 +74,23 @@ Begin
   DT.Sec   := SecsPast Mod 60;
 End;
 
-Function SaveFilePos(FN: String; Var Rec; FS: Word; FPos: LongInt): Word;
+Function SaveFilePos (FN: String; Var Rec; FS: Word; FPos: LongInt): Word;
 Var
-  F: File;
-  Error: Word;
-  temp:longint;
+  F     : File;
+  Error : Word;
+  Temp  : LongInt;
 Begin
   Error := 0;
-  assign (f, fn);
+
+  Assign (F, FN);
 
   FileMode := fmReadWrite + fmDenyNone;
-  If FileExist(FN) Then Begin
-    reset(f,1);
-    if ioresult <> 0 then error := ioresult;
+
+  If FileExist (FN) Then Begin
+    Reset (F, 1);
+    If IoResult <> 0 Then Error := IoResult;
   End Else Begin
-    ReWrite(F,1);
+    ReWrite (F,1);
     Error := IoResult;
   End;
   If Error = 0 Then Begin
@@ -107,13 +107,6 @@ Begin
   End;
   SaveFilePos := Error;
 End;
-
-Function SaveFile(FN: String; Var Rec; FS: Word): Word;
-   Begin
-   SaveFile := SaveFilePos(FN, Rec, FS, 0);
-   End;
-
-
 
 Procedure Str2Az(Str: String; MaxLen: Byte; Var AZStr); {Convert string to asciiz}
 Begin
@@ -164,12 +157,12 @@ Begin
   DStr    := Copy(strPadL(strI2S(Dt.Day),   2, '0'),  1, 2);
   MStr    := Copy(strPadL(strI2S(Dt.Month), 2, '0'),  1, 2);
   YStr    := Copy(strPadL(strI2S(Dt.Year),  4, '0'),  1, 4);
-  HourStr := Copy(strPadL(strI2S(Dt.Hour),  2, ' '),  1, 2);
+  HourStr := Copy(strPadL(strI2S(Dt.Hour),  2, '0'),  1, 2);
   MinStr  := Copy(strPadL(strI2S(Dt.Min),   2, '0'),  1, 2);
   SecStr  := Copy(strPadL(strI2S(Dt.Sec),   2, '0'),  1, 2);
   MNStr   := MonthStr(Dt.Month);
 
-  If (Pos('YYYY', Mask) = 0) Then YStr := Copy(YStr,3,2);
+  If (Pos('YYYY', Mask) = 0) Then YStr := Copy(YStr, 3, 2);
 
   CurrPos := Pos('DD', Mask);
   If CurrPos > 0 Then
@@ -235,22 +228,6 @@ Begin
     End;
   LoadFilePos := Error;
   End;
-
-Function LoadFile(FN: String; Var Rec; FS: Word): Word;
-  Begin
-  LoadFile := LoadFilePos(FN, Rec, FS, 0);
-  End;
-
-Function GetFileSize (FN : String) : LongInt;
-Var
-  SR : SearchRec;
-Begin
-  FindFirst (FN, AnyFile, SR);
-  If DosError = 0 Then
-    GetFileSize := SR.Size
-  Else
-    GetFileSize := -1;
-End;
 
 Function ExtendFile(FN: String; ToSize: LongInt): Word;
 {Pads file with nulls to specified size}
