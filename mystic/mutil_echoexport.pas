@@ -29,13 +29,22 @@ Var
 Begin
   FileMode := 66;
 
-  {$I-}
+  log(3, '+', 'flo add: ' + floname + ' ' + packetfn);
 
   Assign (T, FloName);
-  Reset (T);
+  {$I-} Reset (T); {$I+}
 
-  If IoResult <> 0 Then
-    ReWrite(T);
+  If IoResult <> 0 Then Begin
+    log(3, '+', 'flo reset failed');
+
+    {$I-} ReWrite(T); {$I+}
+
+    If IoResult <> 0 Then Begin
+      log(3, '+', 'unable to rewrite flo');
+    end;
+
+    Reset(T);
+  end;
 
   While Not Eof(T) Do Begin
     ReadLn (T, Str);
@@ -48,7 +57,7 @@ Begin
 
   log(3, '+', 'flo close and append');
 
-  Close   (T);
+//  Close   (T);
   Append  (T);
   WriteLn (T, '^' + PacketFN);
   Close   (T);
