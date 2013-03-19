@@ -27,9 +27,10 @@ Unit m_CRC;
 
 Interface
 
-Function Crc16     (CP: Byte; CRC: Word) : Word;
-Function Crc32     (Octet: Byte; CRC: LongInt) : LongInt;
-Function FileCRC32 (FileName: String) : LongInt;
+Function Crc16       (CP: Byte; CRC: Word) : Word;
+Function Crc32       (Octet: Byte; CRC: LongInt) : LongInt;
+Function FileCRC32   (FileName: String) : LongInt;
+Function StringCRC32 (Str: String) : LongInt;
 
 Implementation
 
@@ -113,6 +114,16 @@ Const
 Function Crc32 (Octet: Byte; CRC: LongInt) : LongInt;
 Begin
   Crc32 := LongInt(CRC_32_TAB[Byte(CRC xor LongInt(Octet))] xor ((CRC shr 8) and $00FFFFFF));
+End;
+
+Function StringCRC32 (Str: String) : LongInt;
+Var
+  Count : Byte;
+Begin
+  Result := $FFFFFFFF;
+
+  For Count := 1 to Length(Str) Do
+    Result := CRC32(Byte(Str[Count]), Result);
 End;
 
 Function FileCRC32 (FileName: String) : LongInt;

@@ -36,6 +36,7 @@ Function  DirExists       (Str: String) : Boolean;
 Function  DirSlash        (Str: String) : String;
 Function  DirChange       (Dir: String) : Boolean;
 Procedure DirClean        (Path: String; Exempt: String);
+Function  DirFiles        (Str: String) : LongInt;
 Function  FileRename      (OldFN, NewFN: String) : Boolean;
 Function  FileCopy        (Source, Target: String) : Boolean;
 Function  FileFind        (FN: String) : String;
@@ -111,6 +112,9 @@ Type
 Implementation
 
 Uses
+  {$IFDEF WINDOWS}   // FileErase (FPC Erase) hardly EVER FUCKING WORKS.
+    Windows,
+  {$ENDIF}
   DOS,
   m_Types,
   m_Strings,
@@ -129,13 +133,13 @@ Begin
   ioCode   := 5;
 
   While (Count < ioRetries) and (ioCode = 5) Do Begin
-    Reset (F, RecSize);
+    {$I-} Reset (F, RecSize); {$I+}
     ioCode := IoResult;
     Inc (Count);
     If ioCode = 5 Then WaitMS(ioWaitTime);
   End;
 
-  ioReset := (ioCode = 0);
+  Result := (ioCode = 0);
 End;
 
 Function ioReWrite (Var F: File; RecSize: Word; Mode: Byte) : Boolean;
@@ -405,18 +409,25 @@ Begin
     End;
 End;
 
+{$IFDEF WINDOWS}
+Function FileErase (Str: String) : Boolean;
+Begin
+  Str    := Str + #0;
+  Result := Windows.DeleteFile(PChar(@Str[1]));
+End;
+{$ELSE}
 Function FileErase (Str: String) : Boolean;
 Var
   F : File;
 Begin
-  Assign   (F, Str);
-  SetFAttr (F, Archive);
+  {$I-}
 
-  {$I-} Erase (F); {$I+}
+  Assign (F, Str);
+  Erase  (F);
 
-  Result := (IoResult = 0);
+  Result := IoResult = 0;
 End;
-
+{$ENDIF}
 Function FileExist (Str: String) : Boolean;
 Var
   DF   : File;
@@ -758,6 +769,24 @@ Begin
   If DosError = 0 Then Result := Dir.Size;
 
   FindClose(Dir);
+End;
+
+Function DirFiles (Str: String) : LongInt;
+Var
+  DirInfo : SearchRec;
+Begin
+  Result := 0;
+
+  FindFirst (Str + '*', AnyFile, DirInfo);
+
+  While DosError = 0 Do Begin
+    If DirInfo.Attr And Directory = 0 Then
+      Inc (Result);
+
+    FindNext(DirInfo);
+  End;
+
+  FindClose (DirInfo);
 End;
 
 End.

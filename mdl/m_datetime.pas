@@ -22,7 +22,7 @@ Function  DateStr2Julian    (Str: String) : LongInt;
 Procedure DateG2J           (Year, Month, Day: LongInt; Var Julian: LongInt);
 Procedure DateJ2G           (Julian: LongInt; Var Year, Month, Day: SmallInt);
 Function  DateValid         (Str: String) : Boolean;
-Function  TimeDos2Str       (Date: LongInt; Twelve: Boolean) : String;
+Function  TimeDos2Str       (Date: LongInt; Mode: Byte) : String;
 Function  DayOfWeek         (Date: LongInt) : Byte;
 Function  DaysAgo           (Date: LongInt; dType: Byte) : LongInt;
 Function  TimeSecToStr      (Secs: LongInt) : String;
@@ -274,24 +274,25 @@ Begin
   Result := (M > 0) and (M < 13) and (D > 0) and (D < 32);
 End;
 
-Function TimeDos2Str (Date: LongInt; Twelve: Boolean) : String;
+Function TimeDos2Str (Date: LongInt; Mode: Byte) : String;
 Var
   DT : DateTime;
 Begin
   UnPackTime (Date, DT);
 
-  If Twelve Then Begin
-    If DT.Hour > 11 Then Begin
-      If DT.Hour = 12 Then Inc(DT.Hour, 12);
+  Case Mode of
+    0 : Result := strZero(DT.Hour) + ':' + strZero(DT.Min);
+    1 : If DT.Hour > 11 Then Begin
+          If DT.Hour = 12 Then Inc(DT.Hour, 12);
 
-      Result := strZero(DT.Hour - 12) + ':' + strZero(DT.Min) + 'p'
-    End Else Begin
-      If DT.Hour = 0 Then Inc(DT.Hour, 12);
+          Result := strZero(DT.Hour - 12) + ':' + strZero(DT.Min) + 'p'
+        End Else Begin
+          If DT.Hour = 0 Then Inc(DT.Hour, 12);
 
-      Result := strZero(DT.Hour) + ':' + strZero(DT.Min) + 'a';
-    End;
-  End Else
-    Result := strZero(DT.Hour) + ':' + strZero(DT.Min);
+          Result := strZero(DT.Hour) + ':' + strZero(DT.Min) + 'a';
+        End;
+    2 : Result := strZero(DT.Hour) + ':' + strZero(DT.Min) + ':' + strZero(DT.Sec);
+  End;
 End;
 
 Function DayOfWeek (Date: LongInt) : Byte;
