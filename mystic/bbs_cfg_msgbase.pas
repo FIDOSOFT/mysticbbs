@@ -94,14 +94,19 @@ End;
 
 Procedure EditMessageBase (Var MBase: RecMessageBase);
 Var
-  Box   : TAnsiMenuBox;
-  Form  : TAnsiMenuForm;
-  Topic : String;
-  Links : LongInt;
+  Box      : TAnsiMenuBox;
+  Form     : TAnsiMenuForm;
+  Topic    : String;
+  Links    : LongInt;
+  OrigFN   : String;
+  OrigPath : String;
 Begin
   Topic := '|03(|09Message Base Edit|03) |01-|09> |15';
   Box   := TAnsiMenuBox.Create;
   Form  := TAnsiMenuForm.Create;
+
+  OrigFN   := MBase.FileName;
+  OrigPath := Mbase.Path;
 
   Box.Shadow := False;
   Box.Header := ' Index ' + strI2S(MBase.Index) + ' ';
@@ -166,6 +171,28 @@ Begin
   Until False;
 
   MBase.NewsName := strReplace(MBase.NewsName, ' ', '.');
+
+  If (MBase.FileName <> OrigFN) or (MBase.Path <> OrigPath) Then
+    If ShowMsgBox (1, 'Path/Filename changed. Rename? ') Then Begin
+      FileRename (OrigPath + OrigFN + '.lnk', MBase.Path + MBase.FileName + '.lnk');
+      FileRename (OrigPath + OrigFN + '.scn', MBase.Path + MBase.FileName + '.scn');
+
+      Case MBase.BaseType of
+        0 : Begin
+              FileRename (OrigPath + OrigFN + '.jhr', MBase.Path + MBase.FileName + '.jhr');
+              FileRename (OrigPath + OrigFN + '.jlr', MBase.Path + MBase.FileName + '.jlr');
+              FileRename (OrigPath + OrigFN + '.jdt', MBase.Path + MBase.FileName + '.jdt');
+              FileRename (OrigPath + OrigFN + '.jdx', MBase.Path + MBase.FileName + '.jdx');
+            End;
+        1 : Begin
+              FileRename (OrigPath + OrigFN + '.sqd', MBase.Path + MBase.FileName + '.sqd');
+              FileRename (OrigPath + OrigFN + '.sqi', MBase.Path + MBase.FileName + '.sqi');
+              FileRename (OrigPath + OrigFN + '.sql', MBase.Path + MBase.FileName + '.sql');
+            End;
+      End;
+
+
+    End;
 
   Box.Close;
 

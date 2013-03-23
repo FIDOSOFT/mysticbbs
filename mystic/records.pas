@@ -87,47 +87,26 @@ Type
 
   RecEchoMailExport = LongInt;
 
-  (*
-  RecEchoMailOpts = Record
-    SysLocation   : String[40];
-    SysFlags      : String[40];
-    IncomingPath  : String[mysMaxPathSize];
-    SIncomingPath : String[mysMaxPathSize];
-    OutboundPath  : String[mysMaxPathSize];
-    NodeListPath  : String[mysMaxPathSize];
-    ZoneMap       : String[128];
-    FTPPort       : Word;
-    BINKPPort     : Word;
-    Res           : Array[1..485] of Char;
-  End;
-
-  RecEchomailNodeFTP = Record
-    Host      : String[60];
-    Login     : String[30];
-    Password  : String[30];
-    Directory : String[80];
-  End;
-
-  RecEchomailNodeBINKP = Record
-    Host      : String[60];
-    TimeOut   : Word;
-    BlockSize : Word;
-    Res       : Array[1..10] of Byte;
-  End;
-*)
-
   RecEchoMailNode = Record
     Index       : LongInt;
     Description : String[35];
     Active      : Boolean;
     Address     : RecEchoMailAddr;
+    Domain      : String[8];
     ArcType     : String[4];
-//    InType      : Byte;                                         // 0=Disabled 1=FTP 2=BINKP 3=EMAIL 4=DIRECTORY
-//    OutType     : Byte;                                         // 0=Disabled 1=FTP 2=BINKP 3=EMAIL 4=DIRECTORY
-//    FTPin       : RecEchoMailNodeFTP;
-//    FTPout      : RecEchoMailNodeFTP;
-//    BINKPin     : RecEchoMailNodeBINKP;
-//    BINKPout    : RecEchoMailNodeBINKP;
+    MailType    : Byte;
+    binkHost    : String[60];
+    binkPort    : Word;
+    binkTimeout : Word;
+    binkBlock   : Word;
+    binkMD5     : Byte;
+    ftpOutHost  : String[60];
+    ftpOutPort  : Word;
+    ftpOutLogin : String[20];
+    ftpOutPass  : String[20];
+    ftpInDir    : String[60];
+    ftpOutDir   : String[60];
+    ftpTimeOut  : Word;
     LastRecv    : LongInt;
     LastSent    : LongInt;
     LastReset   : LongInt;
@@ -135,6 +114,7 @@ Type
     InSize      : Cardinal;
     OutFiles    : Cardinal;
     OutSize     : Cardinal;
+    Res         : Array[1..512] of Byte;
   End;
 
   RecSauceInfo = Packed Record

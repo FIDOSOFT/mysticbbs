@@ -26,7 +26,7 @@ Type
     Function  OpenMsgBase : Boolean; Virtual; {Open the message base}
     Procedure CloseMsgBase; Virtual; {Close the message base}
     Function  CreateMsgBase(MaxMsg: Word; MaxDays: Word): Boolean; Virtual;
-    Function  MsgBaseExists: Boolean; Virtual; {Does msg base exist}
+//    Function  MsgBaseExists: Boolean; Virtual; {Does msg base exist}
     Function  LockMsgBase: Boolean; Virtual; {Lock the message base}
     Function  UnLockMsgBase: Boolean; Virtual; {Unlock the message base}
     Procedure SetDest (Addr: RecEchoMailAddr); Virtual; {Set Zone/Net/Node/Point for Dest}
@@ -513,9 +513,11 @@ Function TMsgBaseABS.CreateMsgBase(MaxMsg: Word; MaxDays: Word): Boolean;
 Begin
 End;
 
+(*
 Function TMsgBaseABS.MsgBaseExists: Boolean;
 Begin
 End;
+*)
 
 Procedure TMsgBaseABS.StartNewMsg;
 Begin

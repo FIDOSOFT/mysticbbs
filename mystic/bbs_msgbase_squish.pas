@@ -149,7 +149,7 @@ Type
     Function        OpenMsgBase: Boolean; Virtual; {Open message base}
     Procedure CloseMsgBase; Virtual; {Close message base}
     Function        CreateMsgBase(MaxMsg: Word; MaxDays: Word): Boolean; Virtual;
-    Function        MsgBaseExists: Boolean; Virtual;
+//    Function        MsgBaseExists: Boolean; Virtual;
     Procedure SetMsgPath(FN: String); Virtual; {Set filepath and name - no extension}
     Function        SqdOpen: Boolean; Virtual; {Open squish data file}
     Function        SqiOpen: Boolean; Virtual; {Open squish index file}
@@ -429,10 +429,10 @@ Begin
     CreateMsgBase := False;
 End;
 
-Function TMsgBaseSquish.MsgBaseExists: Boolean;
-Begin
-  MsgBaseExists := FileExist(SqInfo^.FN + '.sqd');
-End;
+//Function TMsgBaseSquish.MsgBaseExists: Boolean;
+//Begin
+//  MsgBaseExists := FileExist(SqInfo^.FN + '.sqd');
+//End;
 
 Procedure TMsgBaseSquish.SqdClose;
 Begin

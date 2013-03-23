@@ -21,6 +21,7 @@ Type
     CurX         : Byte;
     CurY         : SmallInt;
     CurAttr      : Byte;
+    QuoteAttr    : Byte;
     CurLength    : Byte;
     TopLine      : LongInt;
     CurLine      : LongInt;
@@ -101,6 +102,7 @@ Begin
   CurLine    := 1;
   TopLine    := 1;
   CurAttr    := 7;
+  QuoteAttr  := 9;
   InsertMode := True;
   DrawMode   := False;
   GlyphMode  := False;
@@ -377,9 +379,10 @@ Begin
   ClearEOL := RowSize >= 79;
 
   If Reset Then Begin
-    CurX    := 1;
-    CurY    := 1;
-    CurAttr := Session.io.ScreenInfo[1].A;
+    CurX      := 1;
+    CurY      := 1;
+    CurAttr   := Session.io.ScreenInfo[1].A;
+    QuoteAttr := Session.io.ScreenInfo[2].A;
 
     FindLastLine;
   End;
@@ -400,6 +403,7 @@ Begin
   While TopLine + CurY - 1 > LastLine Do
     Dec (CurY);
 
+(*
   If Not DrawMode Then Begin
     If (CurX > 1) and (CurX = CurLength + 1) Then
       CurAttr := ANSI.Data[CurLine][CurX - 1].Attr
@@ -408,7 +412,7 @@ Begin
 
     If CurAttr = 0 Then CurAttr := 7;
   End;
-
+*)
   With TBBSCore(Owner).io Do Begin
     AnsiGotoXY (WinX1 + CurX - 1, WinY1 + CurY - 1);
     AnsiColor  (CurAttr);
@@ -814,6 +818,7 @@ Begin
       End;
 
       SetLineText (CurLine, Text[NumLines]);
+      ANSI.SetLineColor (QuoteAttr, CurLine);
 
       If CurY > WinSize Then
         ScrollDown(False);
@@ -896,15 +901,20 @@ Var
   Var
     Count : Byte;
   Begin
-    Session.io.AnsiColor(11); // quote text color
+    Session.io.AnsiColor (QuoteAttr);
 
-    For Count := 1 to QWinSize Do Begin
+    For Count := 1 to QWinSize + 1 Do Begin
       Session.io.AnsiGotoXY (WinX1, WinY1 + Count - 1);
-      Session.io.BufAddStr(QWinData[Count]);
+
+      If Count <= QWinSize Then
+        Session.io.BufAddStr(QWinData[Count]);
+
       Session.io.AnsiClrEOL;
     End;
   End;
 
+Var
+  Temp : Integer;
 Begin
   Added := False;
 
@@ -913,9 +923,9 @@ Begin
 
   If IoResult <> 0 Then Exit;
 
-  QuoteLines   := 0;
   NoMore       := False;
   QWinDataPos  := 0;
+  QuoteLines   := 0;
 
   While Not Eof(InFile) Do Begin
     Inc    (QuoteLines);
@@ -926,9 +936,12 @@ Begin
 
   Session.io.OutFile ('ansiquot', True, 0);
 
-  FillChar(QWinData, SizeOf(QWinData), 0);
+  FillChar (QWinData, SizeOf(QWinData), 0);
 
   QWinSize := Session.io.ScreenInfo[1].Y - WinY1 + 1;
+
+  For Temp := CurLine - ((QWinSize DIV 2) + 1) To CurLine - 1 Do
+    If Temp >= 1 Then AddQuoteWin(GetLineText(Temp));
 
   DrawQWin;
   UpdateWindow;
@@ -1022,7 +1035,7 @@ Begin
                 InsertLine  (CurLine);
                 SetLineText (CurLine, QText[QuoteTopPage + QuoteCurLine]);
 
-                ANSI.SetLineColor (11, CurLine);
+                ANSI.SetLineColor (QuoteAttr, CurLine);
 
                 Inc (CurLine);
                 Inc (CurY);
@@ -1051,7 +1064,15 @@ Begin
 
   Session.io.OutFull('|16');
 
-//  If (CurLine < mysMaxMsgLines) And Added Then Inc(CurLine);
+  If CurLine < mysMaxMsgLines Then Begin
+    Inc (CurLine);
+    Inc (CurY);
+
+    InsertLine(CurLine);
+
+    If CurY > WinSize Then
+      ScrollDown(False);
+  End;
 End;
 
 Procedure TEditorANSI.Commands;

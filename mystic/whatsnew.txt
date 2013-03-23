@@ -2944,5 +2944,16 @@
    facilitate separation from regular text.  The text will wrap and
    reformat itself so no text should be lost.
 
+ + If you change message base's storage filename or path, Mystic will now ask
+   you if you want to physically rename them on disk too (and of course it
+   will rename them if you say yes).
+
+ + MUTIL now has a full binkley-style echomail importer and exporter with a
+   bunch of features.  It can autocreate new bases, perform unlimited dupe
+   checking, and store duplicate/badmsgs to name a few.
+
+   INSERT  NEW SHIT HERE WHEN NOT DRUNK AND LAZY LOL
+
  + NEW FSE/BSO FTN TOSSER AND BINKP MAILER need to type up the changes
    when done
+

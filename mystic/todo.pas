@@ -29,6 +29,7 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- EXCLUDE from all files list. important.
 - Reply to echomail via netmail.
 - Msgbase flag for AKA matching or just rewrite netmail all together.
 - Amiga .readme and .TIC processing (similar)
