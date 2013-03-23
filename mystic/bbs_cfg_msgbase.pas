@@ -121,7 +121,7 @@ Begin
   Form.AddStr  ('R', ' Read ACS'    ,  7, 13, 19, 13, 10, 30, 30, @MBase.ReadACS, Topic + 'Access required to read messages');
   Form.AddStr  ('C', ' Post ACS'    ,  7, 14, 19, 14, 10, 30, 30, @MBase.PostACS, Topic + 'Access required to post messages');
   Form.AddStr  ('Y', ' Sysop ACS'   ,  6, 15, 19, 15, 11, 30, 30, @MBase.SysopACS, Topic + 'Access required for Sysop access');
-  Form.AddNone ('D', ' Net Address' ,  4, 16, 19, 16, 13, Topic + 'NetMail Address');
+  Form.AddNone ('D', ' Net Address' ,  4, 16, 19, 16, 13, Topic + 'Net/EchoMail Address');
   Form.AddNone ('7', ' Export To'   ,  6, 17, 19, 17, 11, Topic + 'Export messages to these nodes');
   Form.AddStr  ('I', ' Origin'      ,  9, 18, 19, 18,  8, 30, 50, @MBase.Origin, Topic + 'Message base origin line');
   Form.AddStr  ('S', ' Sponsor'     ,  8, 19, 19, 19,  9, 30, 30, @MBase.Sponsor, Topic + 'User name of base''s sponser');
@@ -189,6 +189,7 @@ Var
     GBox   : TAnsiMenuBox;
     Form   : TAnsiMenuForm;
     Active : Array[1..26] of Boolean;
+    ActCnt : Byte;
     Count  : LongInt;
     Topic  : String;
   Begin
@@ -246,45 +247,52 @@ Var
 
       Case Form.Execute of
         'D' : Global.NetAddr := Configuration_EchoMailAddress(False);
-        #21 : If ShowMsgBox(1, 'Update with these settings?') Then Begin
-                For Count := 1 to List.ListMax Do
-                  If List.List[Count]^.Tagged = 1 Then Begin
-                    Seek (MBaseFile, Count - 1);
-                    Read (MBaseFile, MBase);
+        #21 : Begin
+                ActCnt := 0;
 
-                    If Active[01] Then MBase.Path := Global.Path;
-                    If Active[02] Then MBase.ListACS := Global.ListACS;
-                    If Active[03] Then MBase.ReadACS := Global.ReadACS;
-                    If Active[04] Then MBase.PostACS := Global.PostACS;
-                    If Active[05] Then MBase.SysopACS := Global.SysopACS;
-                    If Active[06] Then MBase.NetAddr := Global.NetAddr;
-                    If Active[07] Then MBase.Origin := Global.Origin;
-                    If Active[08] Then MBase.Sponsor := Global.Sponsor;
-                    If Active[09] Then MBase.Header := Global.Header;
-                    If Active[10] Then MBase.RTemplate := Global.RTemplate;
-                    If Active[11] Then MBase.ITemplate := Global.ITemplate;
-                    If Active[12] Then MBase.NetType := Global.NetType;
-                    If Active[13] Then MBase.BaseType := Global.BaseType;
+                For Count := 1 to 26 Do
+                  If Active[Count] Then Inc(ActCnt);
 
-                    If Active[14] Then MBase.ColQuote := Global.ColQuote;
-                    If Active[15] Then MBase.ColText := Global.ColText;
-                    If Active[16] Then MBase.ColTear := Global.ColTear;
-                    If Active[17] Then MBase.ColOrigin := Global.ColOrigin;
-                    If Active[18] Then MBase.ColKludge := Global.ColKludge;
-                    If Active[19] Then MBase.MaxMsgs := Global.MaxMsgs;
-                    If Active[20] Then MBase.MaxAge := Global.MaxAge;
-                    If Active[21] Then MBase.DefNScan := Global.DefNScan;
-                    If Active[22] Then MBase.DefQScan := Global.DefQScan;
-                    If Active[23] Then BitSet(1, 4, MBase.Flags, (Global.Flags AND MBRealNames <> 0));
-                    If Active[24] Then BitSet(3, 4, MBase.Flags, (Global.Flags AND MBAutoSigs <> 0));
-                    If Active[25] Then BitSet(2, 4, MBase.Flags, (Global.Flags AND MBKillKludge <> 0));
-                    If Active[26] Then BitSet(5, 4, MBase.Flags, (Global.Flags AND MBPrivate <> 0));
+                If ShowMsgBox(1, 'Update ' + strI2S(ActCnt) + ' settings per base?') Then Begin
+                  For Count := 1 to List.ListMax Do
+                    If List.List[Count]^.Tagged = 1 Then Begin
+                      Seek (MBaseFile, Count - 1);
+                      Read (MBaseFile, MBase);
 
-                    Seek  (MBaseFile, Count - 1);
-                    Write (MBaseFile, MBase);
-                  End;
+                      If Active[01] Then MBase.Path := Global.Path;
+                      If Active[02] Then MBase.ListACS := Global.ListACS;
+                      If Active[03] Then MBase.ReadACS := Global.ReadACS;
+                      If Active[04] Then MBase.PostACS := Global.PostACS;
+                      If Active[05] Then MBase.SysopACS := Global.SysopACS;
+                      If Active[06] Then MBase.NetAddr := Global.NetAddr;
+                      If Active[07] Then MBase.Origin := Global.Origin;
+                      If Active[08] Then MBase.Sponsor := Global.Sponsor;
+                      If Active[09] Then MBase.Header := Global.Header;
+                      If Active[10] Then MBase.RTemplate := Global.RTemplate;
+                      If Active[11] Then MBase.ITemplate := Global.ITemplate;
+                      If Active[12] Then MBase.NetType := Global.NetType;
+                      If Active[13] Then MBase.BaseType := Global.BaseType;
 
-                Break;
+                      If Active[14] Then MBase.ColQuote := Global.ColQuote;
+                      If Active[15] Then MBase.ColText := Global.ColText;
+                      If Active[16] Then MBase.ColTear := Global.ColTear;
+                      If Active[17] Then MBase.ColOrigin := Global.ColOrigin;
+                      If Active[18] Then MBase.ColKludge := Global.ColKludge;
+                      If Active[19] Then MBase.MaxMsgs := Global.MaxMsgs;
+                      If Active[20] Then MBase.MaxAge := Global.MaxAge;
+                      If Active[21] Then MBase.DefNScan := Global.DefNScan;
+                      If Active[22] Then MBase.DefQScan := Global.DefQScan;
+                      If Active[23] Then BitSet(1, 4, MBase.Flags, (Global.Flags AND MBRealNames <> 0));
+                      If Active[24] Then BitSet(3, 4, MBase.Flags, (Global.Flags AND MBAutoSigs <> 0));
+                      If Active[25] Then BitSet(2, 4, MBase.Flags, (Global.Flags AND MBKillKludge <> 0));
+                      If Active[26] Then BitSet(5, 4, MBase.Flags, (Global.Flags AND MBPrivate <> 0));
+
+                      Seek  (MBaseFile, Count - 1);
+                      Write (MBaseFile, MBase);
+                    End;
+
+                  Break;
+                End;
               End;
         #27 : Break;
       End;

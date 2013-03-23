@@ -353,8 +353,11 @@ Begin
 End;
 
 Function GetMBaseByNetZone (Zone: Word; Var TempBase: RecMessageBase) : Boolean;
+// get netmail base with matching zone, or at least A netmail base if no match
 Var
-  F : File;
+  F      : File;
+  One    : RecMessageBase;
+  GotOne : Boolean;
 Begin
   Result := False;
 
@@ -365,13 +368,24 @@ Begin
   While Not Eof(F) Do Begin
     ioRead(F, TempBase);
 
-    If (Zone = bbsConfig.NetAddress[TempBase.NetAddr].Zone) and (TempBase.NetType = 3) Then Begin
-      Result := True;
-      Break;
+    If (TempBase.NetType = 3) Then Begin
+      One    := TempBase;
+      GotOne := True;
+
+      If Zone = bbsConfig.NetAddress[TempBase.NetAddr].Zone Then Begin
+        Result := True;
+
+        Break;
+      End;
     End;
   End;
 
   Close (F);
+
+  If Not Result And GotOne Then Begin
+    Result   := True;
+    TempBase := One;
+  End;
 End;
 
 Function MessageBaseOpen (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;

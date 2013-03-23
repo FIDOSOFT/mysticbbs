@@ -29,7 +29,11 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- Reply to echomail via netmail.
+- Msgbase flag for AKA matching or just rewrite netmail all together.
 - Amiga .readme and .TIC processing (similar)
+-  ^^ or utility to find .readme in the smae dir and add to file_id.diz if
+   it does not exist.
 - New files list to MUTIL based X number of days
 - All/new file list template files like TOP XX
 - MUTIL create FILES.BBS in the file base directory

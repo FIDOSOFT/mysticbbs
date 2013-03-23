@@ -29,6 +29,8 @@ Var
   Desc       : Array[1..99] of String[50];
   Count      : Integer;
   FilesAdded : LongInt = 0;
+  IgnoreList : Array[1..100] of String[80];
+  IgnoreSize : Byte = 0;
 
   Procedure RemoveDesc (Num: Byte);
   Var
@@ -45,6 +47,26 @@ Var
 Begin
   ProcessName   ('Mass Upload Files', True);
   ProcessResult (rWORKING, False);
+
+  // Read in ignore list
+
+  FillChar (Ignorelist, SizeOf(IgnoreList), #0);
+
+  Ini.SetSequential(True);
+
+  Repeat
+    DizName := INI.ReadString(Header_UPLOAD, 'ignore', '');
+
+    If DizName = '' Then Break;
+
+    Inc (IgnoreSize);
+
+    IgnoreList[IgnoreSize] := DizName;
+  Until IgnoreSize = 100;
+
+  INI.SetSequential(False);
+
+  // get the show on the road
 
   Assign (BaseFile, bbsConfig.DataPath + 'fbases.dat');
   {$I-} Reset (BaseFile); {$I+}
@@ -89,6 +111,13 @@ Begin
             Found := strUpper(List.FileName) = strUpper(DirInfo.Name);
           {$ENDIF}
         End;
+
+        For Count := 1 to IgnoreSize Do
+          If WildMatch (IgnoreList[Count], DirInfo.Name, True) Then Begin
+            Found := True;
+
+            Break;
+          End;
 
         If Not Found Then Begin
           Log (1, '+', '   Add: ' + DirInfo.Name + ' To: ' + strStripPipe(Base.Name));

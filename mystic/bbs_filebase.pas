@@ -75,7 +75,6 @@ Type
     Procedure   SetFileScan;
     Procedure   GetFileScan;
     Function    SelectProtocol        (UseDefault, Batch: Boolean) : Char;
-    Function    WildcardMatch         (Wildcard, FName: String) : Boolean;
     Procedure   CheckFileNameLength   (FPath : String; Var FName: String);
     Procedure   GetFileDescription    (FN: String);
     Function    CheckFileLimits       (DL: Byte; DLK: Integer) : Byte;
@@ -931,32 +930,6 @@ Begin
   Result := (TotalFiles > 0);
 
   If Not Result Then Session.io.OutFullLn(Session.GetPrompt(425));
-End;
-
-Function TFileBase.WildcardMatch (Wildcard, FName: String) : Boolean;
-Begin
-  Result := False;
-
-  If FName = '' Then Exit;
-
-  Case Wildcard[1] of
-    '*' : Begin
-            If FName[1] = '.' Then Exit;
-            If Length(Wildcard) = 1 Then Result := True;
-            If (Length(Wildcard) > 1) and (Wildcard[2] = '.') and (Length(FName) > 0) Then
-              Result := WildCardMatch(Copy(Wildcard, 3, Length(Wildcard) - 2), Copy(FName, Pos('.', FName) + 1, Length(FName)-Pos('.', FName)));
-          End;
-    '?' : If Ord(Wildcard[0]) = 1 Then
-            Result := True
-          Else
-            Result := WildCardMatch(Copy(Wildcard, 2, Length(Wildcard) - 1), Copy(FName, 2, Length(FName) - 1));
-  Else
-    If FName[1] = Wildcard[1] Then
-      If Length(wildcard) > 1 Then
-        Result := WildCardMatch(Copy(Wildcard, 2, Length(Wildcard) - 1), Copy(FName, 2, Length(FName) - 1))
-      Else
-        Result := (Length(FName) = 1) And (Length(Wildcard) = 1);
-  End;
 End;
 
 Function TFileBase.ArchiveList (FName : String) : Boolean;
@@ -2036,7 +2009,7 @@ Var
 
     Case Mode of
       1 : If Data <> '' Then
-            If Not WildCardMatch (Data, FDir.FileName) Then Exit;
+            If Not WildMatch (Data, FDir.FileName, False) Then Exit;
       2 : If FDir.DateTime < FScan.LastNew Then Exit;
       3 : Begin
             T2 := Bool_Search(Data, FDir.FileName);
@@ -3629,7 +3602,7 @@ Begin
     End;
     If Back Then Seek (FDirFile, FilePos(FDirFile) - 2);
     Read (FDirFile, FDir);
-    If (FDir.Flags And FDirDeleted = 0) and WildCardMatch(Mask, FDir.FileName) Then
+    If (FDir.Flags And FDirDeleted = 0) and WildMatch(Mask, FDir.FileName, False) Then
       Break;
   Until False;
 End;
@@ -3770,7 +3743,9 @@ Begin
                 Session.User.IgnoreGroup := True;
                 Repeat
                   Session.io.OutFull ('|CR|09Move to which base (?/List): ');
+
                   Temp := Session.io.GetInput(4, 4, 12, '');
+
                   If Temp = '?' Then Begin
                     Old := FBase;
                     ListFileAreas(False);
@@ -3785,7 +3760,7 @@ Begin
                       Seek (FBaseFile, B - 1);
                       Read (FBaseFile, FBase);
 
-                      If Not FileCopy (Old.Path + FDir.FileName, FBase.Path + FDir.FileName) Then Begin
+                      If FileExist(FBase.Path + FDir.FileName) or (Not FileCopy(Old.Path + FDir.FileName, FBase.Path + FDir.FileName)) Then Begin
                         Session.io.OutFull ('ERROR|CR|CR|PA');
 
                         FBase := Old;

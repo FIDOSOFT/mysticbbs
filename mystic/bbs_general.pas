@@ -67,7 +67,11 @@ Begin
   For Count := 1 to Lines Do
     Editor.SetLineText (Count, Session.Msgs.MsgText[Count]);
 
+  Editor.Subj := Subj;
+
   Result := Editor.Edit;
+
+  Subj := Editor.Subj;
 
   If Result Then Begin
     For Count := 1 to Editor.LastLine Do

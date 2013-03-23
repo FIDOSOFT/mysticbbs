@@ -155,6 +155,7 @@ Begin
       If CurX > WrapPos Then Begin
         Inc (NewLine);
         Inc (NewY);
+
         CurX := 1;
       End;
 
@@ -169,7 +170,7 @@ Begin
     End Else Begin
       Session.io.BufFlush;
 
-      A := strWrap (OldStr, NewStr, WrapPos);
+      A := strWrap (OldStr, NewStr, WrapPos + 1);
 
       If (A > 0) And (Not Moved) And (CurX > Length(OldStr) + 1) Then Begin
         CurX  := CurX - A;
@@ -184,6 +185,7 @@ Begin
 
       If (Session.Msgs.MsgText[Line] = '') or ((Pos(' ', Session.Msgs.MsgText[Line]) = 0) And (Length(Session.Msgs.MsgText[Line]) >= WrapPos)) Then Begin
         InsertLine(Line);
+
         OldStr := NewStr;
       End Else
         OldStr := NewStr + ' ' + Session.Msgs.MsgText[Line];
@@ -192,6 +194,16 @@ Begin
 
   Session.Msgs.MsgText[Line] := OldStr;
 
+
+
+      If NewY <= WinEnd Then TextRefreshPart;
+
+      CurY    := NewY;
+      CurLine := NewLine;
+
+      If CurY > WinEnd Then TextRefreshFull Else UpdatePosition;
+
+(*
   If NewY <= WinEnd Then Begin
     Session.io.AnsiGotoXY(1, CurY);
 
@@ -215,6 +227,7 @@ Begin
   CurLine := NewLine;
 
   If CurY > WinEnd Then TextRefreshFull Else UpdatePosition;
+*)
 End;
 
 Procedure keyEnter;
@@ -977,7 +990,7 @@ Begin
     Lines := TotalLine;
   End;
 
-  Result := (Save = True);
+  Result := Save;
 
   Session.io.AnsiGotoXY (1, Session.User.ThisUser.ScreenSize);
 

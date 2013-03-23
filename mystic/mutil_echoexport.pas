@@ -29,22 +29,13 @@ Var
 Begin
   FileMode := 66;
 
-  log(3, '+', 'flo add: ' + floname + ' ' + packetfn);
-
   Assign (T, FloName);
   {$I-} Reset (T); {$I+}
 
   If IoResult <> 0 Then Begin
-    log(3, '+', 'flo reset failed');
-
     {$I-} ReWrite(T); {$I+}
-
-    If IoResult <> 0 Then Begin
-      log(3, '+', 'unable to rewrite flo');
-    end;
-
     Reset(T);
-  end;
+  End;
 
   While Not Eof(T) Do Begin
     ReadLn (T, Str);
@@ -55,9 +46,6 @@ Begin
     End;
   End;
 
-  log(3, '+', 'flo close and append');
-
-//  Close   (T);
   Append  (T);
   WriteLn (T, '^' + PacketFN);
   Close   (T);
@@ -101,6 +89,8 @@ Begin
       FLOName    := bbsConfig.OutboundPath + GetFTNFlowName(EchoNode.Address) + '.flo';
       BundleName := bbsConfig.OutboundPath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + DayString[DayOfWeek(CurDateDos)];
 
+      // check for existance, packet size limitations, etc and increment
+      // from 0-9 A-Z
       BundleName[Length(BundleName)] := '0';
 
       ExecuteArchive (BundleName, EchoNode.ArcType, TempPath + PKTName, 1);
@@ -167,6 +157,8 @@ Var
       TempStr2 := bbsConfig.OutboundPath + GetFTNFlowName(EchoNode.Address) + '.flo';
 
       // change extensions based on crash etc from echonode
+      // need to add aka matching somewhere in here and also incorporate
+      // routing?
 
       Assign (F, TempStr1);
 
@@ -231,13 +223,18 @@ Var
     If MBase.NetType <> 3 Then
       WriteStr ('AREA:' + MBase.EchoTag, #13);
 
-    WriteStr (#1 + 'INTL ' + strAddr2Str(EchoNode.Address) + ' ' + strAddr2Str(bbsConfig.NetAddress[MBase.NetAddr]), #13);
+    If MBase.NetType = 3 Then
+      WriteStr (#1 + 'INTL ' + strAddr2Str(EchoNode.Address) + ' ' + strAddr2Str(bbsConfig.NetAddress[MBase.NetAddr]), #13);
+
     WriteStr (#1 + 'TID: Mystic BBS ' + mysVersion, #13);
 
     MsgBase^.MsgTxtStartUp;
 
     While Not MsgBase^.EOM Do
       WriteStr (MsgBase^.GetString(79), #13);
+
+    // SEEN-BY needs to include yourself and ANYTHING it is sent to (downlinks)
+    // so we need to cycle through nodes for this mbase and add ALL of them
 
     TempStr1 := 'SEEN-BY: ' + strI2S(bbsConfig.NetAddress[MBase.NetAddr].Net) + '/' + strI2S(bbsConfig.NetAddress[MBase.NetAddr].Node) + ' ';
 
@@ -294,6 +291,9 @@ Begin
 
       While MsgBase^.SeekFound Do Begin
         MsgBase^.MsgStartUp;
+
+        // uncomment islocal if/when we build downlinks on import instead
+        // of export
 
         If {MsgBase^.IsLocal And } Not MsgBase^.IsSent Then Begin
           Assign (ExportFile, MBase.Path + MBase.FileName + '.lnk');

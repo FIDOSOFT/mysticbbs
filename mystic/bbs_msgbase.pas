@@ -11,7 +11,8 @@ Uses
   bbs_General,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
-  bbs_MsgBase_Squish;
+  bbs_MsgBase_Squish,
+  bbs_Edit_ANSI;
 
 Type
   TMsgBase = Class
@@ -40,6 +41,7 @@ Type
     Function    GetBaseCompressed   (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Function    GetBaseByIndex      (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Procedure   GetMessageStats     (List, ShowPrompt, ShowYou: Boolean; Var ListPtr: LongInt; Var TempBase: RecMessageBase; NoFrom, NoRead: Boolean; Var Total, New, Yours: LongInt);
+    Function    GetMatchedAddress   (Orig, Dest: RecEchoMailAddr) : RecEchoMailAddr;
     Function    GetTotalBases       (Compressed: Boolean) : LongInt;
     Function    GetTotalMessages    (Var TempBase: RecMessageBase) : LongInt;
     Procedure   PostTextFile        (Data: String; AllowCodes: Boolean);
@@ -50,7 +52,6 @@ Type
     Procedure   SetMessageScan;
     Procedure   GetMessageScan;
     Procedure   SendMassEmail;
-    Procedure   MessageUpload       (Var CurLine: SmallInt);
     Procedure   ReplyMessage        (Email: Boolean; ListMode: Byte; ReplyID: String);
     Procedure   EditMessage;
     Function    ReadMessages        (Mode: Char; CmdData, SearchStr: String) : Boolean;
@@ -125,6 +126,21 @@ End;
 Destructor TMsgBase.Destroy;
 Begin
   Inherited Destroy;
+End;
+
+Function TMsgBase.GetMatchedAddress (Orig, Dest: RecEchoMailAddr) : RecEchoMailAddr;
+Var
+  Count : Byte;
+Begin
+  Result := Orig;
+
+  If Orig.Zone = Dest.Zone Then Exit;
+
+  For Count := 1 to 30 Do
+    If Config.NetAddress[Count].Zone = Dest.Zone Then Begin
+      Result := Config.NetAddress[Count];
+      Exit;
+    End;
 End;
 
 Function TMsgBase.NetmailLookup (FromMenu: Boolean; MsgTo, DefAddr: String) : String;
@@ -563,13 +579,12 @@ Begin
 
   If MBase.NetType > 0 Then Begin
     Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ')');
-    Msg^.DoStringLn (' * Origin: ' + ResolveOrigin(MBase) + ' (' + strAddr2Str(Config.NetAddress[MBase.NetAddr]) + ')');
+    Msg^.DoStringLn (' * Origin: ' + ResolveOrigin(MBase) + ' (' + strAddr2Str(Msg^.GetOrigAddr) + ')');
   End;
 End;
 
 Procedure TMsgBase.AssignMessageData (Var Msg: PMsgBaseABS; Var TempBase: RecMessageBase);
 Var
-  Addr    : RecEchoMailAddr;
   SemFile : Text;
 Begin
   Msg^.StartNewMsg;
@@ -587,9 +602,7 @@ Begin
     Else
       Msg^.SetMailType(mmtEchoMail);
 
-    Addr := Config.NetAddress[TempBase.NetAddr];
-
-    Msg^.SetOrig(Addr);
+    Msg^.SetOrig(Config.NetAddress[TempBase.NetAddr]);
 
     Case TempBase.NetType of
       1 : Begin
@@ -1152,8 +1165,8 @@ Begin
       If DoWrap Then Begin
         If WrapData <> '' Then Begin
           If TempStr = '' Then Begin
-            WriteLn (QuoteFile, Initials + strStripB(WrapData, ' '));
-            WriteLn (QuoteFile, Initials);
+            WriteLn (QuoteFile, ' ' + Initials + strStripB(WrapData, ' '));
+            WriteLn (QuoteFile, ' ' + Initials);
 
             WrapData := '';
 
@@ -1163,11 +1176,11 @@ Begin
           TempStr := strStripB(WrapData, ' ') + ' ' + strStripL(TempStr, ' ');
         End;
 
-        strWrap (TempStr, WrapData, 75);
+        strWrap (TempStr, WrapData, 74);
 
-        WriteLn (QuoteFile, Initials + Copy(TempStr, 1, 75));
+        WriteLn (QuoteFile, ' ' + Initials + Copy(TempStr, 1, 75));
       End Else
-        WriteLn (QuoteFile, Initials + Copy(TempStr, 1, 75));
+        WriteLn (QuoteFile, ' ' + Initials + Copy(TempStr, 1, 75));
     End;
 
     Close (QuoteFile);
@@ -1188,13 +1201,11 @@ Begin
       2 : MsgNew^.SetTo('All');
       3 : Begin
             MsgNew^.SetDest     (Addr);
+            MsgNew^.SetOrig     (GetMatchedAddress(Config.NetAddress[MBase.NetAddr], Addr));
             MsgNew^.SetCrash    (Config.netCrash);
             MsgNew^.SetHold     (Config.netHold);
             MsgNew^.SetKillSent (Config.netKillSent);
             MsgNew^.SetTo       (ToWho);
-
-            Addr := Config.NetAddress[MBase.NetAddr];
-            MsgNew^.SetOrig (Addr);
           End;
     Else
       MsgNew^.SetTo (ToWho);
@@ -1326,6 +1337,7 @@ Begin
   Until False;
 End;
 
+(*
 Procedure TMsgBase.MessageUpload (Var CurLine: SmallInt);
 Var
   FN : String[100];
@@ -1376,6 +1388,7 @@ Begin
   Session.io.PromptInfo[1] := T1;
   Session.io.PromptInfo[2] := T2;
 End;
+*)
 
 Function TMsgBase.ReadMessages (Mode: Char; CmdData, SearchStr: String) : Boolean;
 Var
@@ -2900,10 +2913,7 @@ Begin
       MsgBase^.SetCrash    (Config.netCrash);
       MsgBase^.SetHold     (Config.netHold);
       MsgBase^.SetKillSent (Config.netKillSent);
-
-      DestAddr := Config.NetAddress[MBase.NetAddr];
-
-      MsgBase^.SetOrig (DestAddr);
+      MsgBase^.SetOrig     (GetMatchedAddress(Config.NetAddress[MBase.NetAddr], DestAddr));
     End;
 
     AppendMessageText (MsgBase, Lines, '');
@@ -3556,7 +3566,7 @@ Begin
   Msg^.SetLocal (True);
 
   If mArea.NetType > 0 Then Begin
-    If mArea.NetType = 2 Then Begin
+    If mArea.NetType = 3 Then Begin
       Msg^.SetMailType (mmtNetMail);
       Msg^.SetCrash    (Config.netCrash);
       Msg^.SetHold     (Config.netHold);
@@ -3590,7 +3600,7 @@ Begin
 
   If mArea.NetType > 0 Then Begin
     Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ')');
-    Msg^.DoStringLn (' * Origin: ' + ResolveOrigin(mArea) + ' (' + strAddr2Str(Config.NetAddress[mArea.NetAddr]) + ')');
+    Msg^.DoStringLn (' * Origin: ' + ResolveOrigin(mArea) + ' (' + strAddr2Str(Msg^.GetOrigAddr) + ')');
   End;
 
   Msg^.WriteMsg;
@@ -4341,7 +4351,7 @@ Begin
 
         If TempBase.NetType > 0 Then Begin
           MsgBase^.DoStringLn (#13 + '--- ' + mysSoftwareID + '/QWK v' + mysVersion + ' (' + OSID + ')');
-          MsgBase^.DoStringLn (' * Origin: ' + ResolveOrigin(TempBase) + ' (' + strAddr2Str(Config.NetAddress[TempBase.NetAddr]) + ')');
+          MsgBase^.DoStringLn (' * Origin: ' + ResolveOrigin(TempBase) + ' (' + strAddr2Str(MsgBase^.GetOrigAddr) + ')');
         End;
 
         If Not IsControl Then Begin

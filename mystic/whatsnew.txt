@@ -2912,3 +2912,37 @@
 
  + The echomail node editor now has an editor where message bases can be
    list, linked, and unlinked from each configured node.
+
+ ! Fixed a bug which would cause the file to be deleted if you tried to
+   move it to the new file base.  Mystic should check now and give an
+   error.
+
+ + Message base global editor now confirms the number of different settings
+   you will be updating before it does.  This will help prevent people from
+   claiming its buggy because they forgot to select "Yes" on a setting! :)
+
+ + The MUTIL mass upload function now has the ability to ignore files when
+   performating the mass upload.  The list can contain up to 100 ignore
+   masks (supporting ? and * wildcards).  For example under your header
+   for [MassUpload] you can add them:
+
+      [MassUpload]
+
+         ignore = files.bbs
+         ignore = *.readme
+
+ ! Fixed a bug with sending Netmail using the text file post menu command
+
+ + Mystic will now attempt to perform AKA matching on the origin address
+   of netmail messages.  If you have a netmail base configured as the address
+   of 1:111/111 but you send a Netmail to 911:111/111, Mystic will switch the
+   origin address to your 911 AKA if you have one configured in Network
+   addresses.  Translation: Use one netmail base for many networks with
+   tossers like FastEcho.
+
+ + Message quoting will now indent itself by a single character to better
+   facilitate separation from regular text.  The text will wrap and
+   reformat itself so no text should be lost.
+
+ + NEW FSE/BSO FTN TOSSER AND BINKP MAILER need to type up the changes
+   when done

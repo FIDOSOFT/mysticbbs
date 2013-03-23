@@ -202,7 +202,7 @@ Begin
 
   If ProcessTotal = 0 Then Begin
     ProcessName   ('Load configuration', False);
-    ProcessStatus ('No processes configured!', True);
+    ProcessStatus ('No processes configured', True);
     ProcessResult (rFATAL, False);
 
     Halt(1);

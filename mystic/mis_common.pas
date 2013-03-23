@@ -18,7 +18,6 @@ Var
 
 Function SearchForUser    (UN: String; Var Rec: RecUser; Var RecPos: LongInt) : Boolean;
 Function CheckAccess      (User: RecUser; IgnoreGroup: Boolean; Str: String) : Boolean;
-Function WildcardMatch    (Wildcard, FName: String) : Boolean;
 Function GetSecurityLevel (Level: Byte; SecLevel: RecSecurity) : Boolean;
 
 Implementation
@@ -196,32 +195,6 @@ Begin
   End;
 
   Result := Pos('%', Out) = 0;
-End;
-
-Function WildcardMatch (Wildcard, FName: String) : Boolean;
-Begin
-  Result := False;
-
-  If FName = '' Then Exit;
-
-  Case Wildcard[1] of
-    '*' : Begin
-            If FName[1] = '.' Then Exit;
-            If Length(Wildcard) = 1 Then Result := True;
-            If (Length(Wildcard) > 1) and (Wildcard[2] = '.') and (Length(FName) > 0) Then
-              Result := WildCardMatch(Copy(Wildcard, 3, Length(Wildcard) - 2), Copy(FName, Pos('.', FName) + 1, Length(FName)-Pos('.', FName)));
-          End;
-    '?' : If Ord(Wildcard[0]) = 1 Then
-            Result := True
-          Else
-            Result := WildCardMatch(Copy(Wildcard, 2, Length(Wildcard) - 1), Copy(FName, 2, Length(FName) - 1));
-  Else
-    If FName[1] = Wildcard[1] Then
-      If Length(wildcard) > 1 Then
-        Result := WildCardMatch(Copy(Wildcard, 2, Length(Wildcard) - 1), Copy(FName, 2, Length(FName) - 1))
-      Else
-        Result := (Length(FName) = 1) And (Length(Wildcard) = 1);
-  End;
 End;
 
 Function GetSecurityLevel (Level: Byte; SecLevel: RecSecurity) : Boolean;

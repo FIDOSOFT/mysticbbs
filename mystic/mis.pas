@@ -221,10 +221,10 @@ Begin
 
     Case FocusCurrent of
       FocusTelnet : If TelnetServer <> NIL Then Break;
-      FocusSMTP   : If SmtpServer <> NIL Then Break;
-      FocusPOP3   : If Pop3Server <> NIL Then Break;
-      FocusFTP    : If FtpServer <> NIL Then Break;
-      FocusNNTP   : If NNTPServer <> NIL Then Break;
+      FocusSMTP   : If SmtpServer   <> NIL Then Break;
+      FocusPOP3   : If Pop3Server   <> NIL Then Break;
+      FocusFTP    : If FtpServer    <> NIL Then Break;
+      FocusNNTP   : If NNTPServer   <> NIL Then Break;
     End;
   Until False;
 

@@ -13,7 +13,7 @@ Interface
 Uses
   DOS;
 
-Function  ToUnixDate    (FDate: LongInt): LongInt;
+Function  ToUnixDate    (DosDate: LongInt): LongInt;
 Function  DTToUnixDate  (DT: DateTime): LongInt;
 Procedure UnixToDT      (SecsPast: LongInt; Var Dt: DateTime);
 Procedure Str2Az        (Str: String; MaxLen: Byte; Var AZStr); {Convert string to asciiz}
@@ -48,11 +48,11 @@ Begin
   DTToUnixDate := SecsPast;
 End;
 
-Function ToUnixDate (FDate: LongInt): LongInt;
+Function ToUnixDate (DosDate: LongInt): LongInt;
 Var
   DT: DateTime;
 Begin
-  UnpackTime(Fdate, DT);
+  UnpackTime(DosDate, DT);
 
   ToUnixDate := DTToUnixDate(DT);
 End;

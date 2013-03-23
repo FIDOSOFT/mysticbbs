@@ -11,6 +11,7 @@ Implementation
 
 Uses
   m_Strings,
+  m_FileIO,
   bbs_Common,
   bbs_Core,
   bbs_FileBase,
@@ -20,6 +21,57 @@ Var
   CurLine : Integer;
   Done,
   Save    : Boolean;
+
+Procedure MessageUpload (Var CurLine: SmallInt);
+Var
+  FN : String[100];
+  TF : Text;
+  T1 : String[30];
+  T2 : String[60];
+  OK : Boolean;
+Begin
+  OK := False;
+
+  T1 := Session.io.PromptInfo[1];
+  T2 := Session.io.PromptInfo[2];
+
+  Session.io.OutFull (Session.GetPrompt(352));
+
+  If Session.LocalMode Then Begin
+    FN := Session.io.GetInput(70, 70, 11, '');
+
+    If FN = '' Then Exit;
+
+    OK := FileExist(FN);
+  End Else Begin
+    FN := Session.TempPath + Session.io.GetInput(70, 70, 11, '');
+
+    If Session.FileBase.SelectProtocol(True, False) = 'Q' Then Exit;
+
+    Session.FileBase.ExecuteProtocol(1, FN);
+
+    OK := Session.FileBase.dszSearch(JustFile(FN));
+  End;
+
+  If OK Then Begin
+    Assign (TF, FN);
+    Reset  (TF);
+
+    While Not Eof(TF) and (CurLine < mysMaxMsgLines) Do Begin
+      ReadLn (TF, Session.Msgs.MsgText[CurLine]);
+      Inc    (CurLine);
+    End;
+
+    Close (TF);
+  End;
+
+  If Not Session.LocalMode Then FileErase(FN);
+
+  DirClean (Session.TempPath, 'msgtmp');
+
+  Session.io.PromptInfo[1] := T1;
+  Session.io.PromptInfo[2] := T2;
+End;
 
 Procedure Quote;
 Var
@@ -111,7 +163,7 @@ Function LineEditor (Var Lines : Integer; MaxLen: Byte; MaxLine: Integer; TEdit,
                 Done := True;
               End;
         'U' : Begin
-                Session.Msgs.MessageUpload(CurLine);
+                MessageUpload(CurLine);
                 Exit;
               End;
       End;

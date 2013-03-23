@@ -505,7 +505,7 @@ Begin
         If (Dir.Flags And FDirInvalid <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeUnvalid)) Then Continue;
         If (Dir.Flags And FDirFailed <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeFailed)) Then Continue;
 
-        If WildcardMatch(FileMask, Dir.FileName) Then
+        If WildMatch(FileMask, Dir.FileName, False) Then
           DataSocket.WriteLine(Dir.FileName);
       End;
     End;
@@ -548,7 +548,7 @@ Begin
         While Not FBaseFile.EOF Do Begin
           FBaseFile.Read(TempBase);
 
-          If ValidDirectory(TempBase) and WildcardMatch(FileMask, TempBase.FtpName) Then
+          If ValidDirectory(TempBase) and WildMatch(FileMask, TempBase.FtpName, False) Then
               DataSocket.WriteLine('drwxr-xr-x   1 ftp      ftp             0 Jul 11 23:35 ' + TempBase.FtpName)
         End;
       End;
@@ -573,7 +573,7 @@ Begin
         If (Dir.Flags And FDirInvalid <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeUnvalid)) Then Continue;
         If (Dir.Flags And FDirFailed  <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeFailed)) Then Continue;
 
-        If WildcardMatch(FileMask, Dir.FileName) Then
+        If WildMatch(FileMask, Dir.FileName, False) Then
           DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL(strI2S(Dir.Size), 13, ' ') + ' Jul 11 23:35 ' + Dir.FileName)
       End;
     End;
@@ -612,7 +612,7 @@ Begin
       While Not DirFile.EOF Do Begin
         DirFile.Read(Dir);
 
-        If WildcardMatch(FileMask, Dir.FileName) Then Begin
+        If WildMatch(FileMask, Dir.FileName, False) Then Begin
           Found := DirFile.FilePos;
           Break;
         End;

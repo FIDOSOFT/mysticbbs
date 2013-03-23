@@ -2,38 +2,42 @@ Unit bbs_Edit_Ansi;
 
 {$I M_OPS.PAS}
 
-// modes
-//   viewer
-//   msgedit
-//   ansiedit
-
 Interface
 
 Uses
+  m_FileIO,
   bbs_MsgBase_ANSI;
 
 Type
   TEditorANSI = Class
-    Owner      : Pointer;
-    ANSI       : TMsgBaseANSI;
-    WinY1      : Byte;
-    WinY2      : Byte;
-    WinX1      : Byte;
-    WinX2      : Byte;
-    WinSize    : Byte;
-    RowSize    : Byte;
-    CurX       : Byte;
-    CurY       : SmallInt;
-    CurAttr    : Byte;
-    CurLength  : Byte;
-    TopLine    : LongInt;
-    CurLine    : LongInt;
-    InsertMode : Boolean;
-    DrawMode   : Boolean;
-    GlyphMode  : Boolean;
-    WrapMode   : Boolean;
-    ClearEOL   : Boolean;
-    LastLine   : LongInt;
+    Owner        : Pointer;
+    ANSI         : TMsgBaseANSI;
+    WinY1        : Byte;
+    WinY2        : Byte;
+    WinX1        : Byte;
+    WinX2        : Byte;
+    WinSize      : Byte;
+    RowSize      : Byte;
+    CurX         : Byte;
+    CurY         : SmallInt;
+    CurAttr      : Byte;
+    CurLength    : Byte;
+    TopLine      : LongInt;
+    CurLine      : LongInt;
+    InsertMode   : Boolean;
+    DrawMode     : Boolean;
+    GlyphMode    : Boolean;
+    WrapMode     : Boolean;
+    ClearEOL     : Boolean;
+    LastLine     : LongInt;
+    QuoteTopPage : SmallInt;
+    QuoteCurLine : SmallInt;
+
+    // old shit from copy over of quote/command functions
+    save   : boolean;
+    forced : boolean;
+    done   : boolean;
+    subj   : string;
 
     Constructor Create (Var O: Pointer);
     Destructor  Destroy; Override;
@@ -42,7 +46,7 @@ Type
     Function    IsBlankLine   (Var Line; LineSize: Byte) : Boolean;
     Function    GetLineLength (Var Line; LineSize: Byte) : Byte;
     Function    GetWrapPos    (Var Line; LineSize, WrapPos: Byte) : Byte;
-    Procedure   TrimLine      (Var Line; LineSize: Byte);
+    Procedure   TrimLeft      (Var Line; LineSize: Byte);
     Procedure   DeleteLine    (Line: LongInt);
     Procedure   InsertLine    (Line: LongInt);
     Function    GetLineText   (Line: Word) : String;
@@ -50,10 +54,11 @@ Type
     Procedure   FindLastLine;
     Procedure   Reformat;
     Procedure   LocateCursor;
-    Procedure   ReDrawTemplate;
+    Procedure   ToggleInsert (Toggle: Boolean);
+    Procedure   ReDrawTemplate (Reset: Boolean);
     Procedure   DrawPage (StartY, EndY: Byte; ExitEOF: Boolean);
     Procedure   ScrollUp;
-    Procedure   ScrollDown;
+    Procedure   ScrollDown (Draw: Boolean);
     Function    LineUp : Boolean;
     Function    LineDown (Reset: Boolean) : Boolean;
     Procedure   PageUp;
@@ -64,7 +69,11 @@ Type
     Procedure   DoDelete;
     Procedure   DoChar (Ch: Char);
     Function    Edit : Boolean;
-    Procedure   LoadANSI;
+
+    procedure quote;
+    procedure quotewindow;
+    procedure commands;
+    procedure messageupload;
   End;
 
 Implementation
@@ -130,8 +139,6 @@ Begin
 End;
 
 Procedure TEditorANSI.FindLastLine;
-Var
-  Count : LongInt;
 Begin
   LastLine := mysMaxMsgLines;
 
@@ -172,7 +179,7 @@ Begin
   Result := EndPos = 0;
 End;
 
-Procedure TEditorANSI.TrimLine (Var Line; LineSize: Byte);
+Procedure TEditorANSI.TrimLeft (Var Line; LineSize: Byte);
 Var
   Data   : Array[1..255] of RecAnsiBufferChar absolute Line;
   EndPos : Byte;
@@ -185,14 +192,6 @@ Begin
     Data[LineSize].Ch := #0;
 
     Inc (EndPos);
-  End;
-
-  EndPos := LineSize;
-
-  While (EndPos > 0) and ((Data[EndPos].Ch = ' ') or (Data[EndPos].Ch = #0)) Do Begin
-    Data[EndPos].Ch := #0;
-
-    Dec (EndPos);
   End;
 End;
 
@@ -267,7 +266,7 @@ Var
     If NewY > WinSize Then NewY := WinSize;
 
     If CurY > WinSize Then
-      ScrollDown
+      ScrollDown(True)
     Else
       DrawPage (StartY, NewY, True);
   End;
@@ -321,7 +320,7 @@ Begin
       Move     (TempStr[LineSize], WrapData, (GetLineLength(TempStr, 255) - LineSize + 1) * SizeOf(RecAnsiBufferChar));
       FillChar (TempStr[LineSize], (255 - LineSize) * SizeOf(RecAnsiBufferChar), #0);
 
-      TrimLine (WrapData, 255);
+      TrimLeft (WrapData, 255);
 
       If First Then Begin
         If CurX > LineSize Then Begin
@@ -339,17 +338,7 @@ Begin
     Move     (TempStr, ANSI.Data[Count], RowSize * SizeOf(RecAnsiBufferChar));
 
     If LineSize = 0 Then Begin
-      If First Then Begin
-        CurX := 1;
-
-        Inc (CurLine);
-        Inc (CurY);
-
-        If CurLine > LastLine Then LastLine := CurLine;
-
-        EndLine := Count + 1;
-      End Else
-        EndLine := Count;
+      EndLine := Count;
 
       Update;
 
@@ -358,49 +347,46 @@ Begin
 
     Inc (Count);
   End;
-
-//  Update;
 End;
 
-Procedure TEditorANSI.ReDrawTemplate;
-// temp stuff to be replaced by real template
-Var
-  B : TAnsiMenuBox;
+Procedure TEditorANSI.ToggleInsert (Toggle: Boolean);
+Begin
+  If Toggle Then InsertMode := Not InsertMode;
+
+  Session.io.AnsiColor  (Session.io.ScreenInfo[3].A);
+  Session.io.AnsiGotoXY (Session.io.ScreenInfo[3].X, Session.io.ScreenInfo[3].Y);
+
+  If InsertMode Then Session.io.BufAddStr('INS') else Session.io.BufAddStr('OVR'); { ++lang }
+End;
+
+Procedure TEditorANSI.ReDrawTemplate (Reset: Boolean);
 Begin
   TBBSCore(Owner).io.AllowArrow := True;
 
-  TBBSCore(Owner).io.AnsiColor(7);
-  TBBSCore(Owner).io.AnsiClear;
+  Session.io.PromptInfo[2] := Subj;
 
-(*
-  B := TAnsiMenuBox.Create;
-
-  B.FrameType := 1;
-
-  B.Open (5, 2, 75, 23);
-  B.Free;
-
-  WinX1    := 6;
-  WinX2    := 74;
-  WinY1    := 3;
-  WinY2    := 22;
-*)
+  Session.io.OutFile ('ansiedit', True, 0);
 
   WinX1    := 1;
   WinX2    := 79;
-  WinY1    := 2;
-  WinY2    := 23;
+  WinY1    := Session.io.ScreenInfo[1].Y;
+  WinY2    := Session.io.ScreenInfo[2].Y;
 
   WinSize  := WinY2 - WinY1 + 1;
   RowSize  := WinX2 - WinX1 + 1;
-  CurX     := 1;
-  CurY     := 1;
   ClearEOL := RowSize >= 79;
 
-  //LoadANSI;
-  FindLastLine;
+  If Reset Then Begin
+    CurX    := 1;
+    CurY    := 1;
+    CurAttr := Session.io.ScreenInfo[1].A;
+
+    FindLastLine;
+  End;
 
   DrawPage(1, WinSize, False);
+
+  ToggleInsert (False);
 End;
 
 Procedure TEditorANSI.LocateCursor;
@@ -424,10 +410,6 @@ Begin
   End;
 
   With TBBSCore(Owner).io Do Begin
-
-    //AnsiGotoXY (1, 1);
-    //BufAddStr  ('X:' + strI2S(CurX) + ' Y:' + strI2S(CurY) + ' CL:' + strI2S(CurLine) + ' TL:' + strI2S(TopLine) + ' Last:' + strI2S(LastLine) + ' Len:' + strI2S(GetLineLength(ANSI.Data[CurLine], 80)) + ' Row:' + strI2S(RowSize) + '       ');
-
     AnsiGotoXY (WinX1 + CurX - 1, WinY1 + CurY - 1);
     AnsiColor  (CurAttr);
 
@@ -438,7 +420,6 @@ End;
 Procedure TEditorANSI.DrawPage (StartY, EndY: Byte; ExitEOF: Boolean);
 Var
   CountY : LongInt;
-  CountX : Byte;
 Begin
   For CountY := StartY to EndY Do Begin
     If TopLine + CountY - 1 > LastLine + 1 Then Begin
@@ -452,8 +433,8 @@ Begin
     End Else
     If TopLine + CountY - 1 = LastLine + 1 Then Begin
       TBBSCore(Owner).io.AnsiGotoXY (WinX1, WinY1 + CountY - 1);
-      TBBSCore(Owner).io.AnsiColor  (12);
-      TBBSCore(Owner).io.BufAddStr  (strPadC('-----END-----', RowSize, ' '));
+      TBBSCore(Owner).io.AnsiColor  (8);
+      TBBSCore(Owner).io.BufAddStr  (strPadC('(END)', RowSize, ' '));
 
       If ExitEOF Then Break;
     End Else
@@ -475,7 +456,7 @@ Begin
   DrawPage(1, WinSize, False);
 End;
 
-Procedure TEditorANSI.ScrollDown;
+Procedure TEditorANSI.ScrollDown (Draw: Boolean);
 Var
   NewTop : LongInt;
 Begin
@@ -487,7 +468,8 @@ Begin
   CurY    := CurLine - NewTop + 1;
   TopLine := NewTop;
 
-  DrawPage(1, WinSize, False);
+  If Draw Then
+    DrawPage(1, WinSize, False);
 End;
 
 Function TEditorANSI.LineUp : Boolean;
@@ -524,27 +506,9 @@ Begin
   If CurY > WinSize Then Begin
     Result := True;
 
-    ScrollDown;
+    ScrollDown(True);
   End;
 End;
-(*
-Procedure TEditorANSI.DrawLine (Line: LongInt; XP, YP: Byte);
-Var
-  Count : Byte;
-Begin
-  TBBSCore(Owner).io.AnsiGotoXY (WinX1 + XP - 1, WinY1 + YP - 1);
-
-  For Count := XP to RowSize Do Begin
-    If ANSI.Data[Line][Count].Ch = #0 Then Begin
-      TBBSCore(Owner).io.AnsiColor  (7);
-      TBBSCore(Owner).io.BufAddChar (' ');
-    End Else Begin
-      TBBSCore(Owner).io.AnsiColor  (ANSI.Data[Line][Count].Attr);
-      TBBSCore(Owner).io.BufAddChar (ANSI.Data[Line][Count].Ch);
-    End;
-  End;
-End;
-*)
 
 Procedure TEditorANSI.DrawLine (Line: LongInt; XP, YP: Byte);
 Var
@@ -758,34 +722,6 @@ Begin
   DrawPage(1, WinSize, False);
 End;
 
-Procedure TEditorANSI.LoadANSI;
-Var
-  F  : File;
-  B  : Array[1..1024] of Char;
-  BR : LongInt;
-  A  : LongInt;
-  C  : LongINt;
-Begin
-  Assign (F, '\code\mystic1\text\gj-glue1.ans');
-  Reset  (F, 1);
-
-  While Not Eof(F) Do Begin
-    BlockRead (F, B, SizeOf(B), BR);
-
-    If BR = 0 Then Break;
-
-    ANSI.ProcessBuf(B, BR);
-  End;
-
-  Close(F);
-
-  For A := 1 to ANSI.Lines Do
-    For C := RowSize + 1 to 80 Do Begin
-      ANSI.Data[A][C].Ch   := #0;
-      ANSI.Data[A][C].Attr := 0;
-    End;
-End;
-
 Procedure TEditorANSI.DoEnter;
 Var
   TempLine : RecAnsiBufferLine;
@@ -810,16 +746,437 @@ Begin
     LineDown(True);
 End;
 
+Procedure TEditorANSI.Quote;
+Var
+  InFile   : Text;
+  Start    : Integer;
+  Finish   : Integer;
+  NumLines : Integer;
+  Text     : Array[1..mysMaxMsgLines] of String[80];
+  PI1      : String;
+  PI2      : String;
+Begin
+  Assign (InFile, Session.TempPath + 'msgtmp');
+  {$I-} Reset (InFile); {$I+}
+  If IoResult <> 0 Then Begin
+    Session.io.OutFullLn (Session.GetPrompt(158));
+    Exit;
+  End;
+
+  NumLines := 0;
+  Session.io.AllowPause := True;
+
+  While Not Eof(InFile) Do Begin
+    Inc    (NumLines);
+    ReadLn (InFile, Text[NumLines]);
+  End;
+
+  Close (InFile);
+
+  PI1 := Session.io.PromptInfo[1];
+  PI2 := Session.io.PromptInfo[2];
+
+  Session.io.OutFullLn('|CL' + Session.GetPrompt(452));
+
+  For Start := 1 to NumLines Do Begin
+    Session.io.PromptInfo[1] := strI2S(Start);
+    Session.io.PromptInfo[2] := Text[Start];
+
+    Session.io.OutFullLn (Session.GetPrompt(341));
+
+    If (Session.io.PausePtr >= Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
+      Case Session.io.MorePrompt of
+        'N' : Break;
+        'C' : Session.io.AllowPause := False;
+      End;
+  End;
+
+  Session.io.AllowPause := True;
+
+  Session.io.OutFull (Session.GetPrompt(159));
+  Start := strS2I(Session.io.GetInput(3, 3, 11, ''));
+
+  Session.io.OutFull (Session.GetPrompt(160));
+
+  Finish := strS2I(Session.io.GetInput(3, 3, 11, ''));
+
+  If (Start > 0) and (Start <= NumLines) and (Finish <= NumLines) Then Begin
+    If Finish = 0 Then Finish := Start;
+
+    For NumLines := Start to Finish Do Begin
+      If LastLine = mysMaxMsgLines Then Break;
+
+      If Not IsBlankLine(Ansi.Data[CurLine], 80) Then Begin
+        Inc (CurLine);
+        Inc (CurY);
+
+        InsertLine (CurLine);
+      End;
+
+      SetLineText (CurLine, Text[NumLines]);
+
+      If CurY > WinSize Then
+        ScrollDown(False);
+    End;
+  End;
+
+  If CurLine < mysMaxMsgLines Then Begin
+    Inc (CurLine);
+    Inc (CurY);
+
+    InsertLine(CurLine);
+
+    If CurY > WinSize Then
+      ScrollDown(False);
+  End;
+
+  Session.io.PromptInfo[1] := PI1;
+  Session.io.PromptInfo[2] := PI2;
+End;
+
+Procedure TEditorANSI.QuoteWindow;
+Var
+  QText      : Array[1..mysMaxMsgLines] of String[79];
+  InFile     : Text;
+  QuoteLines : Integer;
+  NoMore     : Boolean;
+
+  Procedure UpdateBar (On: Boolean);
+  Begin
+    Session.io.AnsiGotoXY (1, QuoteCurLine + Session.io.ScreenInfo[2].Y);
+
+    If On Then
+      Session.io.AnsiColor (Session.Theme.QuoteColor)
+    Else
+      Session.io.AnsiColor (Session.io.ScreenInfo[2].A);
+
+    Session.io.BufAddStr (strPadR(QText[QuoteTopPage + QuoteCurLine], 79, ' '));
+  End;
+
+  Procedure UpdateWindow;
+  Var
+    Count : Integer;
+  Begin
+    Session.io.AnsiGotoXY (1, Session.io.ScreenInfo[2].Y);
+    Session.io.AnsiColor  (Session.io.ScreenInfo[2].A);
+
+    For Count := QuoteTopPage to QuoteTopPage + 5 Do Begin
+      If Count <= QuoteLines Then Session.io.BufAddStr (QText[Count]);
+
+      Session.io.AnsiClrEOL;
+
+      If Count <= QuoteLines Then Session.io.BufAddStr(#13#10);
+    End;
+
+    UpdateBar(True);
+  End;
+
+Var
+  Ch          : Char;
+  Added       : Boolean;
+  QWinSize    : Byte;
+  QWinDataPos : Byte;
+  QWinData    : Array[1..15] of String[79];
+
+  Procedure AddQuoteWin (S: String);
+  Var
+    Count : Byte;
+  Begin
+    If QWinDataPos < QWinSize Then Begin
+      Inc (QWinDataPos);
+    End Else Begin
+      For Count := 2 to QWinSize Do
+        QWinData[Count - 1] := QWinData[Count]
+    End;
+
+    QWinData[QWinDataPos] := S;
+  End;
+
+  Procedure DrawQWin;
+  Var
+    Count : Byte;
+  Begin
+    Session.io.AnsiColor(11); // quote text color
+
+    For Count := 1 to QWinSize Do Begin
+      Session.io.AnsiGotoXY (WinX1, WinY1 + Count - 1);
+      Session.io.BufAddStr(QWinData[Count]);
+      Session.io.AnsiClrEOL;
+    End;
+  End;
+
+Begin
+  Added := False;
+
+  Assign (InFile, Session.TempPath + 'msgtmp');
+  {$I-} Reset(InFile); {$I+}
+
+  If IoResult <> 0 Then Exit;
+
+  QuoteLines   := 0;
+  NoMore       := False;
+  QWinDataPos  := 0;
+
+  While Not Eof(InFile) Do Begin
+    Inc    (QuoteLines);
+    ReadLn (InFile, QText[QuoteLines]);
+  End;
+
+  Close (InFile);
+
+  Session.io.OutFile ('ansiquot', True, 0);
+
+  FillChar(QWinData, SizeOf(QWinData), 0);
+
+  QWinSize := Session.io.ScreenInfo[1].Y - WinY1 + 1;
+
+  DrawQWin;
+  UpdateWindow;
+
+  Repeat
+    Ch := Session.io.GetKey;
+
+    If Session.io.IsArrow Then Begin
+      Case Ch of
+        #71 : If QuoteCurLine > 0 Then Begin
+                QuoteTopPage := 1;
+                QuoteCurLine := 0;
+
+                UpdateWindow;
+              End;
+        #72 : Begin
+                If QuoteCurLine > 0 Then Begin
+                  UpdateBar(False);
+
+                  Dec(QuoteCurLine);
+
+                  UpdateBar(True);
+                End Else
+                If QuoteTopPage > 1 Then Begin
+                  Dec (QuoteTopPage);
+
+                  UpdateWindow;
+                End;
+
+                NoMore := False;
+              End;
+        #73,
+        #75 : Begin
+                If QuoteTopPage > 6 Then
+                  Dec (QuoteTopPage, 6)
+                Else Begin
+                  QuoteTopPage := 1;
+                  QuoteCurLine := 0;
+                End;
+
+                NoMore := False;
+
+                UpdateWindow;
+              End;
+        #79 : Begin
+                If QuoteLines <= 6 Then
+                  QuoteCurLine := QuoteLines - QuoteTopPage
+                Else Begin
+                  QuoteTopPage := QuoteLines - 5;
+                  QuoteCurLine := 5;
+                End;
+
+                UpdateWindow;
+              End;
+        #80 : If QuoteTopPage + QuoteCurLine < QuoteLines Then Begin
+                If QuoteCurLine = 5 Then Begin
+                  Inc (QuoteTopPage);
+
+                  UpdateWindow;
+                End Else Begin
+                  UpdateBar(False);
+
+                  Inc (QuoteCurLine);
+
+                  UpdateBar(True);
+                End;
+              End;
+        #77,
+        #81 : Begin
+                If QuoteLines <= 6 Then
+                  QuoteCurLine := QuoteLines - QuoteTopPage
+                Else
+                If QuoteTopPage + 6 < QuoteLines - 6 Then
+                  Inc (QuoteTopPage, 6)
+                Else Begin
+                  QuoteTopPage := QuoteLines - 5;
+                  QuoteCurLine := 5;
+                End;
+
+                UpdateWindow;
+              End;
+      End;
+    End Else
+      Case Ch of
+        #27 : Break;
+        #13 : If (LastLine < mysMaxMsgLines) and (Not NoMore) Then Begin
+                Added := True;
+
+                If QuoteTopPage + QuoteCurLine = QuoteLines Then NoMore := True;
+
+                InsertLine  (CurLine);
+                SetLineText (CurLine, QText[QuoteTopPage + QuoteCurLine]);
+
+                ANSI.SetLineColor (11, CurLine);
+
+                Inc (CurLine);
+                Inc (CurY);
+
+                If CurY > WinSize Then
+                  ScrollDown(False);
+
+                AddQuoteWin(QText[QuoteTopPage + QuoteCurLine]);
+                DrawQWin;
+
+                If QuoteTopPage + QuoteCurLine < QuoteLines Then
+                  If QuoteCurLine = 5 Then Begin
+                    Inc (QuoteTopPage);
+
+                    UpdateWindow;
+                  End Else Begin
+                    UpdateBar(False);
+
+                    Inc (QuoteCurLine);
+
+                    UpdateBar(True);
+                  End;
+              End;
+      End;
+  Until False;
+
+  Session.io.OutFull('|16');
+
+//  If (CurLine < mysMaxMsgLines) And Added Then Inc(CurLine);
+End;
+
+Procedure TEditorANSI.Commands;
+Var
+  Ch  : Char;
+  Str : String;
+Begin
+  Done := False;
+  Save := False;
+
+  Repeat
+    Session.io.OutFull (Session.GetPrompt(354));
+
+    Ch := Session.io.OneKey ('?ACHQRSTU', True);
+
+    Case Ch of
+      '?' : Session.io.OutFullLn (Session.GetPrompt(355));
+      'A' : If Forced Then Begin
+              Session.io.OutFull (Session.GetPrompt(307));
+              Exit;
+            End Else Begin
+              Done := Session.io.GetYN(Session.GetPrompt(356), False);
+              Exit;
+            End;
+      'C' : Exit;
+      'H' : Begin
+              Session.io.OutFile ('fshelp', True, 0);
+              Exit;
+            End;
+      'Q' : Begin
+              If Session.User.ThisUser.UseLBQuote Then
+                QuoteWindow
+              Else
+                Quote;
+              Exit;
+            End;
+      'R' : Exit;
+      'S' : Begin
+              Save := True;
+              Done := True;
+            End;
+      'T' : Begin
+              Session.io.OutFull(Session.GetPrompt(463));
+              Str := Session.io.GetInput(60, 60, 11, Subj);
+              If Str <> '' Then Subj := Str;
+              Session.io.PromptInfo[2] := Subj;
+              Exit;
+            End;
+      'U' : Begin
+              MessageUpload;
+              Exit;
+            End;
+    End;
+  Until Done;
+End;
+
+Procedure TEditorANSI.MessageUpload;
+Var
+  FN : String[100];
+  T1 : String[30];
+  T2 : String[60];
+  OK : Boolean;
+  F  : File;
+  B  : Array[1..2048] of Char;
+  BR : LongInt;
+Begin
+  OK := False;
+
+  T1 := Session.io.PromptInfo[1];
+  T2 := Session.io.PromptInfo[2];
+
+  Session.io.OutFull (Session.GetPrompt(352));
+
+  If Session.LocalMode Then Begin
+    FN := Session.io.GetInput(70, 70, 11, '');
+
+    If FN = '' Then Exit;
+
+    OK := FileExist(FN);
+  End Else Begin
+    FN := Session.TempPath + Session.io.GetInput(70, 70, 11, '');
+
+    If Session.FileBase.SelectProtocol(True, False) = 'Q' Then Exit;
+
+    Session.FileBase.ExecuteProtocol(1, FN);
+
+    OK := Session.FileBase.dszSearch(JustFile(FN));
+  End;
+
+  If OK Then Begin
+    Assign (F, FN);
+    Reset  (F, 1);
+
+    While Not Eof(F) Do Begin
+      BlockRead (F, B, SizeOf(B), BR);
+
+      If BR = 0 Then Break;
+
+      ANSI.ProcessBuf(B, BR);
+    End;
+
+    Close(F);
+  End;
+
+  If Not Session.LocalMode Then FileErase(FN);
+
+  DirClean (Session.TempPath, 'msgtmp');
+
+  Session.io.PromptInfo[1] := T1;
+  Session.io.PromptInfo[2] := T2;
+
+  FindLastLine;
+End;
+
 Function TEditorANSI.Edit : Boolean;
 Var
-  Ch   : Char;
-  Attr : Byte;
+  Ch : Char;
 Begin
-  Result := False;
+  Result       := False;
+  QuoteCurLine := 0;
+  QuoteTopPage := 1;
 
-  ReDrawTemplate;
+  ReDrawTemplate(True);
 
-  While Not TBBSCore(Owner).ShutDown Do Begin
+  Repeat
     LocateCursor;
 
     Ch := TBBSCore(Owner).io.GetKey;
@@ -827,19 +1184,27 @@ Begin
     If Session.io.IsArrow Then Begin
       Case Ch of
         #71 : CurX := 1;
-        #79 : CurX := CurLength + 1;
         #72 : LineUp;
-        #80 : If CurLine < LastLine Then LineDown(False);
+        #73 : PageUp;
         #75 : If CurX > 1 Then Dec(CurX);
         #77 : If CurX <= RowSize Then Inc(CurX);
-        #73 : PageUp;
+        #79 : CurX := CurLength + 1;
+        #80 : If CurLine < LastLine Then LineDown(False);
         #81 : PageDown;
         #83 : DoDelete;
       End;
     End Else
       Case Ch of
-        ^V   : InsertMode := Not InsertMode; //update on screen
-        ^Y   : Begin
+        ^Q   : Begin
+                 If Session.User.ThisUser.UseLBQuote Then
+                   QuoteWindow
+                 Else
+                   Quote;
+
+                 ReDrawTemplate(False);
+               End;
+        ^V   : ToggleInsert(True);
+        ^Y   : If (CurLine < LastLine) or ((CurLine = LastLine) And Not IsBlankLine(ANSI.Data[CurLine], 80)) Then Begin
                  DeleteLine (CurLine);
 
                  If CurLine > LastLine Then
@@ -847,20 +1212,38 @@ Begin
 
                  DrawPage (CurY, WinSize, False);
                End;
-        ^Z   : Break;
+        ^Z,
+        ^[   : Begin
+                 Commands;
+
+                 If (Not Save) and (Not Done) Then ReDrawTemplate(False);
+
+                 Session.io.AllowArrow := True;
+               End;
         #08  : DoBackSpace;
         #13  : DoEnter;
         #32..
         #254 : If (CurLength >= RowSize) and (GetWrapPos(ANSI.Data[CurLine], RowSize, RowSize) = 0) Then Begin
-                 If CurX = CurLength + 1 Then Begin
-                   LineDown(True);
-                 End;
+                 // dont do anything
+               End Else
+               If (CurX = 1) and (Ch = '/') Then Begin
+                 Commands;
+
+                 If (Not Save) and (Not Done) Then ReDrawTemplate(False);
+
+                 Session.io.AllowArrow := True;
                End Else
                  DoChar(Ch);
       End;
-  End;
+  Until Done;
 
-  Result := True;
+  Session.io.AllowArrow := False;
+
+  If Save Then FindLastLine;
+
+  Result := Save;
+
+  Session.io.AnsiGotoXY (1, Session.User.ThisUser.ScreenSize);
 End;
 
 End.
