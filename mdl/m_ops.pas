@@ -28,7 +28,7 @@
   -------------------------------------------------------------------------
 }
 
-{.$DEFINE NEWEDITOR}
+{$DEFINE NEWEDITOR}
 
 {.$DEFINE DEBUG}
 {$DEFINE RELEASE}

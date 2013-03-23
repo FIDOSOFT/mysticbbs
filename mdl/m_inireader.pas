@@ -15,9 +15,10 @@ Type
 
     Constructor Create (FN: String);
     Destructor  Destroy; Override;
-    Function    ReadString  (Category, Value, DefValue: String) : String;
-    Function    ReadInteger (Category, Value: String; DefValue: LongInt) : LongInt;
-    Function    ReadBoolean (Category, Value: String; DefValue: Boolean) : Boolean;
+    Procedure   SetSequential (S: Boolean);
+    Function    ReadString    (Category, Value, DefValue: String) : String;
+    Function    ReadInteger   (Category, Value: String; DefValue: LongInt) : LongInt;
+    Function    ReadBoolean   (Category, Value: String; DefValue: Boolean) : Boolean;
   End;
 
 Implementation
@@ -42,6 +43,13 @@ End;
 Destructor TIniReader.Destroy;
 Begin
   If Opened Then Close(IniFile);
+End;
+
+Procedure TIniReader.SetSequential (S: Boolean);
+Begin
+  Sequential := S;
+
+  If Opened Then Reset(IniFile);
 End;
 
 Function TIniReader.ReadString (Category, Value, DefValue: String) : String;

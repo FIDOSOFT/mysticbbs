@@ -56,8 +56,8 @@ Const
   AppInputSize         = 128;
   SDLAppWindowX : Word = 800;
   SDLAppWindowY : Word = 600;
-  SDLFontSize   : Byte = 16;
-  SDLFontSpace  : Byte = 16;
+  SDLFontSize   : Byte = 17;
+  SDLFontSpace  : Byte = 0;
 
 Type
   TSDLScreenMode = (mode_80x25, mode_80x50, mode_132x50);
@@ -147,7 +147,8 @@ Begin
 
   SDL_INIT(SDL_INIT_VIDEO);
 
-  Screen := SDL_SetVideoMode(SDLAppWindowX, SDLAppWindowY, 32, SDL_HWSURFACE or SDL_FULLSCREEN);
+//  Screen := SDL_SetVideoMode(SDLAppWindowX, SDLAppWindowY, 32, SDL_HWSURFACE or SDL_FULLSCREEN);
+  Screen := SDL_SetVideoMode(SDLAppWindowX, SDLAppWindowY, 32, SDL_HWSURFACE);
 
   If Screen = NIL Then Halt;
 

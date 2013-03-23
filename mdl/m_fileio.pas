@@ -31,6 +31,7 @@ Function  JustFileName    (Str: String) : String;
 Function  JustFile        (Str: String) : String;
 Function  JustFileExt     (Str: String) : String;
 Function  JustPath        (Str: String) : String;
+Function  WildMatch       (WildCard, FName: String; IgnoreCase: Boolean) : Boolean;
 Function  DirCreate       (Str: String) : Boolean;
 Function  DirExists       (Str: String) : Boolean;
 Function  DirSlash        (Str: String) : String;
@@ -409,6 +410,37 @@ Begin
     End;
 End;
 
+Function WildMatch (WildCard, FName: String; IgnoreCase: Boolean) : Boolean;
+Begin
+  Result := False;
+
+  If FName = '' Then Exit;
+
+  If IgnoreCase Then Begin
+    WildCard := strUpper(WildCard);
+    FName    := strUpper(FName);
+  End;
+
+  Case Wildcard[1] of
+    '*' : Begin
+            If FName[1] = '.' Then Exit;
+            If Length(Wildcard) = 1 Then Result := True;
+            If (Length(Wildcard) > 1) and (Wildcard[2] = '.') and (Length(FName) > 0) Then
+              Result := WildMatch(Copy(Wildcard, 3, Length(Wildcard) - 2), Copy(FName, Pos('.', FName) + 1, Length(FName)-Pos('.', FName)), False);
+          End;
+    '?' : If Ord(Wildcard[0]) = 1 Then
+            Result := True
+          Else
+            Result := WildMatch(Copy(Wildcard, 2, Length(Wildcard) - 1), Copy(FName, 2, Length(FName) - 1), False);
+  Else
+    If FName[1] = Wildcard[1] Then
+      If Length(Wildcard) > 1 Then
+        Result := WildMatch(Copy(Wildcard, 2, Length(Wildcard) - 1), Copy(FName, 2, Length(FName) - 1), False)
+      Else
+        Result := (Length(FName) = 1) And (Length(Wildcard) = 1);
+  End;
+End;
+
 {$IFDEF WINDOWS}
 Function FileErase (Str: String) : Boolean;
 Begin
@@ -762,7 +794,7 @@ Function FileByteSize (FN: String) : Int64;
 Var
   Dir : SearchRec;
 Begin
-  Result := -1;
+  Result := 0;
 
   FindFirst (FN, AnyFile, Dir);
 
