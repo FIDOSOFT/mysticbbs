@@ -25,9 +25,10 @@ Type
   End;
 
   TProtocolQueue = Class
-    QSize : Word;
-    QPos  : Word;
-    QData : Array[1..QueueMaxSize] of TProtocolQueuePTR;
+    QFSize : Cardinal;
+    QSize  : Word;
+    QPos   : Word;
+    QData  : Array[1..QueueMaxSize] of TProtocolQueuePTR;
 
     Constructor Create;
     Destructor  Destroy; Override;
@@ -44,8 +45,9 @@ Constructor TProtocolQueue.Create;
 Begin
   Inherited Create;
 
-  QSize := 0;
-  QPos  := 0;
+  QFSize := 0;
+  QSize  := 0;
+  QPos   := 0;
 End;
 
 Destructor TProtocolQueue.Destroy;
@@ -57,7 +59,7 @@ Function TProtocolQueue.Add (fPath, fName: String) : Boolean;
 Var
   F : File;
 Begin
-  Add := False;
+  Result := False;
 
   If (QSize = QueueMaxSize) Then Exit;
 
@@ -76,11 +78,20 @@ Begin
   If IoResult = 0 Then Begin
     QData[QSize]^.FileSize := FileSize(F);
     QData[QSize]^.Status   := QueuePending;
-    Close(F);
-  End Else
-    QData[QSize]^.Status := QueueNoFile;
 
-  Add := True;
+    Inc (QFSize, QData[QSize]^.FileSize);
+
+    Close(F);
+  End Else Begin
+    Dispose (QData[QSize]);
+    Dec     (QSize);
+
+    Exit;
+
+    // QData[QSize]^.Status := QueueNoFile;
+  End;
+
+  Result := True;
 End;
 
 Procedure TProtocolQueue.Delete (Idx: Word);
@@ -88,6 +99,8 @@ Var
   Count : Word;
 Begin
   If QData[Idx] <> NIL Then Begin
+    Dec (QFSize, QData[QSize]^.FileSize);
+
     Dispose (QData[Idx]);
 
     For Count := Idx To QueueMaxSize - 1 Do
@@ -123,8 +136,9 @@ Begin
     QData[Count] := NIL;
   End;
 
-  QSize := 0;
-  QPos  := 0;
+  QFSize := 0;
+  QSize  := 0;
+  QPos   := 0;
 End;
 
 End.

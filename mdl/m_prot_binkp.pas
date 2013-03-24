@@ -1,14 +1,19 @@
-Program BT;
+Program BinkPoll;
 
 {$I M_OPS.PAS}
 
 Uses
-  cryptoldold,
+  DOS,
+  CryptNew,
   m_DateTime,
   m_FileIO,
   m_Strings,
   m_IO_Sockets,
-  m_Protocol_Queue;
+  m_Protocol_Queue,
+  bbs_Common;
+
+Var
+  bbsConfig : RecConfig;
 
 Const
   M_NUL  = 0;
@@ -25,11 +30,7 @@ Const
   M_DATA = 255;
 
   BinkPMaxBufferSize = 30 * 1024;
-  BinkPTimeOut       = 3000;
-  BinkPUseCRAMMD5    = True;
   TempFileTime       = 1363944820;
-
-  InboundPath : String = 'd:\dev\code\mystic\dls\';
 
 Const
   BinkCmdStr : Array[0..10] of String[4] = (
@@ -80,9 +81,14 @@ Type
   );
 
   TBinkP = Class
+    SetPassword  : String;
+    SetBlockSize : Word;
+    SetTimeOut   : Word;
+
     Client       : TIOSocket;
     IsClient     : Boolean;
     UseMD5       : Boolean;
+    ForceMD5     : Boolean;
     AuthState    : TBinkAuthState;
     TimeOut      : LongInt;
     TxState      : TBinkTxState;
@@ -96,7 +102,7 @@ Type
     MD5Challenge : String;
     FileList     : TProtocolQueue;
 
-    Constructor Create (Var C: TIOSocket; Var FL: TProtocolQueue; IsCli, MD5: Boolean);
+    Constructor Create (Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
     Destructor  Destroy; Override;
 
     Function    GetDataStr : String;
@@ -124,18 +130,20 @@ Begin
   End;
 End;
 
-Constructor TBinkP.Create (Var C: TIOSocket; Var FL: TProtocolQueue; IsCli, MD5: Boolean);
+Constructor TBinkP.Create (Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
 Begin
   Inherited Create;
 
+  SetTimeOut   := TOV;
   Client       := C;
   FileList     := FL;
   IsClient     := IsCli;
-  UseMD5       := MD5;
+  UseMD5       := False;
+  ForceMD5     := False;
   RxBufSize    := 0;
   RxState      := RxNone;
   TxState      := TxNone;
-  TimeOut      := TimerSet(BinkPTimeout);
+  TimeOut      := TimerSet(SetTimeout);
   NeedHeader   := True;
   HaveHeader   := False;
   MD5Challenge := '';
@@ -173,7 +181,8 @@ Begin
   Client.BufWriteStr(Char(Hi(DataSize)) + Char(Lo(DataSize)) + Char(CmdType) + CmdData + #0);
   Client.BufFlush;
 
-  WriteLn ('Put Command Frame (', BinkCmdStr[CmdType], ') Data: ', CmdData);
+  WriteLn ('    S ' + BinkCmdStr[CmdType] + ' ' + CmdData);
+  //WriteLn ('Put Command Frame (', BinkCmdStr[CmdType], ') Data: ', CmdData);
 End;
 
 Procedure TBinkP.SendDataFrame (Var Buf; BufSize: Word);
@@ -191,7 +200,7 @@ Begin
   Client.WriteBuf (LoChar, 1);
   Client.WriteBuf (SendData[1], BufSize);
 
-  TimeOut := TimerSet(BinkPTimeOut);
+  TimeOut := TimerSet(SetTimeOut);
 
 //  WriteLn ('Put Data Frame (', BufSize, ')');
 End;
@@ -223,13 +232,15 @@ Begin
         Client.ReadBuf(RxBuffer[InPos], 1);
 
     If Client.Connected Then Begin
-      TimeOut    := TimerSet(BinkPTimeOut);
+      TimeOut    := TimerSet(SetTimeOut);
       NeedHeader := False;
       HaveHeader := True;
     End;
 
     Case RxFrameType of
-      Command : WriteLn ('Got Command Frame (', BinkCmdStr[RxCommand], ') Data: ', GetDataStr);
+//      Command : If (RxCommand = M_NUL) or (RxCommand = M_ERR) Then
+//                  WriteLn ('    R ', BinkCmdStr[RxCommand], ' ', GetDataStr);
+        Command : WriteLn ('    R ', BinkCmdStr[RxCommand], ' ', GetDataStr);
 //      Data    : WriteLn ('Got Data Frame (Read ', InPos, ' of ', RxBufSize, ')');
     End;
   End;
@@ -240,7 +251,7 @@ Var
   Str   : String;
   Count : LongInt;
 Begin
-  WriteLn ('Begin Authentication');
+  //WriteLn ('Begin Authentication');
 
   Repeat
     DoFrameCheck;
@@ -268,10 +279,10 @@ Begin
       SendChallenge : Begin  // Send MD5 digest
                       End;
       SendWelcome   : Begin
-                        SendFrame (M_NUL, 'SYS Sector7');
-                        SendFrame (M_NUL, 'ZYZ g00r00');
-                        SendFrame (M_NUL, 'LOC Philadelphia, PA');
-                        SendFrame (M_NUL, 'VER Mystic/1.10 binkp/1.1');
+                        SendFrame (M_NUL, 'SYS ' + bbsConfig.BBSName);
+                        SendFrame (M_NUL, 'ZYZ ' + bbsConfig.SysopName);
+//                        SendFrame (M_NUL, 'LOC Philadelphia, PA');
+                        SendFrame (M_NUL, 'VER Mystic/1.10 binkp/1.0');
 
                         If IsClient Then
                           AuthState := SendAddress
@@ -280,26 +291,42 @@ Begin
                       End;
 
       SendAddress   : Begin
-                        SendFrame (M_ADR, '55:268/212@mysticnet');
+                        Str := '';
+
+                        For Count := 1 to 30 Do
+                          If strAddr2Str(bbsConfig.NetAddress[Count]) <> '0:0/0' Then Begin
+                            If Str <> '' Then Str := Str + ' ';
+
+                            Str := Str + strAddr2Str(bbsConfig.NetAddress[Count]);
+
+                            If bbsConfig.NetDomain[Count] <> '' Then
+                              Str := Str + '@' + bbsConfig.NetDomain[Count];
+                          End;
+
+                        SendFrame (M_ADR, Str);
 
                         AuthState := SendPassword;
                       End;
       SendPassword  : If HaveHeader Then Begin // wait for header to see if we support CRAMMD5
                         If UseMD5 And (MD5Challenge <> '') Then Begin
-                          Str          := 'password';
-                          MD5Challenge := StrHex(MD5Challenge);
-                          MD5Challenge := HexStr(HMAC_MD5(Str, MD5Challenge));
+                          MD5Challenge := Digest2String(HMAC_MD5(String2Digest(MD5Challenge), SetPassword));
 
                           SendFrame (M_PWD, 'CRAM-MD5-' + MD5Challenge);
                         End Else
-                          // if forced CRAMMD5 then error and exit otherwise...
-                          SendFrame (M_PWD, 'password');
+                          If ForceMD5 Then Begin
+                            SendFrame (M_ERR, 'Required CRAM-MD5 authentication');
+
+                            AuthState := AuthFailed;
+                          End Else
+                            SendFrame (M_PWD, SetPassword);
 
                         Client.BufFlush;
 
                         HaveHeader := False;
                         NeedHeader := True;
-                        AuthState  := WaitPwdOK;
+
+                        If AuthState <> AuthFailed Then
+                          AuthState  := WaitPwdOK;
                       End;
       WaitAddress   : Begin
                         // get address
@@ -331,11 +358,11 @@ Var
   InTime  : Cardinal;
   FSize   : Cardinal;
 Begin
-  WriteLn ('Begin File Transfers');
+  //WriteLn ('Begin File Transfers');
 
   RxState    := RxWaitFile;
   TxState    := TxNextFile;
-  TimeOut    := TimerSet(BinkPTimeOut);
+  TimeOut    := TimerSet(SetTimeOut);
   NeedHeader := True;
   HaveHeader := False;
 
@@ -369,8 +396,8 @@ Begin
                        InTime := strS2I(strWordGet(3, Str, ' '));
                        InPos  := strS2I(strWordGet(4, Str, ' '));
 
-                       If FileExist(InBoundPath + InFN) Then Begin
-                         FSize := FileByteSize(InBoundPath + InFN);
+                       If FileExist(bbsConfig.InBoundPath + InFN) Then Begin
+                         FSize := FileByteSize(bbsConfig.InBoundPath + InFN);
 
                          // fix timestamp and escape filen
 
@@ -385,7 +412,7 @@ Begin
                          End;
                        End;
 
-                       Assign (InFile, InBoundPath + InFN);
+                       Assign (InFile, bbsConfig.InBoundPath + InFN);
                        Reset  (InFile, 1);
 
                        If IoResult <> 0 Then ReWrite (InFile, 1);
@@ -477,29 +504,172 @@ Begin
   If Client.Connected Then Client.BufFlush;
 End;
 
+Procedure PollNode (Var Queue: TProtocolQueue; Var EchoNode: RecEchoMailNode);
 Var
   BinkP  : TBinkP;
   Client : TIOSocket;
-  Queue  : TProtocolQueue;
+  Port   : Word;
 Begin
-  Queue  := TProtocolQueue.Create;
   Client := TIOSocket.Create;
 
   Client.FTelnetClient := False;
   Client.FTelnetServer := False;
 
-  Queue.Add('d:\s7\echomail\inbound\t\', '0019ff33.mo0');
-  Queue.Add('d:\s7\echomail\inbound\t\', '0019ff33.mo1');
-  Queue.Add('d:\s7\echomail\inbound\t\', '0019ff33.mo2');
+  Write ('- Connecting to ', EchoNode.binkHost, ': ');
 
-  BinkP := TBinkP.Create(Client, Queue, True, False);
+  Port := strS2I(strWordGet(2, EchoNode.binkHost, ':'));
 
-  Client.Connect ('localhost', 24554);
+  If Port = 0 Then Port := 24554;
+
+  If Not Client.Connect (strWordGet(1, EchoNode.binkHost, ':'), Port) Then Begin
+    WriteLn ('UNABLE TO CONNECT');
+
+    Client.Free;
+
+    Exit;
+  End;
+
+  WriteLn ('CONNECTED!');
+
+  BinkP := TBinkP.Create(Client, Queue, True, EchoNode.binkTimeOut * 100);
+
+  BinkP.SetPassword  := EchoNode.binkPass;
+  BinkP.SetBlockSize := EchoNode.binkBlock;
+  BinkP.UseMD5       := EchoNode.binkMD5 > 0;
+  BinkP.ForceMD5     := EchoNode.binkMD5 = 2;
 
   If BinkP.DoAuthentication Then
-    BinkP.DoTransfers;
+    BinkP.DoTransfers
+  Else
+    WriteLn ('- Unable to authenticate');
 
   BinkP.Free;
   Client.Free;
-  Queue.Free;
+End;
+
+Function GetFTNFlowName (Dest: RecEchoMailAddr) : String;
+Begin
+  Result := strI2H((Dest.Net SHL 16) OR Dest.Node);
+End;
+
+Procedure ScanOutbound;
+Var
+  DirInfo  : SearchRec;
+  FLOFile  : Text;
+  EchoFile : File of RecEchoMailNode;
+  EchoNode : RecEchoMailNode;
+  Queue    : TProtocolQueue;
+  Str      : String;
+  FN       : String;
+  Path     : String;
+  Matched  : Boolean;
+Begin
+  WriteLn ('Scanning configured Echomail nodes...');
+  WriteLn;
+
+  FindFirst (bbsConfig.OutboundPath + '*.?lo', AnyFile, DirInfo);
+
+  While DosError = 0 Do Begin
+    Write ('- Found ', DirInfo.Name, ' -> Send Type: ');
+
+    Case UpCase(JustFileExt(DirInfo.Name)[1]) of
+      'C' : WriteLn ('Crash');
+      'D' : WriteLn ('Direct');
+      'H' : Begin
+              WriteLn ('Hold - SKIPPING');
+
+              FindNext (DirInfo);
+
+              Continue;
+            End;
+    Else
+      WriteLn ('Normal');
+    End;
+
+    Matched := False;
+
+    Assign (EchoFile, bbsConfig.DataPath + 'echonode.dat');
+    {$I-} Reset (EchoFile); {$I+}
+
+    If IoResult <> 0 Then Begin
+      WriteLn ('- Unable to match .FLO with configured Echomail node');
+
+      FindNext (DirInfo);
+
+      Continue;
+    End;
+
+    While Not Eof(EchoFile) And Not Matched Do Begin
+      Read (EchoFile, EchoNode);
+
+      Matched := (strUpper(JustFileName(DirInfo.Name)) = strUpper(GetFTNFlowName(EchoNode.Address))) and EchoNode.Active and (EchoNode.ProtType = 0);
+    End;
+
+    Close (EchoFile);
+
+    If Not Matched Then Begin
+      WriteLn ('- Unable to match .FLO with configured Echomail node');
+
+      FindNext (DirInfo);
+
+      Continue;
+    End;
+
+    Queue := TProtocolQueue.Create;
+
+    Assign (FLOFile, bbsConfig.OutboundPath + DirInfo.Name);
+    Reset  (FLOFile);
+
+    While Not Eof(FLOFile) Do Begin
+      ReadLn (FLOFile, Str);
+
+      If (Str = '') or (Str[1] = '!') Then Continue;
+
+      Str  := strStripB(Copy(Str, 2, 255), ' ');
+      FN   := JustFile(Str);
+      Path := JustPath(Str);
+
+      Queue.Add (Path, FN);
+    End;
+
+    Close (FLOFile);
+
+    WriteLn('- Queued ', Queue.QSize, ' files (', Queue.QFSize, ' bytes) to ', strAddr2Str(EchoNode.Address));
+
+    If Queue.QSize > 0 Then
+      PollNode(Queue, Echonode);
+
+    Queue.Free;
+
+    FindNext (DirInfo);
+  End;
+
+  FindClose (DirInfo);
+End;
+
+Var
+  CF : File of RecConfig;
+Begin
+  WriteLn;
+  WriteLn ('BINKPOLL Version ' + mysVersion);
+  WriteLn;
+
+  Assign (CF, '\s7\mystic.dat');
+
+  {$I-} Reset(CF); {$I+}
+
+  If IoResult <> 0 Then Begin
+    WriteLn ('Unable to read MYSTIC.DAT');
+    Halt(1);
+  End;
+
+  Read  (CF, bbsConfig);
+  Close (CF);
+
+  If bbsConfig.DataChanged <> mysDataChanged Then Begin
+    WriteLn ('Mystic VERSION mismatch');
+    Halt(1);
+  End;
+
+  ScanOutbound;
 End.
