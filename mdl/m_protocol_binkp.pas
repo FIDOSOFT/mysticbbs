@@ -458,6 +458,11 @@ Begin
                        If RxCommand = M_GOT Then Begin
                          HaveHeader := False;
                          NeedHeader := True;
+
+                         FileList.QData[FileList.QPos].Status := QueueSuccess;
+
+                         FileErase (FileList.QData[FileList.QPos].FilePath + FileList.QData[FileList.QPos].FileName);
+
                          TxState    := TxNextFile;
                        End;
                    End;
