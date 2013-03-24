@@ -362,6 +362,8 @@ Begin
 End;
 
 Procedure TEditorANSI.ReDrawTemplate (Reset: Boolean);
+Var
+  Count : LongInt;
 Begin
   TBBSCore(Owner).io.AllowArrow := True;
 
@@ -385,6 +387,13 @@ Begin
     QuoteAttr := Session.io.ScreenInfo[2].A;
 
     FindLastLine;
+
+    If LastLine > 1 Then
+      For Count := 1 to LastLine Do
+        If Session.Msgs.IsQuotedText(GetLineText(Count)) Then
+          ANSI.SetLineColor(QuoteAttr, Count)
+        Else
+          ANSI.SetLineColor(CurAttr, Count);
   End;
 
   DrawPage(1, WinSize, False);
@@ -550,7 +559,7 @@ Var
   JoinBuf : Array[1..255] of RecAnsiBufferChar;
 Begin
   If CurX <= CurLength Then Begin
-    Move (ANSI.Data[CurLine][CurX + 1], ANSI.Data[CurLine][CurX], (CurLength - 1) * SizeOf(RecAnsiBufferChar));
+    Move (ANSI.Data[CurLine][CurX + 1], ANSI.Data[CurLine][CurX], (CurLength - CurX + 1) * SizeOf(RecAnsiBufferChar));
 
     ANSI.Data[CurLine][CurLength].Ch := #0;
 

@@ -30,6 +30,7 @@ Type
     ItemFlags,
     ItemDate,
     ItemPass,
+    ItemMask,
     ItemPipe,
     ItemCaps,
     ItemBits,
@@ -113,6 +114,7 @@ Type
     Procedure   AddPipe (HK: Char; D: String; X, Y, FX, FY, DS, FS, MX: Byte; P: Pointer; H: String);
     Procedure   AddPath (HK: Char; D: String; X, Y, FX, FY, DS, FS, MX: Byte; P: Pointer; H: String);
     Procedure   AddPass (HK: Char; D: String; X, Y, FX, FY, DS, FS, MX: Byte; P: Pointer; H: String);
+    Procedure   AddMask (HK: Char; D: String; X, Y, FX, FY, DS, FS, MX: Byte; P: Pointer; H: String);
     Procedure   AddBol  (HK: Char; D: String; X, Y, FX, FY, DS, FS: Byte; P: Pointer; H: String);
     Procedure   AddByte (HK: Char; D: String; X, Y, FX, FY, DS, FS: Byte; MN, MX: Byte; P: Pointer; H: String);
     Procedure   AddWord (HK: Char; D: String; X, Y, FX, FY, DS, FS: Byte; MN, MX: Word; P: Pointer; H: String);
@@ -338,6 +340,7 @@ Begin
       ItemPass,
       ItemDate,
       ItemPath,
+      ItemMask,
       ItemString  : S := P;
       ItemBoolean : O := P;
       ItemAttr,
@@ -396,6 +399,13 @@ Begin
   If Items = FormMaxItems Then Exit;
 
   AddBasic (HK, D, X, Y, FX, FY, DS, FS, MX, ItemPass, P, H);
+End;
+
+Procedure TAnsiMenuForm.AddMask (HK: Char; D: String; X, Y, FX, FY, DS, FS, MX: Byte; P: Pointer; H: String);
+Begin
+  If Items = FormMaxItems Then Exit;
+
+  AddBasic (HK, D, X, Y, FX, FY, DS, FS, MX, ItemMask, P, H);
 End;
 
 Procedure TAnsiMenuForm.AddPath (HK: Char; D: String; X, Y, FX, FY, DS, FS, MX: Byte; P: Pointer; H: String);
@@ -529,6 +539,7 @@ Procedure TAnsiMenuForm.FieldWrite (RecPos : Word);
 Begin
   With ItemData[RecPos]^ Do Begin
     Case ItemType of
+      ItemMask,
       ItemPass    : WriteXY (FieldX, FieldY, cData, strPadR(strRep('*', Length(S^)), FieldSize, ' '));
       ItemCaps,
       ItemDate,
@@ -564,6 +575,7 @@ Begin
       ItemCaps    : S^ := Input.GetStr(FieldX, FieldY, FieldSize, MaxSize, 2, S^);
       ItemDate    : S^ := Input.GetStr(FieldX, FieldY, FieldSize, MaxSize, 3, S^);
       ItemPipe,
+      ItemMask,
       ItemString  : S^ := Input.GetStr(FieldX, FieldY, FieldSize, MaxSize, 1, S^);
       ItemBoolean : Begin
                       O^      := Not O^;

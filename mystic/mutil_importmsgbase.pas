@@ -44,6 +44,7 @@ Begin
       MBase.Name      := BaseName;
       MBase.QWKName   := BaseName;
       MBase.NewsName  := strReplace(BaseName, ' ', '.');
+      MBase.EchoTag   := BaseName;
       MBase.FileName  := BaseName;
       MBase.Path      := bbsConfig.MsgsPath;
       MBase.NetType   := INI.ReadInteger(Header_IMPORTMB, 'net_type', 0);

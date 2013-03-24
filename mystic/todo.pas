@@ -8,6 +8,7 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
+! DUPE database needs to limit itself based on configurable size
 ! GE option 32 (change def protocol) might be broken
 ! LBP menus arent scrolling correctly in Linux
 ! MUTIL FILESBBS import is not skipping FILES.BBS?
@@ -29,6 +30,8 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- cut/paste needs to be added back into the FS editor
+- QWK put/get per individual users via FTP
 - EXCLUDE from all files list. important.
 - Reply to echomail via netmail.
 - Msgbase flag for AKA matching or just rewrite netmail all together.

@@ -96,7 +96,8 @@ Type
     ArcType     : String[4];
     MailType    : Byte;
     binkHost    : String[60];
-    binkPort    : Word;
+    NetType     : Byte;
+    ProtType    : Byte;
     binkTimeout : Word;
     binkBlock   : Word;
     binkMD5     : Byte;
@@ -114,7 +115,8 @@ Type
     InSize      : Cardinal;
     OutFiles    : Cardinal;
     OutSize     : Cardinal;
-    Res         : Array[1..512] of Byte;
+    binkPass    : String[20];
+    Res         : Array[1..491] of Byte;
   End;
 
   RecSauceInfo = Packed Record

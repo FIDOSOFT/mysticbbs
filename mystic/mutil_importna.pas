@@ -60,6 +60,7 @@ Begin
       MBase.Name      := BaseName;
       MBase.QWKName   := TagName;
       MBase.NewsName  := strReplace(BaseName, ' ', '.');
+      MBase.EchoTag   := TagName;
       MBase.FileName  := TagName;
       MBase.Path      := bbsConfig.MsgsPath;
       MBase.NetType   := 1;

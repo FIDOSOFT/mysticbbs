@@ -302,7 +302,7 @@ Begin
     List.Close;
 
     Case List.ExitCode of
-      #13 : Begin
+      #13 : If List.ListMax <> 0 Then Begin
               UserFile.Seek (List.Picked - 1);
               UserFile.Read (User);
 

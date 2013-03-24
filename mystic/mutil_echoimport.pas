@@ -203,19 +203,19 @@ Var
                    MBase.ColOrigin := bbsConfig.ColorOrigin;
                    MBase.ColKludge := bbsConfig.ColorKludge;
                    MBase.Origin    := bbsConfig.Origin;
-                   MBase.BaseType  := INI.ReadInteger(Header_IMPORTMB, 'base_type', 0);
-                   MBase.ListACS   := INI.ReadString(Header_IMPORTMB, 'acs_list', '');
-                   MBase.ReadACS   := INI.ReadString(Header_IMPORTMB, 'acs_read', '');
-                   MBase.PostACS   := INI.ReadString(Header_IMPORTMB, 'acs_post', '');
-                   MBase.NewsACS   := INI.ReadString(Header_IMPORTMB, 'acs_news', '');
-                   MBase.SysopACS  := INI.ReadString(Header_IMPORTMB, 'acs_sysop', 's255');
-                   MBase.Header    := INI.ReadString(Header_IMPORTMB, 'header', 'msghead');
-                   MBase.RTemplate := INI.ReadString(Header_IMPORTMB, 'read_template', 'ansimrd');
-                   MBase.ITemplate := INI.ReadString(Header_IMPORTMB, 'index_template', 'ansimlst');
-                   MBase.MaxMsgs   := INI.ReadInteger(Header_IMPORTMB, 'max_msgs', 500);
-                   MBase.MaxAge    := INI.ReadInteger(Header_IMPORTMB, 'max_msgs_age', 365);
-                   MBase.DefNScan  := INI.ReadInteger(Header_IMPORTMB, 'new_scan', 1);
-                   MBase.DefQScan  := INI.ReadInteger(Header_IMPORTMB, 'qwk_scan', 1);
+                   MBase.BaseType  := INI.ReadInteger(Header_ECHOIMPORT, 'base_type', 0);
+                   MBase.ListACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_list', '');
+                   MBase.ReadACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_read', '');
+                   MBase.PostACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_post', '');
+                   MBase.NewsACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_news', '');
+                   MBase.SysopACS  := INI.ReadString (Header_ECHOIMPORT, 'acs_sysop', 's255');
+                   MBase.Header    := INI.ReadString (Header_ECHOIMPORT, 'header', 'msghead');
+                   MBase.RTemplate := INI.ReadString (Header_ECHOIMPORT, 'read_template', 'ansimrd');
+                   MBase.ITemplate := INI.ReadString (Header_ECHOIMPORT, 'index_template', 'ansimlst');
+                   MBase.MaxMsgs   := INI.ReadInteger(Header_ECHOIMPORT, 'max_msgs', 500);
+                   MBase.MaxAge    := INI.ReadInteger(Header_ECHOIMPORT, 'max_msgs_age', 365);
+                   MBase.DefNScan  := INI.ReadInteger(Header_ECHOIMPORT, 'new_scan', 1);
+                   MBase.DefQScan  := INI.ReadInteger(Header_ECHOIMPORT, 'qwk_scan', 1);
                    MBase.NetAddr   := 1;
 
                    For Count := 1 to 30 Do
@@ -224,13 +224,13 @@ Var
                        Break;
                      End;
 
-                  If INI.ReadString(Header_IMPORTMB, 'use_autosig', '1') = '1' Then
+                  If INI.ReadString(Header_ECHOIMPORT, 'use_autosig', '1') = '1' Then
                     MBase.Flags := MBase.Flags OR MBAutoSigs;
 
-                  If INI.ReadString(Header_IMPORTMB, 'use_realname', '0') = '1' Then
+                  If INI.ReadString(Header_ECHOIMPORT, 'use_realname', '0') = '1' Then
                     MBase.Flags := MBase.Flags OR MBRealNames;
 
-                  If INI.ReadString(Header_IMPORTMB, 'kill_kludge', '1') = '1' Then
+                  If INI.ReadString(Header_ECHOIMPORT, 'kill_kludge', '1') = '1' Then
                     MBase.Flags := MBase.Flags OR MBKillKludge;
 
                   // ADD DOWNLINK INFORMATION HERE INTO ECHONODES??
