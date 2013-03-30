@@ -60,8 +60,7 @@ Uses
   BBS_Ansi_Help,
   BBS_Cfg_Main,
   BBS_Cfg_Events,
-  BBS_Cfg_UserEdit,
-  BBS_Cfg_Vote;
+  BBS_Cfg_UserEdit;
 
 Constructor TMenuEngine.Create (O: Pointer);
 Begin
@@ -300,6 +299,7 @@ Begin
           End;
     'V' : Case Cmd[2] of
             'A' : Add_Booth;
+            'D' : Voting_Booth_Delete;
             'N' : Voting_Booth_New;
             'R' : Voting_Result (strS2I(CmdData));
             'V' : Voting_Booth (False, strS2I(CmdData));
@@ -340,7 +340,7 @@ Begin
                       Result := True;
                     End;
               'A' : Configuration_ExecuteEditor('A');
-              'E' : Event_Editor;
+              'E' : Configuration_Events;
               'F' : Configuration_ExecuteEditor('F');
               'G' : Configuration_ExecuteEditor('G');
               'L' : Configuration_ExecuteEditor('L');
@@ -349,7 +349,6 @@ Begin
               'R' : Configuration_ExecuteEditor('R');
               'S' : Configuration_MainMenu;
               'U' : Configuration_UserEditor;
-              'V' : Vote_Editor;
             End;
           End;
   End;

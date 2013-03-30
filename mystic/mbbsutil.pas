@@ -121,7 +121,7 @@ Begin
   WriteLn ('-BPACK                      Pack all BBS lists');
   WriteLn ('-BSORT    <ID> <Type>       Sorts and packs BBS list by <type>');
   WriteLn ('-FCHECK   <KILL>            Check filelist for correct size/status');
-  WriteLn ('-FIXINDEX                   Fix broken permanent index for msg/file bases');
+  WriteLn ('-FIXINDEX                   Fix wrong perm index for user/msg/file bases');
   WriteLn ('-FPACK                      Pack file bases');
   WriteLn ('-FSORT                      Sort file base entries by filename');
   WriteLn ('-MTRASH   <File>            Delete messages to/from users listed in <File>');
@@ -910,9 +910,11 @@ Var
   ConfigFile : File of RecConfig;
   MBaseFile  : File of RecMessageBase;
   FBaseFile  : File of RecFileBase;
+  UserFile   : File of RecUser;
   Config     : RecConfig;
   MBase      : RecMessageBase;
   FBase      : RecFileBase;
+  User       : RecUser;
 
   Function IsDupeMBaseIndex (SavedPos, Idx: LongInt) : Boolean;
   Var
@@ -932,6 +934,28 @@ Var
     End;
 
     Seek (MBaseFile, SavedPos);
+  End;
+
+  Function IsDupeUserIndex (SavedPos, Idx: LongInt) : Boolean;
+  Var
+    TempUser : RecUser;
+  Begin
+    Result := False;
+
+//    Close (UserFile);
+    Reset (UserFile);
+
+    While Not Eof(UserFile) Do Begin
+      Read (UserFile, TempUser);
+
+      If (TempUser.PermIdx = Idx) and (FilePos(UserFile) <> SavedPos) Then Begin
+        Result := True;
+        Break;
+      End;
+    End;
+
+//    Reset (UserFile);
+    Seek  (UserFile, SavedPos);
   End;
 
   Function IsDupeFBaseIndex (SavedPos, Idx: LongInt) : Boolean;
@@ -956,6 +980,7 @@ Var
 
 Var
   NewIndex : Cardinal;
+  MaxUser  : Cardinal;
 Begin
   Write ('Fixing Indexes       :');
 
@@ -1029,6 +1054,43 @@ Begin
   End;
 
   Close (FBaseFile);
+
+  Assign (UserFile, Config.DataPath + 'users.dat');
+  Reset  (UserFile);
+
+  MaxUser := 0;
+
+  While Not Eof(UserFile) Do Begin
+    Read (UserFile, User);
+
+    If User.PermIdx > MaxUser Then MaxUser := User.PermIdx;
+
+    Update_Bar (FilePos(UserFile), FileSize(UserFile));
+
+    If IsDupeUserIndex(FilePos(UserFile), User.PermIdx) Then Begin
+      NewIndex := 0;
+
+      While IsDupeUserIndex(FilePos(UserFile), NewIndex) Do
+        Inc (NewIndex);
+
+      User.PermIdx := NewIndex;
+
+      If User.PermIdx > MaxUser Then MaxUser := User.PermIdx;
+    End;
+
+    Seek  (UserFile, FilePos(UserFile) - 1);
+    Write (UserFile, User);
+  End;
+
+  Close (UserFile);
+
+  If MaxUser <> Config.UserIdxPos Then Begin
+    Config.UserIdxPos := MaxUser + 1;
+
+    Reset (ConfigFile);
+    Write (ConfigFile, Config);
+    Close (ConfigFile);
+  End;
 
   Update_Bar(100, 100);
   Update_Status('Completed');

@@ -126,6 +126,7 @@ Const
 
     // VOTING BOOTH MENU COMMANDS
     (  Name: 'VA';   Desc: 'Create voting poll'           ),
+    (  Name: 'VD';   Desc: 'Delete voting poll'           ),
     (  Name: 'VN';   Desc: 'Vote on new polls'            ),
     (  Name: 'VR';   Desc: 'See poll results'             ),
     (  Name: 'VV';   Desc: 'Vote on a poll'               ),
@@ -159,8 +160,7 @@ Const
     (  Name: '*P';   Desc: '(SYS) Protocol editor'        ),
     (  Name: '*R';   Desc: '(SYS) File group editor'      ),
     (  Name: '*S';   Desc: '(SYS) System configuration'   ),
-    (  Name: '*U';   Desc: '(SYS) User editor'            ),
-    (  Name: '*V';   Desc: '(SYS) Voting booth editor'    )
+    (  Name: '*U';   Desc: '(SYS) User editor'            )
   );                       {123456789012345678901234567890}
 
 Var

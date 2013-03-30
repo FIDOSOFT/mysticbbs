@@ -84,20 +84,21 @@ Begin
       OrigAddr.Net  := PH.OrigNet;
       OrigAddr.Node := PH.OrigNode;
 
+      // TODO
       // if echonode.echomail.crash etc change char F in FLO extension
 
       FLOName    := bbsConfig.OutboundPath + GetFTNFlowName(EchoNode.Address) + '.flo';
       BundleName := bbsConfig.OutboundPath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + DayString[DayOfWeek(CurDateDos)];
 
+      // TODO
       // check for existance, packet size limitations, etc and increment
       // from 0-9 A-Z
+
       BundleName[Length(BundleName)] := '0';
 
       ExecuteArchive (BundleName, EchoNode.ArcType, TempPath + PKTName, 1);
-
-      FileErase (TempPath + PKTName);
-
-      AddToFLOQueue (FLOName, BundleName);
+      FileErase      (TempPath + PKTName);
+      AddToFLOQueue  (FLOName, BundleName);
     End;
 
     FindNext (DirInfo);

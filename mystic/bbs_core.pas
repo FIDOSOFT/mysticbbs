@@ -35,15 +35,15 @@ Type
     Menu           : TMenuEngine;
     IO             : TBBSIO;
     Pipe           : TPipe;
-    EventFile      : File of EventRec;
+    EventFile      : File of RecEvent;
     ThemeFile      : File of RecTheme;
     VoteFile       : File of VoteRec;
     Vote           : VoteRec;
     CommHandle     : LongInt;
     ShutDown       : Boolean;
     TempPath       : String;
-    Event          : EventRec;
-    NextEvent      : EventRec;
+    Event          : RecEvent;
+    NextEvent      : RecEvent;
     Theme          : RecTheme;
     LocalMode      : Boolean;
     Baud           : LongInt;
@@ -222,23 +222,19 @@ Begin
 
   MinCheck := -1;
 
-  Assign  (EventFile, Config.DataPath + 'events.dat');
-  ioReset (EventFile, SizeOf(EventRec), fmRWDN);
+  Assign  (EventFile, Config.DataPath + 'event.dat');
 
-  If IoResult <> 0 Then ioReWrite (EventFile, SizeOf(EventRec), fmRWDN);
+  If Not ioReset (EventFile, SizeOf(RecEvent), fmRWDN) Then
+    ioReWrite (EventFile, SizeOf(RecEvent), fmRWDN);
 
   While Not Eof(EventFile) Do Begin
     ioRead (EventFile, Event);
 
-    If MinCheck = -1 Then Begin
-      If Event.Active and ((Event.Node = 0) or (Event.Node = NodeNum)) Then begin
+    If (MinCheck = -1) or ((MinCheck <> -1) and (MinutesUntilEvent(Event.ExecTime) < MinCheck)) Then Begin
+      If Event.Active and (Event.ExecType = 0) and ((Event.Node = 0) or (Event.Node = NodeNum)) and (Event.ExecDays[DayOfWeek(CurDateDos)]) Then Begin
         MinCheck  := MinutesUntilEvent(Event.ExecTime);
         NextEvent := Event;
       End;
-    End Else
-    If (Event.Active) and ((Event.Node = 0) or (Event.Node = NodeNum)) and (MinutesUntilEvent(Event.ExecTime) < MinCheck) Then Begin
-      MinCheck  := MinutesUntilEvent(Event.ExecTime);
-      NextEvent := Event;
     End;
   End;
 
@@ -320,7 +316,7 @@ Begin {exits if 0 mins}
 
       SystemLog('Event: ' + NextEvent.Name);
 
-      Halt (NextEvent.ErrLevel);
+      Halt (NextEvent.ExecLevel);
     End Else
       EventRunAfter := True;
   End;

@@ -2987,3 +2987,15 @@
 
  ! Fixed a bug that could cause the user editor to crash directly after a
    new install if you didn't create your SysOp account first.
+
+ + The MBBSUTIL -fixindex function will now also check users for duplicate
+   perm index and attempt to fix them (along with the file/msg bases).
+
+ + Added new event editor to replace the old crappy one.  You should delete
+   event*.dat from your DATA directory.  You will have to reconfigure your
+   events unfortunately (as if anyone even used them ever).
+
+ + BBS events can now be executed on specific days of the week.
+
+ + Old Voting booth editor has been replaced with the VD menu command used
+   to delete voting questions.

@@ -39,6 +39,7 @@ Procedure Add_Booth;
 Procedure Voting_Booth (Forced: Boolean; Num: Integer);
 Procedure Voting_Result (Data: Integer);
 Procedure Voting_Booth_New;
+Procedure Voting_Booth_Delete;
 Procedure View_Directory (Data: String; ViewType: Byte);
 Procedure AnsiViewer (Bar: RecPercent; Data: String);
 
@@ -896,6 +897,60 @@ Begin
 
   Close (Session.VoteFile);
   If Session.io.GetYN (Session.GetPrompt(248), True) Then Voting_Result(VPos);
+End;
+
+Procedure Voting_Booth_Delete;
+Var
+  Max : LongInt;
+  A   : LongInt;
+  C   : LongInt;
+Begin
+  Max := Voting_List;
+
+  Session.io.OutFull('|CR|09Delete which question? ');
+
+  A := strS2I(Session.io.GetInput(2, 2, 12, ''));
+
+  If (A > 0) and (A <= Max) Then Begin
+    Max := 0;
+
+    Reset (Session.VoteFile);
+
+    Repeat
+      Read (Session.VoteFile, Session.Vote);
+
+      If Session.User.Access(Session.Vote.ACS) Then Inc(Max);
+    Until Max = A;
+
+    A := FilePos(Session.VoteFile);
+
+    Session.io.OutFullLn ('|CR|12Deleting...');
+
+    KillRecord (Session.VoteFile, A, SizeOf(VoteRec));
+
+    Close (Session.VoteFile);
+
+    Reset (Session.User.UserFile);
+
+    While Not Eof(Session.User.UserFile) Do Begin
+      Read (Session.User.UserFile, Session.User.TempUser);
+
+      For C := A To 19 Do
+        Session.User.TempUser.Vote[C] := Session.User.TempUser.Vote[C+1];
+
+      Session.User.TempUser.Vote[20] := 0;
+
+      Seek  (Session.User.UserFile, FilePos(Session.User.UserFile) - 1);
+      Write (Session.User.UserFile, Session.User.TempUser);
+    End;
+
+    Close (Session.User.UserFile);
+
+    For C := A to 19 Do
+      Session.User.ThisUser.Vote[C] := Session.User.ThisUser.Vote[C+1];
+
+    Session.User.ThisUser.Vote[20] := 0;
+  End;
 End;
 
 Procedure ShowBBSHistory (LastDays: Word);

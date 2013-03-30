@@ -28,10 +28,7 @@ Uses
   bbs_cfg_UserEdit,
   bbs_cfg_EchoMail,
   bbs_cfg_MenuEdit,
-
-  // old shit to rewrite
-  bbs_cfg_events,
-  bbs_cfg_vote;
+  bbs_cfg_Events;
 
 Procedure Configuration_ExecuteEditor (Mode: Char);
 Var
@@ -112,23 +109,6 @@ Var
 
     Box.Close;
     Box.Free;
-  End;
-
-  Procedure ExecuteOldConfiguration (Mode: Char);
-  Var
-    TmpImage : TConsoleImageRec;
-  Begin
-    Screen.GetScreenImage (1, 1, 79, 24, TmpImage);
-
-    Session.io.AnsiColor(7);
-    Session.io.AnsiClear;
-
-    Case Mode of
-      'E' : Event_Editor;
-      'V' : Vote_Editor;
-    End;
-
-    Session.io.RemoteRestore(TmpImage);
   End;
 
 Begin
@@ -258,7 +238,7 @@ Begin
               End;
           End;
       3 : Begin
-            BoxOpen      (38, 4, 64, 17);
+            BoxOpen      (38, 4, 64, 16);
             CoolBoxOpen  (39, 'Editors');
 
             Form.AddNone ('U', ' U User Editor',           39,  5, 39,  5, 25, '');
@@ -272,8 +252,6 @@ Begin
             Form.AddNone ('A', ' A Archive Editor',        39, 13, 39, 13, 25, '');
             Form.AddNone ('P', ' P Protocol Editor',       39, 14, 39, 14, 25, '');
             Form.AddNone ('E', ' E Event Editor',          39, 15, 39, 15, 25, '');
-            Form.AddNone ('V', ' V Voting Editor',         39, 16, 39, 16, 25, '');
-//            Form.AddNone ('L', ' L BBS List Editor',       39, 17, 39, 17, 25, '');
 
             Res        := Form.Execute;
             MenuPos[3] := Form.ItemPos;
@@ -297,8 +275,7 @@ Begin
                 'S' : Configuration_SecurityEditor(True);
                 'T' : Configuration_ThemeEditor(False);
                 'U' : Configuration_UserEditor;
-                'E',
-                'V' : ExecuteOldConfiguration(Res);
+                'E' : Configuration_Events;
                 'X' : Break;
               Else
                 MenuPtr := 0;

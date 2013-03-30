@@ -1,127 +1,191 @@
-Unit bbs_cfg_Events;
+Unit BBS_Cfg_Events;
 
 {$I M_OPS.PAS}
 
 Interface
 
-Procedure Event_Editor;
+Procedure Configuration_Events;
 
 Implementation
 
 Uses
   m_Strings,
   m_DateTime,
-  bbs_Core,
+  m_FileIO,
   bbs_Common,
-  bbs_User;
+  bbs_ansi_MenuBox,
+  bbs_ansi_MenuForm,
+  bbs_cfg_Common;
 
-Procedure Event_Editor;
+Procedure EditEvent (Var Event: RecEvent);
 Var
-	A, B : Integer;
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Hour  : Byte;
+  Min   : Byte;
+  Count : Byte;
 Begin
-	Session.SystemLog ('*EVENT EDITOR*');
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
 
-  Assign (Session.EventFile, Config.DataPath + 'events.dat');
-  {$I-} Reset (Session.EventFile); {$I+}
-  If IoResult <> 0 Then ReWrite(Session.EventFile);
+  Form.HelpSize := 0;
 
-	Repeat
-    Session.io.OutFullLn ('|CL|14Event Editor|CR|CR|09###  Name|CR---  ------------------------------  -----|14');
-    Reset (Session.EventFile);
-    While Not Eof(Session.EventFile) do begin
-      read (Session.EventFile, session.event);
-      if session.event.active then Session.io.BufAddChar('+') else Session.io.BufAddChar('-');
-      Session.io.OutFullLn ('|15' + strPadR(strI2S(filepos(Session.EventFile)), 4, ' ') + '|14' + strPadR(session.event.name, 32, ' ') +
-      strZero(session.event.exectime div 60) + ':' + strZero(session.event.exectime mod 60));
-		end;
-    Session.io.OutFull ('|CR|09(I)nsert, (D)elete, (E)dit, (Q)uit? ');
-    case Session.io.OneKey ('DIEQ', True) of
-			'D' : begin
-              Session.io.OutRaw ('Delete which? ');
-              a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-              KillRecord (Session.EventFile, A, SizeOf(EventRec));
-      			end;
-			'I' : begin
-              Session.io.OutRaw ('Insert before? (1-' + strI2S(filesize(Session.EventFile)+1) + '): ');
-              a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-              if (a > 0) and (a <= filesize(Session.EventFile)+1) then begin
-                AddRecord (Session.EventFile, A, SizeOf(EventRec));
-								session.event.active   := false;
-                Session.Event.Name     := 'New Event';
-                Session.Event.errlevel := 0;
-                Session.Event.exectime := 0;
-                Session.Event.warning  := 0;
-                Session.Event.lastran  := 0;
-                Session.Event.offhook  := false;
-                Session.Event.node     := 0;
-                write (Session.EventFile, Session.event);
-							end;
-      			end;
-			'E' : begin
-              Session.io.OutRaw ('Edit which? ');
-              a := strS2I(Session.io.GetInput(3, 3, 11, ''));
-              if (a > 0) and (a <= filesize(Session.EventFile)) then begin
-                seek (Session.EventFile, a-1);
-                read (Session.EventFile, Session.event);
-								repeat
-                  Session.io.OutFullLn ('|CL|14Event ' + strI2S(FilePos(Session.EventFile)) + ' of ' + strI2S(FileSize(Session.EventFile)) + '|CR|03');
-                  Session.io.OutRawln ('!. Active         : ' + Session.io.OutYN(Session.Event.active));
-                  Session.io.OutRawln ('A. Description    : ' + Session.Event.Name);
-                  Session.io.OutRawln ('B. Forced         : ' + Session.io.OutYN(Session.Event.forced));
-                  Session.io.OutRawln ('C. Errorlevel     : ' + strI2S(Session.Event.ErrLevel));
-                  Session.io.OutRaw   ('D. Execution Time : ');
-                  a := Session.Event.exectime div 60;
-                  b := Session.Event.exectime mod 60;
-                  Session.io.OutRawln (strZero(a) + ':' + strZero(b));
-                  Session.io.OutRawln ('E. Busy Warning   : ' + strI2S(Session.Event.Warning));
-                  Session.io.OutRawln ('F. Last Ran on    : ' + DateDos2Str(Session.Event.LastRan, Session.User.ThisUser.DateType));
-                  Session.io.OutRawln ('G. Offhook Modem  : ' + Session.io.OutYN(Session.Event.Offhook));
-                  Session.io.OutRaw   ('H. Node Number    : ');
-                  If Session.Event.Node = 0 Then
-                    Session.io.OutRawLn ('All')
-									Else
-                    Session.io.OutRawLn (strI2S(Session.Event.Node));
-                  Session.io.OutFull ('|CR|09Command (Q/Quit): ');
-                  case Session.io.OneKey('[]!ABCDEFGHQ', True) of
-                    '[' : If FilePos(Session.EventFile) > 1 Then Begin
-                            Seek  (Session.EventFile, FilePos(Session.EventFile)-1);
-                            Write (Session.EventFile, Session.Event);
-                            Seek  (Session.EventFile, FilePos(Session.EventFile)-2);
-                            Read  (Session.EventFile, Session.Event);
-													End;
-                    ']' : If FilePos(Session.EventFile) < FileSize(Session.EventFile) Then Begin
-                            Seek (Session.EventFile, FilePos(Session.EventFile)-1);
-                            Write (Session.EventFile, Session.Event);
-                            Read (Session.EventFile, Session.Event);
-													End;
-                    '!' : Session.Event.active   := not Session.Event.active;
-                    'A' : Session.Event.name     := Session.io.InXY(21, 4, 30, 30, 11, Session.Event.name);
-                    'B' : Session.Event.forced   := not Session.Event.forced;
-                    'C' : Session.Event.errlevel := strS2I(Session.io.InXY(21, 6, 3, 3, 12, strI2S(Session.Event.errlevel)));
-										'D' : Begin
-                            a := strS2I(Session.io.InXY(21, 7, 2, 2, 12, ''));
-                            b := strS2I(Session.io.InXY(24, 7, 2, 2, 12, ''));
-														if (a > -1) and (a < 24) and (b >= 0) and (b < 60) then
-                              Session.Event.exectime := (a * 60) + b;
-													end;
-                    'E' : Session.Event.Warning := strS2I(Session.io.InXY(21, 8, 2, 2, 12, strI2S(Session.Event.Warning)));
-                    'F' : Session.Event.LastRan := DateStr2Dos(Session.io.InXY(21, 9, 8, 8, 15, DateDos2Str(Session.Event.lastran, Session.User.ThisUser.DateType)));
-                    'G' : Session.Event.Offhook := Not Session.Event.Offhook;
-                    'H' : Session.Event.Node    := strS2I(Session.io.InXY(21, 11, 3, 3, 12, strI2S(Session.Event.Node)));
-										'Q' : Break;
-									end
-								until false;
-                seek (Session.EventFile, filepos(Session.EventFile)-1);
-                write (Session.EventFile, Session.Event);
-							end;
-						end;
-			'Q' : break;
-		end;
-	until False;
+  Box.Open (11, 6, 69, 20);
 
-  Close (Session.EventFile);
+  VerticalLine (26, 8, 18);
+  VerticalLine (63, 9, 15);
 
-	Session.FindNextEvent;
+  Hour := Event.ExecTime DIV 60;
+  Min  := Event.ExecTime MOD 60;
+
+  Form.AddStr  ('D', ' Description' , 13,  8, 28,  8, 13, 30, 40, @Event.Name, '');
+  Form.AddBol  ('A', ' Active'      , 18,  9, 28,  9,  8,  3, @Event.Active, '');
+  Form.AddTog  ('Y', ' Exec Type'   , 15, 10, 28, 10, 11, 9, 0, 2, 'BBS Semaphore Shell', @Event.ExecType, '');
+  Form.AddByte ('E', ' Exec Hour'   , 15, 11, 28, 11, 11, 2, 0, 23, @Hour, '');
+  Form.AddByte ('M', ' Exec Min'    , 16, 12, 28, 12, 10, 2, 0, 59, @Min, '');
+  Form.AddStr  ('H', ' Shell'       , 19, 13, 28, 13,  7, 30, 80, @Event.Shell, '');
+  Form.AddStr  ('S', ' Semaphore'   , 15, 14, 28, 14, 11, 30, 40, @Event.SemaFile, '');
+  Form.AddBol  ('F', ' Forced'      , 18, 15, 28, 15,  8,  3, @Event.Forced, '');
+  Form.AddByte ('N', ' Node'        , 20, 16, 28, 16,  6, 3, 0, 250, @Event.Node, '');
+  Form.AddByte ('W', ' Warning'     , 17, 17, 28, 17,  9, 3, 0, 255, @Event.Warning, '');
+  Form.AddByte ('X', ' Exit Level'  , 14, 18, 28, 18, 12, 3, 0, 255, @Event.ExecLevel, '');
+
+  For Count := 0 to 6 Do
+    Form.AddBol ('0', ' ' + DayString[Count], 58, 9 + Count, 65, 9 + Count,  5, 3, @Event.ExecDays[Count], '');
+
+  Form.Execute;
+
+  Event.ExecTime := (Hour * 60) + Min;
+
+  Box.Close;
+  Form.Free;
+  Box.Free;
+End;
+
+Procedure Configuration_Events;
+Var
+  Box     : TAnsiMenuBox;
+  List    : TAnsiMenuList;
+  F       : File of RecEvent;
+  Event   : RecEvent;
+  Copied  : RecEvent;
+  HasCopy : Boolean = False;
+
+  Procedure MakeList;
+  Var
+    Count   : Byte;
+    DL      : String[7] = '';
+    Hour    : Byte;
+    Min     : Byte;
+    TypeStr : String;
+  Begin
+    List.Clear;
+
+    Reset(F);
+
+    While Not Eof(F) Do Begin
+      Read (F, Event);
+
+      For Count := 0 to 6 Do
+        If Event.ExecDays[Count] Then
+          DL := DL + DayString[Count][1]
+        Else
+          DL := DL + '-';
+
+      Hour := Event.ExecTime DIV 60;
+      Min  := Event.ExecTime MOD 60;
+
+      Case Event.ExecType of
+        0 : TypeStr := 'BBS';
+        1 : TypeStr := 'Semaphore';
+        2 : TypeStr := 'Shell';
+//        3 : TypeStr := 'PollMail';
+//        4 : TypeStr := 'SendMail';
+      End;
+
+      List.Add (strPadR(strYN(Event.Active), 7, ' ') + ' ' + strPadR(TypeStr, 15, ' ') + '  ' + strPadR(Event.Name, 25, ' ') + '  ' + strZero(Hour) + ':' + strZero(Min) + '  ' + DL, 0);
+    End;
+
+    List.Add ('', 2);
+  End;
+
+Begin
+  Assign (F, Config.DataPath + 'event.dat');
+
+  If Not ioReset(F, SizeOf(Event), fmRWDN) Then
+    ioReWrite (F, SizeOf(Event), fmRWDN);
+
+  Box  := TAnsiMenuBox.Create;
+  List := TAnsiMenuList.Create;
+
+  Box.Header    := ' Event Editor ';
+  List.NoWindow := True;
+  List.LoChars  := #13#27#47;
+  List.SearchY  := 20;
+
+  Box.Open (6, 5, 75, 20);
+
+  WriteXY (8,  7, 112, 'Active  Type             Description                Time   Days');
+  WriteXY (8,  8, 112, strRep('Ä', 66));
+  WriteXY (8, 18, 112, strRep('Ä', 66));
+  WriteXY (29, 19, 112, cfgCommandList);
+
+  Repeat
+    MakeList;
+
+    List.Open (6, 8, 75, 18);
+    List.Close;
+
+    Case List.ExitCode of
+      '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
+              'I' : Begin
+                      AddRecord (F, List.Picked, SizeOf(Event));
+
+                      FillChar (Event, SizeOf(Event), 0);
+
+                      Event.Name := 'New Event';
+
+                      Write (F, Event);
+
+                      MakeList;
+                    End;
+              'D' : If List.Picked < List.ListMax Then
+                      If ShowMsgBox(1, 'Delete this entry?') Then Begin
+                        KillRecord (F, List.Picked, SizeOf(Event));
+                        MakeList;
+                      End;
+              'C' : If List.Picked <> List.ListMax Then Begin
+                      Seek (F, List.Picked - 1);
+                      Read (F, Copied);
+
+                      HasCopy := True;
+                    End;
+              'P' : If HasCopy Then Begin
+                      AddRecord (F, List.Picked, SizeOf(Event));
+                      Write     (F, Copied);
+
+                      MakeList;
+                    End;
+
+            End;
+      #13 : If List.Picked <> List.ListMax Then Begin
+              Seek (F, List.Picked - 1);
+              Read (F, Event);
+
+              EditEvent(Event);
+
+              Seek  (F, List.Picked - 1);
+              Write (F, Event);
+            End;
+      #27 : Break;
+    End;
+  Until False;
+
+  Close(F);
+
+  Box.Close;
+  List.Free;
+  Box.Free;
 End;
 
 End.

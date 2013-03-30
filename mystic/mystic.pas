@@ -137,7 +137,7 @@ Begin
   End;
 
   If Session.ExitLevel <> 0 Then ExitCode := Session.ExitLevel;
-  If Session.EventRunAfter  Then ExitCode := Session.NextEvent.ErrLevel;
+  If Session.EventRunAfter  Then ExitCode := Session.NextEvent.ExecLevel;
 
   FileMode := 66;
 

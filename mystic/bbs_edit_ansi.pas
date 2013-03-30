@@ -494,7 +494,8 @@ Begin
   Dec (CurLine);
   Dec (CurY);
 
-  If CurX > GetLineLength(ANSI.Data[CurLine], 80) Then CurX := GetLineLength(ANSI.Data[CurLine], 80) + 1;
+  If CurX > GetLineLength(ANSI.Data[CurLine], 80) Then
+    CurX := GetLineLength(ANSI.Data[CurLine], 80) + 1;
 
   If CurY < 1 Then Begin
     ScrollUp;
@@ -514,7 +515,8 @@ Begin
 
   If Reset Then CurX := 1;
 
-  If CurX > GetLineLength(ANSI.Data[CurLine], 80) Then CurX := GetLineLength(ANSI.Data[CurLine], 80) + 1;
+  If CurX > GetLineLength(ANSI.Data[CurLine], 80) Then
+    CurX := GetLineLength(ANSI.Data[CurLine], 80) + 1;
 
   If CurY > WinSize Then Begin
     Result := True;
@@ -701,7 +703,7 @@ Begin
   CurY    := CurLine - NewTop + 1;
   TopLine := NewTop;
 
-  DrawPage(1, WinSize, False);
+  DrawPage (1, WinSize, False);
 End;
 
 Procedure TEditorANSI.PageDown;
@@ -732,7 +734,7 @@ Begin
   CurY    := CurLine - NewTop + 1;
   TopLine := NewTop;
 
-  DrawPage(1, WinSize, False);
+  DrawPage (1, WinSize, False);
 End;
 
 Procedure TEditorANSI.DoEnter;

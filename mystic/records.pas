@@ -405,22 +405,20 @@ Type
     Reserved     : Array[1..388] of Byte;
   End;
 
-  // day of week
-  // sema file
-  // event type [bbs exit/bbs exec/mis event]
-  // execcmd
-  // remove offhook
-
-  EventRec = Record                   { EVENTS.DAT                        }
-    Active   : Boolean;               { Is event active?                  }
-    Name     : String[30];            { Event Name                        }
-    Forced   : Boolean;               { Is this a forced event            }
-    ErrLevel : Byte;                  { Errorlevel to Exit                }
-    ExecTime : SmallInt;              { Minutes after midnight            }
-    Warning  : Byte;                  { Warn user before the event        }
-    Offhook  : Boolean;               { Offhook modem for event?          }
-    Node     : Byte;                  { Node number.  0 = all             }
-    LastRan  : LongInt;               { Last time event was ran           }
+  RecEvent = Record
+    Active    : Boolean;
+    Name      : String[40];
+    ExecType  : Byte;  // 0=BBS, 1=Semaphore, 2=Shell, 3=Poll Nodes, 4=SendEcho
+    ExecTime  : SmallInt;
+    ExecDays  : Array[0..6] of Boolean;
+    ExecLevel : Byte;
+    Shell     : String[80];
+    SemaFile  : String[80];
+    Forced    : Boolean;
+    Node      : Byte;
+    Warning   : Byte;
+    LastRan   : LongInt;
+    Res       : Array[1..34] of Byte;
   End;
 
 (* SECURITY.DAT in the data directory holds 255 records, one for each *)
