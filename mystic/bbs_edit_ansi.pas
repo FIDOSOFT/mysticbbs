@@ -8,6 +8,9 @@ Uses
   m_FileIO,
   bbs_MsgBase_ANSI;
 
+Const
+  fseMaxCutText = 60;
+
 Type
   TEditorANSI = Class
     Owner        : Pointer;
@@ -33,6 +36,9 @@ Type
     LastLine     : LongInt;
     QuoteTopPage : SmallInt;
     QuoteCurLine : SmallInt;
+    CutText      : Array[1..fseMaxCutText] of RecAnsiBufferLine;
+    CutTextPos   : Word;
+    CutPasted    : Boolean;
 
     // old shit from copy over of quote/command functions
     save   : boolean;
@@ -48,12 +54,14 @@ Type
     Function    GetLineLength (Var Line; LineSize: Byte) : Byte;
     Function    GetWrapPos    (Var Line; LineSize, WrapPos: Byte) : Byte;
     Procedure   TrimLeft      (Var Line; LineSize: Byte);
+    Procedure   TrimRight     (Var Line; LineSize: Byte);
     Procedure   DeleteLine    (Line: LongInt);
     Procedure   InsertLine    (Line: LongInt);
     Function    GetLineText   (Line: Word) : String;
     Procedure   SetLineText   (Line: LongInt; Str: String);
     Procedure   FindLastLine;
-    Procedure   Reformat;
+    Procedure   WordWrap;
+    Procedure   ReformParagraph;
     Procedure   LocateCursor;
     Procedure   ToggleInsert (Toggle: Boolean);
     Procedure   ReDrawTemplate (Reset: Boolean);
@@ -109,6 +117,10 @@ Begin
   WrapMode   := True;
   ClearEOL   := RowSize >= 79;
   LastLine   := 1;
+  CutPasted  := False;
+  CutTextPos := 0;
+
+  FillChar (CutText, SizeOf(CutText), 0);
 End;
 
 Destructor TEditorANSI.Destroy;
@@ -197,6 +209,17 @@ Begin
   End;
 End;
 
+Procedure TEditorANSI.TrimRight (Var Line; LineSize: Byte);
+Var
+  Data   : Array[1..255] of RecAnsiBufferChar absolute Line;
+Begin
+  While ((Data[LineSize].Ch = ' ') or (Data[LineSize].Ch = #0)) Do Begin
+    Data[LineSize].Ch := #0;
+
+    Dec (LineSize);
+  End;
+End;
+
 Procedure TEditorANSI.DeleteLine (Line: LongInt);
 Var
   Count : LongInt;
@@ -247,7 +270,7 @@ Begin
     Dec (Result);
 End;
 
-Procedure TEditorANSI.Reformat;
+Procedure TEditorANSI.WordWrap;
 Var
   WrapData  : Array[1..255] of RecAnsiBufferChar;
   TempStr   : Array[1..255] of RecAnsiBufferChar;
@@ -396,7 +419,7 @@ Begin
           ANSI.SetLineColor(CurAttr, Count);
   End;
 
-  DrawPage(1, WinSize, False);
+  DrawPage (1, WinSize, False);
 
   ToggleInsert (False);
 End;
@@ -422,6 +445,12 @@ Begin
     If CurAttr = 0 Then CurAttr := 7;
   End;
 *)
+
+//  With TBBSCore(Owner).io Do Begin
+//    AnsiGotoXY (1, 1);
+//    BufAddStr  ('X:' + strI2S(CurX) + ' Y:' + strI2S(CurY) + ' CL:' + strI2S(CurLine) + ' TopL:' + strI2S(TopLine) + ' Last:' + strI2S(LastLine) + ' Len:' + strI2S(GetLineLength(ANSI.Data[CurLine], 80)) + ' Row:' + strI2S(RowSize) + '          ');
+//  End;
+
   With TBBSCore(Owner).io Do Begin
     AnsiGotoXY (WinX1 + CurX - 1, WinY1 + CurY - 1);
     AnsiColor  (CurAttr);
@@ -449,7 +478,7 @@ Begin
       TBBSCore(Owner).io.AnsiColor  (8);
       TBBSCore(Owner).io.BufAddStr  (strPadC('(END)', RowSize, ' '));
 
-      If ExitEOF Then Break;
+      If ExitEOF Then Exit;
     End Else
       DrawLine (TopLine + CountY - 1, 1, CountY);
   End;
@@ -661,7 +690,7 @@ Begin
     End Else Begin
       Inc (CurX);
 
-      Reformat;
+      WordWrap;
     End;
   End Else
   If CurX <= RowSize Then Begin
@@ -779,6 +808,7 @@ Begin
   End;
 
   NumLines := 0;
+
   Session.io.AllowPause := True;
 
   While Not Eof(InFile) Do Begin
@@ -1198,9 +1228,50 @@ Begin
   FindLastLine;
 End;
 
+Procedure TEditorANSI.ReformParagraph;
+Var
+  Line    : LongInt;
+  LineLen : Byte;
+  JoinPos : Byte;
+  JoinLen : Byte;
+  JoinBuf : Array[1..255] of RecAnsiBufferChar;
+Begin
+  Line := CurLine;
+
+  Repeat
+    If (Line = LastLine) or IsBlankLine(ANSI.Data[Line], RowSize) Then Break;
+
+    TrimRight (ANSI.Data[Line], RowSize);
+    TrimLeft  (ANSI.Data[Line + 1], RowSize);
+
+    LineLen := GetLineLength(ANSI.Data[Line], RowSize);
+    JoinLen := GetLineLength(ANSI.Data[Line + 1], RowSize);
+    JoinPos := GetWrapPos(ANSI.Data[Line + 1], JoinLen, RowSize - LineLen);
+
+    If JoinLen = 0 Then Break;
+
+    If LineLen + JoinLen <= RowSize Then Begin
+      Move       (ANSI.Data[Line + 1], ANSI.Data[Line][LineLen + 2], SizeOf(RecAnsiBufferChar) * JoinLen);
+      DeleteLine (Line + 1);
+    End Else
+    If JoinPos > 0 Then Begin
+      Move     (ANSI.Data[Line + 1], ANSI.Data[Line][LineLen + 2], SizeOf(RecAnsiBufferChar) * (JoinPos - 1));
+      FillChar (JoinBuf, SizeOf(JoinBuf), #0);
+      Move     (ANSI.Data[Line + 1][JoinPos + 1], JoinBuf, (JoinLen - JoinPos + 1) * SizeOf(RecAnsiBufferChar));
+      Move     (JoinBuf, ANSI.Data[Line + 1], RowSize * SizeOf(RecAnsiBufferChar));
+    End Else
+      Inc (Line);
+  Until False;
+
+  DrawPage (CurY, WinSize, False);
+
+  // need to optimize this output.
+End;
+
 Function TEditorANSI.Edit : Boolean;
 Var
-  Ch : Char;
+  Ch    : Char;
+  Count : LongInt;
 Begin
   Result       := False;
   QuoteCurLine := 0;
@@ -1227,6 +1298,27 @@ Begin
       End;
     End Else
       Case Ch of
+        ^B   : ReformParagraph;
+        ^K   : Begin
+                 If CutPasted Then Begin
+                   CutTextPos := 0;
+                   CutPasted  := False;
+                 End;
+
+                 If CutTextPos < fseMaxCutText Then Begin
+                   Inc (CutTextPos);
+
+                   CutText[CutTextPos] := ANSI.Data[CurLine];
+
+                   DeleteLine(CurLine);
+
+                   DrawPage (CurY, WinSize, False);  //optimize + 1
+                 End;
+               End;
+        ^O   : Begin
+                 Session.io.OutFile('fshelp', True, 0);
+                 ReDrawTemplate(False);
+               End;
         ^Q   : Begin
                  If Session.User.ThisUser.UseLBQuote Then
                    QuoteWindow
@@ -1234,6 +1326,18 @@ Begin
                    Quote;
 
                  ReDrawTemplate(False);
+               End;
+        ^U   : If CutTextPos > 0 Then Begin
+                 CutPasted := True;
+
+                 For Count := CutTextPos DownTo 1 Do
+                   If LastLine < mysMaxMsgLines Then Begin
+                     InsertLine(CurLine);
+
+                     ANSI.Data[CurLine] := CutText[Count];
+                   End;
+
+                 DrawPage (CurY, WinSize, False);
                End;
         ^V   : ToggleInsert(True);
         ^Y   : If (CurLine < LastLine) or ((CurLine = LastLine) And Not IsBlankLine(ANSI.Data[CurLine], 80)) Then Begin
