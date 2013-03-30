@@ -1,7 +1,5 @@
 Program BinkPoll;
 
-// Need to rewrite.  BuildQueueByNode function PollNode
-// Need to include NETMAIL
 // Need to include point and multi zones (same with tosser)
 
 {$I M_OPS.PAS}
@@ -18,6 +16,7 @@ Uses
 
 Var
   bbsConfig : RecConfig;
+  TempPath  : String;
 
 Const
   M_NUL  = 0;
@@ -109,6 +108,7 @@ Type
     Constructor Create (Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
     Destructor  Destroy; Override;
 
+    Procedure   RemoveFilesFromFLO (FN: String);
     Function    GetDataStr : String;
     Procedure   SendFrame     (CmdType: Byte; CmdData: String);
     Procedure   SendDataFrame (Var Buf; BufSize: Word);
@@ -160,6 +160,60 @@ End;
 Destructor TBinkP.Destroy;
 Begin
   Inherited Destroy;
+End;
+
+Procedure TBinkP.RemoveFilesFromFLO (FN: String);
+Var
+  Str      : String;
+  DirInfo  : SearchRec;
+  OrigFile : Text;
+  NewFile  : Text;
+  Matched  : Boolean;
+Begin
+  // Scan all FLO files in outbound directory, and PRUNE them all.
+
+  FindFirst (bbsConfig.OutboundPath + '*.?lo', AnyFile, DirInfo);
+
+  While DosError = 0 Do Begin
+    FileRename (bbsConfig.OutboundPath + DirInfo.Name, TempPath + DirInfo.Name);
+
+    Assign  (NewFile, bbsConfig.OutboundPath + DirInfo.Name);
+    ReWrite (NewFile);
+    Append  (NewFile);
+
+    Assign  (OrigFile, TempPath + DirInfo.Name);
+    Reset   (OrigFile);
+
+    While Not Eof (OrigFile) Do Begin
+      ReadLn (OrigFile, Str);
+
+      If (Str = '') or (Str[1] = '!') Then
+        WriteLn (NewFile, Str)
+      Else Begin
+        Case Str[1] of
+          '~',
+          '#',
+          '^'  : Matched := strUpper(FN) = strUpper(Copy(Str, 2, 255));
+        Else
+          Matched := (strUpper(FN) = strUpper(Str));
+        End;
+
+        If Not Matched Then
+          WriteLn (NewFile, Str);
+      End;
+    End;
+
+    Close (NewFile);
+    Close (OrigFile);
+    Erase (OrigFile);
+
+    If FileByteSize(bbsConfig.OutboundPath + DirInfo.Name) = 0 Then
+      FileErase(bbsConfig.OutboundPath + DirInfo.Name);
+
+    FindNext (DirInfo);
+  End;
+
+  FindClose (DirInfo);
 End;
 
 Function TBinkP.GetDataStr : String;
@@ -456,13 +510,13 @@ Begin
       TxGetEOF   : Begin
                      If HaveHeader Then
                        If RxCommand = M_GOT Then Begin
-                         HaveHeader := False;
-                         NeedHeader := True;
-
                          FileList.QData[FileList.QPos].Status := QueueSuccess;
 
-                         FileErase (FileList.QData[FileList.QPos].FilePath + FileList.QData[FileList.QPos].FileName);
+                         FileErase          (FileList.QData[FileList.QPos].FilePath + FileList.QData[FileList.QPos].FileName);
+                         RemoveFilesFromFLO (FileList.QData[FileList.QPos].FilePath + FileList.QData[FileList.QPos].FileName);
 
+                         HaveHeader := False;
+                         NeedHeader := True;
                          TxState    := TxNextFile;
                        End;
                    End;
@@ -561,21 +615,14 @@ Begin
   Result := strI2H((Dest.Net SHL 16) OR Dest.Node);
 End;
 
-Procedure ScanOutbound;
+Procedure QueueByNode (Var Queue: TProtocolQueue; EchoNode: RecEchoMailNode);
 Var
-  DirInfo  : SearchRec;
-  FLOFile  : Text;
-  EchoFile : File of RecEchoMailNode;
-  EchoNode : RecEchoMailNode;
-  Queue    : TProtocolQueue;
-  Str      : String;
-  FN       : String;
-  Path     : String;
-  Matched  : Boolean;
+  DirInfo : SearchRec;
+  FLOFile : Text;
+  Str     : String;
+  FN      : String;
+  Path    : String;
 Begin
-  WriteLn ('Scanning configured Echomail nodes...');
-  WriteLn;
-
   FindFirst (bbsConfig.OutboundPath + '*.?lo', AnyFile, DirInfo);
 
   While DosError = 0 Do Begin
@@ -595,36 +642,11 @@ Begin
       WriteLn ('Normal');
     End;
 
-    Matched := False;
-
-    Assign (EchoFile, bbsConfig.DataPath + 'echonode.dat');
-    {$I-} Reset (EchoFile); {$I+}
-
-    If IoResult <> 0 Then Begin
-      WriteLn ('- Unable to match .FLO with configured Echomail node');
-
+    If Not ((strUpper(JustFileName(DirInfo.Name)) = strUpper(GetFTNFlowName(EchoNode.Address))) and EchoNode.Active and (EchoNode.ProtType = 0)) Then Begin
       FindNext (DirInfo);
 
       Continue;
     End;
-
-    While Not Eof(EchoFile) And Not Matched Do Begin
-      Read (EchoFile, EchoNode);
-
-      Matched := (strUpper(JustFileName(DirInfo.Name)) = strUpper(GetFTNFlowName(EchoNode.Address))) and EchoNode.Active and (EchoNode.ProtType = 0);
-    End;
-
-    Close (EchoFile);
-
-    If Not Matched Then Begin
-      WriteLn ('- Unable to match .FLO with configured Echomail node');
-
-      FindNext (DirInfo);
-
-      Continue;
-    End;
-
-    Queue := TProtocolQueue.Create;
 
     Assign (FLOFile, bbsConfig.OutboundPath + DirInfo.Name);
     Reset  (FLOFile);
@@ -645,29 +667,67 @@ Begin
 
     WriteLn('- Queued ', Queue.QSize, ' files (', Queue.QFSize, ' bytes) to ', strAddr2Str(EchoNode.Address));
 
-    If Queue.QSize > 0 Then
-      PollNode(Queue, EchoNode);
-
-    Queue.Free;
-
     FindNext (DirInfo);
   End;
+End;
 
-  FindClose (DirInfo);
+Procedure PollAll (OnlyNew: Boolean);
+Var
+  Queue    : TProtocolQueue;
+  EchoFile : File of RecEchoMailNode;
+  EchoNode : RecEchoMailNode;
+  Total    : LongInt;
+Begin
+  WriteLn ('Polling BINKP nodes...');
+  WriteLn;
+
+  Total := 0;
+  Queue := TProtocolQueue.Create;
+
+  Assign (EchoFile, bbsConfig.DataPath + 'echonode.dat');
+  {$I-} Reset (EchoFile); {$I+}
+
+  If IoResult <> 0 Then Exit;
+
+  While Not Eof(EchoFile) Do Begin
+    Read (EchoFile, EchoNode);
+
+    If Not (EchoNode.Active and (EchoNode.ProtType = 0)) Then Continue;
+
+    Queue.Clear;
+
+    QueueByNode (Queue, EchoNode);
+
+    If OnlyNew and (Queue.QSize = 0) Then Continue;
+
+    Inc (Total);
+
+    WriteLn  ('- Polling node ' + strAddr2Str(EchoNode.Address) + ' (Queued ', Queue.QSize, ' files, ', Queue.QFSize, ' bytes)');
+    PollNode (Queue, EchoNode);
+  End;
+
+  Close (EchoFile);
+
+  Queue.Free;
+
+  If Total > 0 Then WriteLn;
+
+  WriteLn ('Polled ', Total, ' nodes');
 End;
 
 Var
-  CF : File of RecConfig;
+  CF  : File of RecConfig;
+  Str : String;
 Begin
+  FileMode := 66;
+
   WriteLn;
   WriteLn ('BINKPOLL Version ' + mysVersion);
   WriteLn;
 
-  Assign (CF, '\s7\mystic.dat');
+  Assign (CF, 'mystic.dat');
 
-  {$I-} Reset(CF); {$I+}
-
-  If IoResult <> 0 Then Begin
+  If Not ioReset (CF, SizeOf(RecConfig), fmRWDN) Then Begin
     WriteLn ('Unable to read MYSTIC.DAT');
     Halt(1);
   End;
@@ -680,5 +740,26 @@ Begin
     Halt(1);
   End;
 
-  ScanOutbound;
+  If ParamCount = 0 Then Begin
+    WriteLn ('BINKPOLL SEND   - Only send/poll if node has new outbound messages');
+    WriteLn ('BINKPOLL FORCED - Poll/send to all configured/active BINKP nodes');
+    WriteLn ('BINKPOLL SERVER - Start in BINKP server mode (not implmented yet)');
+
+    Halt(1);
+  End;
+
+  TempPath := bbsConfig.SystemPath + 'tempftn' + PathChar;
+
+  {$I-}
+  MkDir (TempPath);
+  {$I+}
+
+  If IoResult <> 0 Then;
+
+  Str := strUpper(strStripB(ParamStr(1), ' '));
+
+  If (Str = 'SEND') or (Str = 'FORCED') Then
+    PollAll (Str = 'SEND')
+  Else
+    WriteLn ('Invalid command line');
 End.
