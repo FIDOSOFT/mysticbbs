@@ -164,7 +164,14 @@ Var
     GetTime (DT.Hour, DT.Min,   DT.Sec, Temp);
 
     If MBase.NetType = 3 Then Begin
-      // need to incorporate routing here?!?
+      // if is NOT a msg originated from ourself, skip it unless
+      // both orig and dest are not ourself? hmmm....
+
+      // need to incorporate routing here... this all needs reworked
+      // ALWAYS send directly if the message is directed to one of our
+      // uplinks, else, perform routing to figure it out?
+      // add configuration for routing somewhere... hmm need to research
+      // and think all of this through
 
       TempStr3 := GetFTNOutPath(EchoNode);
 

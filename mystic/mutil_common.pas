@@ -2,6 +2,37 @@ Unit MUTIL_Common;
 
 {$I M_OPS.PAS}
 
+(*
+add domain into this?  how would this be used in routing?  where is routing
+configuration going?
+
+Function IsAddressMatch (Str: String; Addr: RecEchoMailAddr) : Boolean;
+Var
+  Zone : String;
+  Net  : String;
+  Node : String;
+  A    : Byte;
+  B    : Byte;
+Begin
+  Result := False;
+
+  A := Pos(':', Str);
+  B := Pos('/', Str);
+
+  If (A = 0) or (B <= A) Then Exit;
+
+  Zone := Copy(Str, 1, A - 1);
+  Net  := Copy(Str, A + 1, B - 1 - A);
+  Node := Copy(Str, B + 1, 255);
+
+  If (Zone <> '*') and (Addr.Zone <> strS2I(Zone)) Then Exit;
+  If (Net  <> '*') and (Addr.Net  <> strS2I(Net))  Then Exit;
+  If (Node <> '*') and (Addr.Node <> strS2I(Node)) Then Exit;
+
+  Result := True;
+End;
+*)
+
 Interface
 
 Uses
