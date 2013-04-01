@@ -87,6 +87,7 @@ Type
     SetPassword  : String;
     SetBlockSize : Word;
     SetTimeOut   : Word;
+    SetOutPath   : String;
 
     Client       : TIOSocket;
     IsClient     : Boolean;
@@ -172,12 +173,12 @@ Var
 Begin
   // Scan all FLO files in outbound directory, and PRUNE them all.
 
-  FindFirst (bbsConfig.OutboundPath + '*.?lo', AnyFile, DirInfo);
+  FindFirst (SetOutPath + '*.?lo', AnyFile, DirInfo);
 
   While DosError = 0 Do Begin
-    FileRename (bbsConfig.OutboundPath + DirInfo.Name, TempPath + DirInfo.Name);
+    FileRename (SetOutPath + DirInfo.Name, TempPath + DirInfo.Name);
 
-    Assign  (NewFile, bbsConfig.OutboundPath + DirInfo.Name);
+    Assign  (NewFile, SetOutPath + DirInfo.Name);
     ReWrite (NewFile);
     Append  (NewFile);
 
@@ -207,8 +208,8 @@ Begin
     Close (OrigFile);
     Erase (OrigFile);
 
-    If FileByteSize(bbsConfig.OutboundPath + DirInfo.Name) = 0 Then
-      FileErase(bbsConfig.OutboundPath + DirInfo.Name);
+    If FileByteSize(SetOutPath + DirInfo.Name) = 0 Then
+      FileErase(SetOutPath + DirInfo.Name);
 
     FindNext (DirInfo);
   End;
@@ -340,7 +341,7 @@ Begin
                         SendFrame (M_NUL, 'SYS ' + bbsConfig.BBSName);
                         SendFrame (M_NUL, 'ZYZ ' + bbsConfig.SysopName);
 //                        SendFrame (M_NUL, 'LOC Philadelphia, PA');
-                        SendFrame (M_NUL, 'VER Mystic/1.10 binkp/1.0');
+                        SendFrame (M_NUL, 'VER Mystic/' + Copy(mysVersion, 1, 4) + ' binkp/1.0');
 
                         If IsClient Then
                           AuthState := SendAddress
@@ -567,6 +568,35 @@ Begin
   If Client.Connected Then Client.BufFlush;
 End;
 
+Function IsFTNPrimary (EchoNode: RecEchoMailNode) : Boolean;
+Var
+  Count : Byte;
+Begin
+  For Count := 1 to 30 Do
+    If (strUpper(EchoNode.Domain) = strUpper(bbsConfig.NetDomain[Count])) and
+       (EchoNode.Address.Zone = bbsConfig.NetAddress[Count].Zone) and
+       (bbsConfig.NetPrimary[Count]) Then Begin
+         Result := True;
+
+         Exit;
+    End;
+
+  Result := False;
+End;
+
+Function GetFTNOutPath (EchoNode: RecEchoMailNode) : String;
+Begin;
+  If IsFTNPrimary(EchoNode) Then
+    Result := bbsConfig.OutboundPath
+  Else
+    Result := DirLast(bbsConfig.OutboundPath) + strLower(EchoNode.Domain + '.' + strPadL(strI2H(EchoNode.Address.Zone, 3), 3, '0')) + PathChar;
+End;
+
+Function GetFTNFlowName (Dest: RecEchoMailAddr) : String;
+Begin
+  Result := strI2H((Dest.Net SHL 16) OR Dest.Node, 8);
+End;
+
 Procedure PollNode (Var Queue: TProtocolQueue; Var EchoNode: RecEchoMailNode);
 Var
   BinkP  : TBinkP;
@@ -596,6 +626,7 @@ Begin
 
   BinkP := TBinkP.Create(Client, Queue, True, EchoNode.binkTimeOut * 100);
 
+  BinkP.SetOutPath   := GetFTNOutPath(EchoNode);
   BinkP.SetPassword  := EchoNode.binkPass;
   BinkP.SetBlockSize := EchoNode.binkBlock;
   BinkP.UseMD5       := EchoNode.binkMD5 > 0;
@@ -610,11 +641,6 @@ Begin
   Client.Free;
 End;
 
-Function GetFTNFlowName (Dest: RecEchoMailAddr) : String;
-Begin
-  Result := strI2H((Dest.Net SHL 16) OR Dest.Node);
-End;
-
 Procedure QueueByNode (Var Queue: TProtocolQueue; EchoNode: RecEchoMailNode);
 Var
   DirInfo : SearchRec;
@@ -622,8 +648,11 @@ Var
   Str     : String;
   FN      : String;
   Path    : String;
+  OutPath : String;
 Begin
-  FindFirst (bbsConfig.OutboundPath + '*.?lo', AnyFile, DirInfo);
+  OutPath := GetFTNOutPath(EchoNode);
+
+  FindFirst (OutPath + '*.?lo', AnyFile, DirInfo);
 
   While DosError = 0 Do Begin
     Write ('- Found ', DirInfo.Name, ' -> Send Type: ');
@@ -648,7 +677,7 @@ Begin
       Continue;
     End;
 
-    Assign (FLOFile, bbsConfig.OutboundPath + DirInfo.Name);
+    Assign (FLOFile, OutPath + DirInfo.Name);
     Reset  (FLOFile);
 
     While Not Eof(FLOFile) Do Begin
@@ -715,6 +744,10 @@ Begin
   WriteLn ('Polled ', Total, ' nodes');
 End;
 
+Procedure DoServer;
+Begin
+End;
+
 Var
   CF  : File of RecConfig;
   Str : String;
@@ -760,6 +793,9 @@ Begin
 
   If (Str = 'SEND') or (Str = 'FORCED') Then
     PollAll (Str = 'SEND')
+  Else
+  If (Str = 'SERVER') Then
+    DoServer
   Else
     WriteLn ('Invalid command line');
 End.
