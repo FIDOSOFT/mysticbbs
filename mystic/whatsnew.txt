@@ -2999,3 +2999,11 @@
 
  + Old Voting booth editor has been replaced with the VD menu command used
    to delete voting questions.
+
+ + CTRL-B will now reformat paragraphs in the FS editor.
+
+ + In the FSE the TAB key now works in insert mode meaning it will push and
+   wrap text by tabstop.
+
+ ! Forced messages were able to be aborted sometimes while using the FS
+   editor and using the CTRL-A key to abort.

@@ -130,7 +130,6 @@ Var
   Box   : TAnsiMenuBox;
   Form  : TAnsiMenuForm;
   Topic : String;
-  TempB : Byte;
 Begin
   Topic := '|03(|09Echomail Node|03) |01-|09> |15';
   Box   := TAnsiMenuBox.Create;
@@ -417,15 +416,16 @@ Function Configuration_EchomailAddress (Edit: Boolean) : Byte;
     Box   : TAnsiMenuBox;
     Form  : TAnsiMenuForm;
     Topic : String;
+    Count : Byte;
   Begin
     Topic := '|03(|09Echomail Network|03) |01-|09> |15';
     Box   := TAnsiMenuBox.Create;
     Form  := TAnsiMenuForm.Create;
 
-    Box.Open (14, 6, 66, 17);
+    Box.Open (14, 6, 66, 18);
 
     VerticalLine (29,  9, 12);
-    VerticalLine (29, 14, 15);
+    VerticalLine (29, 14, 16);
 
     WriteXY (21, 8, 112, 'Address');
 
@@ -436,11 +436,16 @@ Function Configuration_EchomailAddress (Edit: Boolean) : Byte;
 
     Form.AddStr  ('M', ' Domain',      21, 14, 31, 14,  8,  8,  8, @Config.NetDomain[Num], Topic + 'Network domain');
     Form.AddStr  ('D', ' Description', 16, 15, 31, 15, 13, 25, 25, @Config.NetDesc[Num], Topic + 'Network description');
+    Form.AddBol  ('I', ' Primary',     20, 16, 31, 16,  9,  3, @Config.NetPrimary[Num], Topic + 'Is this a primary address?');
 
     Form.Execute;
 
-    Box.Close;
+    If Config.NetPrimary[Num] Then
+      For Count := 1 to 30 Do
+        If Config.NetPrimary[Count] and (Count <> Num) Then
+          Config.NetPrimary[Count] := False;
 
+    Box.Close;
     Form.Free;
     Box.Free;
   End;
@@ -456,7 +461,7 @@ Var
     List.Clear;
 
     For A := 1 to 30 Do
-      List.Add(strPadL(strAddr2Str(Config.NetAddress[A]), 23, ' ') + ' ' + strPadL(Config.NetDesc[A], 20, ' '), 0);
+      List.Add(strPadR(strAddr2Str(Config.NetAddress[A]), 23, ' ') + ' ' + strPadR(Config.NetDomain[A], 8, ' ') + '  ' + strPadR(strYN(Config.NetPrimary[A]), 3, ' ') + '  ' + Config.NetDesc[A], 0);
   End;
 
 Begin
@@ -467,15 +472,15 @@ Begin
 
   List.NoWindow := True;
 
-  Box.Open (17, 5, 64, 20);
+  Box.Open (7, 5, 74, 20);
 
-  WriteXY (27, 6, 112, 'Network Address          Description');
-  WriteXY (19, 7, 112, strRep('Ä', 44));
+  WriteXY (9, 6, 112, 'Network Address         Domain    Pri  Description');
+  WriteXY (9, 7, 112, strRep('Ä', 64));
 
   Repeat
     CreateList;
 
-    List.Open (17, 7, 64, 20);
+    List.Open (7, 7, 74, 20);
 
     Case List.ExitCode of
       #13 : If Edit Then

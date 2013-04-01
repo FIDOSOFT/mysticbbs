@@ -475,6 +475,7 @@ Begin
   Form.AddBol  ('T', ' External FSE',         13, 15, 29, 15, 14, 3, @Config.FSEditor, Topic + 'Use external editor');
   Form.AddStr  ('F', ' FSE Command Line',      9, 16, 29, 16, 18, 40, 60, @Config.FSCommand, Topic + 'FSE command line');
   Form.AddStr  ('D', ' Default Origin',       11, 17, 29, 17, 16, 40, 50, @Config.Origin, Topic + 'Origin line for new bases');
+//  Form.AddStr  ('2', ' Default Domain',       11, 18, 29, 18, 16,  8,  8, @Config.DefDomain, Topic + 'Default echomail domain');
 
   Form.AddAttr ('Q', ' Quote Color',          52,  7, 67,  7, 13, @Config.ColorQuote, Topic + 'Color for quoted text');
   Form.AddAttr ('E', ' Text Color'  ,         53,  8, 67,  8, 12, @Config.ColorText, Topic + 'Color for message text');

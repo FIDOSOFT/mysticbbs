@@ -892,7 +892,7 @@ Begin
 
       If MBase.NetType <> 1 Then Continue;
 
-      WriteLn (OutFile, '!' + Config.DataPath + MBase.FileName + ' ' + MBase.FileName + ' ' + strAddr2Str(Config.NetUplink[MBase.NetAddr]));
+      WriteLn (OutFile, '!' + Config.DataPath + MBase.FileName + ' ' + MBase.FileName + ' ' + '0:0/0');
     End;
   End;
 

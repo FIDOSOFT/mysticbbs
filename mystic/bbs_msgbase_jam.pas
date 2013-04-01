@@ -474,7 +474,9 @@ Begin
     Error := IoResult;
     JM^.TxtBufStart := FileSize(JM^.BufFile);
   End;
+
   TxtBuf^[JM^.TxtPos - JM^.TxtBufStart] := Ch;
+
   Inc(JM^.TxtPos);
 End;
 
@@ -1647,8 +1649,7 @@ Begin
   FindLastRead := -1;
   Found        := False;
 
-  New (LastBuf);
-
+  New  (LastBuf);
   Seek (LastFile, 0);
 
   LastError := IoResult;
@@ -1792,7 +1793,9 @@ Begin
       LockError := IoResult;
     End;
   End;
-  Inc(JM^.LockCount);
+
+  Inc (JM^.LockCount);
+
   LockMsgBase := (LockError = 0);
 End;
 
@@ -1821,8 +1824,6 @@ Begin
   UnLockMsgBase := (LockError = 0);
 End;
 
-{SetSeeAlso/GetSeeAlso provided by 2:201/623@FidoNet Jonas@iis.bbs.bad.se}
-
 Procedure TMsgBaseJAM.SetNextSeeAlso(SAlso: LongInt);
 Begin
   MsgHdr^.JamHdr.ReplyNext := SAlso;
@@ -1833,7 +1834,7 @@ Begin
   GetNextSeeAlso := MsgHdr^.JamHdr.ReplyNext;
 End;
 
-Function TMsgBaseJAM.ReReadIdx(Var IdxLoc : LongInt) : Word;
+Function TMsgBaseJAM.ReReadIdx (Var IdxLoc : LongInt) : Word;
 Begin
   ReReadIdx := 0;
   IdxLoc    := JM^.CurrMsgNum - JM^.BaseHdr.BaseMsgNum;

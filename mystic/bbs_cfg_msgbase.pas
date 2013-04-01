@@ -333,7 +333,8 @@ Var
 
   Procedure MakeList;
   Var
-    Tag : Byte;
+    Tag  : Byte;
+    Addr : String;
   Begin
     List.Clear;
 
@@ -344,7 +345,12 @@ Var
 
       Read (MBaseFile, MBase);
 
-      List.Add(strPadR(strI2S(FilePos(MBaseFile) - 1), 5, ' ') + '  ' + strPadR(strStripMCI(MBase.Name), 35, ' ') + ' ' + strPadL(strAddr2Str(Config.NetAddress[MBase.NetAddr]), 12, ' '), Tag);
+      If MBase.NetType = 0 Then
+        Addr := 'Local'
+      Else
+        Addr := strAddr2Str(Config.NetAddress[MBase.NetAddr]);
+
+      List.Add(strPadR(strI2S(FilePos(MBaseFile) - 1), 5, ' ') + '  ' + strPadR(strStripMCI(MBase.Name), 35, ' ') + ' ' + strPadL(Addr, 12, ' '), Tag);
     End;
 
     List.Add('', 2);

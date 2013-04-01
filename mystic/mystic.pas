@@ -44,12 +44,9 @@ Uses
   bbs_Common,
   bbs_Core,
   bbs_NodeInfo,
-  {$IFDEF NEWEDITOR}
-  bbs_edit_ansi,
-  {$ENDIF}
   bbs_Cfg_Main;
 
-{$IFDEF NEWEDITOR}
+(*
 Procedure TestEditor;
 Var
   T : TEditorANSI;
@@ -59,7 +56,7 @@ Begin
   T.Edit;
   T.Free;
 End;
-{$ENDIF}
+*)
 
 Procedure InitClasses;
 Begin
@@ -482,10 +479,8 @@ Begin
 
   Set_Node_Action (Session.GetPrompt(345));
 
-  {$IFDEF NEWEDITOR}
-  //TestEditor;
-  //Halt(0);
-  {$ENDIF}
+//  TestEditor;
+//  Halt(0);
 
   Session.User.UserLogon1 (Script);
 

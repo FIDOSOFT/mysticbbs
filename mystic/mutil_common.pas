@@ -60,6 +60,7 @@ Function  SaveMessage        (mArea: RecMessageBase; mFrom, mTo, mSubj: String; 
 Function  GetFTNPKTName      : String;
 Function  GetFTNArchiveName  (Orig, Dest: RecEchoMailAddr) : String;
 Function  GetFTNFlowName     (Dest: RecEchoMailAddr) : String;
+Function  GetFTNOutPath      (EchoNode: RecEchoMailNode) : String;
 Function  GetNodeByIndex     (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
 
 Implementation
@@ -494,12 +495,36 @@ Begin
   If Net  < 0 Then Net  := 65536 + Net;
   If Node < 0 Then Node := 65536 + Node;
 
-  Result := strI2H((Net SHL 16) OR Node);
+  Result := strI2H((Net SHL 16) OR Node, 8);
 End;
 
 Function GetFTNFlowName (Dest: RecEchoMailAddr) : String;
 Begin
-  Result := strI2H((Dest.Net SHL 16) OR Dest.Node);
+  Result := strI2H((Dest.Net SHL 16) OR Dest.Node, 8);
+End;
+
+Function IsFTNPrimary (EchoNode: RecEchoMailNode) : Boolean;
+Var
+  Count : Byte;
+Begin
+  For Count := 1 to 30 Do
+    If (strUpper(EchoNode.Domain) = strUpper(bbsConfig.NetDomain[Count])) and
+       (EchoNode.Address.Zone = bbsConfig.NetAddress[Count].Zone) and
+       (bbsConfig.NetPrimary[Count]) Then Begin
+         Result := True;
+
+         Exit;
+    End;
+
+  Result := False;
+End;
+
+Function GetFTNOutPath (EchoNode: RecEchoMailNode) : String;
+Begin;
+  If IsFTNPrimary(EchoNode) Then
+    Result := bbsConfig.OutboundPath
+  Else
+    Result := DirLast(bbsConfig.OutboundPath) + strLower(EchoNode.Domain + '.' + strPadL(strI2H(EchoNode.Address.Zone, 3), 3, '0')) + PathChar;
 End;
 
 Function GetNodeByIndex (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;

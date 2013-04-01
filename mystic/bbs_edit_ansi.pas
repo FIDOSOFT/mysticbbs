@@ -68,7 +68,7 @@ Type
     Procedure   DrawPage (StartY, EndY: Byte; ExitEOF: Boolean);
     Procedure   ScrollUp;
     Procedure   ScrollDown (Draw: Boolean);
-    Function    LineUp : Boolean;
+    Function    LineUp (Reset: Boolean) : Boolean;
     Function    LineDown (Reset: Boolean) : Boolean;
     Procedure   PageUp;
     Procedure   PageDown;
@@ -514,7 +514,7 @@ Begin
     DrawPage(1, WinSize, False);
 End;
 
-Function TEditorANSI.LineUp : Boolean;
+Function TEditorANSI.LineUp (Reset: Boolean) : Boolean;
 Begin
   Result := False;
 
@@ -523,7 +523,8 @@ Begin
   Dec (CurLine);
   Dec (CurY);
 
-  If CurX > GetLineLength(ANSI.Data[CurLine], 80) Then
+  // might be able to use curlength
+  If Reset or (CurX > GetLineLength(ANSI.Data[CurLine], 80)) Then
     CurX := GetLineLength(ANSI.Data[CurLine], 80) + 1;
 
   If CurY < 1 Then Begin
@@ -537,7 +538,8 @@ Function TEditorANSI.LineDown (Reset: Boolean) : Boolean;
 Begin
   Result := False;
 
-  If CurLine >= mysMaxMsgLines Then Exit;
+  If CurLine >= LastLine Then Exit;
+//  If CurLine >= mysMaxMsgLines Then Exit;
 
   Inc (CurLine);
   Inc (CurY);
@@ -648,7 +650,7 @@ Begin
 
       DeleteLine (CurLine);
 
-      If Not LineUp Then DrawPage (CurY, WinSize, False); //optimize
+      If Not LineUp(False) Then DrawPage (CurY, WinSize, False); //optimize
     End Else Begin
       JoinPos := GetWrapPos(ANSI.Data[CurLine], RowSize, RowSize - GetLineLength(ANSI.Data[CurLine - 1], RowSize));
 
@@ -660,9 +662,9 @@ Begin
         Move     (ANSI.Data[CurLine][JoinPos + 1], JoinBuf, (CurLength - JoinPos + 1) * SizeOf(RecAnsiBufferChar));
         Move     (JoinBuf, ANSI.Data[CurLine], RowSize * SizeOf(RecAnsiBufferChar));
 
-        If Not LineUp Then DrawPage (CurY, WinSize, False);
+        If Not LineUp(False) Then DrawPage (CurY, WinSize, False);
       End Else Begin
-        LineUp;
+        LineUp(False);
 
         CurX := CurLength + 1;
       End;
@@ -1252,10 +1254,16 @@ Begin
 
     If LineLen + JoinLen <= RowSize Then Begin
       Move       (ANSI.Data[Line + 1], ANSI.Data[Line][LineLen + 2], SizeOf(RecAnsiBufferChar) * JoinLen);
+
+      ANSI.Data[Line][LineLen + 1].Ch := ' ';
+
       DeleteLine (Line + 1);
     End Else
     If JoinPos > 0 Then Begin
       Move     (ANSI.Data[Line + 1], ANSI.Data[Line][LineLen + 2], SizeOf(RecAnsiBufferChar) * (JoinPos - 1));
+
+      ANSI.Data[Line][LineLen + 1].Ch := ' ';
+
       FillChar (JoinBuf, SizeOf(JoinBuf), #0);
       Move     (ANSI.Data[Line + 1][JoinPos + 1], JoinBuf, (JoinLen - JoinPos + 1) * SizeOf(RecAnsiBufferChar));
       Move     (JoinBuf, ANSI.Data[Line + 1], RowSize * SizeOf(RecAnsiBufferChar));
@@ -1287,10 +1295,10 @@ Begin
     If Session.io.IsArrow Then Begin
       Case Ch of
         #71 : CurX := 1;
-        #72 : LineUp;
+        #72 : LineUp(False);
         #73 : PageUp;
-        #75 : If CurX > 1 Then Dec(CurX);
-        #77 : If CurX <= RowSize Then Inc(CurX);
+        #75 : If CurX > 1 Then Dec(CurX) Else LineUp(True);
+        #77 : If CurX <= CurLength Then Inc(CurX) Else LineDown(True);
         #79 : CurX := CurLength + 1;
         #80 : If CurLine < LastLine Then LineDown(False);
         #81 : PageDown;
@@ -1298,7 +1306,30 @@ Begin
       End;
     End Else
       Case Ch of
+(*
+        ^A   : Begin
+                 If Forced Then
+                   Session.io.OutFull (Session.GetPrompt(307))
+                 Else
+                   Done := Session.io.GetYN(Session.GetPrompt(356), False);
+
+                 If Not Done Then ReDrawTemplate(False);
+               End;
+*)
         ^B   : ReformParagraph;
+        ^F   : CurX := 1;
+        ^G   : CurX := CurLength + 1;
+        ^H   : DoBackSpace;
+        ^I   : Begin
+                 If (CurX < RowSize) and (CurX MOD 5 = 0) Then
+                   DoChar(' ');
+
+                 While (CurX < RowSize) and (CurX MOD 5 <> 0) Do Begin
+                   CurLength := GetLineLength(ANSI.Data[CurLine], RowSize);
+
+                   DoChar(' ');
+                 End;
+               End;
         ^K   : Begin
                  If CutPasted Then Begin
                    CutTextPos := 0;
@@ -1315,6 +1346,7 @@ Begin
                    DrawPage (CurY, WinSize, False);  //optimize + 1
                  End;
                End;
+        ^M   : DoEnter;
         ^O   : Begin
                  Session.io.OutFile('fshelp', True, 0);
                  ReDrawTemplate(False);
@@ -1356,8 +1388,6 @@ Begin
 
                  Session.io.AllowArrow := True;
                End;
-        #08  : DoBackSpace;
-        #13  : DoEnter;
         #32..
         #254 : If (CurLength >= RowSize) and (GetWrapPos(ANSI.Data[CurLine], RowSize, RowSize) = 0) Then Begin
                  // dont do anything

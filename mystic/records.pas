@@ -246,7 +246,8 @@ Type
     FSCommand       : String[60];
  // ECHOMAIL NETWORKS
     NetAddress      : Array[1..30] of RecEchoMailAddr;          // echomail addresses
-    NetUplink       : Array[1..30] of RecEchoMailAddr;          // echomail uplink addresses
+    NetPrimary      : Array[1..30] of Boolean;
+    Res1            : Array[1..210] of Byte;
     NetDomain       : Array[1..30] of String[8];                // echomail domains (5D)
     NetDesc         : Array[1..30] of String[25];               // echomail network description
  // OFFLINE MAIL (should include local qwk path)
@@ -316,6 +317,7 @@ Type
     ThemeOnStart    : Boolean;
     StartCodePage   : Byte;
     AcsSeeOffline   : String[mysMaxAcsSize];
+  //  DefDomain       : String[8];
     //inetSMTPRelay   : String[30];
     //inetSMTPLogin   : String[30];
     //inetSMTPPW      : String[30];

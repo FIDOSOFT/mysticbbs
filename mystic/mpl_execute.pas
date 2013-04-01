@@ -1524,7 +1524,7 @@ Begin
             Store (TempLong, 4);
           End;
     28  : Begin
-            TempStr := strI2H(Param[1].L);
+            TempStr := strI2H(Param[1].L, 8);
             Store (TempStr, 256);
           End;
     29  : Begin

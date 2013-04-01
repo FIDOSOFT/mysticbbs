@@ -216,8 +216,8 @@ Begin
   If DoMassUpload Then uMassUpload;
   If DoTopLists   Then uTopLists;
   If DoAllFiles   Then uAllFilesList;
-  If DoEchoExport Then uEchoExport;
   If DoEchoImport Then uEchoImport;
+  If DoEchoExport Then uEchoExport;
   If DoMsgPurge   Then uPurgeMessageBases;
   If DoMsgPack    Then uPackMessageBases;
   If DoMsgPost    Then uPostMessages;

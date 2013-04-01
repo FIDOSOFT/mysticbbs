@@ -40,7 +40,7 @@ Begin
   While Not Eof(T) Do Begin
     ReadLn (T, Str);
 
-    If strUpper(Str) = '^' + strUpper(PacketFN) Then Begin
+    If (strUpper(Str) = strUpper(PacketFN)) or (strUpper(Copy(Str, 2, 255)) = strUpper(PacketFN)) Then Begin
       Close (T);
       Exit;
     End;
@@ -61,6 +61,7 @@ Var
   EchoNode   : RecEchoMailNode;
   PKTName    : String;
   BundleName : String;
+  BundlePath : String;
   FLOName    : String;
   OrigAddr   : RecEchoMailAddr;
 Begin
@@ -84,11 +85,19 @@ Begin
       OrigAddr.Net  := PH.OrigNet;
       OrigAddr.Node := PH.OrigNode;
 
-      // TODO
-      // if echonode.echomail.crash etc change char F in FLO extension
+      BundlePath := GetFTNOutPath(EchoNode);
 
-      FLOName    := bbsConfig.OutboundPath + GetFTNFlowName(EchoNode.Address) + '.flo';
-      BundleName := bbsConfig.OutboundPath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + DayString[DayOfWeek(CurDateDos)];
+      DirCreate (BundlePath);
+
+      FLOName    := BundlePath + GetFTNFlowName(EchoNode.Address);
+      BundleName := BundlePath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + strLower(DayString[DayOfWeek(CurDateDos)]);
+
+      Case EchoNode.MailType of
+        0 : FLOName := FLOName + '.flo';
+        1 : FLOName := FLOName + '.clo';
+        2 : FLOName := FLOName + '.dlo';
+        3 : FlOName := FLOName + '.hlo';
+      End;
 
       // TODO
       // check for existance, packet size limitations, etc and increment
@@ -143,6 +152,7 @@ Var
   Var
     TempStr1 : String;
     TempStr2 : String;
+    TempStr3 : String;
   Begin
     If (EchoNode.Address.Zone = MsgBase^.GetOrigAddr.Zone) and
        (EchoNode.Address.Net  = MsgBase^.GetOrigAddr.Net)  and
@@ -154,12 +164,32 @@ Var
     GetTime (DT.Hour, DT.Min,   DT.Sec, Temp);
 
     If MBase.NetType = 3 Then Begin
-      TempStr1 := bbsConfig.OutboundPath + GetFTNFlowName(EchoNode.Address) + '.out';
-      TempStr2 := bbsConfig.OutboundPath + GetFTNFlowName(EchoNode.Address) + '.flo';
+      // need to incorporate routing here?!?
 
-      // change extensions based on crash etc from echonode
-      // need to add aka matching somewhere in here and also incorporate
-      // routing?
+      TempStr3 := GetFTNOutPath(EchoNode);
+
+      DirCreate (TempStr3);
+
+      TempStr1 := TempStr3 + GetFTNFlowName(EchoNode.Address);
+      TempStr2 := TempStr3 + GetFTNFlowName(EchoNode.Address);
+
+      Case EchoNode.MailType of
+        1 : Begin
+              TempStr1 := TempStr1 + '.cut';
+              TempStr2 := TempStr2 + '.clo';
+            End;
+        2 : Begin
+              TempStr1 := TempStr1 + '.dut';
+              TempStr2 := TempStr2 + '.dlo';
+            End;
+        3 : Begin
+              TempStr1 := TempStr1 + '.hut';
+              TempStr2 := TempStr2 + '.hlo';
+            End;
+      Else
+        TempStr1 := TempStr1 + '.out';
+        TempStr2 := TempStr2 + '.flo';
+      End;
 
       Assign (F, TempStr1);
 
@@ -179,7 +209,7 @@ Var
 
       FillChar (PH, SizeOf(PH), 0);
 
-      PH.OrigNode := bbsConfig.NetAddress[MBase.NetAddr].Node;
+      PH.OrigNode := MsgBase^.GetOrigAddr.Node;
       PH.DestNode := EchoNode.Address.Node;
       PH.Year     := DT.Year;
       PH.Month    := DT.Month;
@@ -188,10 +218,10 @@ Var
       PH.Minute   := DT.Min;
       PH.Second   := DT.Sec;
       PH.PKTType  := 2;
-      PH.OrigNet  := bbsConfig.NetAddress[MBase.NetAddr].Net;
+      PH.OrigNet  := MsgBase^.GetOrigAddr.Net;
       PH.DestNet  := EchoNode.Address.Net;
       PH.ProdCode := 254; // RESEARCH THIS
-      PH.OrigZone := bbsConfig.NetAddress[MBase.NetAddr].Zone;
+      PH.OrigZone := MsgBase^.GetOrigAddr.Zone;
       PH.DestZone := EchoNode.Address.Zone;
       //Password : Array[1..8] of Char;  // RESEARCH THIS
 
@@ -201,9 +231,9 @@ Var
     FillChar (MH, SizeOf(MH), 0);
 
     MH.MsgType  := 2;
-    MH.OrigNode := bbsConfig.NetAddress[MBase.NetAddr].Node;
+    MH.OrigNode := MsgBase^.GetOrigAddr.Node;
     MH.DestNode := EchoNode.Address.Node;
-    MH.OrigNet  := bbsConfig.NetAddress[MBase.NetAddr].Net;
+    MH.OrigNet  := MsgBase^.GetOrigAddr.Net;
     MH.DestNet  := EchoNode.Address.Net;
 
     TempStr1 := FormattedDate(DT, 'DD NNN YY  HH:MM:SS') + #0;
@@ -225,7 +255,7 @@ Var
       WriteStr ('AREA:' + MBase.EchoTag, #13);
 
     If MBase.NetType = 3 Then
-      WriteStr (#1 + 'INTL ' + strAddr2Str(EchoNode.Address) + ' ' + strAddr2Str(bbsConfig.NetAddress[MBase.NetAddr]), #13);
+      WriteStr (#1 + 'INTL ' + strAddr2Str(EchoNode.Address) + ' ' + strAddr2Str(MsgBase^.GetOrigAddr), #13);
 
     WriteStr (#1 + 'TID: Mystic BBS ' + mysVersion, #13);
 
@@ -237,15 +267,15 @@ Var
     // SEEN-BY needs to include yourself and ANYTHING it is sent to (downlinks)
     // so we need to cycle through nodes for this mbase and add ALL of them
 
-    TempStr1 := 'SEEN-BY: ' + strI2S(bbsConfig.NetAddress[MBase.NetAddr].Net) + '/' + strI2S(bbsConfig.NetAddress[MBase.NetAddr].Node) + ' ';
+    TempStr1 := 'SEEN-BY: ' + strI2S(MsgBase^.GetOrigAddr.Net) + '/' + strI2S(MsgBase^.GetOrigAddr.Node) + ' ';
 
-    If bbsConfig.NetAddress[MBase.NetAddr].Net <> EchoNode.Address.Net Then
+    If MsgBase^.GetOrigAddr.Net <> EchoNode.Address.Net Then
       TempStr1 := TempStr1 + strI2S(EchoNode.Address.Net) + '/';
 
     TempStr1 := TempStr1 + strI2S(EchoNode.Address.Node);
 
     WriteStr (TempStr1, #13);
-    WriteStr (#1 + 'PATH: ' + strI2S(bbsConfig.NetAddress[MBase.NetAddr].Net) + '/' + strI2S(bbsConfig.NetAddress[MBase.NetAddr].Node), #13);
+    WriteStr (#1 + 'PATH: ' + strI2S(MsgBase^.GetOrigAddr.Net) + '/' + strI2S(MsgBase^.GetOrigAddr.Node), #13);
     WriteStr (#0#0, #0);
 
     Close (F);
@@ -303,6 +333,14 @@ Begin
             While Not Eof(ExportFile) Do Begin
               Read (ExportFile, ExportIndex);
 
+              // check base type and export network or echo?  or
+              // do it from exportmessage?
+
+              If MBase.NetType = 3 Then Begin
+                If GetNodeByIndex(ExportIndex, EchoNode) Then
+                  If EchoNode.Active and (EchoNode.Address.Zone = MsgBase^.GetOrigAddr.Zone) Then
+                    ExportMessage;
+              End Else
               If GetNodeByIndex(ExportIndex, EchoNode) Then
                 If EchoNode.Active Then
                   ExportMessage;

@@ -550,8 +550,8 @@ Var
   S  : String;
   A  : SmallInt;
 Begin
-  If MBase.NetType > 0 Then Begin
-    Msg^.DoStringLn (#1 + 'MSGID: ' + strAddr2Str(Config.NetAddress[MBase.NetAddr]) + ' ' + strI2H(CurDateDos));
+  If (MBase.NetType > 0) and (MBase.NetType <> 3) Then Begin
+    Msg^.DoStringLn (#1 + 'MSGID: ' + strAddr2Str(Config.NetAddress[MBase.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
 
     If ReplyID <> '' Then
       Msg^.DoStringLn (#1 + 'REPLY: ' + ReplyID);
