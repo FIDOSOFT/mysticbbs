@@ -35,6 +35,7 @@ Function  WildMatch       (WildCard, FName: String; IgnoreCase: Boolean) : Boole
 Function  DirCreate       (Str: String) : Boolean;
 Function  DirExists       (Str: String) : Boolean;
 Function  DirSlash        (Str: String) : String;
+Function  DirLast         (CurPath: String) : String;
 Function  DirChange       (Dir: String) : Boolean;
 Procedure DirClean        (Path: String; Exempt: String);
 Function  DirFiles        (Str: String) : LongInt;
@@ -357,6 +358,17 @@ Begin
     Str := Str + PathSep;
 
   Result := Str;
+End;
+
+Function DirLast (CurPath: String) : String;
+Begin
+  If CurPath[Length(CurPath)] = PathSep Then
+    Delete (CurPath, Length(CurPath), 1);
+
+  While (CurPath[Length(CurPath)] <> PathSep) and (CurPath <> '') Do
+    Delete (CurPath, Length(CurPath), 1);
+
+  Result := DirSlash(CurPath);
 End;
 
 Function JustPath (Str: String) : String;

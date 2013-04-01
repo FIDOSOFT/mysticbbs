@@ -65,16 +65,6 @@ Begin
   Result := sayi;
 End;
 
-Function Byte2Hex (numb: Byte) : String;
-Const
-  HexChars : Array[0..15] of Char = '0123456789abcdef';
-begin
-//  setlength(result, 2);
-  Byte2Hex[0] := #2;
-  Byte2Hex[1] := HexChars[numb shr 4];
-  Byte2Hex[2] := HexChars[numb and 15];
-end;
-
 Function Digest2String (Digest: String) : String;
 var
   count : byte;

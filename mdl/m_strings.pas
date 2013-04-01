@@ -14,7 +14,7 @@ Function strZero      (Num: LongInt) : String;
 Function strComma     (Num: LongInt) : String;
 Function strI2S       (Num: LongInt) : String;
 Function strH2I       (Str: String) : LongInt;
-Function strI2H       (Num: LongInt) : String;
+Function strI2H       (Num: LongInt; Idx: Byte) : String;
 Function strS2I       (Str: String) : LongInt;
 Function strI2O       (Num: LongInt) : String;
 Function strR2S       (Num: Real; Deci: Byte) : String;
@@ -34,6 +34,7 @@ Function strReplace   (Str, OldStr, NewStr: String) : String;
 Function strWide2Str  (Var Str: String; MaxLen: Byte) : String;
 Function strYN        (Bol: Boolean) : String;
 Function LoCase       (Ch: Char) : Char;
+Function Byte2Hex     (Num: Byte) : String;
 
 Implementation
 
@@ -161,13 +162,11 @@ Begin
   End;
 End;
 
-Function strI2H (Num: LongInt) : String;
+Function strI2H (Num: LongInt; Idx: Byte) : String;
 Var
-  Ch  : Char;
-  Idx : Byte;
+  Ch : Char;
 Begin
-  Result := '00000000';
-  Idx    := 8;
+  Result := strRep('0', Idx);
 
   While Num <> 0 Do Begin
     Ch := Chr(48 + Byte(Num) AND $0F);
@@ -425,6 +424,15 @@ End;
 Function strYN (Bol: Boolean) : String;
 Begin
   If Bol Then Result := 'Yes' Else Result := 'No';
+End;
+
+Function Byte2Hex (Num: Byte) : String;
+Const
+  HexChars : Array[0..15] of Char = '0123456789abcdef';
+Begin
+  Byte2Hex[0] := #2;
+  Byte2Hex[1] := HexChars[Num SHR 4];
+  Byte2Hex[2] := HexChars[Num AND 15];
 End;
 
 End.
