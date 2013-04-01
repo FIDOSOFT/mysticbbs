@@ -14,7 +14,30 @@ Uses
   mUtil_Common;
 
 Const
-  MaxDupeChecks = 40000;
+  MaxDupeSize = 250000;
+
+Type
+  RecMsgDupe = Record
+    Header : Cardinal;
+    Text   : Cardinal;
+  End;
+
+  RecDupePTR   = ^RecDupeArray;
+  RecDupeArray = Array[1..MaxDupeSize] of RecMsgDupe;
+
+Type
+  TPKTDupe = Class
+    DupeData   : RecDupePTR;
+    MaxDupes   : Cardinal;
+    CurDupes   : Cardinal;
+    TotalDupes : Cardinal;
+
+    Constructor Create (Max: Cardinal);
+    Destructor  Destroy; Override;
+
+    Function    IsDuplicate  (Var D: RecMsgDupe) : Boolean;
+    Procedure   AddDuplicate (Var D: RecMsgDupe);
+  End;
 
 Const
   pktPrivate    = $0001;
@@ -66,11 +89,6 @@ Type
     Filler   : Array[1..20] of Char;
   End;
 
-  RecMsgDupe = Record
-    Header : Cardinal;
-    Text   : Cardinal;
-  End;
-
   RecMsgLine = String[79];
 
   TPKTReader = Class
@@ -79,7 +97,6 @@ Type
     Dest      : RecEchoMailAddr;
     MsgHdr    : RecPKTMessageHdr;
     MsgFile   : PCharFile;
-    DupeFile  : PCharFile;
     MsgTo     : String[50];
     MsgFrom   : String[50];
     MsgSubj   : String[80];
@@ -98,18 +115,86 @@ Type
 
     Function    Open (FN: String) : Boolean;
     Function    GetMessage (NetMail: Boolean) : Boolean;
-    Function    IsDuplicate : Boolean;
-    Procedure   AddDuplicate;
   End;
 
 Implementation
+
+Constructor TPKTDupe.Create (Max: Cardinal);
+Var
+  F  : File;
+  RS : Cardinal;
+Begin
+  Inherited Create;
+
+  If Max > MaxDupeSize Then Max := MaxDupeSize;
+
+  MaxDupes   := Max;
+  TotalDupes := 0;
+
+  GetMem (DupeData, MaxDupes * SizeOf(RecMsgDupe));
+
+  Assign (F, bbsConfig.DataPath + 'echodupes.dat');
+  {$I-} Reset (F, 1); {$I+}
+
+  If IoResult <> 0 Then ReWrite (F, 1);
+
+  BlockRead (F, DupeData^, MaxDupes * SizeOf(RecMsgDupe), TotalDupes);
+  Close     (F);
+
+  If TotalDupes > 0 Then
+    TotalDupes := TotalDupes DIV SizeOf(RecMsgDupe);
+
+  CurDupes := TotalDupes;
+End;
+
+Function TPKTDupe.IsDuplicate (Var D: RecMsgDupe) : Boolean;
+Var
+  Count : Cardinal;
+Begin
+  Result := False;
+
+  For Count := 1 to TotalDupes Do
+    If (D.Header = DupeData^[Count].Header) and (D.Text = DupeData^[Count].Text) Then Begin
+      Result := True;
+
+      Exit;
+    End;
+End;
+
+Procedure TPKTDupe.AddDuplicate (Var D: RecMsgDupe);
+Begin
+  If CurDupes = MaxDupes Then Begin
+    TotalDupes := MaxDupes;
+    CurDupes   := 0;
+  End;
+
+  Inc (CurDupes);
+
+  If TotalDupes < CurDupes Then
+    TotalDupes := CurDupes;
+
+  DupeData^[CurDupes] := D;
+End;
+
+Destructor TPKTDupe.Destroy;
+Var
+  F : File;
+Begin
+  Assign     (F, bbsConfig.DataPath + 'echodupes.dat');
+  ReWrite    (F, 1);
+  BlockWrite (F, DupeData^, TotalDupes * SizeOf(RecMsgDupe));
+  Close      (F);
+
+  FreeMem (DupeData, MaxDupes * SizeOf(RecMsgDupe));
+
+  Inherited Destroy;
+End;
 
 Constructor TPKTReader.Create;
 Begin
   Opened   := False;
   MsgLines := 0;
-  MsgFile  := New (PCharFile, Init(1024 * 4));
-  DupeFile := New (PCharFile, Init(1024 * 8));
+  MsgFile  := New (PCharFile, Init(1024 * 16));
 End;
 
 Destructor TPKTReader.Destroy;
@@ -117,12 +202,8 @@ Begin
   DisposeText;
 
   If MsgFile.Opened Then MsgFile.Close;
-  If DupeFile.Opened Then DupeFile.Close;
 
   Dispose (MsgFile, Done);
-  Dispose (DupeFile, Done);
-
-  // TRIM DUPLICATE FILE HERE
 
   Inherited Destroy;
 End;
@@ -284,42 +365,6 @@ Begin
       MsgCRC.Text        := Crc32(Byte(Ch), MsgCRC.Text);
     End;
   Until False;
-End;
-
-Procedure TPKTReader.AddDuplicate;
-Var
-  F: File;
-Begin
-  Assign (F, bbsConfig.DataPath + 'echodupes.dat');
-
-  If Not ioReset (F, 1, fmRWDN) Then
-    ioReWrite (F, 1, fmRWDN);
-
-  Seek       (F, FileSize(F));
-  BlockWrite (F, MsgCRC, SizeOf(RecMsgDupe));
-  Close      (F);
-End;
-
-Function TPKTReader.IsDuplicate : Boolean;
-Var
-  Dupe : RecMsgDupe;
-  Res  : LongInt;
-Begin
-  Result := False;
-
-  If Not DupeFile.Open (bbsConfig.DataPath + 'echodupes.dat') Then Exit;
-
-  While Not DupeFile.EOF Do Begin
-    DupeFile.BlockRead (Dupe, SizeOf(RecMsgDupe), Res);
-
-    If (Dupe.Text = MsgCRC.Text) and (Dupe.Header = MsgCRC.Header) Then Begin
-      Result := True;
-
-      Break;
-    End;
-  End;
-
-  DupeFile.Close;
 End;
 
 End.

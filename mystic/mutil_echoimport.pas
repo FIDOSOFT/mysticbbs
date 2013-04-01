@@ -69,7 +69,9 @@ Var
   TotalDupes  : LongInt;
   EchoNode    : RecEchoMailNode;
   DupeIndex   : LongInt;
+  DupeMBase   : RecMessageBase;
   CreateBases : Boolean;
+  Dupes       : TPKTDupe;
 
   Procedure ImportNetMailpacket (ArcFN: String);
   Var
@@ -152,28 +154,23 @@ Var
           End;
 
           While PKT.GetMessage(False) Do Begin
-            If PKT.IsDuplicate Then Begin
+            If Dupes.IsDuplicate(PKT.MsgCRC) Then Begin
               Log (3, '!', '      Duplicate message found in ' + PKT.MsgArea);
 
               If DupeIndex <> -1 Then Begin
-                CurTag := '';  // force next real msg to get mbase record
+                If (MsgBase <> NIL) and (CurTag <> '-DUPEMSG-') Then Begin
+                  MsgBase^.CloseMsgBase;
 
-                // TODO for speed:
-                // load dupe base first before all processsing
-                // add a way to not close/reopen if last was dupe (simple boolean)
+                  Dispose (MsgBase, Done);
 
-                If GetMBaseByIndex (DupeIndex, MBase) Then Begin
-                  If MsgBase <> NIL Then Begin
-                    MsgBase^.CloseMsgBase;
-
-                    Dispose (MsgBase, Done);
-
-                    MsgBase := NIL;
-                  End;
-
-                  MessageBaseOpen  (MsgBase, MBase);
-                  SavePKTMsgToBase (MsgBase, PKT, False);
+                  MsgBase := NIL;
+                  CurTag  := '-DUPEMSG-';
                 End;
+
+                If MsgBase = NIL Then
+                  MessageBaseOpen (MsgBase, DupeMBase);
+
+                SavePKTMsgToBase (MsgBase, PKT, False);
               End;
 
               Inc (TotalDupes);
@@ -253,7 +250,7 @@ Var
 
               SavePKTMsgToBase (MsgBase, PKT, False);
 
-              PKT.AddDuplicate;
+              Dupes.AddDuplicate(PKT.MsgCRC);
 
               Inc (TotalEcho);
 
@@ -271,8 +268,6 @@ Var
 
           PKT.MsgFile.Close;
         End;
-
-//        PKT.MsgFile.Close;
 
         FileErase (TempPath + DirInfo.Name);
       End;
@@ -324,6 +319,13 @@ Begin
 
   CreateBases := INI.ReadBoolean(Header_ECHOIMPORT, 'auto_create', False);
   DupeIndex   := INI.ReadInteger(Header_ECHOIMPORT, 'dupe_msg_index', -1);
+  Count       := INI.ReadInteger(Header_ECHOIMPORT, 'dupe_db_size', 32000);
+
+  Dupes := TPKTDupe.Create(Count);
+
+  If DupeIndex <> -1 Then
+    If Not GetMBaseByIndex (DupeIndex, DupeMBase) Then
+      DupeIndex := -1;
 
   FindFirst (bbsConfig.InboundPath + '*', AnyFile, DirInfo);
 
@@ -366,6 +368,8 @@ Begin
   End;
 
   FindClose (DirInfo);
+
+  Dupes.Free;
 
   ProcessStatus ('Total |15' + strI2S(TotalEcho) + ' |07echo |15' + strI2S(TotalNet) + ' |07net |15' + strI2S(TotalDupes) + ' |07dupe', True);
   ProcessResult (rDONE, True);
