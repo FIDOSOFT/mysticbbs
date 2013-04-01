@@ -161,7 +161,7 @@ Begin
 
   Close (PromptFile);
 
-  {$IFDEF WINDOWS}
+  {$IFNDEF UNIX}
     Client.Free;
   {$ENDIF}
 

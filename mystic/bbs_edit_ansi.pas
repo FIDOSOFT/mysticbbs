@@ -39,12 +39,10 @@ Type
     CutText      : Array[1..fseMaxCutText] of RecAnsiBufferLine;
     CutTextPos   : Word;
     CutPasted    : Boolean;
-
-    // old shit from copy over of quote/command functions
-    save   : boolean;
-    forced : boolean;
-    done   : boolean;
-    subj   : string;
+    Save         : Boolean;
+    Forced       : Boolean;
+    Done         : Boolean;
+    Subject      : String;
 
     Constructor Create (Var O: Pointer);
     Destructor  Destroy; Override;
@@ -78,11 +76,10 @@ Type
     Procedure   DoDelete;
     Procedure   DoChar (Ch: Char);
     Function    Edit : Boolean;
-
-    procedure quote;
-    procedure quotewindow;
-    procedure commands;
-    procedure messageupload;
+    Procedure   Quote;
+    Procedure   QuoteWindow;
+    Procedure   Commands;
+    Procedure   MessageUpload;
   End;
 
 Implementation
@@ -390,7 +387,7 @@ Var
 Begin
   TBBSCore(Owner).io.AllowArrow := True;
 
-  Session.io.PromptInfo[2] := Subj;
+  Session.io.PromptInfo[2] := Subject;
 
   Session.io.OutFile ('ansiedit', True, 0);
 
@@ -1159,9 +1156,9 @@ Begin
             End;
       'T' : Begin
               Session.io.OutFull(Session.GetPrompt(463));
-              Str := Session.io.GetInput(60, 60, 11, Subj);
-              If Str <> '' Then Subj := Str;
-              Session.io.PromptInfo[2] := Subj;
+              Str := Session.io.GetInput(60, 60, 11, Subject);
+              If Str <> '' Then Subject := Str;
+              Session.io.PromptInfo[2] := Subject;
               Exit;
             End;
       'U' : Begin
@@ -1208,6 +1205,10 @@ Begin
   If OK Then Begin
     Assign (F, FN);
     Reset  (F, 1);
+
+    ANSI.Lines := CurLine;
+    Ansi.CurX  := CurX;
+    Ansi.CurY  := CurLine;
 
     While Not Eof(F) Do Begin
       BlockRead (F, B, SizeOf(B), BR);
