@@ -192,7 +192,7 @@ Var
       Read (MBaseFile, MBase);
 
       If IsExportNode(MBase, Node.Index) Then
-        List.Add(strPadR(strI2S(MBase.Index), 6, ' ') + ' ' + strPadR('(' + MBase.EchoTag + ') ' + strStripPipe(MBase.Name), 40, ' '), 0);
+        List.Add(strPadR(strI2S(MBase.Index), 6, ' ') + ' ' + strPadR('(' + MBase.EchoTag + ') ' + strStripPipe(MBase.Name), 47, ' '), 0);
     End;
   End;
 
@@ -301,7 +301,7 @@ Var
     While Not Eof(EchoFile) Do Begin
       Read (EchoFile, EchoNode);
 
-      List.Add(strPadR(strI2S(FilePos(EchoFile)), 3, ' ') + '  ' + strPadR(EchoNode.Description, 35, ' ') + ' ' + strPadL(strAddr2Str(EchoNode.Address), 12, ' '), 0);
+      List.Add(strPadR(strI2S(FilePos(EchoFile)), 7, ' ') + ' ' + strPadL(strYN(EchoNode.Active), 3, ' ') + '  ' + strPadR(EchoNode.Description, 35, ' ') + ' ' + strPadL(strAddr2Str(EchoNode.Address), 17, ' '), 0);
     End;
 
     List.Add('', 2);
@@ -345,17 +345,17 @@ Begin
 
   If Not Edit Then Box.Header := ' Select' + Box.Header;
 
-  Box.Open (11, 5, 69, 21);
+  Box.Open (5, 5, 74, 21);
 
-  WriteXY (13,  6, 112, '###  Node Description' + strRep(' ', 25) + 'Network');
-  WriteXY (13,  7, 112, strRep(#196, 53));
-  WriteXY (13, 19, 112, strRep(#196, 53));
+  WriteXY (7,  6, 112, '###  Active  Description' + strRep(' ', 35) + 'Network');
+  WriteXY (7,  7, 112, strRep(#196, 66));
+  WriteXY (7, 19, 112, strRep(#196, 66));
   WriteXY (28, 20, 112, cfgCommandList);
 
   Repeat
     MakeList;
 
-    List.Open (11, 7, 69, 19);
+    List.Open (5, 7, 74, 19);
     List.Close;
 
     Case List.ExitCode of
@@ -513,7 +513,7 @@ Var
   Begin
     List.Clear;
 
-    Reset (ExportFile);
+    ioReset (ExportFile, SizeOf(RecEchoMailExport), fmRWDN);
 
     While Not Eof(ExportFile) Do Begin
       Read (ExportFile, ExpNode);

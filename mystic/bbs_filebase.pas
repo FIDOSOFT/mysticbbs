@@ -1167,13 +1167,17 @@ Var
   Var
     B : Word;
   Begin
-    B := 0;
+    If A = 0 Then Exit;
 
+    B        := 0;
     FileMode := 66;
+
     Reset (FBaseFile);
 
     Repeat
-      Read (FBaseFile, FBase);
+      {$I-} Read (FBaseFile, FBase); {$I+}
+
+      If IoResult <> 0 Then Exit;
 
       If Session.User.Access(FBase.ListACS) Then Inc(B);
 
@@ -1203,11 +1207,12 @@ Var
   End;
 
 Var
-  Old  : RecFileBase;
-  Temp : String[11];
-  A    : Word;
-  N1   : Word;
-  N2   : Word;
+  Old    : RecFileBase;
+  Temp   : String[40];
+  Count1 : LongInt;
+  Count2 : LongInt;
+  Num1   : String[40];
+  Num2   : String[40];
 Begin
   Old := FBase;
 
@@ -1222,23 +1227,43 @@ Begin
   Repeat
     Session.io.OutFull (Session.GetPrompt(202));
 
-    Temp := Session.io.GetInput(11, 11, 12, '');
+    Temp := Session.io.GetInput(10, 40, 12, '');
 
     If (Temp = '') or (Temp = 'Q') Then Break;
 
     If Temp = '?' Then
       List_Bases
     Else Begin
-      If Pos('-', Temp) > 0 Then Begin
-        N1 := strS2I(Copy(Temp, 1, Pos('-', Temp) - 1));
-        N2 := strS2I(Copy(Temp, Pos('-', Temp) + 1, Length(Temp)));
-      End Else Begin
-        N1 := strS2I(Temp);
-        N2 := N1;
+      Num1 := '';
+      Num2 := '';
+
+      For Count1 := 1 to Length(Temp) Do Begin
+        If Temp[Count1] = ' ' Then Continue;
+
+        If Temp[Count1] = ',' Then Begin
+          If Num2 <> '' Then Begin
+            For Count2 := strS2I(Num2) to strS2I(Num1) Do
+              ToggleBase(Count2);
+          End Else
+            ToggleBase(strS2I(Num1));
+
+          Num1 := '';
+          Num2 := '';
+        End Else
+        If Temp[Count1] = '-' Then Begin
+          Num2 := Num1;
+          Num1 := '';
+        End Else
+          Num1 := Num1 + Temp[Count1];
       End;
 
-      For A := N1 to N2 Do
-        If (A > 0) and (A <= Total) Then ToggleBase(A);
+      If Num2 <> '' Then Begin
+        For Count1 := strS2I(Num2) to strS2I(Num1) Do
+          ToggleBase(Count1);
+      End Else
+        ToggleBase(strS2I(Num1));
+
+      List_Bases;
     End;
   Until False;
 

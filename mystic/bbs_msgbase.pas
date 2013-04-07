@@ -758,13 +758,17 @@ Var
   Var
     B : Word;
   Begin
+    If A = 0 Then Exit;
+
     B        := 0;
     FileMode := 66;
 
     Reset (MBaseFile);
 
     Repeat
-      Read (MBaseFile, MBase);
+      {$I-} Read (MBaseFile, MBase); {$I+}
+
+      If IoResult <> 0 Then Exit;
 
       If Session.User.Access(MBase.ListACS) Then
         Inc(B);
@@ -806,11 +810,12 @@ Var
   End;
 
 Var
-  Old  : RecMessageBase;
-  Temp : String[11];
-  A    : Word;
-  N1   : Word;
-  N2   : Word;
+  Old    : RecMessageBase;
+  Temp   : String[40];
+  Count1 : LongInt;
+  Count2 : LongInt;
+  Num1   : String[40];
+  Num2   : String[40];
 Begin
   Old := MBase;
 
@@ -828,23 +833,43 @@ Begin
   Repeat
     Session.io.OutFull (Session.GetPrompt(95));
 
-    Temp := Session.io.GetInput(11, 11, 12, '');
+    Temp := Session.io.GetInput(10, 40, 12, '');
 
     If (Temp = '') or (Temp = 'Q') Then Break;
 
     If Temp = '?' Then
       List_Bases
     Else Begin
-      If Pos('-', Temp) > 0 Then Begin
-        N1 := strS2I(Copy(Temp, 1, Pos('-', Temp) - 1));
-        N2 := strS2I(Copy(Temp, Pos('-', Temp) + 1, Length(Temp)));
-      End Else Begin
-        N1 := strS2I(Temp);
-        N2 := N1;
+      Num1 := '';
+      Num2 := '';
+
+      For Count1 := 1 to Length(Temp) Do Begin
+        If Temp[Count1] = ' ' Then Continue;
+
+        If Temp[Count1] = ',' Then Begin
+          If Num2 <> '' Then Begin
+            For Count2 := strS2I(Num2) to strS2I(Num1) Do
+              ToggleBase(Count2);
+          End Else
+            ToggleBase(strS2I(Num1));
+
+          Num1 := '';
+          Num2 := '';
+        End Else
+        If Temp[Count1] = '-' Then Begin
+          Num2 := Num1;
+          Num1 := '';
+        End Else
+          Num1 := Num1 + Temp[Count1];
       End;
 
-      For A := N1 to N2 Do
-        If (A > 0) and (A <= Total) Then ToggleBase(A);
+      If Num2 <> '' Then Begin
+        For Count1 := strS2I(Num2) to strS2I(Num1) Do
+          ToggleBase(Count1);
+      End Else
+        ToggleBase(strS2I(Num1));
+
+      List_Bases;
     End;
   Until False;
 
@@ -1400,7 +1425,7 @@ Var
   HelpFile  : String[8];
   LastRead  : LongInt;
   ListMode  : Byte;
-  ReplyID   : String[31];
+  ReplyID   : String[60];
   TempStr   : String;
 
   Procedure SetMessageSecurity;
@@ -1663,24 +1688,24 @@ Var
     Session.io.PromptInfo[9] := strStripB(Session.io.PromptInfo[9], ' ');
   End;
 
-  Procedure Send_Msg_Text (Str : String);
+  Procedure Send_Msg_Text (Str: String);
   Begin
     If IsQuotedText(Str) Then Begin
-      Session.io.AnsiColor(MBase.ColQuote);
-      Session.io.OutPipe (Str);
-      Session.io.AnsiColor(MBase.ColText);
+      Session.io.AnsiColor (MBase.ColQuote);
+      Session.io.OutPipe   (Str);
+      Session.io.AnsiColor (MBase.ColText);
     End Else
     If Copy(Str, 1, 4) = '--- ' Then Begin
-      Session.io.AnsiColor(MBase.ColTear);
-      Session.io.OutPipe (Str);
-      Session.io.AnsiColor(MBase.ColText);
+      Session.io.AnsiColor (MBase.ColTear);
+      Session.io.OutPipe   (Str);
+      Session.io.AnsiColor (MBase.ColText);
     End Else
     If Copy(Str, 1, 2) = ' *' Then Begin
-      Session.io.AnsiColor(MBase.ColOrigin);
-      Session.io.OutPipe (Str);
-      Session.io.AnsiColor(MBase.ColText);
+      Session.io.AnsiColor (MBase.ColOrigin);
+      Session.io.OutPipe   (Str);
+      Session.io.AnsiColor (MBase.ColText);
     End Else
-      Session.io.OutPipe (Str);
+      Session.io.OutPipe(Str);
 
     If ListMode = 1 Then
       Session.io.AnsiClrEOL;
@@ -1754,14 +1779,12 @@ Var
     A      : LongInt;
     CurMsg : LongInt;
   Begin
-    Ansi_View_Message := False;
+    Result := False;
 
     Repeat
       Set_Node_Action (Session.GetPrompt(348));
 
       SetMessageSecurity;
-
-      If MsgBase^.GetMsgNum > LastRead Then LastRead := MsgBase^.GetMsgNum;
 
       If Session.User.IsThisUser(MsgBase^.GetTo) And Not MsgBase^.IsRcvd Then Begin
         MsgBase^.SetRcvd(True);
@@ -1772,7 +1795,11 @@ Var
       Lines     := 0;
       PageStart := 1;
 
+      If CurMsg > LastRead Then LastRead := CurMsg;
+
       Session.io.AllowArrow := True;
+
+      // create ReadMessageText function?
 
       MsgBase^.MsgTxtStartUp;
 
@@ -1845,6 +1872,7 @@ Var
                   End;
             #80 : If PageEnd <= Lines Then Begin
                     Inc (PageStart);
+
                     Draw_Msg_Text;
                   End;
             #81 : If (Lines > PageSize) and (PageEnd <= Lines) Then Begin
@@ -1869,6 +1897,7 @@ Var
                       End;
                     End Else
                       MsgBase^.SeekFirst(CurMsg);
+
                     Break;
                   End;
             'E' : Begin
@@ -1893,8 +1922,8 @@ Var
                     Break;
                   End;
             'I' : Begin
-                    LastRead          := MsgBase^.GetHighMsgNum;
-                    Ansi_View_Message := True;
+                    LastRead  := MsgBase^.GetHighMsgNum;
+                    Result    := True;
 
                     RemoveNewScan(495);
 
@@ -2045,6 +2074,7 @@ Var
     CurPage   : Word;
     MsgInfo   : Array[1..24] of MsgInfoRec;
     FirstPage : Boolean;
+    AskRemove : Boolean;
 
     Procedure DrawPage;
     Var
@@ -2188,6 +2218,8 @@ Var
     SN  : LongInt;
     A   : Byte;
   Begin
+    AskRemove := False;
+
     If Read_Page (True, False, False) Then Begin
       WereMsgs := True;
       PagePos  := 1;
@@ -2308,9 +2340,8 @@ Var
                   End;
             'G' : Break;
             'I' : Begin
-                    LastRead := MsgBase^.GetHighMsgNum;
-
-                    RemoveNewScan(495);
+                    LastRead  := MsgBase^.GetHighMsgNum;
+                    AskRemove := True;
 
                     Break;
                   End;
@@ -2328,6 +2359,9 @@ Var
     If WereMsgs Then Begin
       Session.io.AnsiGotoXY (1, Session.io.ScreenInfo[3].Y);
       Session.io.OutRawLn('');
+
+      If AskRemove Then
+        RemoveNewScan(495);
     End;
   End;
 

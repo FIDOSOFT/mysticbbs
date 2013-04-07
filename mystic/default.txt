@@ -196,7 +196,7 @@
 ; &1 = base number      &2 = base name      &3 = scan base? (Yes or No)
 093  |07|$R04|&1|15|$R03|&3  |07|$R29|&2
 094 |CR|12There are no available message bases!
-095 |09Selection |01[|10##|01]|09, |01[|10##|01-|10##|01]|09, |01[|10?|01/|10List|01]|09, or |01[|10Q|01]|09uit: |XX
+095 |09Selection |01[|10##|01]|09, |01[|10##|01-|10##|01,|10##|01]|09, |01[|10?|01/|10List|01]|09, or |01[|10Q|01]|09uit: |XX
 ; For strings 096 - 099: &1 = message base name
 096 |CR |11|&1 will NOT be scanned in QWK packets!|CR
 097 |CR |11|&1 will be scanned in QWK packets!|CR
@@ -373,7 +373,7 @@
 ; &1 = File base number      &2 = File base name      &3 = Scan? (Yes or No)
 201  |07|$R04|&1|15|$R03|&3  |07|$R29|&2
 ; Select scanned file bases prompt
-202 |09Selection |01[|10##|01]|09, |01[|10##|01-|10##|01]|09, |01[|10?|01/|10List|01]|09, or |01[|10Q|01]|09uit: |XX
+202 |09Selection |01[|10##|01]|09, |01[|10##|01-|10##|01,|10##|01]|09, |01[|10?|01/|10List|01]|09, or |01[|10Q|01]|09uit: |XX
 ; &1 = File base name
 203 |CR |11|&1 will NOT be scanned in new file scan!|CR
 ; &1 = File base name

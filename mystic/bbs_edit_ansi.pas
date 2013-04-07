@@ -134,7 +134,10 @@ Begin
   Result := '';
 
   For Count := 1 to GetLineLength(ANSI.Data[Line], RowSize) Do
-    Result := Result + ANSI.Data[Line][Count].Ch;
+    If ANSI.Data[Line][Count].Ch = #0 Then
+      Result := Result + ' '
+    Else
+      Result := Result + ANSI.Data[Line][Count].Ch;
 End;
 
 Procedure TEditorANSI.SetLineText (Line: LongInt; Str: String);

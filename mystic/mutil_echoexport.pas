@@ -334,6 +334,8 @@ Begin
         // of export
 
         If {MsgBase^.IsLocal And } Not MsgBase^.IsSent Then Begin
+          Log (3, '!', '   Found msg for export');
+
           Assign (ExportFile, MBase.Path + MBase.FileName + '.lnk');
 
           If ioReset(ExportFile, SizeOf(RecEchoMailExport), fmRWDN) Then Begin
@@ -345,7 +347,7 @@ Begin
 
               If MBase.NetType = 3 Then Begin
                 If GetNodeByIndex(ExportIndex, EchoNode) Then
-                  If EchoNode.Active and (EchoNode.Address.Zone = MsgBase^.GetOrigAddr.Zone) Then
+                  If EchoNode.Active and (EchoNode.Address.Zone = MsgBase^.GetDestAddr.Zone) Then
                     ExportMessage;
               End Else
               If GetNodeByIndex(ExportIndex, EchoNode) Then

@@ -193,7 +193,7 @@ Var
                    MBase.FileName  := PKT.MsgArea;
                    MBase.EchoTag   := PKT.MsgArea;
                    MBase.Path      := bbsConfig.MsgsPath;
-                   MBase.NetType   := 2;
+                   MBase.NetType   := 1;
                    MBase.ColQuote  := bbsConfig.ColorQuote;
                    MBase.ColText   := bbsConfig.ColorText;
                    MBase.ColTear   := bbsConfig.ColorTear;

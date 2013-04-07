@@ -120,34 +120,13 @@ Begin
 End;
 
 Function MakeDir (Str: String) : Boolean;
-Var
-  PathPos : Byte;
-  CurDIR  : String;
-  Prefix  : String;
 Begin
   Result := True;
 
   If DirExists(Str) Then Exit;
 
-  Prefix  := '';
-  PathPos := Pos(PathChar, Str);
-
-  While (PathPos > 0) Do Begin
-    CurDIR := Copy(Str, 1, PathPos);
-
-    Delete (Str, 1, PathPos);
-
-    Prefix := Prefix + CurDIR;
-
-    If Not IsDir(Prefix) Then Begin
-      {$I-} MkDIR (Prefix); {$I+}
-      If IoResult <> 0 Then Begin
-        ShowError('Unable to create: ' + Prefix);
-      End;
-    End;
-
-    PathPos := Pos(PathChar, Str);
-  End;
+  If Not DirCreate(Str) Then
+    ShowError('Unable to create: ' + Str);
 End;
 
 Var
@@ -391,8 +370,10 @@ Begin
 	MakeDir (Config.ScriptPath);
 	MakeDir (Config.AttachPath);
   MakeDir (Config.QwkPath);
-	MakeDir (Config.SystemPath + 'files');
-	MakeDir (Config.SystemPath + 'files' + PathChar + 'uploads');
+  MakeDir (Config.SystemPath + 'docs' + PathChar);
+  MakeDir (Config.SystemPath + 'files' + PathChar + 'uploads' + PathChar);
+  MakeDir (Config.InBoundPath);
+  MakeDir (Config.OutBoundPath);
 End;
 
 Procedure ExtractFile (Y : Byte; Desc, FN, EID, DestPath : String);
@@ -426,18 +407,20 @@ Begin
 	Reset  (CfgFile);
 	Read	 (CfgFile, Cfg);
 
-  Cfg.DataChanged := mysDataChanged;
-	Cfg.SystemPath  := Config.SystemPath;
-	Cfg.AttachPath  := Config.AttachPath;
-	Cfg.DataPath	  := Config.DataPath;
-	Cfg.MsgsPath	  := Config.MsgsPath;
-	Cfg.SemaPath	  := Config.SemaPath;
-	Cfg.QwkPath 	  := Config.QwkPath;
-	Cfg.ScriptPath  := Config.ScriptPath;
-	Cfg.LogsPath	  := Config.LogsPath;
-  Cfg.MenuPath    := Lang.MenuPath;
-  Cfg.TextPath    := Lang.TextPath;
-	Cfg.UserIdxPos  := 0;
+  Cfg.DataChanged  := mysDataChanged;
+	Cfg.SystemPath   := Config.SystemPath;
+	Cfg.AttachPath   := Config.AttachPath;
+	Cfg.DataPath	   := Config.DataPath;
+	Cfg.MsgsPath	   := Config.MsgsPath;
+	Cfg.SemaPath	   := Config.SemaPath;
+	Cfg.QwkPath 	   := Config.QwkPath;
+	Cfg.ScriptPath   := Config.ScriptPath;
+	Cfg.LogsPath	   := Config.LogsPath;
+  Cfg.MenuPath     := Lang.MenuPath;
+  Cfg.TextPath     := Lang.TextPath;
+  Cfg.InBoundPath  := Config.InBoundPath;
+  Cfg.OutBoundPath := Config.OutBoundPath;
+  Cfg.UserIdxPos  := 0;
   Cfg.SystemCalls := 0;
 
 	Reset (CfgFile);
@@ -502,6 +485,7 @@ Begin
 	ExtractFile (16, '|08[|15û|08] |07Installing menu files|08...',    'install_data', 'MENUS',  Lang.MenuPath);
 	ExtractFile (17, '|08[|15û|08] |07Installing script files|08...',  'install_data', 'SCRIPT', Config.ScriptPath);
 	ExtractFile (18, '|08[|15û|08] |07Installing data files|08...',    'install_data', 'DATA',   Config.DataPath);
+  ExtractFile (19, '|08[|15û|08] |07Installing documentation|08...', 'install_data', 'DOCS',   Config.SystemPath + 'docs' + PathChar);
 
 	UpdateDataFiles;
 
@@ -658,7 +642,9 @@ Begin
 
   { update paths not on the list }
 
-  Config.QwkPath := Config.SystemPath + 'localqwk' + PathChar;
+  Config.QwkPath      := Config.SystemPath + 'localqwk' + PathChar;
+  Config.InBoundPath  := Config.SystemPath + 'echomail' + PathChar + 'in' + PathChar;
+  Config.OutBoundPath := Config.SystemPath + 'echomail' + PathChar + 'out' + PathChar + 'fidonet' + PathChar;
 End;
 
 Const

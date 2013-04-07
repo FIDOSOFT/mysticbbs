@@ -1055,7 +1055,7 @@ Procedure TBBSIO.AnsiGotoXY (X: Byte; Y: Byte);
 Begin
   If Graphics = 0 Then Exit;
 
-  If (X = Screen.CursorX) and (Y = Screen.CursorY) Then Exit;
+//  If (X = Screen.CursorX) and (Y = Screen.CursorY) Then Exit;
 
   If X = 0 Then X := Screen.CursorX;
   If Y = 0 Then Y := Screen.CursorY;

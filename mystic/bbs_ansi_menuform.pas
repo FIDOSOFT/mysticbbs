@@ -465,6 +465,8 @@ Procedure TAnsiMenuForm.AddTog (HK: Char; D: String; X, Y, FX, FY, DS, FS, MN, M
 Begin
   If Items = FormMaxItems Then Exit;
 
+  If (Byte(P^) > MX) or (Byte(P^) < MN) Then Byte(P^) := MN;
+
   AddBasic (HK, D, X, Y, FX, FY, DS, FS, MX, ItemToggle, P, H);
 
   ItemData[Items]^.Toggle := TG;

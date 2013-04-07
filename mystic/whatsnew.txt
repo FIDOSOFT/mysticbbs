@@ -2814,7 +2814,7 @@
 
       508 |09|$D79=|CR
 
- <ALPHA 28 RELEASED>
+   <ALPHA 28 RELEASED>
 
  + Prompt #490 has been changed to separate message header flags by comma
    instead of space.  This allows the ability to completely exclude certain
@@ -2896,7 +2896,7 @@
 
  + MPL errors when executing a MPX module are now logged in the SYSOP logs
 
- <ALPHA 29 RELEASED>
+   <ALPHA 29 RELEASED>
 
  + Added new INBOUND and OUTBOUND echomail directories into the System
    Configuration.
@@ -2952,12 +2952,27 @@
    you if you want to physically rename them on disk too upon leaving the
    base editor.
 
- + MUTIL now has a full binkley-style echomail importer and exporter.  It
+ + MUTIL now has a full binkley-style 5D echomail importer and exporter.  It
    can autocreate new bases, perform dupe checking, and push duplicate msgs
    to their own base.  All node configuration, echos, and export info comes
    from within the new editor options with Mystic's configuration.
 
    Please review MUTIL.INI for the two new added functions for import/export
+
+   There are a few things left on my TODO list before I consider everything
+   pretty much functional.  I have two networks setup using only Mystic and
+   it is able to interact fine so far (Fido and Agora) with both Echo and
+   Netmail - so it DOES work, however, please review the current TODO:
+
+     1. Does not support exporting to point nodes.
+     2. Does not properly create reply chain links when importing
+     3. Netmail routing/passthrough does not exist yet.  You can only export
+        netmail to a configured uplink or downlink.  This is a big issue
+        when using networks like Fido that have multiple zones.
+     4. Does not have the option to keep "last scanned" pointers when
+        exporting mail.  This means that it searches all of your messages when
+        exporting.  This doesn't effect features, just the speed of exporting
+        messages.
 
    The basic setup is this:
 
@@ -2983,7 +2998,37 @@
 
       6. Turn on importing/exporting in MUTIL.INI.
 
-      7. At your own risk: Delete FastEcho, GEcho, CrashMail, etc. :)
+      7. Set one echomail address as your PRIMARY address.  This will be
+         what the root outbound directory you defined in system configuration
+         will use.  When a echomail message for a non-primary address is
+         found Mystic will replace the last directory with the domain and
+         zone.  So for example if your root is:
+
+            c:\mybbs\echomail\out\
+
+         And you have Fido as your primary, a message posted to Agora net
+         will be created in:
+
+            c:\mybbs\echomail\agoranet.02e\
+
+         The 5D BSO outbound format doesn't append to the base outbound
+         directory as you would expect.  Because of this, I recommand setting
+         the default outbound to include the primary address network domain.
+
+         So for example, if you have FidoNet as your primary address, set your
+         outbound directory to include the primary's domain:
+
+            c:\mybbs\echomail\out\fidonet\
+
+         This will mean that Mystic will then create the following using the
+         above example:
+
+            c:\mybbs\echomail\out\agoranet.02e\
+
+         I know all of this is confusing and stupid, but I didn't create the
+         standard I'm only dealing with it! :)
+
+      8. At your own risk: Delete FastEcho, GEcho, CrashMail, etc. :)
 
  ! Fixed a bug that could cause the user editor to crash directly after a
    new install if you didn't create your SysOp account first.
@@ -3007,3 +3052,33 @@
 
  ! Forced messages were able to be aborted sometimes while using the FS
    editor and using the CTRL-A key to abort.
+
+ + Toggling message base new scan and QWK scan can now accept commas, in
+   addition to range.  For example: 1,3,7-9,15 will toggle bases
+   1, 3, 7, 8, 9, and 15.
+
+ + Toggling file base new scan can now accept commas, in addition to range.
+   For example: 1,3,7-9,15 will toggle bases 1, 3, 7, 8, 9, and 15.
+
+ + After toggling any base or range of bases, the list of bases will now
+   automatically redisplay for both message, qwk, and file bases.
+
+ ! Fixed a bug in the MPL user get functions that could cause a RTE 100.
+
+ ! Installation will now properly create the file base directory for the
+   default upload filebase.
+
+ + Installation now creates a DOCS directory off the root installation. This
+   will eventually contain documentation.
+
+ + Installation now creates default echomail in/out directories.
+
+ + New program called FIDOPOLL has been added.  This will poll or send mail
+   to configured echomail nodes using BINKP.  This will eventually be baked
+   into MIS or MUTIL and will also include FTP echomail exchange as well as
+   QWK FTP networking.  For now it just does BINKP.
+
+   This program does NOT run as a server (daemon) so it will only poll for
+   mail it will not allow nodes to connect to you to exchange mail.
+
+   <ALPHA 30 RELEASED>
