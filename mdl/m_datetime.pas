@@ -4,6 +4,9 @@ Unit m_DateTime;
 
 Interface
 
+Uses
+  DOS;
+
 Const
   DayString   : Array[0..6] of String[3]  = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
   MonthString : Array[1..12] of String[3] = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
@@ -15,6 +18,7 @@ Function  TimerSet          (Secs: LongInt) : LongInt;
 Function  TimerUp           (Secs: LongInt) : Boolean;
 Function  CurDateDos        : LongInt;
 Function  CurDateJulian     : LongInt;
+Function  CurDateDT         : DateTime;
 Function  DateDos2Str       (Date: LongInt; Format: Byte) : String;
 Function  DateJulian2Str    (Date: LongInt; Format: Byte) : String;
 Function  DateStr2Dos       (Str: String) : LongInt;
@@ -36,7 +40,6 @@ Uses
 {$IFDEF UNIX}
   BaseUnix,
 {$ENDIF}
-  DOS,
   m_Strings;
 
 Const
@@ -139,6 +142,14 @@ Begin
   Date.Sec  := 0;
 
   DateG2J(Date.Year, Date.Month, Date.Day, Result);
+End;
+
+Function CurDateDT : DateTime;
+Var
+  Temp : Word;
+Begin
+  GetDate  (Result.Year, Result.Month, Result.Day, Temp);
+  GetTime  (Result.Hour, Result.Min, Result.Sec, Temp);
 End;
 
 Function TimerSeconds : LongInt;

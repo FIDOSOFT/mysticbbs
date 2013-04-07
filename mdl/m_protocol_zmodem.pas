@@ -1481,7 +1481,7 @@ Begin
   {$IFDEF ZDEBUG} ZLog('ZRecvFile -> File:' + FName); {$ENDIF}
   {$IFDEF ZDEBUG} ZLog('ZRecvFile -> Size:' + strI2S(FSize)); {$ENDIF}
 
-  Queue.Add(ReceivePath, FName);
+  Queue.Add(ReceivePath, FName, '');
 
   Queue.QData[Queue.QSize]^.FileSize := FSize;
   Queue.QData[Queue.QSize]^.Status   := QueueIntransit;

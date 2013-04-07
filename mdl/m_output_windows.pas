@@ -169,34 +169,25 @@ End;
 
 Procedure TOutputWindows.ClearEOL;
 Var
-  Buf      : Array[1..80] of TCharInfo;
-  Count    : Byte;
-  BufSize  : TCoord;
-  BufCoord : TCoord;
-  Region   : TSmallRect;
+  Buf   : Array[1..80] of TCharInfo;
+  Count : Byte;
+  Res   : LongInt;
 Begin
+  If Window.Right = Cursor.X Then Exit;
+
   Count := 0;
 
   While Count <= Window.Right - Cursor.X Do Begin
     Inc (Count);
+
     Buf[Count].Attributes  := TextAttr;
     Buf[Count].UnicodeChar := ' ';
   End;
 
   Move(Buf[1], Buffer[Cursor.Y + 1][Cursor.X + 1], SizeOf(TCharInfo) * Count);
 
-  If Active Then Begin
-    BufSize.X     := Count;
-    BufSize.Y     := 1;
-    BufCoord.X    := 0;
-    BufCoord.Y    := 0;
-    Region.Left   := Cursor.X;
-    Region.Top    := Cursor.Y;
-    Region.Right  := Cursor.X + Count - 1;
-    Region.Bottom := Cursor.Y;
-
-    WriteConsoleOutput(ConOut, @Buf, BufSize, BufCoord, Region);
-  End;
+  If Active Then
+    FillConsoleOutputCharacter (ConOut, ' ', Count, Cursor, @Res);
 End;
 
 Procedure TOutputWindows.ClearScreenNoUpdate;
@@ -264,6 +255,7 @@ Begin
   While Count <= Length(Text) Do Begin
     Buf[Count].Attributes  := A;
     Buf[Count].UnicodeChar := Text[Count];
+
     Inc (Count);
   End;
 

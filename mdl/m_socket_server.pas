@@ -98,7 +98,7 @@ Begin
     If ServerStatus.Count > MaxStatusText Then
       ServerStatus.Delete(0);
 
-    Res := '(' + Copy(DateDos2Str(CurDateDos, 1), 1, 5) + ' ' + TimeDos2Str(CurDateDos, False) + ') ' + Str;
+    Res := '(' + Copy(DateDos2Str(CurDateDos, 1), 1, 5) + ' ' + TimeDos2Str(CurDateDos, 0) + ') ' + Str;
 
     If Length(Res) > 74 Then Begin
       ServerStatus.Add(Copy(Res, 1, 74));

@@ -43,6 +43,7 @@ Function  FileRename      (OldFN, NewFN: String) : Boolean;
 Function  FileCopy        (Source, Target: String) : Boolean;
 Function  FileFind        (FN: String) : String;
 Function  FileByteSize    (FN: String) : Int64;
+Function  FileNewExt      (FN, NewExt: String) : String;
 
 { GLOBAL FILEIO VARIABLES AND CONSTANTS }
 
@@ -170,7 +171,7 @@ Begin
   ioCode := 5;
 
   While (Count < ioRetries) and (ioCode = 5) Do Begin
-    Seek (F, FPos);
+    {$I-} Seek (F, FPos); {$I+}
     ioCode := IoResult;
     Inc (Count);
     If ioCode = 5 Then WaitMS(ioWaitTime);
@@ -221,7 +222,7 @@ Begin
   ioCode := 5;
 
   While (Count < ioRetries) and (ioCode = 5) Do Begin
-    BlockRead (F, Rec, 1);
+    {$I-} BlockRead (F, Rec, 1); {$I+}
     ioCode := IoResult;
     Inc (Count);
     If ioCode = 5 Then WaitMS(ioWaitTime);
@@ -831,6 +832,19 @@ Begin
   End;
 
   FindClose (DirInfo);
+End;
+
+Function FileNewExt (FN, NewExt: String) : String;
+Var
+  Temp : Byte;
+Begin
+  For Temp := Length(FN) DownTo 1 Do
+    If FN[Temp] = '.' Then Begin
+      Result := Copy(FN, 1, Temp) + NewExt;
+      Exit;
+    End;
+
+  Result := FN + '.' + NewExt;
 End;
 
 End.

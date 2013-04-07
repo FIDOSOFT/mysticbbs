@@ -20,6 +20,7 @@ Type
   TProtocolQueueRec = Record
     FilePath : String[QueueMaxPathSize];
     FileName : String[QueueMaxNameSize];
+    FileNew  : String[QueueMaxNameSize];
     FileSize : Int64;
     Status   : Byte;
   End;
@@ -33,7 +34,7 @@ Type
     Constructor Create;
     Destructor  Destroy; Override;
 
-    Function    Add    (fPath, fName: String) : Boolean;
+    Function    Add    (fPath, fName, fNew: String) : Boolean;
     Procedure   Delete (Idx: Word);
     Procedure   Clear;
     Function    Next : Boolean;
@@ -55,7 +56,7 @@ Begin
   Clear;
 End;
 
-Function TProtocolQueue.Add (fPath, fName: String) : Boolean;
+Function TProtocolQueue.Add (fPath, fName, fNew: String) : Boolean;
 Var
   F : File;
 Begin
@@ -69,7 +70,11 @@ Begin
 
   QData[QSize]^.FilePath := fPath;
   QData[QSize]^.FileName := fName;
+  QData[QSize]^.FileNew  := fNew;
   QData[Qsize]^.FileSize := 0;
+
+  If fNew = '' Then
+    QData[QSize]^.FileNew := fName;
 
   Assign (F, fPath + fName);
 
