@@ -251,9 +251,10 @@ Begin
 
       WriteXYPipe (22, 23, 7, 0, 'Press |08[|15TAB|08] |07for more or |08[|15ENTER|08] |07to Quit');
 
-      Case OneKey(#09 + #13, False) of
+      Case OneKey(#09 + #13 + #27, False) of
         #09 : If ShowMode < 3 Then ShowMode := ShowMode + 1 Else ShowMode := 1;
-        #13 : Break;
+        #13,
+        #27 : Break;
       End;
     Until False;
   End;
