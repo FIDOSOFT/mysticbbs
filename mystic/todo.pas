@@ -8,33 +8,34 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
-! DUPE database needs to limit itself based on configurable size
 ! GE option 32 (change def protocol) might be broken
-! LBP menus arent scrolling correctly in Linux
-! MUTIL FILESBBS import is not skipping FILES.BBS?
-! Make sure MIS in Linux works with DOSEMU
 ! Node chat goes haywire at 1000 lines scrollback
 ! Node chat needs to actualy word wrap not nickname wrap.
 ! Node chat does not seem to account for prompt MCI codes when calculating
   the wrap length.
 ! Make sure ALL msgbase and filebase MPL variables are in place.
-! Make sure copy/paste for any msg file base REGENS unique numbers.
 ! GOTO does not always work properly in MPL (IceDevil)
 ! Complex boolean evaluations using numerical variables can sometime fail to
   compile (IceDevil)
 ! After data file review, add missing variables to various MPL Get/Put
   functions.
 ! Test midnight rollovers for time (flag for user to be immune to timecheck)
-! Fixed REAL2STR per Gryphon
+! Fix REAL2STR per Gryphon
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- AreaFix
+- Echomail export saves last scanned pointers
+- Echomail export support for points
+- Echomail export support for netmail routing
+- FileFix / TIC
+- Add "Add Export To" to global msgbase editor.  Also Del Export?
+! Use NetReply in RecMB also Reply to another base
 - cut/paste needs to be added back into the FS editor
 - QWK put/get per individual users via FTP
 - EXCLUDE from all files list. important.
 - Reply to echomail via netmail.
-- Msgbase flag for AKA matching or just rewrite netmail all together.
 - Amiga .readme and .TIC processing (similar)
 -  ^^ or utility to find .readme in the smae dir and add to file_id.diz if
    it does not exist.
@@ -43,10 +44,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - MUTIL create FILES.BBS in the file base directory
 - MUTILs new DIR import of msg bases could have optional config to reference
   a series of .NA files to get the name/description of bases.
-- New Scan/Read message should have option to not update last read when
-  reading personal messages.
-- Option for QuickScan that only prints a base if it has new messages.
-- Option for quickscan to show information about the messages (from,subj)
 - QWK via email
 - Either add Public/Private fusion type message base or allow reply via
   email or netmail option.
@@ -56,7 +53,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Email validation
 - Recode FCHECK into MUTIL, but also add the option to phsyically delete the
   file record instead of marking it offline.
-- Add ability to ignore files from a files.bbs import
 - Need ALL mystic servers to hvae the option to auto-ban an IP address if it
   connects X amount of times in X seconds.
 - Outbound telnet feature
@@ -83,36 +79,23 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - User-directories?  How could this be used?  Next two items?
 - Ability to save a message post if a user is disconnected while posting.
 - Ability to save file queue if a user is disconnected with a queue.
-- User 2 User chat system and private split screen/normal chat.  For the
-  Linux and OSX peeps that do not have a page sysop function.  Forced ACS
-  and remote screen restore afterwards.
-- NNTP server completion
+- User 2 User split screen chat
+- NodeSpy split chat
 - MBBSCGI (or PHP DLL) [Grymmjack might have the only MBBSCGI copy]
 - If not the above then finish the HTTP server?
-- SDL versions of m_input and m_output and also use SDL if that becomes
-  reality for the ability to play WAV/MP3/MIDI files etc as SysOp
-  notification of events and pages.  Maybe someone else can take on creating
-  a mimic of m_Output_Windows and m_Input_Windows using SDL?  This would
-  benefit the entire FPC community, and not just Mystic.  NetRunner could
-  also have a full screen mode in Windows, Linux, and OSX.
+- SDL versions of m_input and m_output?
 - Possibility of OS/2 port again?  Need to find a working OS/2 VMware in
-  order to do this.  Once MDL is ported over it should almost just work.
+  order to do this.
 - MVIEW rewrite to mimic oldskool AcidView type deals, which would be amazing
   combined with the SDL stuff if that happens.
 - Mystic-DOS rewrite or just code a file manager which would probably be a
-  lot nicer using the new ANSI UI.  Combined with the text/ansi editor a
-  SysOp would never need to use anything else to draw/maintain their setup
-  even from a remote telnet connection in Windows, if desired.
+  lot nicer using the new ANSI UI.
 - MIDE version using the Lazaurs GUI editor [Spec].   Maybe he would be
   interested in working on that?
 - Filebase allow anonymous flag for FTP or just use FreeFiles
 - Template system similar to Mystic 2 (ansiedit.ans ansiedit.ans.cfg)
 - Rename Template filenames to allow more than 8 characters (for clarity)
-- Does anyone use Version 7 compiled nodelists?  Worth supporting?
-  How do other softwares leverage nodelists?  Reference TG, RG, RA,
-  SearchLight, PCBoard, etc, and come up with the best solution.
 - ANSI message upload post processor option: Auto/Disabled/Ask
-- Prompt for disconect after UL or DL (and add option to filebase settings)
 - Finish optional user prompts
 - MCI code for FS ansi viewer?
 - MCI code for # of files in current file area
@@ -124,15 +107,8 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - BBS email forward to e-mail address
 - Email pasword resets
 - Email verification
-- BinkP and FTP echomail polling/hosting options
--    ^^ Auto tosses into/out of Mystic
--    ^^ AREAFIX
--    ^^ TIC processing
--    ^^ Needs to be powerful enough to HUB an entire FTN network
 - QWK Networking support internally WHO CAN HELP THIS HAPPEN?
 - MPL trunc/round?
-- Internal Zmodem and TN/Link protocols or at least MBBSPROT executable
-     ^^ driver that ships with Mystic and can be used by others.
 - Salted SHA-1 or SHA-256 password encryption
 - User editor: Reset password/Force change... cannot view PWs
 

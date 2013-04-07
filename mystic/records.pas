@@ -23,7 +23,7 @@
 Const
   mysSoftwareID  = 'Mystic';                                    // no idea
   mysCopyYear    = '1997-2013';                                 // its been a long time!
-  mysVersion     = '1.10 A30';                                  // current version
+  mysVersion     = '1.10 A31';                                  // current version
   mysDataChanged = '1.10 A11';                                  // version of last records change
 
   {$IFDEF WIN32}
@@ -511,7 +511,8 @@ Type
     Flags     : LongInt;                                        // MB flag bits see above
     Created   : LongInt;
     EchoTag   : String[40];                                     // EchoMail Tag
-    Res       : Array[1..35] of Byte;                           // RESERVED
+    NetReply  : LongInt;
+    Res       : Array[1..31] of Byte;                           // RESERVED
   End;
 
   FScanRec = Record                    { <Data Path> *.SCN               }

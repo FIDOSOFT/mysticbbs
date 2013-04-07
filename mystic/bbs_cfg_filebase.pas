@@ -181,7 +181,7 @@ Var
 
     With FBase Do Begin
       FileName := 'new';
-      Path     := Config.SystemPath + 'xfers' + PathChar + 'new' + PathChar;
+      Path     := Config.SystemPath + 'files' + PathChar + 'new' + PathChar;
       Name     := 'New File Base';
       FtpName  := Name;
       DefScan  := 1;
