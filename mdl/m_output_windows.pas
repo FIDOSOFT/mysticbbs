@@ -186,8 +186,10 @@ Begin
 
   Move(Buf[1], Buffer[Cursor.Y + 1][Cursor.X + 1], SizeOf(TCharInfo) * Count);
 
-  If Active Then
+  If Active Then Begin
     FillConsoleOutputCharacter (ConOut, ' ', Count, Cursor, @Res);
+    FillConsoleOutputAttribute (ConOut, TextAttr, Count, Cursor, @Res);
+  End;
 End;
 
 Procedure TOutputWindows.ClearScreenNoUpdate;
