@@ -8,6 +8,7 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
+! Weird console slowdown with test.txt in Win7 use MVIEW to test
 ! GE option 32 (change def protocol) might be broken
 ! Node chat goes haywire at 1000 lines scrollback
 ! Node chat needs to actualy word wrap not nickname wrap.

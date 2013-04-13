@@ -93,6 +93,7 @@ Function  GetFTNArchiveName  (Orig, Dest: RecEchoMailAddr) : String;
 Function  GetFTNFlowName     (Dest: RecEchoMailAddr) : String;
 Function  GetFTNOutPath      (EchoNode: RecEchoMailNode) : String;
 Function  GetNodeByIndex     (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
+Function  IsValidAKA         (Zone, Net, Node: Word) : Boolean;
 
 Implementation
 
@@ -579,6 +580,21 @@ Begin
   End;
 
   Close (F);
+End;
+
+Function IsValidAKA (Zone, Net, Node: Word) : Boolean;
+Var
+  Count : Byte;
+Begin
+  Result := False;
+
+  For Count := 1 to 30 Do Begin
+    Result := (bbsConfig.NetAddress[Count].Zone  = Zone) And
+              (bbsConfig.NetAddress[Count].Net   = Net)  And
+              (bbsConfig.NetAddress[Count].Node  = Node);
+
+    If Result Then Break;
+  End;
 End;
 
 End.

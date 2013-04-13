@@ -1114,8 +1114,31 @@ Var
   DoWrap    : Boolean = True;
   QuoteFile : Text;
   Lines     : SmallInt;
+  ReplyBase : RecMessageBase;
 Begin
-  If Not Session.User.Access(MBase.PostACS) Then Begin
+  ReplyBase := MBase;
+
+(*
+  Session.io.OutFull('|CR|09Reply |01[|10ENTER|01] |09Current Base, |01[|10B|01]|09ase, |01[|10N|01]|09etmail, |01[|10E|01]|09mail, |01[|10ESC|01] |09Abort: |11');
+
+  Case Session.io.OneKey (#13#27 + 'BNE', True) of
+    #27 : Exit;
+    'B' : Begin
+            //Total := ListAreas(Config.MCompress);
+            //NEW something like: (and use it in other areas too)
+            //PromptMessageBase (Var Base: RMB, IgnoreGroups): LongInt; -1 is abort, otherwise = physical area
+          End;
+    'E' : Begin
+            Reset (MBaseFile);
+            Read  (MBaseFile, ReplyBase);
+            Close (MBaseFile);
+
+            Email := True;
+          End; // load email area set email := true
+    'N' : ; // load netmail area
+  End;
+*)
+  If Not Session.User.Access(ReplyBase.PostACS) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(105));
     Exit;
   End;
@@ -1144,7 +1167,7 @@ Begin
       Break;
   Until False;
 
-  If MBase.NetType = 3 Then Begin
+  If ReplyBase.NetType = 3 Then Begin
     MsgBase^.GetOrig(Addr);
 
     TempStr := NetmailLookup(False, ToWho, strAddr2Str(Addr));
@@ -1218,15 +1241,15 @@ Begin
   If Editor(Lines, ColumnValue[Session.Theme.ColumnSize] - 2, mysMaxMsgLines, False, fn_tplMsgEdit, Subj) Then Begin
     Session.io.OutFull (Session.GetPrompt(107));
 
-    If Not OpenCreateBase(MsgNew, MBase) Then Exit;
+    If Not OpenCreateBase(MsgNew, ReplyBase) Then Exit;
 
-    AssignMessageData(MsgNew, MBase);
+    AssignMessageData(MsgNew, ReplyBase);
 
-    Case MBase.NetType of
+    Case ReplyBase.NetType of
       2 : MsgNew^.SetTo('All');
       3 : Begin
             MsgNew^.SetDest     (Addr);
-            MsgNew^.SetOrig     (GetMatchedAddress(Config.NetAddress[MBase.NetAddr], Addr));
+            MsgNew^.SetOrig     (GetMatchedAddress(Config.NetAddress[ReplyBase.NetAddr], Addr));
             MsgNew^.SetCrash    (Config.netCrash);
             MsgNew^.SetHold     (Config.netHold);
             MsgNew^.SetKillSent (Config.netKillSent);
@@ -1256,7 +1279,7 @@ Begin
       Inc (Session.User.ThisUser.Emails);
       Inc (Session.HistoryEmails);
     End Else Begin
-      Session.SystemLog ('Posted #' + strI2S(MsgNew^.GetMsgNum) + ': "' + Subj + '" to ' + strStripMCI(MBase.Name));
+      Session.SystemLog ('Posted #' + strI2S(MsgNew^.GetMsgNum) + ': "' + Subj + '" to ' + strStripMCI(ReplyBase.Name));
 
       Inc (Session.User.ThisUser.Posts);
       Inc (Session.HistoryPosts);

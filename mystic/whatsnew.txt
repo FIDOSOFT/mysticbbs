@@ -3069,7 +3069,7 @@
    default upload filebase.
 
  + Installation now creates a DOCS directory off the root installation. This
-   will eventually contain documentation.
+   will eventually contain documentation that hopefully doesn't suck. :)
 
  + Installation now creates default echomail in/out directories.
 
@@ -3082,3 +3082,44 @@
    mail it will not allow nodes to connect to you to exchange mail.
 
    <ALPHA 30 RELEASED>
+
+ + Lots of changes to the MUTIL echomail import functions:
+
+     1. MUTIL will now process all PKT files with no regard of message type
+        (ie echo or netmail).  It should now also process PKT files that
+        have a mix of each without crashing.
+
+     2. MUTIL will now ignore the base filename of PKT files meaning it will
+        attempt to process ALL incoming PKT files.  MUTIL will check the PKT
+        header against the configured AKAs and if there is a match it will
+        import.  If a PKT is found that is not addressed to a configured AKA
+        address, MUTIL will delete it.
+
+     3. For incoming echomail bundles, MUTIL will continue to first attempt
+        to match the bundle filename to a configured echomail node, but if a
+        configured node cannot be linked, it will attempt to find an archive
+        signature and use that to extract the bundle.  Currently supported
+        signatures are ZIP, RAR, LZH, and ARJ.
+
+        If either a signature is found OR a link to an echomail node is found
+        it will attempt to import.  Should both fail, MUTIL will no longer
+        delete the bundle instead it will only log the issue.  This allows
+        the issue to be resolved without loss of echomail.
+
+        If it DOES succeed, MUTIL will process all PKT files using the same
+        logic that is described in #2 above.
+
+     4. MUTIL now reports status and percentage bars for each individual PKT
+        file when tossing a bundle, rather than just the bundle itself.  In
+        addition, the logging will contain both the bundle and the PKT files
+        contained within it.
+
+ ! Fixed a bug with the windows local console bleeding colors on a clear EOL
+   that was introduced in A30.
+
+ + Added the footprint for the new reply functions (reply by current base,
+   email, netmail, or a selectable msg base).  These are not functional yet,
+   but the internal changes have been made to allow for it.  If you notice
+   wierdness during message replies let me know.
+
+   <ALPHA 31 RELEASED>

@@ -12,6 +12,7 @@ Uses
   DOS,
   m_FileIO,
   m_Strings,
+  AView,
   BBS_Common,
   BBS_MsgBase_ABS,
   BBS_MsgBase_JAM,
@@ -64,199 +65,60 @@ End;
 
 Procedure uEchoImport;
 Var
-  TotalEcho   : LongInt;
-  TotalNet    : LongInt;
-  TotalDupes  : LongInt;
-  EchoNode    : RecEchoMailNode;
-  DupeIndex   : LongInt;
-  DupeMBase   : RecMessageBase;
-  CreateBases : Boolean;
-  Dupes       : TPKTDupe;
+  TotalEcho    : LongInt;
+  TotalNet     : LongInt;
+  TotalDupes   : LongInt;
+  EchoNode     : RecEchoMailNode;
+  DupeIndex    : LongInt;
+  DupeMBase    : RecMessageBase;
+  CreateBases  : Boolean;
+  PKT          : TPKTReader;
+  Dupes        : TPKTDupe;
+  Status       : LongInt;
 
-  Procedure ImportNetMailpacket (ArcFN: String);
+  Procedure ImportPacketFile (PktFN: String);
   Var
-    PKT     : TPKTReader;
-    MBase   : RecMessageBase;
-    MsgBase : PMsgBaseABS;
-  Begin
-    PKT := TPKTReader.Create;
-
-    If PKT.Open (bbsConfig.InboundPath + ArcFN) Then Begin
-      If GetMBaseByNetZone (PKT.PKTHeader.DestZone, MBase) Then Begin
-        MessageBaseOpen(MsgBase, MBase);
-
-        While PKT.GetMessage(True) Do Begin
-          // Check for AreaFix, etc here
-
-          SavePKTMsgToBase(MsgBase, PKT, True);
-
-          Log (2, '+', '      Netmail ' + MBase.EchoTag + ' from ' + PKT.MsgFrom + ' to ' + PKT.MsgTo);
-
-          Inc (TotalNet);
-        End;
-
-        MsgBase^.CloseMsgBase;
-
-        Dispose (MsgBase, Done);
-      End Else
-        Log (3, '!', '   No NETMAIL base for zone ' + strI2S(PKT.PKTHeader.DestZone));
-    End Else
-      Log (3, '!', '   ' + ArcFN + ' is not valid PKT');
-
-    PKT.Free;
-
-    FileErase (bbsConfig.InBoundPath + ArcFN);
-  End;
-
-  Procedure ImportEchoMailPacket (ArcFN: String);
-  Var
-    DirInfo  : SearchRec;
-    FoundPKT : Boolean;
-    CurTag   : String;
     MsgBase  : PMsgBaseABS;
-    PKT      : TPKTReader;
+    CurTag   : String;
     MBase    : RecMessageBase;
-    Part     : LongInt;
-    Whole    : LongInt;
     Count    : LongInt;
   Begin
-    FoundPKT := False;
-    PKT      := TPKTReader.Create;
-    MsgBase  := NIL;
-    Part     := 0;
+    If Not PKT.Open(PktFN) Then Begin
+      Log (3, '!', '   ' + JustFile(PktFN) + ' is not valid PKT');
 
-    ProcessStatus (ArcFN + ' from ' + strAddr2Str(EchoNode.Address), False);
+      Exit;
+    End;
 
-    ExecuteArchive (bbsConfig.InboundPath + ArcFN, EchoNode.ArcType, '*', 2);
+    If Not IsValidAKA(PKT.Dest.Zone, PKT.Dest.Net, PKT.Dest.Node) Then Begin
+      Log (3, '!', '   ' + JustFile(PktFN) + ' does not match an AKA');
 
-    Whole := DirFiles(TempPath);
+      PKT.Close;
+
+      Exit;
+    End;
+
+    ProcessStatus ('Importing ' + JustFile(PktFN), False);
 
     BarOne.Reset;
 
-    FindFirst (TempPath + '*', AnyFile, DirInfo);
+    // set status for PKT name
+    // do percentage bar init
 
-    While DosError = 0 Do Begin
-      If DirInfo.Attr And Directory = 0 Then Begin
-        Inc (Part);
+    CurTag  := '';
+    MsgBase := NIL;
+    Status  := 20;
 
-        BarOne.Update (Part, Whole);
+    While PKT.GetMessage Do Begin
+      If Status MOD 20 = 0 Then
+        BarOne.Update (PKT.MsgFile.FilePos, PKT.MsgFile.FileSize);
 
-        If strUpper(JustFileExt(DirInfo.Name)) = 'PKT' Then Begin
-          FoundPKT := True;
-          CurTag   := '';
+      Inc (Status);
 
-          If Not PKT.Open(TempPath + DirInfo.Name) Then Begin
-            Log (3, '!', '   ' + DirInfo.Name + ' is not valid PKT');
+      If PKT.MsgArea = 'NETMAIL' Then Begin
+        // areafix etc here
 
-            FindNext(DirInfo);
-
-            Continue;
-          End;
-
-          While PKT.GetMessage(False) Do Begin
-            If Dupes.IsDuplicate(PKT.MsgCRC) Then Begin
-              Log (3, '!', '      Duplicate message found in ' + PKT.MsgArea);
-
-              If DupeIndex <> -1 Then Begin
-                If (MsgBase <> NIL) and (CurTag <> '-DUPEMSG-') Then Begin
-                  MsgBase^.CloseMsgBase;
-
-                  Dispose (MsgBase, Done);
-
-                  MsgBase := NIL;
-                  CurTag  := '-DUPEMSG-';
-                End;
-
-                If MsgBase = NIL Then
-                  MessageBaseOpen (MsgBase, DupeMBase);
-
-                SavePKTMsgToBase (MsgBase, PKT, False);
-              End;
-
-              Inc (TotalDupes);
-            End Else Begin
-              If CurTag <> PKT.MsgArea Then Begin
-                If Not GetMBaseByTag(PKT.MsgArea, MBase) Then Begin
-                  Log (2, '!', '   Area ' + PKT.MsgArea + ' does not exist');
-
-                  If Not CreateBases then Continue;
-
-                  If FileExist(bbsConfig.MsgsPath + PKT.MsgArea + '.sqd') or
-                     FileExist(bbsConfig.MsgsPath + PKT.MsgArea + '.jhr') Then Continue;
-
-                   FillChar (MBase, SizeOf(MBase), #0);
-
-                   MBase.Index     := GenerateMBaseIndex;
-                   MBase.Name      := PKT.MsgArea;
-                   MBase.QWKName   := PKT.MsgArea;
-                   MBase.NewsName  := PKT.MsgArea;
-                   MBase.FileName  := PKT.MsgArea;
-                   MBase.EchoTag   := PKT.MsgArea;
-                   MBase.Path      := bbsConfig.MsgsPath;
-                   MBase.NetType   := 1;
-                   MBase.ColQuote  := bbsConfig.ColorQuote;
-                   MBase.ColText   := bbsConfig.ColorText;
-                   MBase.ColTear   := bbsConfig.ColorTear;
-                   MBase.ColOrigin := bbsConfig.ColorOrigin;
-                   MBase.ColKludge := bbsConfig.ColorKludge;
-                   MBase.Origin    := bbsConfig.Origin;
-                   MBase.BaseType  := INI.ReadInteger(Header_ECHOIMPORT, 'base_type', 0);
-                   MBase.ListACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_list', '');
-                   MBase.ReadACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_read', '');
-                   MBase.PostACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_post', '');
-                   MBase.NewsACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_news', '');
-                   MBase.SysopACS  := INI.ReadString (Header_ECHOIMPORT, 'acs_sysop', 's255');
-                   MBase.Header    := INI.ReadString (Header_ECHOIMPORT, 'header', 'msghead');
-                   MBase.RTemplate := INI.ReadString (Header_ECHOIMPORT, 'read_template', 'ansimrd');
-                   MBase.ITemplate := INI.ReadString (Header_ECHOIMPORT, 'index_template', 'ansimlst');
-                   MBase.MaxMsgs   := INI.ReadInteger(Header_ECHOIMPORT, 'max_msgs', 500);
-                   MBase.MaxAge    := INI.ReadInteger(Header_ECHOIMPORT, 'max_msgs_age', 365);
-                   MBase.DefNScan  := INI.ReadInteger(Header_ECHOIMPORT, 'new_scan', 1);
-                   MBase.DefQScan  := INI.ReadInteger(Header_ECHOIMPORT, 'qwk_scan', 1);
-                   MBase.NetAddr   := 1;
-
-                   For Count := 1 to 30 Do
-                     If bbsConfig.NetAddress[Count].Zone = PKT.PKTHeader.DestZone Then Begin
-                       MBase.NetAddr := Count;
-                       Break;
-                     End;
-
-                  If INI.ReadString(Header_ECHOIMPORT, 'use_autosig', '1') = '1' Then
-                    MBase.Flags := MBase.Flags OR MBAutoSigs;
-
-                  If INI.ReadString(Header_ECHOIMPORT, 'use_realname', '0') = '1' Then
-                    MBase.Flags := MBase.Flags OR MBRealNames;
-
-                  If INI.ReadString(Header_ECHOIMPORT, 'kill_kludge', '1') = '1' Then
-                    MBase.Flags := MBase.Flags OR MBKillKludge;
-
-                  // ADD DOWNLINK INFORMATION HERE INTO ECHONODES??
-
-                  AddMessageBase(MBase);
-                End;
-
-                If MsgBase <> NIL Then Begin
-                  MsgBase^.CloseMsgBase;
-
-                  Dispose (MsgBase, Done);
-
-                  MsgBase := NIL;
-                End;
-
-                MessageBaseOpen(MsgBase, MBase);
-
-                CurTag := PKT.MsgArea;
-              End;
-
-              SavePKTMsgToBase (MsgBase, PKT, False);
-
-              Dupes.AddDuplicate(PKT.MsgCRC);
-
-              Inc (TotalEcho);
-
-              Log (2, '+', '      Added Msg #' + strI2S(MsgBase^.GetHighMsgNum) + ' to ' + strStripPipe(MBase.Name));
-            End;
-          End;
+        If GetMBaseByNetZone (PKT.PKTHeader.DestZone, MBase) Then Begin
+          CurTag := '';
 
           If MsgBase <> NIL Then Begin
             MsgBase^.CloseMsgBase;
@@ -266,16 +128,120 @@ Var
             MsgBase := NIL;
           End;
 
-          PKT.MsgFile.Close;
+          MessageBaseOpen(MsgBase, MBase);
+
+          SavePKTMsgToBase(MsgBase, PKT, True);
+
+          Log (2, '+', '      Netmail from ' + PKT.MsgFrom + ' to ' + PKT.MsgTo);
+
+          Inc (TotalNet);
+        End Else
+          Log (3, '!', '   No NETMAIL base for zone ' + strI2S(PKT.PKTHeader.DestZone));
+      End Else Begin
+        If Dupes.IsDuplicate(PKT.MsgCRC) Then Begin
+          Log (3, '!', '      Duplicate message found in ' + PKT.MsgArea);
+
+          If DupeIndex <> -1 Then Begin
+            If (MsgBase <> NIL) and (CurTag <> '-DUPEMSG-') Then Begin
+              MsgBase^.CloseMsgBase;
+
+              Dispose (MsgBase, Done);
+
+              MsgBase := NIL;
+              CurTag  := '-DUPEMSG-';
+            End;
+
+            If MsgBase = NIL Then
+              MessageBaseOpen (MsgBase, DupeMBase);
+
+            SavePKTMsgToBase (MsgBase, PKT, False);
+          End;
+
+          Inc (TotalDupes);
+        End Else Begin
+          If CurTag <> PKT.MsgArea Then Begin
+            If Not GetMBaseByTag(PKT.MsgArea, MBase) Then Begin
+              Log (2, '!', '   Area ' + PKT.MsgArea + ' does not exist');
+
+              If Not CreateBases Then Continue;
+
+              If FileExist(bbsConfig.MsgsPath + PKT.MsgArea + '.sqd') or
+                 FileExist(bbsConfig.MsgsPath + PKT.MsgArea + '.jhr') Then Continue;
+
+              FillChar (MBase, SizeOf(MBase), #0);
+
+              MBase.Index     := GenerateMBaseIndex;
+              MBase.Name      := PKT.MsgArea;
+              MBase.QWKName   := PKT.MsgArea;
+              MBase.NewsName  := PKT.MsgArea;
+              MBase.FileName  := PKT.MsgArea;
+              MBase.EchoTag   := PKT.MsgArea;
+              MBase.Path      := bbsConfig.MsgsPath;
+              MBase.NetType   := 1;
+              MBase.ColQuote  := bbsConfig.ColorQuote;
+              MBase.ColText   := bbsConfig.ColorText;
+              MBase.ColTear   := bbsConfig.ColorTear;
+              MBase.ColOrigin := bbsConfig.ColorOrigin;
+              MBase.ColKludge := bbsConfig.ColorKludge;
+              MBase.Origin    := bbsConfig.Origin;
+              MBase.BaseType  := INI.ReadInteger(Header_ECHOIMPORT, 'base_type', 0);
+              MBase.ListACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_list', '');
+              MBase.ReadACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_read', '');
+              MBase.PostACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_post', '');
+              MBase.NewsACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_news', '');
+              MBase.SysopACS  := INI.ReadString (Header_ECHOIMPORT, 'acs_sysop', 's255');
+              MBase.Header    := INI.ReadString (Header_ECHOIMPORT, 'header', 'msghead');
+              MBase.RTemplate := INI.ReadString (Header_ECHOIMPORT, 'read_template', 'ansimrd');
+              MBase.ITemplate := INI.ReadString (Header_ECHOIMPORT, 'index_template', 'ansimlst');
+              MBase.MaxMsgs   := INI.ReadInteger(Header_ECHOIMPORT, 'max_msgs', 500);
+              MBase.MaxAge    := INI.ReadInteger(Header_ECHOIMPORT, 'max_msgs_age', 365);
+              MBase.DefNScan  := INI.ReadInteger(Header_ECHOIMPORT, 'new_scan', 1);
+              MBase.DefQScan  := INI.ReadInteger(Header_ECHOIMPORT, 'qwk_scan', 1);
+              MBase.NetAddr   := 1;
+
+              For Count := 1 to 30 Do
+                If bbsConfig.NetAddress[Count].Zone = PKT.PKTHeader.DestZone Then Begin
+                  MBase.NetAddr := Count;
+                  Break;
+                End;
+
+              If INI.ReadString(Header_ECHOIMPORT, 'use_autosig', '1') = '1' Then
+                MBase.Flags := MBase.Flags OR MBAutoSigs;
+
+              If INI.ReadString(Header_ECHOIMPORT, 'use_realname', '0') = '1' Then
+                MBase.Flags := MBase.Flags OR MBRealNames;
+
+              If INI.ReadString(Header_ECHOIMPORT, 'kill_kludge', '1') = '1' Then
+                MBase.Flags := MBase.Flags OR MBKillKludge;
+
+              // ADD DOWNLINK INFORMATION HERE INTO ECHONODES??
+
+              AddMessageBase(MBase);
+            End;
+
+            If MsgBase <> NIL Then Begin
+              MsgBase^.CloseMsgBase;
+
+              Dispose (MsgBase, Done);
+
+              MsgBase := NIL;
+            End;
+
+            MessageBaseOpen(MsgBase, MBase);
+
+            CurTag := PKT.MsgArea;
+          End;
+
+          SavePKTMsgToBase (MsgBase, PKT, False);
+
+          Dupes.AddDuplicate(PKT.MsgCRC);
+
+          Inc (TotalEcho);
+
+          Log (2, '+', '      Added Msg #' + strI2S(MsgBase^.GetHighMsgNum) + ' to ' + strStripPipe(MBase.Name));
         End;
-
-        FileErase (TempPath + DirInfo.Name);
       End;
-
-      FindNext (DirInfo);
     End;
-
-    FindClose (DirInfo);
 
     If MsgBase <> NIL Then Begin
       MsgBase^.CloseMsgBase;
@@ -285,19 +251,89 @@ Var
       MsgBase := NIL;
     End;
 
-    If Not FoundPKT Then
-      Log (2, '!', '   Unable to find PKT in packet. Archive issue?');
+    PKT.Close;
 
-    PKT.Free;
+    FileErase (PktFN);
 
-    FileErase (bbsConfig.InboundPath + ArcFN);
+    BarOne.Update (1, 1);
+  End;
+
+  Procedure ImportPacketBundle (PktBundle: String);
+  Var
+    PKTFound   : Boolean;
+    PKTMatched : Boolean;
+    DirInfo    : SearchRec;
+    NodeFile   : File of RecEchoMailNode;
+    EchoNode   : RecEchoMailNode;
+    ArcType    : String[4];
+    Count      : Byte;
+  Begin
+    PKTMatched := False;
+
+    Assign (NodeFile, bbsConfig.DataPath + 'echonode.dat');
+
+    If ioReset(NodeFile, Sizeof(RecEchoMailNode), fmRWDN) Then Begin
+      While Not Eof(NodeFile) Do Begin
+        Read (NodeFile, EchoNode);
+
+        For Count := 1 to 30 Do Begin
+          If strUpper(JustFileName(PktBundle)) = strUpper(GetFTNArchiveName(EchoNode.Address, bbsConfig.NetAddress[Count])) Then Begin
+            PKTMatched := True;
+            ArcType    := EchoNode.ArcType;
+
+            Break;
+          End;
+        End;
+      End;
+
+      Close (NodeFile);
+    End;
+
+    If Not PKTMatched Then Begin
+      Case GetArchiveType(bbsConfig.InboundPath + PktBundle) of
+        'A' : ArcType := 'ARJ';
+        'R' : ArcType := 'RAR';
+        'Z' : ArcType := 'ZIP';
+        'L' : ArcType := 'LZH';
+      Else
+        Log (2, '!', '   Cannot find arctype for ' + PktBundle + '; skipping');
+
+        Exit;
+      End;
+    End;
+
+    PKTFound := False;
+
+    ProcessStatus ('Extracting ' + PktBundle, False);
+
+    ExecuteArchive (bbsConfig.InboundPath + PktBundle, ArcType, '*', 2);
+
+    FindFirst (TempPath + '*', AnyFile, DirInfo);
+
+    While DosError = 0 Do Begin
+      If DirInfo.Attr And Directory = 0 Then Begin
+        If strUpper(JustFileExt(DirInfo.Name)) = 'PKT' Then Begin
+          PKTFound := True;
+
+          ImportPacketFile (TempPath + DirInfo.Name);
+        End;
+      End;
+
+      FindNext (DirInfo);
+    End;
+
+    FindClose (DirInfo);
+
+    If Not PKTFound Then
+      Log (2, '!', '   Unable to extract bundle; skipping')
+    Else
+      FileErase (bbsConfig.InboundPath + PktBundle);
   End;
 
 Var
-  DirInfo     : SearchRec;
-  NodeFile    : File of RecEchoMailNode;
-  Count       : LongInt;
-  FoundPacket : Byte;
+  DirInfo : SearchRec;
+  Count   : LongInt;
+  FileExt : String;
 Begin
   TotalEcho  := 0;
   TotalNet   := 0;
@@ -322,6 +358,7 @@ Begin
   Count       := INI.ReadInteger(Header_ECHOIMPORT, 'dupe_db_size', 32000);
 
   Dupes := TPKTDupe.Create(Count);
+  PKT   := TPKTReader.Create;
 
   If DupeIndex <> -1 Then
     If Not GetMBaseByIndex (DupeIndex, DupeMBase) Then
@@ -331,37 +368,21 @@ Begin
 
   While DosError = 0 Do Begin
     If DirInfo.Attr And Directory = 0 Then Begin
-      FoundPacket := 0;
+      FileExt := Copy(strUpper(JustFileExt(DirInfo.Name)), 1, 2);
 
-      If strUpper(JustFileExt(DirInfo.Name)) = 'PKT' Then Begin
-        FoundPacket := 2;
-        // NETMAIL
-      End Else Begin
-        // ECHOMAIL
-        Assign (NodeFile, bbsConfig.DataPath + 'echonode.dat');
-
-        If ioReset(NodeFile, Sizeof(RecEchoMailNode), fmRWDN) Then Begin
-          While Not Eof(NodeFile) Do Begin
-            Read (NodeFile, EchoNode);
-
-            For Count := 1 to 30 Do Begin
-              If strUpper(JustFileName(DirInfo.Name)) = strUpper(GetFTNArchiveName(EchoNode.Address, bbsConfig.NetAddress[Count])) Then Begin
-                FoundPacket := 1;
-
-                Break;
-              End;
-            End;
-          End;
-
-          Close (NodeFile);
-        End;
-      End;
-
-      Case FoundPacket of
-        0 : Log (2, '!', '   Unknown inbound file: ' + DirInfo.Name);
-        1 : ImportEchoMailPacket (DirInfo.Name);
-        2 : ImportNetMailPacket  (DirInfo.Name);
-      End;
+      If FileExt = 'PK' Then
+        ImportPacketFile(bbsConfig.InboundPath + DirInfo.Name)
+      Else
+      If (FileExt = 'SU') or
+         (FileExt = 'MO') or
+         (FileExt = 'TU') or
+         (FileExt = 'WE') or
+         (FileExt = 'TH') or
+         (FileExt = 'FR') or
+         (FileExt = 'SA') Then
+           ImportPacketBundle(DirInfo.Name)
+      Else
+        Log (2, '!', '   Unknown inbound file: ' + DirInfo.Name);
     End;
 
     FindNext (DirInfo);
@@ -369,6 +390,7 @@ Begin
 
   FindClose (DirInfo);
 
+  PKT.Free;
   Dupes.Free;
 
   ProcessStatus ('Total |15' + strI2S(TotalEcho) + ' |07echo |15' + strI2S(TotalNet) + ' |07net |15' + strI2S(TotalDupes) + ' |07dupe', True);

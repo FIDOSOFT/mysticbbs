@@ -114,7 +114,8 @@ Type
     Procedure   DisposeText;
 
     Function    Open (FN: String) : Boolean;
-    Function    GetMessage (NetMail: Boolean) : Boolean;
+    Procedure   Close;
+    Function    GetMessage : Boolean;
   End;
 
 Implementation
@@ -218,6 +219,13 @@ Begin
   MsgLines := 0;
 End;
 
+Procedure TPKTReader.Close;
+Begin
+  DisposeText;
+
+  If MsgFile.Opened Then MsgFile.Close;
+End;
+
 Function TPKTReader.Open (FN: String) : Boolean;
 Var
   Res : LongInt;
@@ -230,6 +238,7 @@ Begin
 
   If (Res <> SizeOf(PKTHeader)) or (PKTHeader.PKTType <> $0002) Then Begin
     MsgFile.Close;
+
     Opened := False;
   End Else Begin
     Orig.Zone := PKTHeader.OrigZone;
@@ -243,10 +252,11 @@ Begin
   End;
 End;
 
-Function TPKTReader.GetMessage (NetMail: Boolean) : Boolean;
+Function TPKTReader.GetMessage : Boolean;
 Var
-  Res : LongInt;
-  Ch  : Char;
+  Res   : LongInt;
+  Ch    : Char;
+  First : Boolean;
 
   Function GetStr (TermChar: Char) : String;
   Begin
@@ -278,12 +288,6 @@ Begin
   MsgSubj := GetStr (#0);
   MsgTime := Copy(MsgDate, 12, 5);
 
-  If Not NetMail Then Begin
-    MsgArea := GetStr (#13);
-
-    Delete (MsgArea, Pos('AREA:', MsgArea), 5);
-  End;
-
   Tmp := strUpper(Copy(MsgDate, 4, 3));
 
   For Res := 1 to 12 Do
@@ -296,6 +300,7 @@ Begin
 
   DisposeText;
 
+  First         := True;
   MsgSize       := 0;
   Result        := True;
   MsgLines      := 1;
@@ -319,6 +324,19 @@ Begin
                  Until (Ch = #0) or (MsgFile.EOF);
 
                  Break;
+               End;
+
+               If First Then Begin
+                 First := False;
+
+                 If Pos('AREA:', MsgText[MsgLines]^) = 1 Then Begin
+                   MsgArea := Copy(MsgText[MsgLines]^, 6, 255);
+
+                   MsgText[MsgLines]^ := '';
+
+                   Continue;
+                 End Else
+                   MsgArea := 'NETMAIL';
                End;
 
                Inc (MsgSize, Length(MsgText[MsgLines]^));
