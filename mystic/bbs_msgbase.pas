@@ -182,6 +182,7 @@ Var
   Listed    : LongInt;
   ListType  : Byte;
   HasList   : Boolean;
+  Addr      : RecEchoMailAddr;
 Begin
   HasList  := FileExist(Config.DataPath + 'nodelist.txt');
   NodeList := TNodeListSearch.Create;
@@ -267,6 +268,18 @@ Begin
         Result := strAddr2Str(NodeData.Address);
 
         Break;
+      End;
+    End Else
+    If (Listed = 0) And Not FromMenu And Not Config.ForceNodelist Then Begin
+      If strStr2Addr(Result, Addr) Then Begin
+        Session.io.PromptInfo[1] := strAddr2Str(Addr);
+        Session.io.PromptInfo[7] := MsgTo;
+
+        If Session.io.GetYN(Session.GetPrompt(502), True) Then Begin
+          Result := strAddr2Str(NodeData.Address);
+
+          Break;
+        End;
       End;
     End Else Begin
       Session.io.PromptInfo[1] := strComma(Listed);

@@ -382,7 +382,7 @@ Begin
          (FileExt = 'SA') Then
            ImportPacketBundle(DirInfo.Name)
       Else
-        Log (2, '!', '   Unknown inbound file: ' + DirInfo.Name);
+        Log (2, '!', '   Unknown inbound file ' + DirInfo.Name);
     End;
 
     FindNext (DirInfo);

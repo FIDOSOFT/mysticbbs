@@ -3123,3 +3123,9 @@
    wierdness during message replies let me know.
 
    <ALPHA 31 RELEASED>
+
+ + New option in System Config -> Message Base settings called "Forced NL
+   Match".  If this is set to TRUE, Mystic will force a user who is sending
+   netmail to match an address found in the nodelist.  If it is set to false
+   Mystic will still allow a user to search the nodelist, but if it does
+   not find a match they will still have the option to send the netmail.
