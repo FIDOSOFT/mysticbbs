@@ -139,6 +139,7 @@ Begin
   For Count := 1 to 30 Do
     If Config.NetAddress[Count].Zone = Dest.Zone Then Begin
       Result := Config.NetAddress[Count];
+
       Exit;
     End;
 End;
@@ -276,7 +277,7 @@ Begin
         Session.io.PromptInfo[7] := MsgTo;
 
         If Session.io.GetYN(Session.GetPrompt(502), True) Then Begin
-          Result := strAddr2Str(NodeData.Address);
+          Result := strAddr2Str(Addr);
 
           Break;
         End;
@@ -295,7 +296,8 @@ Function TMsgBase.IsQuotedText (Str: String) : Boolean;
 Var
   Temp : Byte;
 Begin
-  Temp   := Pos('>', strStripL(Str, ' '));
+  Temp := Pos('>', Str);
+//  Temp   := Pos('>', strStripL(Str, ' '));
   Result := (Temp > 0) and (Temp < 5);
 End;
 
@@ -1127,30 +1129,56 @@ Var
   DoWrap    : Boolean = True;
   QuoteFile : Text;
   Lines     : SmallInt;
+  Total     : LongInt;
   ReplyBase : RecMessageBase;
 Begin
   ReplyBase := MBase;
 
-(*
-  Session.io.OutFull('|CR|09Reply |01[|10ENTER|01] |09Current Base, |01[|10B|01]|09ase, |01[|10N|01]|09etmail, |01[|10E|01]|09mail, |01[|10ESC|01] |09Abort: |11');
+  If Not Email Then Begin
+    Session.io.PromptInfo[1] := MBase.Name;
+    Session.io.PromptInfo[2] := MsgBase^.GetFrom;
+    Session.io.PromptInfo[3] := MsgBase^.GetSubj;
 
-  Case Session.io.OneKey (#13#27 + 'BNE', True) of
-    #27 : Exit;
-    'B' : Begin
-            //Total := ListAreas(Config.MCompress);
-            //NEW something like: (and use it in other areas too)
-            //PromptMessageBase (Var Base: RMB, IgnoreGroups): LongInt; -1 is abort, otherwise = physical area
-          End;
-    'E' : Begin
-            Reset (MBaseFile);
-            Read  (MBaseFile, ReplyBase);
-            Close (MBaseFile);
+    If ListMode = 0 Then
+      Session.io.OutFull(Session.GetPrompt(509))
+    Else
+      Session.io.OutFull(Session.GetPrompt(510));
 
-            Email := True;
-          End; // load email area set email := true
-    'N' : ; // load netmail area
+    Case Session.io.OneKey (#13#27 + 'QBNE', True) of
+      'Q',
+      #27 : Exit;
+      'B' : Begin
+              Total := ListAreas(Config.MCompress);
+
+              Repeat
+                Session.io.OutFull(Session.GetPrompt(511));
+
+                Case Session.io.OneKeyRange(#13 + '?Q', 1, Total) of
+                  #13,
+                  'Q': Exit;
+                  '?': Total := ListAreas(Config.MCompress);
+                Else
+                  Break;
+                End;
+              Until False;
+
+              If Not GetBaseCompressed(Session.io.RangeValue, ReplyBase) Then
+                Exit;
+            End;
+      'E' : Begin
+              Reset (MBaseFile);
+              Read  (MBaseFile, ReplyBase);
+              Close (MBaseFile);
+
+              Email := True;
+            End;
+    End;
   End;
-*)
+
+  Session.io.PromptInfo[1] := ReplyBase.Name;
+
+  Session.io.OutFullLn(Session.GetPrompt(512));
+
   If Not Session.User.Access(ReplyBase.PostACS) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(105));
     Exit;
@@ -1812,7 +1840,6 @@ Var
 
   Var
     Ch     : Char;
-    A      : LongInt;
     CurMsg : LongInt;
   Begin
     Result := False;
@@ -1971,15 +1998,15 @@ Var
 
                     Session.io.OutFull (Session.GetPrompt(403));
 
-                    A := strS2I(Session.io.GetInput(9, 9, 12, ''));
+                    If Session.io.OneKeyRange(#13 + 'Q', 1, MsgBase^.GetHighMsgNum) = #0 Then Begin
+                      MsgBase^.SeekFirst(Session.io.RangeValue);
 
-                    If (A > 0) and (A <= MsgBase^.GetHighMsgNum) Then Begin
-                      MsgBase^.SeekFirst(A);
                       If Not SeekNextMsg(True, False) Then Begin
                         MsgBase^.SeekFirst(CurMsg);
                         SeekNextMsg(True, False);
                       End;
                     End;
+
                     Break;
                   End;
             'L' : Exit;
@@ -2554,10 +2581,8 @@ Var
 
                   Session.io.OutFull (Session.GetPrompt(334));
 
-                  A := strS2I(Session.io.GetInput(9, 9, 12, ''));
-
-                  If (A > 0) and (A <= MsgBase^.GetHighMsgNum) Then Begin
-                    MsgBase^.SeekFirst(A);
+                  If Session.io.OneKeyRange(#13 + 'Q', 1, MsgBase^.GetHighMsgNum) = #0 Then Begin
+                    MsgBase^.SeekFirst(Session.io.RangeValue);
 
                     If Not SeekNextMsg(True, False) Then Begin
                       MsgBase^.SeekFirst(B);
@@ -2623,6 +2648,7 @@ Var
                 End;
           'R' : Begin
                   ReplyMessage (Mode = 'E', ListMode, ReplyID);
+
                   Break;
                 End;
           'T' : Begin

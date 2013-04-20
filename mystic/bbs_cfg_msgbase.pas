@@ -215,10 +215,15 @@ Var
   Var
     GBox   : TAnsiMenuBox;
     Form   : TAnsiMenuForm;
-    Active : Array[1..26] of Boolean;
+    Active : Array[1..28] of Boolean;
     ActCnt : Byte;
     Count  : LongInt;
     Topic  : String;
+    DelIdx : LongInt = -1;
+    DelStr : String = '';
+    AddIdx : LongInt = -1;
+    AddStr : String = '';
+    EN     : RecEchoMailNode;
   Begin
     FillChar (Active, SizeOf(Active), 0);
 
@@ -230,10 +235,10 @@ Var
 
     GBox.Open (6, 5, 75, 21);
 
-    VerticalLine (26, 7, 19);
-    VerticalLine (64, 7, 19);
+    VerticalLine (26, 7, 20);
+    VerticalLine (64, 7, 20);
 
-    For Count := 1 to 13 Do
+    For Count := 1 to 14 Do
       Form.AddBol ('!', '> ',  8, 6 + Count, 10, 6 + Count, 2, 3, @Active[Count], Topic + ChangeStr);
 
     Form.AddPath ('P', ' Path'        , 20,  7, 28,  7,  6, 16, 80, @Global.Path, Topic + 'Message base storage path');
@@ -249,9 +254,10 @@ Var
     Form.AddStr  ('M', ' L Template'  , 14, 17, 28, 17, 12, 16, 20, @Global.ITemplate, Topic + 'Template for lightbar message list');
     Form.AddTog  ('A', ' Base Type'   , 15, 18, 28, 18, 11,  9,  0, 3, 'Local EchoMail Newsgroup Netmail', @Global.NetType, Topic + 'Message base type');
     Form.AddTog  ('B', ' Base Format' , 13, 19, 28, 19, 13,  6,  0, 1, 'JAM Squish', @Global.BaseType, Topic + 'Message base storage format');
+    Form.AddNone ('7', ' Export Add'  , 14, 20, 28, 20, 12, Topic + 'Add EchoNode Export');
 
-    For Count := 1 to 13 Do
-      Form.AddBol ('!', '> ', 45, 6 + Count, 47, 6 + Count, 2, 3, @Active[Count + 13], Topic + ChangeStr);
+    For Count := 1 to 14 Do
+      Form.AddBol ('!', '> ', 45, 6 + Count, 47, 6 + Count, 2, 3, @Active[Count + 14], Topic + ChangeStr);
 
     Form.AddAttr ('Q', ' Quote Color' , 51,  7, 66,  7, 13, @Global.ColQuote, Topic + 'Color for quoted text');
     Form.AddAttr ('X', ' Text Color'  , 52,  8, 66,  8, 12, @Global.ColText, Topic + 'Color for message text');
@@ -266,18 +272,37 @@ Var
     Form.AddBits ('5', ' Autosigs'    , 54, 17, 66, 17, 10, MBAutoSigs, @Global.Flags, Topic + 'Allow auto signatures in this base?');
     Form.AddBits ('6', ' Kill Kludge' , 51, 18, 66, 18, 13, MBKillKludge, @Global.Flags, Topic + 'Filter out kludge lines');
     Form.AddBits ('V', ' Private'     , 55, 19, 66, 19,  9, MBPrivate, @Global.Flags, Topic + 'Is this a private base?');
+    Form.AddNone ('8', ' Export Kill' , 51, 20, 66, 20, 13, Topic + 'Remove EchoNode Export');
 
     Form.LoExitChars := #21#27;
 
     Repeat
       WriteXY (28, 12, 113, strPadR(strAddr2Str(Config.NetAddress[Global.NetAddr]), 19, ' '));
 
+      If AddStr <> '' Then
+        WriteXY (28, 20, 113, strPadR(AddStr, 12, ' '));
+
+      If DelStr <> '' Then
+        WriteXY (66, 20, 113, strPadR(DelStr, 8, ' '));
+
       Case Form.Execute of
+        '7' : Begin
+                AddIdx := Configuration_EchoMailNodes(False);
+
+                If GetNodeByIndex(AddIdx, EN) Then
+                  AddStr := strAddr2Str(EN.Address);
+              End;
+        '8' : Begin
+                DelIdx := Configuration_EchoMailNodes(False);
+
+                If GetNodeByIndex(DelIdx, EN) Then
+                  DelStr := strAddr2Str(EN.Address);
+              End;
         'D' : Global.NetAddr := Configuration_EchoMailAddress(False);
         #21 : Begin
                 ActCnt := 0;
 
-                For Count := 1 to 26 Do
+                For Count := 1 to 28 Do
                   If Active[Count] Then Inc(ActCnt);
 
                 If ShowMsgBox(1, 'Update ' + strI2S(ActCnt) + ' settings per base?') Then Begin
@@ -300,22 +325,28 @@ Var
                       If Active[12] Then MBase.NetType := Global.NetType;
                       If Active[13] Then MBase.BaseType := Global.BaseType;
 
-                      If Active[14] Then MBase.ColQuote := Global.ColQuote;
-                      If Active[15] Then MBase.ColText := Global.ColText;
-                      If Active[16] Then MBase.ColTear := Global.ColTear;
-                      If Active[17] Then MBase.ColOrigin := Global.ColOrigin;
-                      If Active[18] Then MBase.ColKludge := Global.ColKludge;
-                      If Active[19] Then MBase.MaxMsgs := Global.MaxMsgs;
-                      If Active[20] Then MBase.MaxAge := Global.MaxAge;
-                      If Active[21] Then MBase.DefNScan := Global.DefNScan;
-                      If Active[22] Then MBase.DefQScan := Global.DefQScan;
-                      If Active[23] Then BitSet(1, 4, MBase.Flags, (Global.Flags AND MBRealNames <> 0));
-                      If Active[24] Then BitSet(3, 4, MBase.Flags, (Global.Flags AND MBAutoSigs <> 0));
-                      If Active[25] Then BitSet(2, 4, MBase.Flags, (Global.Flags AND MBKillKludge <> 0));
-                      If Active[26] Then BitSet(5, 4, MBase.Flags, (Global.Flags AND MBPrivate <> 0));
+                      If Active[15] Then MBase.ColQuote := Global.ColQuote;
+                      If Active[16] Then MBase.ColText := Global.ColText;
+                      If Active[17] Then MBase.ColTear := Global.ColTear;
+                      If Active[18] Then MBase.ColOrigin := Global.ColOrigin;
+                      If Active[19] Then MBase.ColKludge := Global.ColKludge;
+                      If Active[20] Then MBase.MaxMsgs := Global.MaxMsgs;
+                      If Active[21] Then MBase.MaxAge := Global.MaxAge;
+                      If Active[22] Then MBase.DefNScan := Global.DefNScan;
+                      If Active[23] Then MBase.DefQScan := Global.DefQScan;
+                      If Active[24] Then BitSet(1, 4, MBase.Flags, (Global.Flags AND MBRealNames <> 0));
+                      If Active[25] Then BitSet(3, 4, MBase.Flags, (Global.Flags AND MBAutoSigs <> 0));
+                      If Active[26] Then BitSet(2, 4, MBase.Flags, (Global.Flags AND MBKillKludge <> 0));
+                      If Active[27] Then BitSet(5, 4, MBase.Flags, (Global.Flags AND MBPrivate <> 0));
 
                       Seek  (MBaseFile, Count - 1);
                       Write (MBaseFile, MBase);
+
+                      If Active[14] And (AddIdx <> -1) Then
+                        AddExportByBase (MBase, AddIdx);
+
+                      If Active[28] And (DelIdx <> -1) Then
+                        RemoveExportFromBase (MBase, DelIdx);
                     End;
 
                   Break;
@@ -418,9 +449,24 @@ Var
       End;
     End;
 
-    Write(MBaseFile, MBase);
+    Write (MBaseFile, MBase);
   End;
 
+  Procedure EraseData;
+  Begin
+    FileErase (MBase.Path + MBase.FileName + '.jhr');
+    FileErase (MBase.Path + MBase.FileName + '.jlr');
+    FileErase (MBase.Path + MBase.FileName + '.jdt');
+    FileErase (MBase.Path + MBase.FileName + '.jdx');
+    FileErase (MBase.Path + MBase.FileName + '.sqd');
+    FileErase (MBase.Path + MBase.FileName + '.sqi');
+    FileErase (MBase.Path + MBase.FileName + '.sql');
+    FileErase (MBase.Path + MBase.FileName + '.scn');
+  End;
+
+Var
+  KillData : Boolean;
+  Count    : LongInt;
 Begin
   Result := -1;
 
@@ -459,24 +505,34 @@ Begin
                       AssignRecord(False);
                       MakeList;
                     End;
-              'D' : If (List.Picked > 1) and (List.Picked < List.ListMax) Then
+              'D' : If List.Marked > 0 Then Begin
+                      If ShowMsgBox(1, 'Delete ' + strI2S(List.Marked) + ' bases?') Then Begin
+                        KillData := ShowMsgBox(1, 'Delete data files for ' + strI2S(List.Marked) + ' bases?');
+
+                        For Count := List.ListMax DownTo 1 Do
+                          If List.List[Count].Tagged = 1 Then Begin
+                            Seek (MBaseFile, Count - 1);
+                            Read (MBaseFile, MBase);
+
+                            KillRecord (MBaseFile, Count, SizeOf(MBase));
+                            FileErase  (MBase.Path + MBase.FileName + '.lnk');
+
+                            If KillData Then EraseData;
+                          End;
+
+                        MakeList;
+                      End;
+                    End Else
+                    If (List.Picked > 1) and (List.Picked < List.ListMax) Then
                       If ShowMsgBox(1, 'Delete this entry?') Then Begin
                         Seek (MBaseFile, List.Picked - 1);
                         Read (MBaseFile, MBase);
 
                         KillRecord (MBaseFile, List.Picked, SizeOf(MBase));
+                        FileErase  (MBase.Path + MBase.FileName + '.lnk');
 
-                        If ShowMsgBox(1, 'Delete data files?') Then Begin
-                          FileErase (MBase.Path + MBase.FileName + '.jhr');
-                          FileErase (MBase.Path + MBase.FileName + '.jlr');
-                          FileErase (MBase.Path + MBase.FileName + '.jdt');
-                          FileErase (MBase.Path + MBase.FileName + '.jdx');
-                          FileErase (MBase.Path + MBase.FileName + '.sqd');
-                          FileErase (MBase.Path + MBase.FileName + '.sqi');
-                          FileErase (MBase.Path + MBase.FileName + '.sql');
-                          FileErase (MBase.Path + MBase.FileName + '.scn');
-                          FileErase (MBase.Path + MBase.FileName + '.lnk');
-                        End;
+                        If ShowMsgBox(1, 'Delete data: ' + strStripPipe(MBase.Name)) Then
+                          EraseData;
 
                         MakeList;
                       End;

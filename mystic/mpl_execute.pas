@@ -292,6 +292,7 @@ Procedure TInterpEngine.GetFBaseVars (Var F: RecFileBase);
 Begin
   Move (F.Name,     VarData[IdxVarFBase     ]^.Data^, SizeOf(F.Name));
   Move (F.ListACS,  VarData[IdxVarFBase + 1 ]^.Data^, SizeOf(F.ListACS));
+  Move (F.FileName, VarData[IdxVarFBase + 2 ]^.Data^, SizeOf(F.FileName));
 End;
 
 Function TInterpEngine.GetFBaseRecord (Num: LongInt) : Boolean;

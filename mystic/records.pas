@@ -59,7 +59,7 @@ Const
   mysMaxMenuCmds     = 25;                                      // Max menu commands per item
   mysMaxMenuInput    = 12;
   mysMaxMenuStack    = 8;
-  mysMaxThemeText    = 508;
+  mysMaxThemeText    = 512;
 
   fn_SemFileEcho = 'echomail.now';
   fn_SemFileNews = 'newsmail.now';
@@ -116,7 +116,8 @@ Type
     OutFiles    : Cardinal;
     OutSize     : Cardinal;
     binkPass    : String[20];
-    Res         : Array[1..491] of Byte;
+    RouteInfo   : String[128];
+    Res         : Array[1..362] of Byte;
   End;
 
   RecSauceInfo = Packed Record

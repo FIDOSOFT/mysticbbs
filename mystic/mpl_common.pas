@@ -381,6 +381,7 @@ Begin
 
           AddStr ({$IFDEF MPLPARSER} 'fbasename',     {$ENDIF} iString, 40);
           AddStr ({$IFDEF MPLPARSER} 'fbaseacs',      {$ENDIF} iString, 30);
+          AddStr ({$IFDEF MPLPARSER} 'fbasefn',       {$ENDIF} iString, 40);
         End;
     6 : Begin
           {$IFNDEF MPLPARSER} TInterpEngine(S).IdxVarFGroup := X + 1; {$ENDIF}

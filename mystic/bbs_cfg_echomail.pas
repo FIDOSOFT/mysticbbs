@@ -8,6 +8,10 @@ Uses
   BBS_Core,
   BBS_Common;
 
+Function  GetNodeByIndex       (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
+Procedure AddExportByBase      (Var MBase: RecMessageBase; Idx: LongInt);
+Procedure RemoveExportFromBase (Var MBase: RecMessageBase; Idx: LongInt);
+
 Function  Configuration_EchoMailNodes   (Edit: Boolean) : LongInt;
 Function  Configuration_EchomailAddress (Edit: Boolean) : Byte;
 Procedure Configuration_NodeExport      (Var MBase: RecMessageBase);
@@ -140,12 +144,12 @@ Begin
 
   Box.Open (3, 5, 76, 21);
 
-  VerticalLine (19,  7, 12);
-  VerticalLine (19, 15, 19);
+  VerticalLine (19,  7, 13);
+  VerticalLine (19, 16, 20);
   VerticalLine (53,  7, 11);
 //  VerticalLine (53, 14, 19);
 
-  WriteXY (13, 14, 112, 'BINKP');
+  WriteXY (13, 15, 112, 'BINKP');
 //  WriteXY (49, 13, 112, 'FTP');
 
   Form.AddStr  ('D', ' Description'  ,  6,  7, 21,  7, 13, 23, 35, @Node.Description, Topic + 'Node description');
@@ -154,12 +158,13 @@ Begin
   Form.AddTog  ('E', ' Network Type' ,  5, 10, 21, 10, 14,  7, 0, 1, 'FidoNet QWK', @Node.NetType, Topic);
   Form.AddTog  ('L', ' Session Type' ,  5, 11, 21, 11, 14,  5, 0, 1, 'BinkP FTP', @Node.ProtType, Topic);
   Form.AddTog  ('Y', ' Export Type'  ,  6, 12, 21, 12, 13,  6, 0, 3, 'Normal Crash Direct Hold', @Node.MailType, Topic);
+  Form.AddStr  ('U', ' Route Info'   ,  7, 13, 21, 13, 12, 54, 128, @Node.RouteInfo, Topic + 'Route info (ie "2:* 3:*")');
 
-  Form.AddStr  ('H', ' Host'         , 13, 15, 21, 15,  6, 20, 60, @Node.binkHost, Topic + '<hostname>:<port>');
-  Form.AddMask ('S', ' Password'     ,  9, 16, 21, 16, 10, 20, 20, @Node.binkPass, Topic);
-  Form.AddWord ('T', ' TimeOut'      , 10, 17, 21, 17,  9,  4, 10, 9999, @Node.binkTimeOut, Topic + 'Inactive session timeout (seconds)');
-  Form.AddWord ('B', ' BlockSize'    ,  8, 18, 21, 18, 11,  5, 4096, 30720, @Node.binkBlock, Topic + 'Blocksize in bytes');
-  Form.AddTog  ('M', ' CRAM-MD5'     ,  9, 19, 21, 19, 10,  6, 0,  2, 'No Yes Forced', @Node.binkMD5, Topic);
+  Form.AddStr  ('H', ' Host'         , 13, 16, 21, 16,  6, 20, 60, @Node.binkHost, Topic + '<hostname>:<port>');
+  Form.AddMask ('S', ' Password'     ,  9, 17, 21, 17, 10, 20, 20, @Node.binkPass, Topic);
+  Form.AddWord ('T', ' TimeOut'      , 10, 18, 21, 18,  9,  4, 10, 9999, @Node.binkTimeOut, Topic + 'Inactive session timeout (seconds)');
+  Form.AddWord ('B', ' BlockSize'    ,  8, 19, 21, 19, 11,  5, 4096, 30720, @Node.binkBlock, Topic + 'Blocksize in bytes');
+  Form.AddTog  ('M', ' CRAM-MD5'     ,  9, 20, 21, 20, 10,  6, 0,  2, 'No Yes Forced', @Node.binkMD5, Topic);
 
   Form.AddWord ('Z', ' Zone'         , 47,  7, 55,  7,  6,  5,  0, 65535, @Node.Address.Zone,  Topic + 'Network Zone');
   Form.AddWord ('N', ' Net'          , 48,  8, 55,  8,  5,  5,  0, 65535, @Node.Address.Net,   Topic + 'Network Net');
@@ -393,7 +398,7 @@ Begin
                 Break;
               End;
 
-              EditNode(EchoNode);
+              EditNode (EchoNode);
 
               Seek  (EchoFile, List.Picked - 1);
               Write (EchoFile, EchoNode);
@@ -412,12 +417,16 @@ End;
 Function Configuration_EchomailAddress (Edit: Boolean) : Byte;
 
   Procedure EditAddress (Num: Byte);
+  Label
+    Start;
   Var
     Box   : TAnsiMenuBox;
     Form  : TAnsiMenuForm;
     Topic : String;
     Count : Byte;
   Begin
+    Start:
+
     Topic := '|03(|09Echomail Network|03) |01-|09> |15';
     Box   := TAnsiMenuBox.Create;
     Form  := TAnsiMenuForm.Create;
@@ -448,6 +457,11 @@ Function Configuration_EchomailAddress (Edit: Boolean) : Byte;
     Box.Close;
     Form.Free;
     Box.Free;
+
+    If Config.NetDomain[Num] = '' Then Begin
+      ShowMsgBox(0, 'You must supply a domain');
+      Goto Start;
+    End;
   End;
 
 Var

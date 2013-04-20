@@ -65,16 +65,18 @@ End;
 
 Procedure uEchoImport;
 Var
-  TotalEcho    : LongInt;
-  TotalNet     : LongInt;
-  TotalDupes   : LongInt;
-  EchoNode     : RecEchoMailNode;
-  DupeIndex    : LongInt;
-  DupeMBase    : RecMessageBase;
-  CreateBases  : Boolean;
-  PKT          : TPKTReader;
-  Dupes        : TPKTDupe;
-  Status       : LongInt;
+  TotalEcho   : LongInt;
+  TotalNet    : LongInt;
+  TotalDupes  : LongInt;
+  EchoNode    : RecEchoMailNode;
+  DupeIndex   : LongInt;
+  DupeMBase   : RecMessageBase;
+  CreateBases : Boolean;
+  PKT         : TPKTReader;
+  Dupes       : TPKTDupe;
+  Status      : LongInt;
+  ForwardList : Array[1..50] of String[35];
+  ForwardSize : Byte = 0;
 
   Procedure ImportPacketFile (PktFN: String);
   Var
@@ -101,9 +103,6 @@ Var
 
     BarOne.Reset;
 
-    // set status for PKT name
-    // do percentage bar init
-
     CurTag  := '';
     MsgBase := NIL;
     Status  := 20;
@@ -118,6 +117,10 @@ Var
         // areafix etc here
 
         If GetMBaseByNetZone (PKT.PKTHeader.DestZone, MBase) Then Begin
+          For Count := 1 to 50 Do
+            If strUpper(strWordGet(1, ForwardList[Count], ';')) = strUpper(PKT.MsgTo) Then
+              PKT.MsgTo := strWordGet(2, ForwardList[Count], ';');
+
           CurTag := '';
 
           If MsgBase <> NIL Then Begin
@@ -356,6 +359,24 @@ Begin
   CreateBases := INI.ReadBoolean(Header_ECHOIMPORT, 'auto_create', False);
   DupeIndex   := INI.ReadInteger(Header_ECHOIMPORT, 'dupe_msg_index', -1);
   Count       := INI.ReadInteger(Header_ECHOIMPORT, 'dupe_db_size', 32000);
+
+  // Read in forward list from INI
+
+  FillChar (ForwardList, SizeOf(ForwardList), #0);
+
+  Ini.SetSequential(True);
+
+  Repeat
+    FileExt := INI.ReadString(Header_ECHOIMPORT, 'forward', '');
+
+    If FileExt = '' Then Break;
+
+    Inc (ForwardSize);
+
+    ForwardList[ForwardSize] := FileExt;
+  Until ForwardSize = 50;
+
+  INI.SetSequential(False);
 
   Dupes := TPKTDupe.Create(Count);
   PKT   := TPKTReader.Create;

@@ -93,6 +93,7 @@ Function  GetFTNArchiveName  (Orig, Dest: RecEchoMailAddr) : String;
 Function  GetFTNFlowName     (Dest: RecEchoMailAddr) : String;
 Function  GetFTNOutPath      (EchoNode: RecEchoMailNode) : String;
 Function  GetNodeByIndex     (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
+Function  GetNodeByRoute     (Dest: RecEchoMailAddr; Var TempNode: RecEchoMailNode) : Boolean;
 Function  IsValidAKA         (Zone, Net, Node: Word) : Boolean;
 
 Implementation
@@ -577,6 +578,111 @@ Begin
 
       Break;
     End;
+  End;
+
+  Close (F);
+End;
+
+Function GetNodeByRoute (Dest: RecEchoMailAddr; Var TempNode: RecEchoMailNode) : Boolean;
+
+  Function IsMatch (Str: String) : Boolean;
+
+    Function IsOneMatch (Mask: String) : Boolean;
+    Var
+      Zone  : String;
+      Net   : String;
+      Node  : String;
+      A     : Byte;
+      B     : Byte;
+      Count : Byte;
+    Begin
+      Result := False;
+      Zone   := '';
+      Net    := '';
+      Node   := '';
+      A      := Pos(':', Mask);
+      B      := Pos('/', Mask);
+
+      If A <> 0 Then Begin
+        Zone := Copy(Mask, 1, A - 1);
+
+        If B = 0 Then B := 255;
+
+        Net  := Copy(Mask, A + 1, B - 1 - A);
+        Node := Copy(Mask, B + 1, 255);
+      End;
+
+      If Zone = '' Then Zone := '*';
+      If Net  = '' Then Net  := '*';
+      If Node = '' Then Node := '*';
+
+      If (Zone <> '*') and (Dest.Zone <> strS2I(Zone)) Then Exit;
+      If (Net  <> '*') and (Dest.Net  <> strS2I(Net))  Then Exit;
+      If (Node <> '*') and (Dest.Node <> strS2I(Node)) Then Exit;
+
+      Result := True;
+    End;
+
+  Var
+    Mask   : String = '';
+    IsNot  : Boolean;
+    OneRes : Boolean;
+
+    Procedure GetNextAddress;
+    Begin
+      If Pos('!', Str) > 0 Then Begin
+        Mask := Copy(Str, 1, Pos('!', Str) - 1);
+
+        Delete (Str, 1, Pos('!', Str) - 1);
+      End Else
+      If Pos(' ', Str) > 0 Then Begin
+        Mask := Copy(Str, 1, Pos(' ', Str) - 1);
+
+        Delete (Str, 1, Pos(' ', Str));
+      End Else Begin
+        Mask := Str;
+        Str  := '';
+      End;
+    End;
+
+  Begin
+    Result := False;
+    Str    := strStripB(Str, ' ');
+
+    If Str = '' Then Exit;
+
+    Repeat
+      GetNextAddress;
+
+      If Mask = '' Then Break;
+
+      OneRes := IsOneMatch(Mask);
+
+      While (Str[1] = '!') and (Mask <> '') Do Begin
+        Delete (Str, 1, 1);
+
+        GetNextAddress;
+
+        OneRes := OneRes AND (NOT IsOneMatch(Mask));
+      End;
+
+      Result := Result OR OneRes;
+    Until Str = '';
+  End;
+
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, bbsConfig.DataPath + 'echonode.dat');
+
+  If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
+
+  While Not Eof(F) And Not Result Do Begin
+    ioRead(F, TempNode);
+
+    Result := IsMatch(TempNode.RouteInfo);
   End;
 
   Close (F);
