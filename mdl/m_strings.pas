@@ -53,6 +53,13 @@ Var
   Space : Byte;
   Temp  : Byte;
 Begin
+  If Length(Str) > Len Then Begin
+    Str[0] := Chr(Len);
+    Result := Str;
+
+    Exit;
+  End;
+
   Space  := (Len - Length(Str)) DIV 2;
   Temp   := Len - ((Space * 2) + Length(Str));
   Result := strRep(Ch, Space) + Str + strRep(Ch, Space + Temp);
