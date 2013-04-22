@@ -3212,4 +3212,40 @@
 
  + New MPL filebase variable: "fbasefn" returns the file base's filename.
 
+ + Added new utility program: ansi2pipe.  This program converts ANSI files
+   to pipe color files and should compile for all operating systems that
+   Mystic compiles for.  This program is not distributed with Mystic directly
+   but is on SourceForge.
+
+ + New MPL function "GetMBaseTotal (Compress: Boolean) : LongInt".  This
+   function returns the total message bases on the system.  If Compressed
+   is true, then it will return the total number of message bases the user
+   has access to (slower to calculate).  If it is false, it returns the raw
+   total number of bases on the system.
+
+ + MPL variables can now be initialized by calling a function.  This has
+   actually been in a for a while but I think I forgot to document it.  For
+   example:
+
+     Var
+       TotalBases : LongInt = GetMBaseTotal(False);
+     Begin
+       WriteLn ('Total message bases: ' + Int2Str(TotalBases));
+     End.
+
+ + New MPL procedure "GetMailStats" returns the number of e-mail messages
+   and the number of unread email messages:
+
+     Var
+       Total, UnRead: LongInt;
+     Begin
+       GetMailStats(Total, UnRead);
+
+       WriteLn ('You have ' + Int2Str(Total) + ' emails, ' + Int2Str(UnRead) + ' unread');
+     End;
+
+ + The MC (check email) menu command now has the optional data /NOLIST.  If
+   this is supplied Mystic will go straight to reading mail instead of
+   listing the messages and asking the user if they want to read e-mail.
+
    <ALPHA 32 RELEASED>
