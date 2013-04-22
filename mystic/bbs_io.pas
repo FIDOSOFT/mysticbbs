@@ -2162,12 +2162,17 @@ Begin
 End;
 
 Procedure TBBSIO.PurgeInputBuffer;
+{$IFDEF WINDOWS}
+Var
+  Ch : Char;
+{$ENDIF}
 Begin
   {$IFDEF UNIX}
   While Input.KeyPressed Do Input.ReadKey;
   {$ENDIF}
   {$IFDEF WINDOWS}
   If Not TBBSCore(Core).LocalMode Then TBBSCore(Core).Client.PurgeInputData(100);
+  If TBBSCore(Core).LocalMode Then While Input.KeyPressed Do Ch := Input.ReadKey;
   {$ENDIF}
 End;
 
