@@ -48,6 +48,7 @@ End;
 Procedure TIniReader.SetSequential (S: Boolean);
 Begin
   Sequential := S;
+  CurrentCat := '';
 
   If Opened Then Reset(IniFile);
 End;
