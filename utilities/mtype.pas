@@ -1,7 +1,7 @@
 Program MTYPE;
 
 // ====================================================================
-// Mystic BBS Software               Copyright 1997-2012 By James Coyle
+// Mystic BBS Software               Copyright 1997-2013 By James Coyle
 // ====================================================================
 //
 // This file is part of Mystic BBS.
@@ -109,11 +109,13 @@ Var
     Terminal.ProcessBuf(S[1], Length(S));
   End;
 
+Var
+  BaudEmu : LongInt;
 Begin
   WriteLn;
 
-  If ParamCount <> 1 Then Begin
-    WriteLn('MTYPE [filename]');
+  If ParamCount < 1 Then Begin
+    WriteLn('MTYPE [filename] [delay]');
     Exit;
   End;
 
@@ -128,13 +130,20 @@ Begin
   Screen   := TOutput.Create(True);
   Terminal := TTermAnsi.Create(Screen);
 
-  Done  := False;
-  A     := 0;
-  dRead := 0;
-  Ch    := #0;
+  BaudEmu := strS2I(ParamStr(2));
+  Done    := False;
+  A       := 0;
+  dRead   := 0;
+  Ch      := #0;
 
   While Not Done Do Begin
     Ch := GetChar;
+
+    If BaudEmu > 0 Then Begin
+      Screen.BufFlush;
+
+      If A MOD BaudEmu = 0 Then WaitMS(6);
+    End;
 
     If Ch = #26 Then
       Break
