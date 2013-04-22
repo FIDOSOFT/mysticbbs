@@ -41,6 +41,7 @@ Type
     Function    GetBaseCompressed   (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Function    GetBaseByIndex      (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Procedure   GetMessageStats     (List, ShowPrompt, ShowYou: Boolean; Var ListPtr: LongInt; Var TempBase: RecMessageBase; NoFrom, NoRead: Boolean; Var Total, New, Yours: LongInt);
+    Procedure   GetMailStats        (Var Total, UnRead: LongInt);
     Function    GetMatchedAddress   (Orig, Dest: RecEchoMailAddr) : RecEchoMailAddr;
     Function    GetTotalBases       (Compressed: Boolean) : LongInt;
     Function    GetTotalMessages    (Var TempBase: RecMessageBase) : LongInt;
@@ -459,6 +460,12 @@ Begin
         Continue;
       End;
 
+      If (TempBase.Flags AND MBPrivate <> 0) And Not Session.User.IsThisUser(TempMsg^.GetTo) Then Begin
+        TempMsg^.SeekNext;
+
+        Continue;
+      End;
+
       If NoRead And Session.User.IsThisUser(TempMsg^.GetTo) And TempMsg^.IsRcvd Then Begin
         TempMsg^.SeekNext;
 
@@ -506,6 +513,40 @@ Begin
     TempMsg^.CloseMsgBase;
 
     Dispose (TempMsg, Done);
+  End;
+End;
+
+Procedure TMsgBase.GetMailStats (Var Total, UnRead: LongInt);
+Var
+  MsgBase  : PMsgBaseABS;
+  TempBase : RecMessageBase;
+Begin
+  Total    := 0;
+  UnRead   := 0;
+  FileMode := 66;
+
+  Reset (MBaseFile);
+  Read  (MBaseFile, TempBase);
+  Close (MBaseFile);
+
+  If OpenCreateBase (MsgBase, TempBase) Then Begin
+    MsgBase^.SeekFirst (1);
+
+    While MsgBase^.SeekFound Do Begin
+      MsgBase^.MsgStartUp;
+
+      If Session.User.IsThisUser(MsgBase^.GetTo) Then Begin
+        Inc (Total);
+
+        If Not MsgBase^.IsRcvd Then Inc (UnRead);
+      End;
+
+      MsgBase^.SeekNext;
+    End;
+
+    MsgBase^.CloseMsgBase;
+
+    Dispose (MsgBase, Done);
   End;
 End;
 
@@ -3068,6 +3109,16 @@ Begin
   Read  (MBaseFile, MBase);
   Close (MBaseFile);
 
+  If Pos('/NOLIST', strUpper(CmdData)) > 0 Then Begin
+      ReadMessages('E', '', '');
+
+      Session.io.OutFullLn (Session.GetPrompt(118));
+
+      MBase := TempBase;
+
+      Exit;
+  End;
+
   If OpenCreateBase (MsgBase, MBase) Then Begin
     MsgBase^.SeekFirst (1);
 
@@ -3112,6 +3163,7 @@ Begin
       Session.io.OutFullLn (Session.GetPrompt(118));
     End;
   End;
+
   MBase := TempBase;
 End;
 

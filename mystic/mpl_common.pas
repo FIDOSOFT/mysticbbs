@@ -298,6 +298,8 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'msgeditget',     {$ENDIF} 'i',       iString);  // 545
           AddProc    ({$IFDEF MPLPARSER} 'msgeditset',     {$ENDIF} 'is',      iNone);    // 546
           AddProc    ({$IFDEF MPLPARSER} 'onekeyrange',    {$ENDIF} 'sll',     iChar);    // 547
+          AddProc    ({$IFDEF MPLPARSER} 'getmbasetotal',  {$ENDIF} 'o',       iLongInt); // 548
+          AddProc    ({$IFDEF MPLPARSER} 'getmailstats',   {$ENDIF} 'LL',      iNone);    // 549
 
 { END OF PROCEDURE DEFINITIONS }
 

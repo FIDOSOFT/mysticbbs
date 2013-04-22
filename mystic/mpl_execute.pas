@@ -1905,7 +1905,8 @@ Begin
             Store (TempBool, 1);
           End;
     541 : Begin
-            TempBool := GetMBaseStats(Param[1].L, Param[2].O, Param[3].O, LongInt(Pointer(Param[3].vData)^), LongInt(Pointer(Param[4].vData)^), LongInt(Pointer(Param[5].vData)^));
+            TempBool := GetMBaseStats(Param[1].L, Param[2].O, Param[3].O, LongInt(Pointer(Param[4].vData)^), LongInt(Pointer(Param[5].vData)^), LongInt(Pointer(Param[6].vData)^));
+
             Store (TempBool, 1);
           End;
     542 : WriteXY (Param[1].B, Param[2].B, Param[3].B, Param[4].S);
@@ -1934,6 +1935,12 @@ Begin
 
             Store (TempStr[1], 1);
           End;
+    548 : Begin
+            TempLong := Session.Msgs.GetTotalBases(Param[1].O);
+
+            Store (TempLong, 4);
+          End;
+    549 : Session.Msgs.GetMailStats (LongInt(Pointer(Param[1].vData)^), LongInt(Pointer(Param[2].vData)^));
   End;
 End;
 
