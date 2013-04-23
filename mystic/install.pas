@@ -496,28 +496,26 @@ Begin
   Screen.WriteLine ('Switch to the Mystic directory (' + Config.SystemPath + ') and then:');
   Screen.WriteLine('');
   {$IFDEF WINDOWS}
-    Screen.WriteLine ('Type "MYSTIC" to run Mystic in local mode');
+    Screen.WriteLine ('Type "MYSTIC" to run Mystic in local mode (do this first to create SysOp account)');
     Screen.WriteLine ('Type "MYSTIC -CFG" to run the configuration utility');
-    Screen.WriteLine('');
-    Screen.WriteLine ('As always, read the documentation!');
   {$ENDIF}
   {$IFDEF LINUX}
-    Screen.WriteLine ('Please read linux.install.doc for installation instructions');
+    Screen.WriteLine ('Please read linux.install.txt for installation instructions');
     Screen.WriteLine ('and notes on using Mystic under Linux');
     Screen.WriteLine('');
     Screen.WriteLine ('Set your terminal to 80x25 lines with an IBM characterset font!');
     Screen.WriteLine('');
-    Screen.WriteLine ('Type "./mystic" from the installed directory to login locally');
+    Screen.WriteLine ('Type "./mystic" to login (do this first to make your SysOp account)');
     Screen.WriteLine ('Type "./mystic -cfg" to run the configuration utility');
   {$ENDIF}
   {$IFDEF DARWIN}
-    Screen.WriteLine ('Please read osx.install.doc for installation instructions');
+    Screen.WriteLine ('Please read osx.install.txt for installation instructions');
     Screen.WriteLine ('and notes on using Mystic under OSX');
     Screen.WriteLine('');
     Screen.WriteLine ('Set your terminal to 80x25 lines with an IBM characterset font!');
-    Screen.WriteLine ('See documentation for more terminal suggestions!');
+    Screen.WriteLine ('See documentation for terminal suggestions! (important in OSX!)');
     Screen.WriteLine('');
-    Screen.WriteLine ('Type "./mystic" from the installed directory to login locally');
+    Screen.WriteLine ('Type "./mystic" to login (do this first to make your SysOp account)');
     Screen.WriteLine ('Type "./mystic -cfg" to run the configuration utility');
   {$ENDIF}
 
