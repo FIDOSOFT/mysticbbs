@@ -72,8 +72,9 @@ Begin
   If Length(Str) >= Len Then
     Result := Copy(Str, 1, Len)
   Else Begin
-    FillChar (TStr, Len, Ch);
-    SetLength(TStr, Len - Length(Str));
+    FillChar  (TStr[1], Len, Ch);
+    SetLength (TStr, Len - Length(Str));
+
     Result  := TStr + Str;
   End;
 End;
