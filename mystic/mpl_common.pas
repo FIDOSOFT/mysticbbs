@@ -360,6 +360,14 @@ Begin
           AddPointer ({$IFDEF MPLPARSER} 'cfgtimeout',     {$ENDIF} iWord,   4,              {$IFNDEF MPLPARSER} @Config.Inactivity     {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'cfgseeinvis',    {$ENDIF} iString, 20,             {$IFNDEF MPLPARSER} @Config.AcsSeeInvis    {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'cfgtnnodes',     {$ENDIF} iByte,    1,             {$IFNDEF MPLPARSER} @Config.INetTNNodes    {$ELSE} NIL {$ENDIF});
+
+          AddPointer ({$IFDEF MPLPARSER} 'cfgnetdesc',     {$ENDIF} iString, 30 * 25 - 1, {$IFNDEF MPLPARSER} @Config.NetDesc {$ELSE} NIL {$ENDIF});
+          CV[X]^.ArrPos := 1;
+          {$IFNDEF MPLPARSER}
+            CV[X]^.VarSize   := 26;
+            CV[X]^.ArrDim[1] := 30;
+          {$ENDIF}
+
         End;
     3 : Begin
           {$IFNDEF MPLPARSER} TInterpEngine(S).IdxVarMBase := X + 1; {$ENDIF}
@@ -370,6 +378,7 @@ Begin
           AddStr ({$IFDEF MPLPARSER} 'mbaseracs',     {$ENDIF} iString, 30);
           AddStr ({$IFDEF MPLPARSER} 'mbasepacs',     {$ENDIF} iString, 30);
           AddStr ({$IFDEF MPLPARSER} 'mbasesacs',     {$ENDIF} iString, 30);
+          AddVar ({$IFDEF MPLPARSER} 'mbasenetaddr',  {$ENDIF} iByte);
         End;
     4 : Begin
           {$IFNDEF MPLPARSER} TInterpEngine(S).IdxVarMGroup := X + 1; {$ENDIF}

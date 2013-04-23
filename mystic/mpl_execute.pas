@@ -242,6 +242,7 @@ Begin
   Move (M.ReadACS,  VarData[IdxVarMBase + 3 ]^.Data^, SizeOf(M.ReadACS));
   Move (M.PostACS,  VarData[IdxVarMBase + 4 ]^.Data^, SizeOf(M.PostACS));
   Move (M.SysopACS, VarData[IdxVarMBase + 5 ]^.Data^, SizeOf(M.SysopACS));
+  Move (M.NetAddr,  VarData[IdxVarMBase + 6 ]^.Data^, SizeOf(M.NetAddr));
 End;
 
 Function TInterpEngine.GetMBaseStats (Num: LongInt; SkipFrom, SkipRead: Boolean; Var Total, New, Yours: LongInt) : Boolean;

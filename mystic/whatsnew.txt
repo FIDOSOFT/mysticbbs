@@ -3202,7 +3202,7 @@
    As usual with routing it can be confusing when you have very specific
    routing needs but if you have only single uplinks then it can be pretty
    straight forward.  EXISTING echomail users need to go in and add their
-   routing information.
+   routing information if they are using the internal tosser.
 
  + Message bases can now be tagged and deleted in bulk, along with their
    message base data files.
@@ -3247,5 +3247,16 @@
  + The MC (check email) menu command now has the optional data /NOLIST.  If
    this is supplied Mystic will go straight to reading mail instead of
    listing the messages and asking the user if they want to read e-mail.
+
+ + New MPL vars: CfgNetDesc (array 1..30 of string[25] contains network
+   descriptions) and MBaseNetAddr (contains the network address target of
+   the message base).  Ex:
+
+      Uses CFG, MBASE;
+
+      Begin
+        If GetMBase(1) Then
+          WriteLn ('Base #1 is in network: ' + CfgNetDesc[MBaseNetAddr]);
+      End.
 
    <ALPHA 32 RELEASED>
