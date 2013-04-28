@@ -193,7 +193,7 @@ Var
 
       Assign (F, TempStr1);
 
-      AddToFloQueue (TempStr2, TempStr1);
+//      AddToFloQueue (TempStr2, TempStr1);
 
       Inc (TotalNet);
     End Else Begin

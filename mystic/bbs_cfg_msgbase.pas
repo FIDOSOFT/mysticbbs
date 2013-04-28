@@ -150,7 +150,6 @@ Begin
   Form.AddTog  ('B', ' Base Format' , 53, 20, 68, 20, 13,  6,  0, 1, 'JAM Squish', @MBase.BaseType, Topic + 'Message base storage format');
   Form.AddStr  ('H', ' Header'      , 58, 21, 68, 21,  8,  9, 20, @MBase.Header, Topic + 'Display file name of msg header');
 
-
   Repeat
     WriteXY (19, 16, 113, strPadR(strAddr2Str(Config.NetAddress[MBase.NetAddr]), 19, ' '));
 
@@ -206,6 +205,7 @@ Var
   List      : TAnsiMenuList;
   Copied    : RecMessageBase;
   HasCopy   : Boolean = False;
+  CopyIdx   : LongInt;
   MBaseFile : File of RecMessageBase;
   MBase     : RecMessageBase;
 
@@ -419,6 +419,7 @@ Var
 
     With MBase Do Begin
       Index       := GetPermanentIndex(FileSize(MBaseFile));
+
       Created     := CurDateDos;
       FileName    := 'new';
       Path        := Config.MsgsPath;
@@ -500,7 +501,7 @@ Begin
 
     Case List.ExitCode of
       '/' : If Edit Then
-            Case GetCommandOption(8, 'I-Insert|D-Delete|C-Copy|P-Paste|G-Global|S-Sort|') of
+            Case GetCommandOption(8, 'I-Insert|D-Delete|C-Copy|M-Move|P-Paste|G-Global|S-Sort|') of
               'I' : If List.Picked > 1 Then Begin
                       AssignRecord(False);
                       MakeList;
@@ -537,10 +538,25 @@ Begin
                         MakeList;
                       End;
               'C' : If List.Picked <> List.ListMax Then Begin
-                      Seek (MBaseFile, List.Picked - 1);
+                      CopyIdx := List.Picked;
+
+                      Seek (MBaseFile, CopyIdx - 1);
                       Read (MBaseFile, Copied);
 
                       HasCopy := True;
+                    End;
+              'M' : If HasCopy And (List.Picked > 1) Then Begin
+                      AddRecord (MBaseFile, List.Picked, SizeOf(MBase));
+                      Write     (MBaseFile, Copied);
+
+                      If List.Picked <= CopyIdx Then
+                        Inc(CopyIdx);
+
+                      KillRecord (MBaseFile, CopyIdx, SizeOf(MBase));
+
+                      MakeList;
+
+                      HasCopy := False;
                     End;
               'P' : If HasCopy And (List.Picked > 1) Then Begin
                       AddRecord (MBaseFile, List.Picked, SizeOf(MBase));

@@ -63,7 +63,7 @@ Begin
   Assign (ConfigFile, 'mystic.dat');
 
   if ioReset(ConfigFile, SizeOf(RecConfig), fmReadWrite + fmDenyNone) Then Begin
-    Read (ConfigFile, Config);
+    Read  (ConfigFile, Config);
     Close (ConfigFile);
   End Else Begin
     WriteLn('ERROR: Unable to read mystic.dat');

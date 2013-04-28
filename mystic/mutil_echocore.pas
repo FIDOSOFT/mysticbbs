@@ -329,8 +329,8 @@ Begin
                If First Then Begin
                  First := False;
 
-                 If Pos('AREA:', MsgText[MsgLines]^) = 1 Then Begin
-                   MsgArea := Copy(MsgText[MsgLines]^, 6, 255);
+                 If Copy(MsgText[MsgLines]^, 1, 5) = 'AREA:' Then Begin
+                   MsgArea := strUpper(Copy(MsgText[MsgLines]^, 6, 255));
 
                    MsgText[MsgLines]^ := '';
 

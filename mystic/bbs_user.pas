@@ -118,7 +118,10 @@ End;
 
 Function TBBSUser.IsThisUser (Str: String) : Boolean;
 Begin
-  Str    := strUpper(Str);
+  Str := strUpper(Str);
+
+  //If Str = 'SYSOP' Then Str := Config.SysopName;
+
   Result := (strUpper(ThisUser.RealName) = Str) or (strUpper(ThisUser.Handle) = Str);
 End;
 

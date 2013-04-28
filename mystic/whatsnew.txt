@@ -3260,3 +3260,15 @@
       End.
 
    <ALPHA 32 RELEASED>
+
+ ! Fixed a small pipe code display bug in the new FS editor.
+
+ + MUTIL echo import now ignores case of echotag when trying to match.
+
+ ! MUTIL no longer adds netmail messages to a Binkley FLO file when exporting
+   echomail.
+
+ ! FIDOPOLL no longer expects netmail packets to be in a FLO file.
+
+ + Message base editor now has a Move command.  You must first Copy a message
+   base, and then move to where you want to move it to and then /M to move it.

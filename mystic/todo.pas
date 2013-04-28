@@ -26,6 +26,8 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- AREAS.BBS import?
+- PGUP/DOWN moves bases in message base editor?
 - AreaFix
 - Echomail export saves last scanned pointers
 - Echomail export support for points

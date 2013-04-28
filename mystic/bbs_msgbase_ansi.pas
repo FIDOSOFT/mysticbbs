@@ -419,18 +419,25 @@ Begin
     PipeCode := PipeCode + Ch;
 
     If Length(PipeCode) = 2 Then Begin
-      If PipeCode = '00' Then
-        SetFore(0)
-      Else
-        Case strS2I(PipeCode) of
-          01..
-          15 : SetFore(strS2I(PipeCode));
-          16..
-          23 : SetBack(strS2I(PipeCode) - 16);
-        Else
-          AddChar('|');
-          OneChar(PipeCode[1]);
-          OneChar(PipeCode[2]);
+      If (PipeCode[1] in ['0'..'2']) and (PipeCode[2] in ['0'..'9']) Then Begin
+        If PipeCode = '00' Then
+          SetFore(0)
+        Else Begin
+          Case strS2I(PipeCode) of
+            01..
+            15 : SetFore(strS2I(PipeCode));
+            16..
+            23 : SetBack(strS2I(PipeCode) - 16);
+          Else
+            AddChar ('|');
+            OneChar (PipeCode[1]);
+            OneChar (PipeCode[2]);
+          End;
+        End;
+      End Else Begin
+        AddChar ('|');
+        OneChar (PipeCode[1]);
+        OneChar (PipeCode[2]);
       End;
 
       GotPipe  := False;
