@@ -1,6 +1,6 @@
-{$I M_OPS.PAS}
-
 Unit m_Output_Windows;
+
+{$I M_OPS.PAS}
 
 Interface
 
@@ -107,6 +107,7 @@ Begin
     50 : ScreenSize := 50;
   Else
     SetScreenSize(25);
+
     ScreenSize := 25;
   End;
 
@@ -169,6 +170,22 @@ End;
 
 Procedure TOutputWindows.ClearEOL;
 Var
+  Count : Byte;
+  Res   : LongInt;
+Begin
+  Count := Window.Right - Cursor.X + 1;
+
+  FillDWord (Buffer[Cursor.Y + 1][Cursor.X + 1], Count, (Word(TextAttr) SHL 16) OR Word($0020));
+
+  If Active Then Begin
+    FillConsoleOutputCharacter (ConOut, ' ', Count, Cursor, @Res);
+    FillConsoleOutputAttribute (ConOut, TextAttr, Count, Cursor, @Res);
+  End;
+End;
+
+(*
+Procedure TOutputWindows.ClearEOL;
+Var
   Buf   : Array[1..80] of TCharInfo;
   Count : Byte;
   Res   : LongInt;
@@ -191,7 +208,7 @@ Begin
     FillConsoleOutputAttribute (ConOut, TextAttr, Count, Cursor, @Res);
   End;
 End;
-
+*)
 Procedure TOutputWindows.ClearScreenNoUpdate;
 Var
   Res   : ULong;
@@ -261,7 +278,6 @@ Begin
     Inc (Count);
   End;
 
-  // add to screen buffer
   Move (Buf[1], Buffer[Y][X], (Count - 1) * SizeOf(TCharInfo));
 
   If Active Then Begin
@@ -342,6 +358,7 @@ Begin
 
       If (Code = '00') or ((CodeNum > 0) and (CodeNum < 24) and (Code[1] <> '$') and (Code[1] <> '&')) Then Begin
         Inc (Count, 2);
+
         If CodeNum in [00..15] Then
           Attr := CodeNum + ((Attr SHR 4) AND 7) * 16
         Else
@@ -388,6 +405,76 @@ Begin
   CursorY := Cursor.Y + 1;
 End;
 
+Procedure TOutputWindows.WriteChar (Ch: Char);
+Var
+  BufferSize,
+  BufferCoord : TCoord;
+  WriteRegion : TSmallRect;
+  OneCell     : TCharInfo;
+//  Res         : LongInt;
+Begin
+  Case Ch of
+    #08 : If Cursor.X > Window.Left Then Begin
+            Dec(Cursor.X);
+
+            If Active Then SetConsoleCursorPosition(ConOut, Cursor);
+          End;
+    #10 : Begin
+            If Cursor.Y = Window.Bottom Then
+              ScrollWindow
+            Else Begin
+              Inc (Cursor.Y);
+
+              Cursor.X := Window.Left;
+            End;
+
+            If Active Then SetConsoleCursorPosition(ConOut, Cursor);
+          End;
+    #13 : Cursor.X := Window.Left;
+  Else
+    If Active Then Begin
+      OneCell.UnicodeChar := Ch;
+      OneCell.Attributes  := TextAttr;
+
+      BufferSize.X  := 1;
+      BufferSize.Y  := 1;
+      BufferCoord.X := 0;
+      BufferCoord.Y := 0;
+
+      WriteRegion.Left   := Cursor.X;
+      WriteRegion.Top    := Cursor.Y;
+      WriteRegion.Right  := Cursor.X;
+      WriteRegion.Bottom := Cursor.Y;
+//      FillConsoleOutputCharacter (ConOut, Ch, 1, Cursor, @Res);
+//      FillConsoleOutputAttribute (ConOut, TextAttr, 1, Cursor, @Res);
+
+      WriteConsoleOutput (ConOut, @OneCell, BufferSize, BufferCoord, WriteRegion);
+    End;
+
+    Buffer[Cursor.Y + 1][Cursor.X + 1].UnicodeChar := Ch;
+    Buffer[Cursor.Y + 1][Cursor.X + 1].Attributes  := TextAttr;
+
+    If Cursor.X < Window.Right Then
+      Inc (Cursor.X)
+    Else Begin
+      If (Cursor.X = Window.Right) And (Cursor.Y = Window.Bottom - 1) Then Begin
+        Inc (Cursor.X);
+        Exit;
+      End;
+
+      Cursor.X := Window.Left;
+
+      If Cursor.Y = Window.Bottom Then
+        ScrollWindow
+      Else
+        Inc (Cursor.Y);
+    End;
+
+    If Active Then SetConsoleCursorPosition(ConOut, Cursor);
+  End;
+End;
+
+(*
 Procedure TOutputWindows.WriteChar (Ch: Char);
 Var
   BufferSize,
@@ -451,6 +538,7 @@ Begin
     If Active Then SetConsoleCursorPosition(ConOut, Cursor);
   End;
 End;
+*)
 
 Procedure TOutputWindows.WriteLine (Str: String);
 Var
@@ -470,32 +558,20 @@ End;
 
 Procedure TOutputWindows.ScrollWindow;
 Var
-  ClipRect,
-  ScrollRect : TSmallRect;
   DestCoord  : TCoord;
   Fill       : TCharInfo;
 Begin
   Fill.UnicodeChar := ' ';
-//  Fill.Attributes  := TextAttr;
-  Fill.Attributes := 7;
-
-  ScrollRect.Left   := Window.Left;
-  ScrollRect.Top    := Window.Top;
-  ScrollRect.Right  := Window.Right;
-  ScrollRect.Bottom := Window.Bottom;
-
-  // might not need cliprect... might be able to pass scrollrect twice
-
-  ClipRect := ScrollRect;
+  Fill.Attributes  := 7;
 
   DestCoord.X := Window.Left;
   DestCoord.Y := Window.Top - 1;
 
   If Active Then
-    ScrollConsoleScreenBuffer(ConOut, ScrollRect, ClipRect, DestCoord, PCharInfo(@Fill)^);
+    ScrollConsoleScreenBuffer(ConOut, Window, Window, DestCoord, Fill);
 
-  Move (Buffer[2][1], Buffer[1][1], SizeOf(TConsoleLineRec) * 49);
-  FillChar(Buffer[Window.Bottom + 1][1], SizeOf(TConsoleLineRec), #0);
+  Move     (Buffer[2][1], Buffer[1][1], SizeOf(TConsoleLineRec) * 49);
+  FillChar (Buffer[Window.Bottom + 1][1], SizeOf(TConsoleLineRec), #0);
 End;
 
 Procedure TOutputWindows.GetScreenImage (X1, Y1, X2, Y2: Byte; Var Image: TConsoleImageRec);

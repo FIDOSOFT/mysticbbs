@@ -125,7 +125,7 @@ Procedure TNLOG (Str: String);
 Var
   T : Text;
 Begin
-  Assign (T, 'tnlog.txt');
+  Assign (T, 'sockdebug.txt');
   {$I-} Append(T); {$I+}
 
   If IoResult <> 0 Then ReWrite(T);
@@ -579,7 +579,15 @@ Begin
   SIN.sin_addr.s_addr := 0;
   SIN.sin_port        := htons(Port);
 
-  fpBind(FSocketHandle, @SIN, SizeOf(SIN));
+  {$IFDEF TNDEBUG}
+    TNLOG('WaitInit Bind');
+    If fpBind(FSocketHandle, @SIN, SizeOf(SIN)) <> 0 Then
+      TNLOG('WaitInit Bind Failed')
+    Else
+      TNLOG('Bind OK');
+  {$ELSE}
+    fpBind(FSocketHandle, @SIN, SizeOf(SIN));
+  {$ENDIF}
 
   SetBlocking(True);
 End;

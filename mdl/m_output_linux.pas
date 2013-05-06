@@ -131,6 +131,7 @@ End;
 Const
   AnsiTable : String[8] = '04261537';
 
+(*
 Function TOutputLinux.AttrToAnsi (Attr: Byte) : String;
 Var
   Str   : String[16];
@@ -187,6 +188,66 @@ Begin
   FTextAttr  := FG + BG * 16;
   AttrToAnsi := #27 + '[' + Str + 'm';
 End;
+*)
+
+Function TOutputLinux.AttrToAnsi (Attr: Byte) : String;
+Var
+  OldFG : LongInt;
+  OldBG : LongInt;
+  FG    : LongInt;
+  BG    : LongInt;
+
+  Procedure AddSep (Ch: Char);
+  Begin
+    If Length(Result) > 0 Then
+      Result := Result + ';';
+
+    Result := Result + Ch;
+  End;
+
+Begin
+  Result := '';
+
+  If Attr = FTextAttr Then Exit;
+
+  FG    := Attr and $F;
+  BG    := Attr shr 4;
+  OldFG := FTextAttr and $F;
+  OldBG := FTextAttr shr 4;
+
+  If (OldFG <> 7) or (FG = 7) or ((OldFG > 7) and (FG < 8)) or ((OldBG > 7) and (BG < 8)) Then Begin
+    Result := '0';
+    OldFG  := 7;
+    OldBG  := 0;
+  End;
+
+  If (FG > 7) and (OldFG < 8) Then Begin
+    AddSep('1');
+
+    OldFG := OldFG or 8;
+  End;
+
+  If (BG and 8) <> (OldBG and 8) Then Begin
+    AddSep('5');
+
+    OldBG := OldBG or 8;
+  End;
+
+  If (FG <> OldFG) Then Begin
+    AddSep('3');
+
+    Result := Result + AnsiTable[(FG and 7) + 1];
+  End;
+
+  If (BG <> OldBG) Then Begin
+    AddSep('4');
+
+    Result := Result + AnsiTable[(BG and 7) + 1];
+  End;
+
+  FTextAttr  := FG + BG * 16;
+  Result     := #27 + '[' + Result + 'm';
+End;
 
 Procedure TOutputLinux.BufFlush;
 Begin
@@ -213,7 +274,7 @@ Begin
 
   BufAddStr(AttrToAnsi(Attr));
 
-  FTextAttr := Attr;
+//  FTextAttr := Attr;
 End;
 
 Procedure TOutputLinux.CursorXYRaw (X, Y: Byte);
@@ -362,10 +423,14 @@ Begin
 
       If FCursorY < FWinBot Then
         Inc (FCursorY)
-      Else
+      Else Begin
         ScrollWindow;
+        BufFlush;
+      End;
+//      Else
+//        ScrollWindow;
 
-      BufFlush;
+//      BufFlush;
     End;
   End;
 End;

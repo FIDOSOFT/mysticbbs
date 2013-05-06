@@ -14,7 +14,7 @@ Const
 
 Type
   TSTDIO = Class(TIOBase)
-    Constructor Create;
+    Constructor Create; Override;
     Destructor  Destroy; Override;
     Function    DataWaiting      : Boolean; Override;
     Function    WriteBuf         (Var Buf; Len: LongInt) : LongInt; Override;
