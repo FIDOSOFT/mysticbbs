@@ -466,6 +466,12 @@ Begin
         Continue;
       End;
 
+      If TempMsg^.IsPriv And Not Session.User.IsThisUser(TempMsg^.GetTo) Then Begin
+        TempMsg^.SeekNext;
+
+        Continue;
+      End;
+
       If NoRead And Session.User.IsThisUser(TempMsg^.GetTo) And TempMsg^.IsRcvd Then Begin
         TempMsg^.SeekNext;
 
@@ -634,7 +640,7 @@ Begin
   End;
 
   If MBase.NetType > 0 Then Begin
-    Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ')');
+    Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' v' + mysVersion + ' (' + OSID + ')');
     Msg^.DoStringLn (' * Origin: ' + ResolveOrigin(MBase) + ' (' + strAddr2Str(Msg^.GetOrigAddr) + ')');
   End;
 End;
@@ -1172,6 +1178,7 @@ Var
   Lines     : SmallInt;
   Total     : LongInt;
   ReplyBase : RecMessageBase;
+  IsPrivate : Boolean;
 Begin
   ReplyBase := MBase;
 
@@ -1227,6 +1234,11 @@ Begin
 
   Set_Node_Action (Session.GetPrompt(349));
 
+  IsPrivate := ReplyBase.Flags AND MBPrivate <> 0;
+
+  If (ReplyBase.Flags AND MBPrivate = 0) AND (ReplyBase.Flags AND MBPrivReply <> 0) Then
+    IsPrivate := Session.io.GetYN(Session.GetPrompt(514), False);
+
   Repeat
     If ListMode = 0 Then
       Session.io.OutFull (Session.GetPrompt(407))
@@ -1237,7 +1249,7 @@ Begin
 
     If ToWho = '' Then Exit;
 
-    If Not Email Then Break;
+    If Not (Email or IsPrivate) Then Break;
 
     If Not Session.User.FindUser(ToWho, False) Then Begin
       Session.io.PromptInfo[1] := ToWho;
@@ -1328,7 +1340,7 @@ Begin
     AssignMessageData(MsgNew, ReplyBase);
 
     Case ReplyBase.NetType of
-      2 : MsgNew^.SetTo('All');
+      2 : MsgNew^.SetTo('All');  //Lang++
       3 : Begin
             MsgNew^.SetDest     (Addr);
             MsgNew^.SetOrig     (GetMatchedAddress(Config.NetAddress[ReplyBase.NetAddr], Addr));
@@ -1341,8 +1353,9 @@ Begin
       MsgNew^.SetTo (ToWho);
     End;
 
-    MsgNew^.SetSubj (Subj);
+    MsgNew^.SetSubj  (Subj);
     MsgNew^.SetRefer (MsgBase^.GetMsgNum);
+    MsgNew^.SetPriv  (IsPrivate);
 
     AppendMessageText (MsgNew, Lines, ReplyID);
 
@@ -1408,15 +1421,17 @@ Begin
   Repeat
     Session.io.PromptInfo[1] := MsgBase^.GetTo;
     Session.io.PromptInfo[2] := MsgBase^.GetSubj;
+    Session.io.PromptInfo[3] := Session.io.OutYN(MsgBase^.IsSent);
 
     If MBase.NetType = 3 Then Begin
       MsgBase^.GetDest(DestAddr);
+
       Session.io.PromptInfo[1] := Session.io.PromptInfo[1] + ' (' + strAddr2Str(DestAddr) + ')';
     End;
 
     Session.io.OutFull (Session.GetPrompt(296));
 
-    Case Session.io.OneKey('ABQ!', True) of
+    Case Session.io.OneKey('ABCQ!', True) of
       'A' : Begin
               Session.io.OutFull (Session.GetPrompt(297));
 
@@ -1443,6 +1458,7 @@ Begin
 
               MsgBase^.SetSubj(Session.io.GetInput(50, 50, 11, MsgBase^.GetSubj));
             End;
+      'C' : MsgBase^.SetSent(NOT MsgBase^.IsSent);
       '!' : Begin
               Temp1 := MsgBase^.GetSubj;
 
@@ -1712,7 +1728,10 @@ Var
       MsgBase^.MsgStartUp;
 
       Case ScanMode of
-        0 : Res := True;
+        0 : If MsgBase^.IsPriv Then
+              Res := Session.User.IsThisUser(MsgBase^.GetTo) or Session.User.IsThisUser(MsgBase^.GetFrom)
+            Else
+              Res := True;
         1 : Res := Session.User.IsThisUser(MsgBase^.GetTo);
         2 : Res := Session.User.IsThisUser(MsgBase^.GetTo) or Session.User.IsThisUser(MsgBase^.GetFrom);
         3 : Begin
@@ -2900,6 +2919,7 @@ Var
   Forced     : Boolean;
   Old        : RecMessageBase;
   SaveGroup  : Boolean;
+  IsPrivate  : Boolean;
 Begin
   Old       := MBase;
   SaveGroup := Session.User.IgnoreGroup;
@@ -2932,10 +2952,14 @@ Begin
 
   Set_Node_Action (Session.GetPrompt(349));
 
-  MsgTo    := '';
-  MsgSubj  := '';
-  MsgAddr  := '';
-  Forced   := False;
+  MsgTo     := '';
+  MsgSubj   := '';
+  MsgAddr   := '';
+  Forced    := False;
+  IsPrivate := MBase.Flags AND MBPrivate <> 0;
+
+  If (MBase.Flags AND MBPrivate = 0) AND (MBase.Flags AND MBPrivReply <> 0) Then
+    IsPrivate := Session.io.GetYN(Session.GetPrompt(513), False);
 
   For A := 1 to strWordCount(Data, ' ') Do Begin
     TempStr := strWordGet(A, Data, ' ');
@@ -2973,7 +2997,7 @@ Begin
         If Not strStr2Addr(MsgAddr, DestAddr) Then MsgTo := '';
       End;
   End Else
-  If MBase.Flags and MBPrivate <> 0 Then Begin
+  If IsPrivate Then Begin
     If MsgTo = '' Then Begin
       Session.io.OutFull (Session.GetPrompt(450));
 
@@ -3044,6 +3068,7 @@ Begin
 
     MsgBase^.SetTo   (MsgTo);
     MsgBase^.SetSubj (MsgSubj);
+    MsgBase^.SetPriv (IsPrivate);
 
     If MBase.NetType = 3 Then Begin
       MsgBase^.SetDest     (DestAddr);
@@ -3747,7 +3772,7 @@ Begin
     Msg^.DoStringLn(MsgText[Count]);
 
   If mArea.NetType > 0 Then Begin
-    Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ')');
+    Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' v' + mysVersion + ' (' + OSID + ')');
     Msg^.DoStringLn (' * Origin: ' + ResolveOrigin(mArea) + ' (' + strAddr2Str(Msg^.GetOrigAddr) + ')');
   End;
 
@@ -4245,7 +4270,7 @@ Begin
 
   FileMode := 66;
   Old      := MBase;
-  Temp     := strPadR('Produced By ' + mysSoftwareID + ' BBS v' + mysVersion + '. ' + CopyID, 128, ' ');
+  Temp     := strPadR('Produced By ' + mysSoftwareID + ' v' + mysVersion + '. ' + CopyID, 128, ' ');
 
   Assign     (DataFile, Session.TempPath + 'messages.dat');
   ReWrite    (DataFile, 1);
@@ -4303,11 +4328,23 @@ Begin
     If FileExist(Config.QwkNews)    Then FileCopy(Config.qwkNews,    Session.TempPath + JustFile(Config.qwkNews));
     If FileExist(Config.QwkGoodbye) Then FileCopy(Config.qwkGoodbye, Session.TempPath + JustFile(Config.qwkGoodbye));
 
+//    Session.SystemLog('DEBUG: Archiving QWK packet');
+
     If Session.LocalMode Then Begin
       Session.FileBase.ExecuteArchive (Config.QWKPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
       Session.io.OutFullLn (Session.GetPrompt(235));
     End Else Begin
+//      Session.SystemLog('DEBUG: Arc QWK: Nonlocal mode');
+
       Session.FileBase.ExecuteArchive (Session.TempPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
+
+//      If FileExist(Session.TempPath + Temp) Then
+//       Session.SystemLog('DEBUG: QWK successfully archived')
+//      Else
+//       Session.SystemLog('DEBUG: Could not find QWK archived packet');
+
+//      Session.SystemLog('DEBUG: QWK calling SendFile on "' + Temp + '"');
+
       Session.FileBase.SendFile (Session.TempPath + Temp);
     End;
 

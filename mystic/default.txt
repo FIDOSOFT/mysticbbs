@@ -566,7 +566,7 @@
 294 |CR|12Delete this BBS from the list? |11
 295 |CR|12You did not add this BBS entry.
 ; editing message display
-296 |CL|14Message Editor|CR|CR|03A.   To : |&1|CRB. Subj : |&2|CR|CR|09Command: (!) Edit text, (Q)uit: |XX
+296 |16|CL|09|17 ° |15Message Editing |$X79 |16|CR|CR|09(|11A|09)      |03To: |11|&1|CR|09(|11B|09) |03Subject: |11|&2|CR|09(|11C|09)    |03Sent: |11|&3|CR|CR|09Edit option (|11!|09) Edit text, (|11Q|09)uit? |11
 ; editing message to
 297 |CR|09To: |XX
 ; editing message net address
@@ -1014,3 +1014,7 @@
 511 |CR|09Select message base for reply [|10?|09/|10List|09]: |11
 ; Message "replying to X base" prompt   &1=base name
 512 |CR|03Posting reply message to base |11|&1|03.
+; Message post: "post msg as private" in pub/priv type base
+513 |CR|12Post this as a private message? |11
+; Message reply: "post msg as private" in pub/priv type base
+514 |CR|12Post this as a private message? |11

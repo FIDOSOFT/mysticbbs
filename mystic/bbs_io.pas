@@ -991,6 +991,7 @@ Begin
 
     If (Color < 8) and (CurFG > 7) Then Prefix := '0;';
     If (Color > 7) and (CurFG < 8) Then Prefix := '1;';
+
     If Color > 7 Then Dec(Color, 8);
 
     Case Color of
@@ -1035,6 +1036,7 @@ Begin
   End;
 End;
 
+(*
 Function TBBSIO.Attr2Ansi (Attr: Byte) : String;
 Begin
   Result := '';
@@ -1042,6 +1044,67 @@ Begin
   If Graphics = 0 Then Exit;
 
   Result := Pipe2Ansi(Attr AND $F) + Pipe2Ansi(((Attr SHR 4) AND 7) + 16);
+End;
+*)
+
+Function TBBSIO.Attr2Ansi (Attr: Byte) : String;
+Const
+  AnsiTable : String[8] = '04261537';
+Var
+  OldFG : LongInt;
+  OldBG : LongInt;
+  FG    : LongInt;
+  BG    : LongInt;
+
+  Procedure AddSep (Ch: Char);
+  Begin
+    If Length(Result) > 0 Then
+      Result := Result + ';';
+
+    Result := Result + Ch;
+  End;
+
+Begin
+  Result := '';
+
+  If (Attr = Screen.TextAttr) or (Graphics = 0) Then Exit;
+
+  FG    := Attr and $F;
+  BG    := Attr shr 4;
+  OldFG := Screen.TextAttr and $F;
+  OldBG := Screen.TextAttr shr 4;
+
+  If (OldFG <> 7) or (FG = 7) or ((OldFG > 7) and (FG < 8)) or ((OldBG > 7) and (BG < 8)) Then Begin
+    Result := '0';
+    OldFG  := 7;
+    OldBG  := 0;
+  End;
+
+  If (FG > 7) and (OldFG < 8) Then Begin
+    AddSep('1');
+
+    OldFG := OldFG or 8;
+  End;
+
+//  If (BG and 8) <> (OldBG and 8) Then Begin
+//    AddSep('5');
+
+//    OldBG := OldBG or 8;
+//  End;
+
+  If (FG <> OldFG) Then Begin
+    AddSep('3');
+
+    Result := Result + AnsiTable[(FG and 7) + 1];
+  End;
+
+  If (BG <> OldBG) Then Begin
+    AddSep('4');
+
+    Result := Result + AnsiTable[(BG and 7) + 1];
+  End;
+
+  Result := #27 + '[' + Result + 'm';
 End;
 
 Procedure TBBSIO.AnsiColor (A : Byte);
@@ -1819,6 +1882,16 @@ Var
     pWrite (Ch);
   End;
 
+  Procedure Clear;
+  Begin
+    Str    := '';
+    StrPos := 1;
+    Junk   := 1;
+    CurPos := 1;
+
+    ReDraw;
+  End;
+
 Begin
   If UseInLimit Then Begin
     Field      := InLimit;
@@ -1945,6 +2018,12 @@ Begin
       Case Ch of
         #02 : ReDraw;
         #08 : If StrPos > 1 Then Begin
+                If (Default <> '') And (Str = Default) Then Begin
+                  Clear;
+
+                  Continue;
+                End;
+
                 Dec    (StrPos);
                 Delete (Str, StrPos, 1);
 
@@ -1963,15 +2042,12 @@ Begin
                 End;
               End;
         #13 : Break;
-        ^Y  : Begin
-                Str    := '';
-                StrPos := 1;
-                Junk   := 1;
-                CurPos := 1;
-                ReDraw;
-              End;
+        ^Y  : Clear;
         #32..
-        #254: If Length(Str) < Max Then
+        #254: Begin
+              If (Default <> '') And (Str = Default) Then Clear;
+
+              If Length(Str) < Max Then
               Case Mode of
                 1 : AddChar (Ch);
                 2 : AddChar (UpCase(Ch));
@@ -2012,6 +2088,7 @@ Begin
                 6 : AddChar(UpCase(Ch));
                 7 : AddChar(LoCase(Ch));
                 9 : AddChar(Ch);
+              End;
               End;
       End;
   Until False;

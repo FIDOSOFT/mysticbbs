@@ -43,8 +43,9 @@ Type
     Forced       : Boolean;
     Done         : Boolean;
     Subject      : String;
+    Template     : String;
 
-    Constructor Create (Var O: Pointer);
+    Constructor Create (Var O: Pointer; TemplateFile: String);
     Destructor  Destroy; Override;
 
     Function    IsAnsiLine    (Line: LongInt) : Boolean;
@@ -90,7 +91,7 @@ Uses
   bbs_Common,
   bbs_Ansi_MenuBox;
 
-Constructor TEditorANSI.Create (Var O: Pointer);
+Constructor TEditorANSI.Create (Var O: Pointer; TemplateFile: String);
 Begin
   Inherited Create;
 
@@ -116,6 +117,7 @@ Begin
   LastLine   := 1;
   CutPasted  := False;
   CutTextPos := 0;
+  Template   := TemplateFile;
 
   FillChar (CutText, SizeOf(CutText), 0);
 End;
@@ -392,10 +394,12 @@ Begin
 
   Session.io.PromptInfo[2] := Subject;
 
-  Session.io.OutFile ('ansiedit', True, 0);
+  Session.io.OutFile (Template, True, 0);
 
-  WinX1    := 1;
-  WinX2    := 79;
+  WinX1  := 1;
+  WinX2  := 79;
+//  WinX1    := Session.io.ScreenInfo[1].X;
+//  WinX2    := Session.io.ScreenInfo[2].X;
   WinY1    := Session.io.ScreenInfo[1].Y;
   WinY2    := Session.io.ScreenInfo[2].Y;
 

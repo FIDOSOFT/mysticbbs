@@ -1107,7 +1107,7 @@ Begin
   TextAttr := 7;
 
   WriteLn;
-  WriteLn ('MBBSUTIL: ', mysSoftwareID, ' BBS Utilities Version ', mysVersion, ' (', OSID, ')');
+  WriteLn ('MBBSUTIL: ', mysSoftwareID, ' Utilities Version ', mysVersion, ' (', OSID, ')');
   WriteLn ('Copyright (C) ', mysCopyYear, ' By James Coyle.  All Rights Reserved.');
   WriteLn;
 

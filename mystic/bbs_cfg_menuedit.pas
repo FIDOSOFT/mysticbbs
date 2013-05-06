@@ -675,6 +675,8 @@ Var
 Begin
   Result := '';
 
+  If Not DirExists(Theme.MenuPath) Then Exit;
+
   Box  := TAnsiMenuBox.Create;
   List := TAnsiMenuList.Create;
 

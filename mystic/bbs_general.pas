@@ -58,7 +58,7 @@ Var
   Editor : TEditorANSI;
   Count  : LongInt;
 Begin
-  Editor := TEditorANSI.Create(Pointer(Session));
+  Editor := TEditorANSI.Create(Pointer(Session), Template);
 
   For Count := 1 to Lines Do
     Editor.SetLineText (Count, Session.Msgs.MsgText[Count]);

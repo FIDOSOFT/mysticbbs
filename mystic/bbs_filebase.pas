@@ -143,7 +143,7 @@ Begin
 
   Res := Pos(UpCase(LineBuf[0]), 'RSZ') > 0;
 
-  //Session.SystemLog('DEBUG: DSZ Status character: ' + LineBuf[0]);
+//  Session.SystemLog('DEBUG: DSZ Status character: ' + LineBuf[0]);
 
   While WordPos < 11 Do Begin
     If LineBuf[Count] = #32 Then Begin
@@ -185,12 +185,12 @@ Begin
     Exit;
   End;
 
-  //Session.SystemLog('DEBUG: DSZ Searching for: ' + FName);
+//  Session.SystemLog('DEBUG: DSZ Searching for: ' + FName);
 
   While Not Eof(LogFile) Do Begin
     DszGetFile(LogFile, FileName, Status);
 
-    //Session.SystemLog('DEBUG: DSZ GetFile returned: ' + FileName + ' (success ' + strI2S(Ord(Status)) + ')');
+//    Session.SystemLog('DEBUG: DSZ GetFile returned: ' + FileName + ' (success ' + strI2S(Ord(Status)) + ')');
 
     If strUpper(FileName) = strUpper(FName) Then Begin
       Result := Status;
@@ -303,6 +303,8 @@ Var
     If Command = '@ZMODEM8' Then
       Protocol := New(ZmodemProtocolPTR, Init(Client, True))
     Else Begin
+//      Session.SystemLog('DEBUG: No internal protocol found');
+
       {$IFDEF UNIX}
       Client.Free;
       {$ENDIF}
@@ -572,6 +574,8 @@ Begin
   Else
     Command := Protocol.RecvCmd;
 
+//  Session.SystemLog('DEBUG: Exec Protocol: ' + Command);
+
   If Command[1] = '@' Then
     ExecInternal
   Else
@@ -764,9 +768,15 @@ Function TFileBase.SendFile (Data: String) : Boolean;
 Begin
   Result := False;
 
+//  Session.SystemLog('DEBUG: In SendFile checking if exists: ' + Data);
+
   If Not FileExist(Data) Then Exit;
 
+//  Session.SystemLog('DEBUG: Calling SelectProtocol w/ use default');
+
   If SelectProtocol(True, False) = 'Q' Then Exit;
+
+//  Session.SystemLog('DEBUG: Calling ExecuteProtocol');
 
   ExecuteProtocol(2, Data);
 
@@ -1344,7 +1354,11 @@ Function TFileBase.SelectProtocol (UseDefault, Batch: Boolean) : Char;
   Begin
     Result := False;
 
+//    Session.SystemLog('DEBUG: In LoadByByDefault.');
+
     If Key = 'Q' Then Exit;
+
+    FileMode := 66;
 
     Reset (ProtocolFile);
 
@@ -1358,6 +1372,8 @@ Function TFileBase.SelectProtocol (UseDefault, Batch: Boolean) : Char;
     End;
 
     Close(ProtocolFile);
+
+//    Session.SystemLog('DEBUG: LoadKeyByDefault result=' + Session.io.OutYN(Result));
   End;
 
 Var
@@ -1368,6 +1384,8 @@ Begin
   SavedP1 := Session.io.PromptInfo[1];
   SavedP2 := Session.io.PromptInfo[2];
   Result  := Session.User.ThisUser.Protocol;
+
+//Session.SystemLog('DEBUG: In SelectProtocol');
 
   If Not LoadByKey(Result) Then Begin
     Keys := 'Q';
@@ -1418,6 +1436,8 @@ Var
   A     : Byte;
   Temp2 : String[60];
 Begin
+//  Session.SystemLog('DEBUG: In ExecuteArchive');
+
   If Temp = '' Then
     Case GetArchiveType(FName) of
       'A' : Temp := 'ARJ';
@@ -1431,6 +1451,10 @@ Begin
       '?' : Temp := strUpper(JustFileExt(FName));
     End;
 
+//  Session.SystemLog('DEBUG: ExecArc found type ' + Temp);
+
+  FileMode := 66;
+
   Reset (ArcFile);
 
   Repeat
@@ -1441,6 +1465,8 @@ Begin
 
     Read (ArcFile, Arc);
 
+//    Session.SystemLog('DEBUG: ExecArc read one');
+
     If (Not Arc.Active) or ((Arc.OSType <> OSType) and (Arc.OSType <> 3)) Then
       Continue;
 
@@ -1448,6 +1474,8 @@ Begin
   Until False;
 
   Close (ArcFile);
+
+//  Session.SystemLog('DEBUG: ExecArc found config for ' + Arc.Ext);
 
   Case Mode of
     1 : Temp2 := Arc.Pack;
@@ -1471,6 +1499,8 @@ Begin
 
     Inc(A);
   End;
+
+  Session.SystemLog('DEBUG: ExecArc build exec for: ' + Temp);
 
   ShellDOS ('', Temp);
 End;

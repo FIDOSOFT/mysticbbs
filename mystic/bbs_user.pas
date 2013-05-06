@@ -1201,7 +1201,7 @@ Begin
       Halt(0);
     End;
 
-  Session.io.OutFullLn ('|CL' + mysSoftwareID + ' BBS v' + mysVersion + ' for ' + OSID + ' Node |ND');
+  Session.io.OutFullLn ('|CL' + mysSoftwareID + ' v' + mysVersion + ' for ' + OSID + ' Node |ND');
   Session.io.OutFullLn (CopyID);
 
   If Config.DefTermMode = 0 Then

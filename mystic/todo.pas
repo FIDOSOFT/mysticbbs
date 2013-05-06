@@ -26,6 +26,10 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- Fix up new FS editor to use passed template and editor contraints.
+     - Test with file description editor.
+- ACS to allow "selecable reply base"
+- Strip pipe colors/ANSI from message option?
 - AREAS.BBS import?
 - PGUP/DOWN moves bases in message base editor?
 - AreaFix

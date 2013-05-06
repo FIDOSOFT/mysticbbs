@@ -111,47 +111,48 @@ Begin
   Box.Shadow := False;
   Box.Header := ' Index ' + strI2S(MBase.Index) + ' ';
 
-  Box.Open (3, 5, 77, 22);
+  Box.Open (3, 4, 77, 22);
 
-  VerticalLine (17,  6, 21);
-  VerticalLine (66,  6, 21);
+  VerticalLine (17,  5, 20);
+  VerticalLine (66,  5, 21);
 
-  Form.AddStr  ('N', ' Name'        , 11,  6, 19,  6,  6, 30, 40, @MBase.Name, Topic + 'Message base description');
-  Form.AddStr  ('W', ' Newsgroup'   ,  6,  7, 19,  7, 11, 30, 60, @MBase.NewsName, Topic + 'Newsgroup name');
-  Form.AddStr  ('Q', ' QWK Name'    ,  7,  8, 19,  8, 10, 13, 13, @MBase.QwkName, Topic + 'Qwk Short name');
-  Form.AddStr  ('8', ' Echo Tag'    ,  7,  9, 19,  9, 10, 30, 40, @MBase.EchoTag, Topic + 'FTN EchoTag');
-  Form.AddStr  ('F', ' File Name'   ,  6, 10, 19, 10, 11, 30, 40, @MBase.FileName, Topic + 'Message base storage file name');
-  Form.AddPath ('P', ' Path'        , 11, 11, 19, 11,  6, 30, 80, @MBase.Path, Topic + 'Message base storage path');
-  Form.AddStr  ('L', ' List ACS'    ,  7, 12, 19, 12, 10, 30, 30, @MBase.ListACS, Topic + 'Access required to see in base list');
-  Form.AddStr  ('R', ' Read ACS'    ,  7, 13, 19, 13, 10, 30, 30, @MBase.ReadACS, Topic + 'Access required to read messages');
-  Form.AddStr  ('C', ' Post ACS'    ,  7, 14, 19, 14, 10, 30, 30, @MBase.PostACS, Topic + 'Access required to post messages');
-  Form.AddStr  ('Y', ' Sysop ACS'   ,  6, 15, 19, 15, 11, 30, 30, @MBase.SysopACS, Topic + 'Access required for Sysop access');
-  Form.AddNone ('D', ' Net Address' ,  4, 16, 19, 16, 13, Topic + 'Net/EchoMail Address');
-  Form.AddNone ('7', ' Export To'   ,  6, 17, 19, 17, 11, Topic + 'Export messages to these nodes');
-  Form.AddStr  ('I', ' Origin'      ,  9, 18, 19, 18,  8, 30, 50, @MBase.Origin, Topic + 'Message base origin line');
-  Form.AddStr  ('S', ' Sponsor'     ,  8, 19, 19, 19,  9, 30, 30, @MBase.Sponsor, Topic + 'User name of base''s sponser');
-  Form.AddStr  ('T', ' R Template'  ,  5, 20, 19, 20, 12, 20, 20, @MBase.RTemplate, Topic + 'Template for full screen reader');
-  Form.AddStr  ('M', ' L Template'  ,  5, 21, 19, 21, 12, 20, 20, @MBase.ITemplate, Topic + 'Template for lightbar message list');
+  Form.AddStr  ('N', ' Name'        , 11,  5, 19,  5,  6, 30, 40, @MBase.Name, Topic + 'Message base description');
+  Form.AddStr  ('W', ' Newsgroup'   ,  6,  6, 19,  6, 11, 30, 60, @MBase.NewsName, Topic + 'Newsgroup name');
+  Form.AddStr  ('Q', ' QWK Name'    ,  7,  7, 19,  7, 10, 13, 13, @MBase.QwkName, Topic + 'Qwk Short name');
+  Form.AddStr  ('8', ' Echo Tag'    ,  7,  8, 19,  8, 10, 30, 40, @MBase.EchoTag, Topic + 'FTN EchoTag');
+  Form.AddStr  ('F', ' File Name'   ,  6,  9, 19,  9, 11, 30, 40, @MBase.FileName, Topic + 'Message base storage file name');
+  Form.AddPath ('P', ' Path'        , 11, 10, 19, 10,  6, 30, 80, @MBase.Path, Topic + 'Message base storage path');
+  Form.AddStr  ('L', ' List ACS'    ,  7, 11, 19, 11, 10, 30, 30, @MBase.ListACS, Topic + 'Access required to see in base list');
+  Form.AddStr  ('R', ' Read ACS'    ,  7, 12, 19, 12, 10, 30, 30, @MBase.ReadACS, Topic + 'Access required to read messages');
+  Form.AddStr  ('C', ' Post ACS'    ,  7, 13, 19, 13, 10, 30, 30, @MBase.PostACS, Topic + 'Access required to post messages');
+  Form.AddStr  ('Y', ' Sysop ACS'   ,  6, 14, 19, 14, 11, 30, 30, @MBase.SysopACS, Topic + 'Access required for Sysop access');
+  Form.AddNone ('D', ' Net Address' ,  4, 15, 19, 15, 13, Topic + 'Net/EchoMail Address');
+  Form.AddNone ('7', ' Export To'   ,  6, 16, 19, 16, 11, Topic + 'Export messages to these nodes');
+  Form.AddStr  ('I', ' Origin'      ,  9, 17, 19, 17,  8, 30, 50, @MBase.Origin, Topic + 'Message base origin line');
+  Form.AddStr  ('S', ' Sponsor'     ,  8, 18, 19, 18,  9, 30, 30, @MBase.Sponsor, Topic + 'User name of base''s sponser');
+  Form.AddStr  ('T', ' R Template'  ,  5, 19, 19, 19, 12, 20, 20, @MBase.RTemplate, Topic + 'Template for full screen reader');
+  Form.AddStr  ('M', ' L Template'  ,  5, 20, 19, 20, 12, 20, 20, @MBase.ITemplate, Topic + 'Template for lightbar message list');
 
-  Form.AddAttr ('Q', ' Quote Color' , 53,  6, 68,  6, 13, @MBase.ColQuote, Topic + 'Color for quoted text');
-  Form.AddAttr ('X', ' Text Color'  , 54,  7, 68,  7, 12, @MBase.ColText, Topic + 'Color for message text');
-  Form.AddAttr ('E', ' Tear Color'  , 54,  8, 68,  8, 12, @MBase.ColTear, Topic + 'Color for tear line');
-  Form.AddAttr ('G', ' Origin Color', 52,  9, 68,  9, 14, @MBase.ColOrigin, Topic + 'Color for origin line');
-  Form.AddAttr ('K', ' Kludge Color', 52, 10, 68, 10, 14, @MBase.ColKludge, Topic + 'Color for kludge line');
-  Form.AddWord ('M', ' Max Msgs'    , 56, 11, 68, 11, 10, 5, 0, 65535, @MBase.MaxMsgs, Topic + 'Maximum number of message in base');
-  Form.AddWord ('1', ' Max Msg Age' , 53, 12, 68, 12, 13, 5, 0, 65535, @MBase.MaxAge, Topic + 'Maximum age (days) to keep messages');
-  Form.AddTog  ('2', ' New Scan'    , 56, 13, 68, 13, 10, 6, 0, 2, 'No Yes Forced', @MBase.DefNScan, Topic + 'Newscan default for users');
-  Form.AddTog  ('3', ' QWK Scan'    , 56, 14, 68, 14, 10, 6, 0, 2, 'No Yes Forced', @MBase.DefQScan, Topic + 'QWKscan default for users');
-  Form.AddBits ('4', ' Real Names'  , 54, 15, 68, 15, 12, MBRealNames, @MBase.Flags, Topic + 'Use real names in this base?');
-  Form.AddBits ('5', ' Autosigs'    , 56, 16, 68, 16, 10, MBAutoSigs, @MBase.Flags, Topic + 'Allow auto signatures in this base?');
-  Form.AddBits ('6', ' Kill Kludge' , 53, 17, 68, 17, 13, MBKillKludge, @MBase.Flags, Topic + 'Filter out kludge lines');
-  Form.AddBits ('V', ' Private'     , 57, 18, 68, 18,  9, MBPrivate, @MBase.Flags, Topic + 'Is this a private base?');
-  Form.AddTog  ('A', ' Base Type'   , 55, 19, 68, 19, 11,  9,  0, 3, 'Local EchoMail Newsgroup Netmail', @MBase.NetType, Topic + 'Message base type');
-  Form.AddTog  ('B', ' Base Format' , 53, 20, 68, 20, 13,  6,  0, 1, 'JAM Squish', @MBase.BaseType, Topic + 'Message base storage format');
-  Form.AddStr  ('H', ' Header'      , 58, 21, 68, 21,  8,  9, 20, @MBase.Header, Topic + 'Display file name of msg header');
+  Form.AddAttr ('Q', ' Quote Color' , 53,  5, 68,  5, 13, @MBase.ColQuote, Topic + 'Color for quoted text');
+  Form.AddAttr ('X', ' Text Color'  , 54,  6, 68,  6, 12, @MBase.ColText, Topic + 'Color for message text');
+  Form.AddAttr ('E', ' Tear Color'  , 54,  7, 68,  7, 12, @MBase.ColTear, Topic + 'Color for tear line');
+  Form.AddAttr ('G', ' Origin Color', 52,  8, 68,  8, 14, @MBase.ColOrigin, Topic + 'Color for origin line');
+  Form.AddAttr ('K', ' Kludge Color', 52,  9, 68,  9, 14, @MBase.ColKludge, Topic + 'Color for kludge line');
+  Form.AddWord ('M', ' Max Msgs'    , 56, 10, 68, 10, 10, 5, 0, 65535, @MBase.MaxMsgs, Topic + 'Maximum number of message in base');
+  Form.AddWord ('1', ' Max Msg Age' , 53, 11, 68, 11, 13, 5, 0, 65535, @MBase.MaxAge, Topic + 'Maximum age (days) to keep messages');
+  Form.AddTog  ('2', ' New Scan'    , 56, 12, 68, 12, 10, 6, 0, 2, 'No Yes Forced', @MBase.DefNScan, Topic + 'Newscan default for users');
+  Form.AddTog  ('3', ' QWK Scan'    , 56, 13, 68, 13, 10, 6, 0, 2, 'No Yes Forced', @MBase.DefQScan, Topic + 'QWKscan default for users');
+  Form.AddTog  ('A', ' Base Type'   , 55, 14, 68, 14, 11,  9,  0, 3, 'Local EchoMail Newsgroup Netmail', @MBase.NetType, Topic + 'Message base type');
+  Form.AddTog  ('B', ' Base Format' , 53, 15, 68, 15, 13,  6,  0, 1, 'JAM Squish', @MBase.BaseType, Topic + 'Message base storage format');
+  Form.AddStr  ('H', ' Header'      , 58, 16, 68, 16,  8,  9, 20, @MBase.Header, Topic + 'Display file name of msg header');
+  Form.AddBits ('4', ' Real Names'  , 54, 17, 68, 17, 12, MBRealNames, @MBase.Flags, Topic + 'Use real names in this base?');
+  Form.AddBits ('5', ' Autosigs'    , 56, 18, 68, 18, 10, MBAutoSigs, @MBase.Flags, Topic + 'Allow auto signatures in this base?');
+  Form.AddBits ('6', ' Kill Kludge' , 53, 19, 68, 19, 13, MBKillKludge, @MBase.Flags, Topic + 'Filter out kludge lines');
+  Form.AddBits ('V', ' Private'     , 57, 20, 68, 20,  9, MBPrivate, @MBase.Flags, Topic + 'Is a private only base?');
+  Form.AddBits ('9', ' Pvt Reply'   , 55, 21, 68, 21, 11, MBPrivReply, @MBase.Flags, Topic + 'Allow private posts in public?');
 
   Repeat
-    WriteXY (19, 16, 113, strPadR(strAddr2Str(Config.NetAddress[MBase.NetAddr]), 19, ' '));
+    WriteXY (19, 15, 113, strPadR(strAddr2Str(Config.NetAddress[MBase.NetAddr]), 19, ' '));
 
     Links := FileByteSize(MBase.Path + MBase.FileName + '.lnk');
 
@@ -160,7 +161,7 @@ Begin
     Else
       Links := 0;
 
-    WriteXY (19, 17, 113, strI2S(Links) + ' node(s)');
+    WriteXY (19, 16, 113, strI2S(Links) + ' node(s)');
 
     Case Form.Execute of
       'D' : MBase.NetAddr := Configuration_EchoMailAddress(False);

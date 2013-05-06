@@ -1,6 +1,7 @@
-{$I M_OPS.PAS}
-
 Unit MIS_Client_FTP;
+
+{$I M_OPS.PAS}
+{.$DEFINE FTPDEBUG}
 
 // does not send file/directory datestamps
 // does not support uploading (need to make bbs functions generic for this
@@ -101,6 +102,22 @@ Const
   re_NoAccess    = '550 Access denied';
   re_DLLimit     = '550 Download limit would be exceeded';
   re_DLRatio     = '550 Download/upload ratio would be exceeded';
+
+{$IFDEF FTPDEBUG}
+Procedure LOG (Str: String);
+Var
+  T : Text;
+Begin
+  Assign (T, 'ftpdebug.txt');
+  {$I-} Append(T); {$I+}
+
+  If IoResult <> 0 Then ReWrite(T);
+
+  WriteLn(T, Str);
+
+  Close(T);
+End;
+{$ENDIF}
 
 Function CreateFTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 Begin
@@ -261,6 +278,9 @@ Begin
   If IsPassive Then Begin
     WaitSock := TIOSocket.Create;
 
+    WaitSock.FTelnetServer := False;
+    WaitSock.FTelnetClient := False;
+
     WaitSock.WaitInit(DataPort);
 
     DataSocket := WaitSock.WaitConnection;
@@ -419,7 +439,14 @@ Var
   WaitSock : TIOSocket;
 Begin
   If LoggedIn Then Begin
+    If Not bbsConfig.inetFTPPassive Then Begin
+      Client.WriteLine(re_BadCommand);
+      Exit;
+    End;
+
     DataPort := Random(bbsConfig.inetFTPPortMax - bbsConfig.inetFTPPortMin) + bbsConfig.inetFTPPortMin;
+
+    {$IFDEF FTPDEBUG} LOG('PASV on host ' + Client.HostIP + ' port ' + strI2S(DataPort)); {$ENDIF}
 
     Client.WriteLine(re_PassiveOK + '(' + strReplace(Client.HostIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo) + ').');
 
@@ -427,9 +454,18 @@ Begin
 
     WaitSock := TIOSocket.Create;
 
+    WaitSock.FTelnetServer := False;
+    WaitSock.FTelnetClient := False;
+
+    {$IFDEF FTPDEBUG} LOG('PASV Init'); {$ENDIF}
+
     WaitSock.WaitInit(DataPort);
 
+    {$IFDEF FTPDEBUG} LOG('PASV Wait'); {$ENDIF}
+
     DataSocket := WaitSock.WaitConnection;
+
+    {$IFDEF FTPDEBUG} LOG('PASV WaitDone'); {$ENDIF}
 
     If Not Assigned(DataSocket) Then Begin
       WaitSock.Free;
@@ -536,11 +572,19 @@ Var
   DirFile   : TBufFile;
   Dir       : RecFileList;
 Begin
+  {$IFDEF FTPDEBUG} LOG('LIST Calling FindDirectory'); {$ENDIF}
+
   If LoggedIn Then Begin
     TempPos := FindDirectory(TempBase);
 
+    {$IFDEF FTPDEBUG} LOG('Back From FindDirectory.  Result ' + strI2S(TempPos)); {$ENDIF}
+
     If TempPos = -1 Then Begin
+      {$IFDEF FTPDEBUG} LOG('Opening data session'); {$ENDIF}
+
       OpenDataSession;
+
+      {$IFDEF FTPDEBUG} LOG('Back from data session'); {$ENDIF}
 
       FBaseFile := TBufFile.Create(FileBufSize);
 
@@ -754,6 +798,8 @@ Begin
   cmdREIN;
 
   Repeat
+    {$IFDEF FTPDEBUG} LOG('Execute loop'); {$ENDIF}
+
     If Client.WaitForData(bbsConfig.inetFTPTimeout * 1000) = 0 Then Break;
 
     If Terminated Then Exit;
@@ -766,6 +812,8 @@ Begin
       Data := strStripB(Copy(Str, Pos(' ', Str) + 1, Length(Str)), ' ')
     Else
       Data := '';
+
+    {$IFDEF FTPDEBUG} LOG('Cmd: ' + Cmd + ' Data: ' + Data); {$ENDIF}
 
     If Cmd = 'CDUP' Then cmdCDUP Else
     If Cmd = 'CWD'  Then cmdCWD Else

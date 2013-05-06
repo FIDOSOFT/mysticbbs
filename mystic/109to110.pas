@@ -582,7 +582,9 @@ Begin
     FillChar (Config.NetAddress, SizeOf(Config.NetAddress), #0);
     FillChar (Config.NetDesc, SizeOf(Config.NetDesc), #0);
     FillChar (Config.NetDomain, SizeOf(Config.NetDomain), #0);
-    FillChar (Config.NetUplink, SizeOf(Config.NetUplink), 0);
+    FillChar (Config.NetPrimary, SizeOf(Config.NetPrimary), 0);
+
+    Config.NetPrimary[2] := True;
 
     For A := 1 to 20 Do Begin
       Config.NetAddress[A].Zone  := NetAddress[A].Zone;
@@ -635,15 +637,15 @@ Begin
     Config.inetFTPDupes   := inetFTPDupes;
     Config.inetFTPPortMin := inetFTPPortMin;
     Config.inetFTPPortMax := inetFTPPortMax;
-    Config.inetFTPAnon    := inetFTPAnon;
+    Config.inetFTPPassive := False;
     Config.inetFTPTimeout := inetFTPTimeout;
 
     { new in 1.10 a11 }
 
-    Config.TemplatePath   := SysPath + 'template' + PathChar;
-    Config.MenuPath       := SysPath + 'menus' + PathChar;
-    Config.TextPath       := SysPath + 'text' + PathChar;
-    Config.WebPath        := SysPath + 'http' + PathChar;
+    Config.MenuPath     := SysPath + 'menus' + PathChar;
+    Config.TextPath     := SysPath + 'text' + PathChar;
+    Config.OutBoundPath := SysPath + 'echomail' + PathChar + 'out' + PathChar + 'fidonet' + PathChar;
+    Config.InBoundPath  := SysPath + 'echomail' + PathChar + 'in' + PathChar;
 
     Config.PWChange       := 0;
     Config.LoginAttempts  := 3;

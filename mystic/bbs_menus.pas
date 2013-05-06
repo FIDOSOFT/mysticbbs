@@ -574,56 +574,63 @@ Begin
         If ReDraw Then Break;
       End;
 
-      Case Ch of
-        #08 : If Length(Temp) > 0 Then Begin
-                Dec (Temp[0]);
+      If Session.io.IsArrow Then Begin
+        If Pos(Ch, ExtKeys) > 0 Then Begin
 
-                TBBSCore(Owner).io.OutBS(1, True);
-              End;
-        #09,
-        #27 : If Pos(Ch, ExtKeys) > 0 Then Begin
-                Translate;
+          Translate;
+          Break;
+        End;
+      End Else
+        Case Ch of
+          #08 : If Length(Temp) > 0 Then Begin
+                  Dec (Temp[0]);
 
-                Break;
-              End;
-        #13 : Begin
-                If Temp = '' Then Temp := 'ENTER';
-
-                Break;
-              End;
-        #32..
-        #126: If Length(Temp) < mysMaxMenuInput Then Begin
-                If TBBSCore(Owner).io.IsArrow And (Pos(Ch, ExtKeys) > 0) Then Begin
+                  TBBSCore(Owner).io.OutBS(1, True);
+                End;
+          #09,
+          #27 : If Pos(Ch, ExtKeys) > 0 Then Begin
                   Translate;
+
                   Break;
                 End;
+          #13 : Begin
+                  If Temp = '' Then Temp := 'ENTER';
 
-                If UseHotKeys Then Begin
-                  ValidKey := False;
-                  Found    := False;
-                  Count    := 0;
-
-                  Repeat
-                    Inc (Count);
-
-                    If SpecialKey(Data.Item[Count]^.HotKey) Or Not TBBSCore(Owner).User.Access(Data.Item[Count]^.Access) Then Continue;
-
-                    Found := Data.Item[Count]^.HotKey = Temp + UpCase(Ch);
-
-                    If Not ValidKey Then
-                      ValidKey := Temp + UpCase(Ch) = Copy(Data.Item[Count]^.HotKey, 1, Length(Temp + Ch));
-                  Until Found or (Count >= Data.NumItems);
-
-                  If Found And (TBBSCore(Owner).User.Access(Data.Item[Count]^.Access)) Then Begin
-                    AddChar;
+                  Break;
+                End;
+          #32..
+          #126: If Length(Temp) < mysMaxMenuInput Then Begin
+                  If TBBSCore(Owner).io.IsArrow And (Pos(Ch, ExtKeys) > 0) Then Begin
+                    Translate;
                     Break;
+                  End;
+
+                  If UseHotKeys Then Begin
+                    ValidKey := False;
+                    Found    := False;
+                    Count    := 0;
+
+                    Repeat
+                      Inc (Count);
+
+                      If SpecialKey(Data.Item[Count]^.HotKey) Or Not TBBSCore(Owner).User.Access(Data.Item[Count]^.Access) Then Continue;
+
+                      Found := Data.Item[Count]^.HotKey = Temp + UpCase(Ch);
+
+                      If Not ValidKey Then
+                        ValidKey := Temp + UpCase(Ch) = Copy(Data.Item[Count]^.HotKey, 1, Length(Temp + Ch));
+                    Until Found or (Count >= Data.NumItems);
+
+                    If Found And (TBBSCore(Owner).User.Access(Data.Item[Count]^.Access)) Then Begin
+                      AddChar;
+                      Break;
+                    End Else
+                      If ValidKey Then AddChar;
                   End Else
-                    If ValidKey Then AddChar;
-                End Else
-                  AddChar;
-              End;
+                    AddChar;
+                End;
+        End;
       End;
-    End;
 
     If Data.Info.CharType <> 2 Then
       TBBSCore(Owner).io.OutRawLn('');

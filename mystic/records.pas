@@ -21,7 +21,7 @@
 //     protocol: active, no 4gig limitation, can batch, etc
 
 Const
-  mysSoftwareID  = 'Mystic';                                    // no idea
+  mysSoftwareID  = 'Mystic BBS';
   mysCopyYear    = '1997-2013';                                 // its been a long time!
   mysVersion     = '1.10 A33';                                  // current version
   mysDataChanged = '1.10 A11';                                  // version of last records change
@@ -36,7 +36,7 @@ Const
   {$IFDEF LINUX}
     PathChar = '/';
     LineTerm = #10;
-    OSID     = 'Linux';
+    {$IFDEF CPUARM} OSID = 'Raspberry Pi'; {$ELSE} OSID = 'Linux'; {$ENDIF}
     OSType   = 1;
   {$ENDIF}
 
@@ -59,7 +59,7 @@ Const
   mysMaxMenuCmds     = 25;                                      // Max menu commands per item
   mysMaxMenuInput    = 12;
   mysMaxMenuStack    = 8;
-  mysMaxThemeText    = 512;
+  mysMaxThemeText    = 514;
 
   fn_SemFileEcho = 'echomail.now';
   fn_SemFileNews = 'newsmail.now';
@@ -306,7 +306,7 @@ Type
     inetFTPDupes    : Byte;
     inetFTPPortMin  : Word;
     inetFTPPortMax  : Word;
-    inetFTPAnon     : Boolean;
+    inetFTPPassive  : Boolean;
     inetFTPTimeout  : Word;
     inetNNTPUse     : Boolean;
     inetNNTPPort    : Word;
@@ -475,7 +475,7 @@ Const
   MBAutosigs    = $00000004; // 3
   MBNoAttach    = $00000008; // 4
   MBPrivate     = $00000010; // 5
-  MBCrossPost   = $00000020; // 6
+  MBPrivReply   = $00000020; // 6
 
 Type
   RecMessageBase = Record                                       // MBASES.DAT

@@ -316,7 +316,7 @@ Begin
   Form.AddByte ('D', ' Dupe IP Limit',      32, 13, 49, 13, 15,  3, 2, 255,   @Config.inetFTPDupes, Topic + 'Max connections with same IP');
   Form.AddWord ('I', ' Data Port Min',      32, 14, 49, 14, 15,  5, 0, 65535, @Config.inetFTPPortMin, Topic + 'Passive port range (minimum)');
   Form.AddWord ('A', ' Data Port Max',      32, 15, 49, 15, 15,  5, 0, 65535, @Config.inetFTPPortMax, Topic + 'Passive port range (maximum)');
-  Form.AddBol  ('Y', ' Allow Anonymous',    30, 16, 49, 16, 17,  3, @Config.inetFTPAnon, Topic + 'Allow anonymous users');
+  Form.AddBol  ('Y', ' Allow Passive',      32, 16, 49, 16, 15,  3, @Config.inetFTPPassive, Topic + 'Allow passive data transfers');
 
   Form.Execute;
   Form.Free;

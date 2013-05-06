@@ -187,6 +187,8 @@ End;
 
 Function ShellDOS (ExecPath: String; Command: String) : LongInt;
 Begin
+  Session.SystemLog('DEBUG: In ShellOS for: (' + ExecPath + ') ' + Command);
+
   Session.io.BufFlush;
 
   {$IFDEF WINDOWS}
@@ -210,7 +212,11 @@ Begin
     Screen.SetRawMode(False);
   {$ENDIF}
 
-  If ExecPath <> '' Then DirChange(ExecPath);
+  If ExecPath <> '' Then Begin
+    Session.SystemLog('DEBUG: ShellOS changing DIR to: ' + ExecPath);
+
+    DirChange(ExecPath);
+  End;
 
   {$IFDEF UNIX}
     Result := Shell (Command);
@@ -218,8 +224,13 @@ Begin
 
   {$IFDEF WINDOWS}
     If Command <> '' Then Command := '/C' + Command;
+
+    Session.SystemLog('DEBUG: ShellOS EXEC' + GetEnv('COMSPEC') + ' ' + Command);
+
     Exec (GetEnv('COMSPEC'), Command);
     Result := DosExitCode;
+
+    Session.SystemLog('DEBUG: ShellOS returned: ' + strI2S(Result));
   {$ENDIF}
 
   {$IFDEF UNIX}
