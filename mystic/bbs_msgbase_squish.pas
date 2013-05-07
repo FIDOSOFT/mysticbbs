@@ -45,7 +45,7 @@ Type
   End;
 
   SqFrameHdrType = Record
-    Id            : LongInt; { Must equal SqHdrId                                                                                         }
+    Id            : Cardinal; { Must equal SqHdrId                                                                                         }
     NextFrame     : LongInt; { Next msg frame                                                                                                     }
     PrevFrame     : LongInt; { Prior msg frame                                                                                                    }
     FrameLength   : LongInt; { Length of this frame not counting header }

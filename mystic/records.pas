@@ -325,7 +325,8 @@ Type
     //EmailValidationLevel
     //AllowEmailPWReset
     ForceNodeList   : Boolean;
-    Reserved        : Array[1..811] of Char;
+    inetInterface   : String[23];
+    Reserved        : Array[1..787] of Char;
   End;
 
 Const

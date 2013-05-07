@@ -96,7 +96,7 @@ Var
   cfg_ExecPath    : String[160];
   cfg_ExecUser    : String[35];
   cfg_ExecPW      : String[20];
-  cfg_TextString  : Byte;
+//  cfg_TextString  : Byte;
   cfg_TextKeyword : Byte;
   cfg_TextComment : Byte;
   cfg_TextNormal  : Byte;
@@ -136,11 +136,9 @@ Type
   CutTextRec = String[255];
 
 Var
-  CutPasted    : Boolean = False;
-  CutTextPos   : Word    = 0;
-  CutText      : Array[1..MaxCutText] of CutTextPTR;
-
-Var
+  CutPasted   : Boolean = False;
+  CutTextPos  : Word    = 0;
+  CutText     : Array[1..MaxCutText] of CutTextPTR;
   Console     : TOutput;
   Input       : TInput;
   StartDir    : String;
@@ -1855,7 +1853,7 @@ Begin
   cfg_ExecPW      := INI.ReadString('Execute', 'password', 'Guest');
   cfg_TextNormal  := INI.ReadInteger('Colors', 'syn_normal', 30);
   cfg_TextKeyword := INI.ReadInteger('Colors', 'syn_keyword', 31);
-  cfg_TextString  := INI.ReadInteger('Colors', 'syn_string', 27);
+//  cfg_TextString  := INI.ReadInteger('Colors', 'syn_string', 27);
   cfg_TextNumber  := INI.ReadInteger('Colors', 'syn_number', 19);
   cfg_TextComment := INI.ReadInteger('Colors', 'syn_comment', 23);
   cfg_TextHex     := INI.ReadInteger('Colors', 'syn_hex', 28);

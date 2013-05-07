@@ -4091,34 +4091,35 @@ Begin
 End;
 
 Function TMsgBase.WriteMSGDAT (Extended: Boolean) : LongInt;
-{ returns last message added to qwk packet }
 Var
   DataFile : File;
   NdxFile  : File of QwkNdxHdr;
   NdxHdr   : QwkNdxHdr;
-  QwkHdr   : QwkDATHdr;
-  Temp     : String;
-  MsgAdded : Integer; {# of message added in packet}
-  LastRead : LongInt;
+  Header   : String[128];
+  Chunks   : Word;
   BufStr   : String[128];
-  Blocks   : Word;
-  Index    : LongInt;
+  MsgAdded : Integer;
+  LastRead : LongInt;
+  QwkIndex : LongInt;
   TooBig   : Boolean;
 
   Procedure DoString (Str: String);
   Var
     Count : SmallInt;
   Begin
-    For Count := 1 to Length(Temp) Do Begin
-      BufStr := BufStr + Temp[Count];
+    For Count := 1 to Length(Str) Do Begin
+      BufStr := BufStr + Str[Count];
 
       If BufStr[0] = #128 Then Begin
         BlockWrite (DataFile, BufStr[1], 128);
+
         BufStr := '';
       End;
     End;
   End;
 
+Var
+  TempStr : String;
 Begin
   MsgAdded := 0;
 
@@ -4132,13 +4133,11 @@ Begin
 
   LastRead := MsgBase^.GetLastRead(Session.User.UserNum) + 1;
 
-  MsgBase^.SeekFirst(LastRead);
+  MsgBase^.SeekFirst (LastRead);
 
   While MsgBase^.SeekFound Do Begin
-    If ((Config.qwkMaxBase > 0) and (MsgAdded = Config.qwkMaxBase)) or
-    ((Config.qwkMaxPacket > 0) and (TotalMsgs = Config.qwkMaxPacket)) Then Break;
-
-    FillChar (QwkHdr, 128, ' ');
+    If ((Config.QwkMaxBase > 0) and (MsgAdded = Config.QwkMaxBase)) or
+    ((Config.QwkMaxPacket > 0) and (TotalMsgs = Config.QwkMaxPacket)) Then Break;
 
     MsgBase^.MsgStartUp;
 
@@ -4152,81 +4151,86 @@ Begin
     Inc (TotalMsgs);
 
     LastRead := MsgBase^.GetMsgNum;
-
-    Temp := strPadR(strUpper(MsgBase^.GetFrom), 25, ' ');
-    Move (Temp[1], QwkHdr.UPFrom, 25);
-    Temp := strPadR(strUpper(MsgBase^.GetTo), 25, ' ');
-    Move (Temp[1], QwkHdr.UPTo, 25);
-    Temp := strPadR(MsgBase^.GetSubj, 25, ' ');
-    Move (Temp[1], QwkHdr.Subject, 25);
-    Temp := MsgBase^.GetDate;
-    Move (Temp[1], QwkHdr.Date, 8);
-    Temp := MsgBase^.GetTime;
-    Move (Temp[1], QwkHdr.Time, 5);
-    Temp := strPadR(strI2S(MsgBase^.GetMsgNum), 7, ' ');
-    Move (Temp[1], QwkHdr.MSGNum, 7);
-    Temp := strPadR(strI2S(MsgBase^.GetRefer), 8, ' ');
-    Move (Temp[1], QwkHdr.ReferNum, 8);
-
-    QwkHdr.Active  := #225;
-    QwkHdr.ConfNum := MBase.Index;
-    QwkHdr.Status  := ' ';
+    Chunks   := 0;
+    BufStr   := '';
+    TooBig   := False;
+    QwkIndex := FileSize(DataFile) DIV 128 + 1;
 
     MsgBase^.MsgTxtStartUp;
 
-    Blocks := MsgBase^.GetTextLen DIV 128;
+    While Not MsgBase^.EOM Do Begin
+      TempStr := MsgBase^.GetString(79);
 
-    If MsgBase^.GetTextLen MOD 128 > 0 Then Inc(Blocks, 2) Else Inc(Blocks);
+      If TempStr[1] = #1 Then Continue;
 
-    Temp := strPadR(strI2S(Blocks), 6, ' ');
+      Inc (Chunks, Length(TempStr));
+    End;
 
-    Move (Temp[1], QwkHdr.NumChunk, 6);
+    If Chunks MOD 128 = 0 Then
+      Chunks := Chunks DIV 128 + 1
+    Else
+      Chunks := Chunks DIV 128 + 2;
+
+    Header :=
+      ' ' +
+      strPadR(strI2S(MsgBase^.GetMsgNum), 7, ' ') +
+      MsgBase^.GetDate +
+      MsgBase^.GetTime +
+      strPadR(strUpper(MsgBase^.GetTo), 25, ' ') +
+      strPadR(strUpper(MsgBase^.GetFrom), 25, ' ') +
+      strPadR(strUpper(MsgBase^.GetSubj), 25, ' ') +
+      strPadR('', 12, ' ') +
+      strPadR(strI2S(MsgBase^.GetRefer), 8, ' ') +
+      strPadR(strI2S(Chunks), 6, ' ') +
+      #255 +
+      '  ' +
+      '  ' +
+      ' ';
 
     If MsgAdded = 1 Then Begin
       Assign  (NdxFile, Session.TempPath + strPadL(strI2S(MBase.Index), 3, '0') + '.ndx');
       ReWrite (NdxFile);
     End;
 
-    Index := FileSize(DataFile) DIV 128 + 1;
-
-    long2msb (Index, NdxHdr.MsgPos);
-
-    Write (NdxFile, NdxHdr);
-
-    BlockWrite (DataFile, QwkHdr, 128);
-
-    BufStr := '';
-    TooBig := False;
+    LONG2MSB   (QwkIndex, NdxHdr.MsgPos);
+    Write      (NdxFile, NdxHdr);
+    BlockWrite (DataFile, Header[1], 128);
 
     If Extended Then Begin
       If Length(MsgBase^.GetFrom) > 25 Then Begin
         DoString('From: ' + MsgBase^.GetFrom + #227);
+
         TooBig := True;
       End;
 
       If Length(MsgBase^.GetTo) > 25 Then Begin
         DoString('To: ' + MsgBase^.GetTo + #227);
+
         TooBig := True;
       End;
 
       If Length(MsgBase^.GetSubj) > 25 Then Begin
         DoString('Subject: ' + MsgBase^.GetSubj + #227);
+
         TooBig := True;
       End;
 
       If TooBig Then DoString(#227);
     End;
 
+    MsgBase^.MsgTxtStartUp;
+
     While Not MsgBase^.EOM Do Begin
-      Temp := MsgBase^.GetString(79) + #227;
+      TempStr := MsgBase^.GetString(79) + #227;
 
-      If Temp[1] = #1 Then Continue;
+      If TempStr[1] = #1 Then Continue;
 
-      DoString(Temp);
+      DoString (TempStr);
     End;
 
     If BufStr <> '' Then Begin
-      BufStr := strPadR(BufStr, 128, ' ');
+      BufStr := strPadR (BufStr, 128, ' ');
+
       BlockWrite (DataFile, BufStr[1], 128);
     End;
 
@@ -4246,7 +4250,7 @@ Begin
   MsgBase^.CloseMsgBase;
   Dispose (MsgBase, Done);
 
-  Session.io.OutBS (Screen.CursorX, True);
+  Session.io.OutBS     (Screen.CursorX, True);
   Session.io.OutFullLn (Session.GetPrompt(232));
 
   Result := LastRead;
@@ -4331,7 +4335,10 @@ Begin
 //    Session.SystemLog('DEBUG: Archiving QWK packet');
 
     If Session.LocalMode Then Begin
+      FileErase (Config.QWKPath + Temp);
+
       Session.FileBase.ExecuteArchive (Config.QWKPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
+
       Session.io.OutFullLn (Session.GetPrompt(235));
     End Else Begin
 //      Session.SystemLog('DEBUG: Arc QWK: Nonlocal mode');

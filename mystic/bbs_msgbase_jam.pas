@@ -76,7 +76,7 @@ Type
     DateRcvd    : LongInt;
     DateArrived : LongInt;
     MsgNum      : LongInt;
-    Attr1       : LongInt;
+    Attr1       : Cardinal;
     Attr2       : LongInt;
     TextOfs     : LongInt;
     TextLen     : LongInt;
@@ -238,7 +238,7 @@ Type
     Procedure   MsgTxtStartUp; Virtual; {Do message text start up tasks}
     Function    GetTxtPos      : LongInt; Virtual; {Get indicator of msg text position}
     Procedure   SetTxtPos      (TP: LongInt); Virtual; {Set text position}
-    Procedure   SetAttr1       (Mask: LongInt; St: Boolean); {Set attribute 1}
+    Procedure   SetAttr1       (Mask: Cardinal; St: Boolean); {Set attribute 1}
     Function    ReadIdx        : Word;
     Function    WriteIdx       : Word;
     Procedure   AddSubField    (id: Word; Data: String);
@@ -371,7 +371,7 @@ Begin
   JM^.MsgTime := STime;
 End;
 
-Procedure TMsgBaseJAM.SetAttr1 (Mask: LongInt; St: Boolean);
+Procedure TMsgBaseJAM.SetAttr1 (Mask: Cardinal; St: Boolean);
   Begin
   If St Then
     MsgHdr^.JamHdr.Attr1 := MsgHdr^.JamHdr.Attr1 Or Mask

@@ -63,7 +63,6 @@ Var
     UserTotal : Cardinal;
     Link      : RecMsgLink;
     Count     : Cardinal;
-    Addr      : RecEchoMailAddr;
   Begin
     FileMode  := 66;
     BaseKills := 0;

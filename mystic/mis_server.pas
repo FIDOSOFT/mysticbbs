@@ -17,7 +17,7 @@ Const
 Type
   TServerManager    = Class;
   TServerClient     = Class;
-  TServerCreateProc = Function (Manager: TServerManager; Config: RecConfig; ND: TNodeData; Client: TIOSocket): TServerClient;
+  TServerCreateProc = Function (Manager: TServerManager; Cfg: RecConfig; ND: TNodeData; Client: TIOSocket): TServerClient;
 
   TServerManager = Class(TThread)
     Critical      : TRTLCriticalSection;
@@ -37,7 +37,7 @@ Type
     Port          : LongInt;
     TextPath      : String[80];
 
-    Constructor Create       (Config: RecConfig; PortNum: Word; CliMax: Word; ND: TNodeData; CreateProc: TServerCreateProc);
+    Constructor Create       (Cfg: RecConfig; PortNum: Word; CliMax: Word; ND: TNodeData; CreateProc: TServerCreateProc);
     Destructor  Destroy;     Override;
     Procedure   Execute;     Override;
     Procedure   Status       (Str: String);
@@ -60,7 +60,7 @@ Uses
   m_Strings,
   m_DateTime;
 
-Constructor TServerManager.Create (Config: RecConfig; PortNum: Word; CliMax: Word; ND: TNodeData; CreateProc: TServerCreateProc);
+Constructor TServerManager.Create (Cfg: RecConfig; PortNum: Word; CliMax: Word; ND: TNodeData; CreateProc: TServerCreateProc);
 Var
   Count : Byte;
 Begin
@@ -82,7 +82,7 @@ Begin
   ClientList    := TList.Create;
   TextPath      := Config.DataPath;
   NodeInfo      := ND;
-  Config        := Config;
+  Config        := Cfg;
 
   For Count := 1 to ClientMax Do
     ClientList.Add(NIL);
@@ -201,7 +201,7 @@ Begin
   Repeat Until Server <> NIL;  // Synchronize with server class
   Repeat Until ServerStatus <> NIL; // Syncronize with status class
 
-  Server.WaitInit(Port);
+  Server.WaitInit(Config.inetInterface, Port);
 
   If Terminated Then Exit;
 

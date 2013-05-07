@@ -54,7 +54,6 @@ End;
 Procedure BundleMessages;
 Var
   F          : File;
-  T          : Text;
   PH         : RecPKTHeader;
   DirInfo    : SearchRec;
   NodeIndex  : LongInt;
@@ -156,9 +155,10 @@ Var
   Begin
     // if msg originated from this echomail address then do not export
 
-    If (EchoNode.Address.Zone = MsgBase^.GetOrigAddr.Zone) and
-       (EchoNode.Address.Net  = MsgBase^.GetOrigAddr.Net)  and
-       (EchoNode.Address.Node = MsgBase^.GetOrigAddr.Node) Then Exit;
+    If (EchoNode.Address.Zone  = MsgBase^.GetOrigAddr.Zone) and
+       (EchoNode.Address.Net   = MsgBase^.GetOrigAddr.Net)  and
+       (EchoNode.Address.Node  = MsgBase^.GetOrigAddr.Node) and
+       (EchoNode.Address.Point = MsgBase^.GetOrigAddr.Point) Then Exit;
 
     Log (2, '+', '      Export #' + strI2S(MsgBase^.GetMsgNum) + ' to ' + strAddr2Str(EchoNode.Address));
 
@@ -257,7 +257,7 @@ Var
     If MBase.NetType = 3 Then
       WriteStr (#1 + 'INTL ' + strAddr2Str(EchoNode.Address) + ' ' + strAddr2Str(MsgBase^.GetOrigAddr), #13);
 
-    WriteStr (#1 + 'TID: Mystic BBS ' + mysVersion, #13);
+    WriteStr (#1 + 'TID: ' + mysSoftwareID + ' ' + mysVersion, #13);
 
     MsgBase^.MsgTxtStartUp;
 

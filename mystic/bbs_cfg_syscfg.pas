@@ -276,13 +276,14 @@ Begin
 
   Box.Header := ' Internet Servers ';
 
-  Box.Open (16, 9, 64, 15);
+  Box.Open (16, 9, 64, 16);
 
-  VerticalLine (31, 11, 13);
+  VerticalLine (31, 11, 14);
 
   Form.AddStr  ('D', ' Domain',          23, 11, 33, 11,  8, 25, 25, @Config.inetDomain, Topic + 'Internet domain name');
-  Form.AddBol  ('B', ' IP Blocking',     18, 12, 33, 12, 13, 3, @Config.inetIPBlocking, Topic + 'Enable IP blocking');
-  Form.AddBol  ('L', ' IP Logging',      19, 13, 33, 13, 12, 3, @Config.inetIPLogging, Topic + 'Enable IP logging');
+  Form.AddStr  ('I', ' Interface',       20, 12, 33, 12, 11, 23, 23, @Config.inetInterface, Topic + 'Network interface IP address');
+  Form.AddBol  ('B', ' IP Blocking',     18, 13, 33, 13, 13, 3, @Config.inetIPBlocking, Topic + 'Enable IP blocking');
+  Form.AddBol  ('L', ' IP Logging',      19, 14, 33, 14, 12, 3, @Config.inetIPLogging, Topic + 'Enable IP logging');
 
   Form.Execute;
 

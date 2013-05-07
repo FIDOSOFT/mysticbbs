@@ -68,7 +68,6 @@ Var
   TotalEcho   : LongInt;
   TotalNet    : LongInt;
   TotalDupes  : LongInt;
-  EchoNode    : RecEchoMailNode;
   DupeIndex   : LongInt;
   DupeMBase   : RecMessageBase;
   CreateBases : Boolean;

@@ -122,8 +122,7 @@ Implementation
 
 Constructor TPKTDupe.Create (Max: Cardinal);
 Var
-  F  : File;
-  RS : Cardinal;
+  F : File;
 Begin
   Inherited Create;
 

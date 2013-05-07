@@ -1,6 +1,7 @@
 Unit MIS_Client_FTP;
 
 {$I M_OPS.PAS}
+
 {.$DEFINE FTPDEBUG}
 
 // does not send file/directory datestamps
@@ -281,7 +282,7 @@ Begin
     WaitSock.FTelnetServer := False;
     WaitSock.FTelnetClient := False;
 
-    WaitSock.WaitInit(DataPort);
+    WaitSock.WaitInit(bbsConfig.inetInterface, DataPort);
 
     DataSocket := WaitSock.WaitConnection;
 
@@ -446,20 +447,23 @@ Begin
 
     DataPort := Random(bbsConfig.inetFTPPortMax - bbsConfig.inetFTPPortMin) + bbsConfig.inetFTPPortMin;
 
-    {$IFDEF FTPDEBUG} LOG('PASV on host ' + Client.HostIP + ' port ' + strI2S(DataPort)); {$ENDIF}
+    {$IFDEF FTPDEBUG}
+      LOG('PASV on host ' + Client.HostIP + ' port ' + strI2S(DataPort));
+
+      Server.Status(re_PassiveOK + '(' + strReplace(Client.HostIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo) + ').');
+    {$ENDIF}
 
     Client.WriteLine(re_PassiveOK + '(' + strReplace(Client.HostIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo) + ').');
 
     IsPassive := True;
-
-    WaitSock := TIOSocket.Create;
+    WaitSock  := TIOSocket.Create;
 
     WaitSock.FTelnetServer := False;
     WaitSock.FTelnetClient := False;
 
     {$IFDEF FTPDEBUG} LOG('PASV Init'); {$ENDIF}
 
-    WaitSock.WaitInit(DataPort);
+    WaitSock.WaitInit(bbsConfig.inetInterface, DataPort);
 
     {$IFDEF FTPDEBUG} LOG('PASV Wait'); {$ENDIF}
 
@@ -765,7 +769,7 @@ Begin
 
       WaitSock := TIOSocket.Create;
 
-      WaitSock.WaitInit(DataPort);
+      WaitSock.WaitInit(bbsConfig.inetInterface, DataPort);
 
       DataSocket := WaitSock.WaitConnection;
 
@@ -813,7 +817,10 @@ Begin
     Else
       Data := '';
 
-    {$IFDEF FTPDEBUG} LOG('Cmd: ' + Cmd + ' Data: ' + Data); {$ENDIF}
+    {$IFDEF FTPDEBUG}
+      LOG('Cmd: ' + Cmd + ' Data: ' + Data);
+      Server.Status ('Cmd: ' + Cmd + ' Data: ' + Data);
+    {$ENDIF}
 
     If Cmd = 'CDUP' Then cmdCDUP Else
     If Cmd = 'CWD'  Then cmdCWD Else

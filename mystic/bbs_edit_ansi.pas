@@ -925,7 +925,6 @@ Var
 
 Var
   Ch          : Char;
-  Added       : Boolean;
   QWinSize    : Byte;
   QWinDataPos : Byte;
   QWinData    : Array[1..15] of String[79];
@@ -963,8 +962,6 @@ Var
 Var
   Temp : Integer;
 Begin
-  Added := False;
-
   Assign (InFile, Session.TempPath + 'msgtmp');
   {$I-} Reset(InFile); {$I+}
 
@@ -1075,7 +1072,6 @@ Begin
       Case Ch of
         #27 : Break;
         #13 : If (LastLine < mysMaxMsgLines) and (Not NoMore) Then Begin
-                Added := True;
 
                 If QuoteTopPage + QuoteCurLine = QuoteLines Then NoMore := True;
 

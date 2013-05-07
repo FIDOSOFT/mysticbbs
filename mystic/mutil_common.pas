@@ -2,37 +2,6 @@ Unit MUTIL_Common;
 
 {$I M_OPS.PAS}
 
-(*
-add domain into this?  how would this be used in routing?  where is routing
-configuration going?
-
-Function IsAddressMatch (Str: String; Addr: RecEchoMailAddr) : Boolean;
-Var
-  Zone : String;
-  Net  : String;
-  Node : String;
-  A    : Byte;
-  B    : Byte;
-Begin
-  Result := False;
-
-  A := Pos(':', Str);
-  B := Pos('/', Str);
-
-  If (A = 0) or (B <= A) Then Exit;
-
-  Zone := Copy(Str, 1, A - 1);
-  Net  := Copy(Str, A + 1, B - 1 - A);
-  Node := Copy(Str, B + 1, 255);
-
-  If (Zone <> '*') and (Addr.Zone <> strS2I(Zone)) Then Exit;
-  If (Net  <> '*') and (Addr.Net  <> strS2I(Net))  Then Exit;
-  If (Node <> '*') and (Addr.Node <> strS2I(Node)) Then Exit;
-
-  Result := True;
-End;
-*)
-
 Interface
 
 Uses
@@ -339,7 +308,9 @@ Begin
     Inc (Count);
   End;
 
-  ShellDOS ('', Temp);
+  Log (3, '!', 'Arc Result (' + strI2S(ShellDOS('', Temp)) + ') ' + Temp);
+
+//  ShellDOS ('', Temp);
 End;
 
 Function GetMBaseByIndex (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
@@ -533,7 +504,10 @@ End;
 
 Function GetFTNFlowName (Dest: RecEchoMailAddr) : String;
 Begin
-  Result := strI2H((Dest.Net SHL 16) OR Dest.Node, 8);
+  If Dest.Point = 0 Then
+    Result := strI2H((Dest.Net SHL 16) OR Dest.Node, 8)
+  Else
+    Result := strI2H(Dest.Point, 8);
 End;
 
 Function IsFTNPrimary (EchoNode: RecEchoMailNode) : Boolean;
@@ -558,6 +532,9 @@ Begin;
     Result := bbsConfig.OutboundPath
   Else
     Result := DirLast(bbsConfig.OutboundPath) + strLower(EchoNode.Domain + '.' + strPadL(strI2H(EchoNode.Address.Zone, 3), 3, '0')) + PathChar;
+
+  If EchoNode.Address.Point <> 0 Then
+    Result := Result + strI2H((EchoNode.Address.Net SHL 16) OR EchoNode.Address.Node, 8) + '.pnt' + PathChar;
 End;
 
 Function GetNodeByIndex (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
@@ -587,6 +564,49 @@ Function GetNodeByRoute (Dest: RecEchoMailAddr; Var TempNode: RecEchoMailNode) :
 
   Function IsMatch (Str: String) : Boolean;
 
+    Function IsOneMatch (Mask: String) : Boolean;
+    Var
+      Zone  : String;
+      Net   : String;
+      Node  : String;
+      Point : String;
+      A     : Byte;
+      B     : Byte;
+      C     : Byte;
+    Begin
+      Result := False;
+      Zone   := '';
+      Net    := '';
+      Node   := '';
+      Point  := '';
+      A      := Pos(':', Mask);
+      B      := Pos('/', Mask);
+      C      := Pos('.', Mask);
+
+      If A <> 0 Then Begin
+        Zone := Copy(Mask, 1, A - 1);
+
+        If B = 0 Then B := 255;
+        If C = 0 Then C := 255;
+
+        Net   := Copy(Mask, A + 1, B - 1 - A);
+        Node  := Copy(Mask, B + 1, C - 1 - B);
+        Point := Copy(Mask, C + 1, 255);
+      End;
+
+      If Zone  = '' Then Zone  := '*';
+      If Net   = '' Then Net   := '*';
+      If Node  = '' Then Node  := '*';
+      If Point = '' Then Point := '*';
+
+      If (Zone <> '*')  and (Dest.Zone  <> strS2I(Zone))  Then Exit;
+      If (Net  <> '*')  and (Dest.Net   <> strS2I(Net))   Then Exit;
+      If (Node <> '*')  and (Dest.Node  <> strS2I(Node))  Then Exit;
+      If (Point <> '*') and (Dest.Point <> strS2I(Point)) Then Exit;
+
+      Result := True;
+    End;
+(*
     Function IsOneMatch (Mask: String) : Boolean;
     Var
       Zone  : String;
@@ -622,10 +642,9 @@ Function GetNodeByRoute (Dest: RecEchoMailAddr; Var TempNode: RecEchoMailNode) :
 
       Result := True;
     End;
-
+*)
   Var
     Mask   : String = '';
-    IsNot  : Boolean;
     OneRes : Boolean;
 
     Procedure GetNextAddress;
@@ -693,6 +712,10 @@ Var
   Count : Byte;
 Begin
   Result := False;
+
+  // this doesn't check points because a point is not in the PKT header so
+  // we cannot compare it against the point aspect.  maybe PKT 2.2 fixes
+  // this?  research it someday
 
   For Count := 1 to 30 Do Begin
     Result := (bbsConfig.NetAddress[Count].Zone  = Zone) And

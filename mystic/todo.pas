@@ -34,12 +34,10 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - PGUP/DOWN moves bases in message base editor?
 - AreaFix
 - Echomail export saves last scanned pointers
-- Echomail export support for points
 - Echomail export support for netmail routing
 - FileFix / TIC
 - Add "Add Export To" to global msgbase editor.  Also Del Export?
-! Use NetReply in RecMB also Reply to another base
-- cut/paste needs to be added back into the FS editor
+! Use NetReply in RecMB also Reply to another base?
 - QWK put/get per individual users via FTP
 - EXCLUDE from all files list. important.
 - Reply to echomail via netmail.
