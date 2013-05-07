@@ -85,6 +85,7 @@ End;
 
 Function TIOBase.WriteBuf (Var Buf; Len: LongInt) : LongInt;
 Begin
+  Result := 0;
 End;
 
 Procedure TIOBase.BufFlush;
@@ -101,30 +102,37 @@ End;
 
 Function TIOBase.ReadChar : Char;
 Begin
+  Result := #0;
 End;
 
 Function TIOBase.PeekChar (Num: Byte) : Char;
 Begin
+  Result := #0;
 End;
 
 Function TIOBase.ReadBuf (Var Buf; Len: LongInt) : LongInt;
 Begin
+  Result := 0;
 End;
 
 Function TIOBase.ReadLine (Var Str: String) : LongInt;
 Begin
+  Result := 0;
 End;
 
 Function TIOBase.WriteStr (Str: String) : LongInt;
 Begin
+  Result := 0;
 End;
 
 Function TIOBase.WriteLine (Str: String) : LongInt;
 Begin
+  Result := 0;
 End;
 
 Function TIOBase.WaitForData (TimeOut: LongInt) : LongInt;
 Begin
+  Result := 0;
 End;
 
 End.

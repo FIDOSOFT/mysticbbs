@@ -11,7 +11,7 @@ Procedure BitSet    (B: Byte; Size: Byte; Var Temp; IsOn: Boolean);
 Implementation
 
 Const
-  Bit : Array[1..32] of LongInt = (
+  Bit : Array[1..32] of Cardinal = (
           $00000001,  $00000002,
           $00000004,  $00000008,
           $00000010,  $00000020,

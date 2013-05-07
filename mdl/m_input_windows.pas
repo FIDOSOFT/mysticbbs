@@ -1,6 +1,6 @@
-{$I M_OPS.PAS} {$R-}
-
 Unit m_Input_Windows;
+
+{$I M_OPS.PAS}
 
 Interface
 
@@ -21,7 +21,7 @@ Type
     Procedure   AddBuffer (Ch: Char);
     Function    RemapScanCode (ScanCode: Word; CtrlKeyState: dWord; Keycode: Word) : Byte;
     Function    ProcessQueue : Boolean;
-    Function    KeyWait (MS: LongInt) : Boolean;
+    Function    KeyWait (MS: Cardinal) : Boolean;
     Function    KeyPressed : Boolean;
     Function    ReadKey : Char;
   End;
@@ -168,7 +168,7 @@ Begin
   Until NumRead = 0;
 End;
 
-Function TInputWindows.KeyWait (MS: LongInt) : Boolean;
+Function TInputWindows.KeyWait (MS: Cardinal) : Boolean;
 Begin
   If BufPos <> BufSize Then Begin
     Result := True;

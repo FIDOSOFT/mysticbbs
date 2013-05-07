@@ -65,7 +65,7 @@ Type
     Function    WaitForData     (TimeOut: LongInt) : LongInt; Override;
     Function    Connect         (Address: String; Port: Word) : Boolean;
     Function    ResolveAddress  (Host: String) : LongInt;
-    Procedure   WaitInit        (Port: Word);
+    Procedure   WaitInit        (NetInterface: String; Port: Word);
     Function    WaitConnection  : TIOSocket;
 
     Function    PeekChar        (Num: Byte) : Char; Override;
@@ -564,7 +564,7 @@ Begin
   Result  := fpConnect(FSocketHandle, @Sin, SizeOf(Sin)) = 0;
 End;
 
-Procedure TIOSocket.WaitInit (Port: Word);
+Procedure TIOSocket.WaitInit (NetInterface: String; Port: Word);
 Var
   SIN : TINetSockAddr;
   Opt : LongInt;
@@ -576,10 +576,12 @@ Begin
   fpSetSockOpt (FSocketHandle, SOL_SOCKET, SO_REUSEADDR, @Opt, SizeOf(Opt));
 
   SIN.sin_family      := PF_INET;
-  SIN.sin_addr.s_addr := 0;
+//  SIN.sin_addr.s_addr := 0;
+  SIN.sin_addr   := StrToNetAddr(NetInterface);
   SIN.sin_port        := htons(Port);
 
   {$IFDEF TNDEBUG}
+    TNLOG('Attempting to bind to interface ' + NetInterface + ' (' + strI2S(SIN.sin_addr.s_addr) + ')');
     TNLOG('WaitInit Bind');
     If fpBind(FSocketHandle, @SIN, SizeOf(SIN)) <> 0 Then
       TNLOG('WaitInit Bind Failed')

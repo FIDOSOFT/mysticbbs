@@ -170,38 +170,38 @@ End;
 
 Procedure TOutputWindows.ClearEOL;
 Var
-  Count : Byte;
-  Res   : LongInt;
+  Count    : Byte;
+  BufSize  : TCoord;
+  BufCoord : TCoord;
+  Region   : TSmallRect;
 Begin
   Count := Window.Right - Cursor.X + 1;
 
   FillDWord (Buffer[Cursor.Y + 1][Cursor.X + 1], Count, (Word(TextAttr) SHL 16) OR Word($0020));
 
   If Active Then Begin
-    FillConsoleOutputCharacter (ConOut, ' ', Count, Cursor, @Res);
-    FillConsoleOutputAttribute (ConOut, TextAttr, Count, Cursor, @Res);
+    BufSize.X     := Count - 1;
+    BufSize.Y     := 1;
+    BufCoord.X    := 0;
+    BufCoord.Y    := 0;
+    Region.Left   := Cursor.X;
+    Region.Top    := Cursor.Y;
+    Region.Right  := Cursor.X + Count - 1;
+    Region.Bottom := Cursor.Y;
+
+    WriteConsoleOutput(ConOut, @Buffer[Cursor.Y + 1][Cursor.X + 1], BufSize, BufCoord, Region);
   End;
 End;
 
 (*
 Procedure TOutputWindows.ClearEOL;
 Var
-  Buf   : Array[1..80] of TCharInfo;
   Count : Byte;
   Res   : LongInt;
 Begin
-  If Window.Right = Cursor.X Then Exit;
+  Count := Window.Right - Cursor.X + 1;
 
-  Count := 0;
-
-  While Count <= Window.Right - Cursor.X Do Begin
-    Inc (Count);
-
-    Buf[Count].Attributes  := TextAttr;
-    Buf[Count].UnicodeChar := ' ';
-  End;
-
-  Move(Buf[1], Buffer[Cursor.Y + 1][Cursor.X + 1], SizeOf(TCharInfo) * Count);
+  FillDWord (Buffer[Cursor.Y + 1][Cursor.X + 1], Count, (Word(TextAttr) SHL 16) OR Word($0020));
 
   If Active Then Begin
     FillConsoleOutputCharacter (ConOut, ' ', Count, Cursor, @Res);
