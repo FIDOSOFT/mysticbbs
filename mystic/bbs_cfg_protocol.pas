@@ -49,12 +49,12 @@ End;
 
 Procedure Configuration_ProtocolEditor;
 Var
-  Box     : TAnsiMenuBox;
-  List    : TAnsiMenuList;
-  F       : TBufFile;
-  Prot    : RecProtocol;
-  Copied  : RecProtocol;
-  HasCopy : Boolean = False;
+  Box      : TAnsiMenuBox;
+  List     : TAnsiMenuList;
+  ProtFile : File of RecProtocol;
+  Prot     : RecProtocol;
+  Copied   : RecProtocol;
+  HasCopy  : Boolean = False;
 
   Procedure MakeList;
   Var
@@ -62,10 +62,10 @@ Var
   Begin
     List.Clear;
 
-    F.Reset;
+    ioReset (ProtFile, SizeOf(RecProtocol), fmRWDN);
 
-    While Not F.Eof Do Begin
-      F.Read (Prot);
+    While Not EOF(ProtFile) Do Begin
+      Read (ProtFile, Prot);
 
       Case Prot.OSType of
         0 : OS := 'Windows';
@@ -83,9 +83,11 @@ Var
   End;
 
 Begin
-  F := TBufFile.Create(SizeOf(RecProtocol));
+  Assign (ProtFile, Config.DataPath + 'protocol.dat');
 
-  F.Open (Config.DataPath + 'protocol.dat', fmOpenCreate, fmReadWrite + fmDenyNone, SizeOf(RecProtocol));
+  If Not ioReset(ProtFile, SizeOf(RecProtocol), fmRWDN) Then
+    If Not ioReWrite(ProtFile, SizeOf(RecProtocol), fmRWDN) Then
+      Exit;
 
   Box  := TAnsiMenuBox.Create;
   List := TAnsiMenuList.Create;
@@ -111,7 +113,7 @@ Begin
     Case List.ExitCode of
       '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
               'I' : Begin
-                      F.RecordInsert (List.Picked);
+                      AddRecord (ProtFile, List.Picked, SizeOf(RecProtocol));
 
                       Prot.OSType    := OSType;
                       Prot.Desc    := 'New protocol';
@@ -121,44 +123,43 @@ Begin
                       Prot.SendCmd := '';
                       Prot.RecvCmd := '';
 
-                      F.Write (Prot);
+                      Write (ProtFile, Prot);
 
                       MakeList;
                     End;
               'D' : If List.Picked < List.ListMax Then
                       If ShowMsgBox(1, 'Delete this entry?') Then Begin
-                        F.RecordDelete (List.Picked);
+                        KillRecord (ProtFile, List.Picked, SizeOf(RecProtocol));
                         MakeList;
                       End;
               'C' : If List.Picked <> List.ListMax Then Begin
-                      F.Seek (List.Picked - 1);
-                      F.Read (Copied);
+                      Seek (ProtFile, List.Picked - 1);
+                      Read (ProtFile, Copied);
 
                       HasCopy := True;
                     End;
               'P' : If HasCopy Then Begin
-                      F.RecordInsert (List.Picked);
-                      F.Write        (Copied);
+                      AddRecord (ProtFile, List.Picked, SizeOf(RecProtocol));
+                      Write     (ProtFile, Copied);
 
                       MakeList;
                     End;
 
             End;
       #13 : If List.Picked <> List.ListMax Then Begin
-              F.Seek (List.Picked - 1);
-              F.Read (Prot);
+              Seek (ProtFile, List.Picked - 1);
+              Read (ProtFile, Prot);
 
               EditProtocol(Prot);
 
-              F.Seek  (List.Picked - 1);
-              F.Write (Prot);
+              Seek  (ProtFile, List.Picked - 1);
+              Write (ProtFile, Prot);
             End;
       #27 : Break;
     End;
   Until False;
 
-  F.Close;
-  F.Free;
+  Close (ProtFile);
 
   Box.Close;
   List.Free;

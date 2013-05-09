@@ -155,7 +155,7 @@ End;
 
 Procedure TNNTPServer.cmd_GROUP;
 Var
-  MBaseFile : TBufFile;
+  MBaseFile : TFileBuffer;
   TempBase  : RecMessageBase;
   MsgBase   : PMsgBaseABS;
   Active    : LongInt = 0;
@@ -168,13 +168,13 @@ Begin
     Exit;
   End;
 
-  MBaseFile := TBufFile.Create(FileReadBuffer);
+  MBaseFile := TFileBuffer.Create(FileReadBuffer);
 
-  If MBaseFile.Open(bbsConfig.DataPath + 'mbases.dat', fmOpen, fmRWDN, SizeOf(RecMessageBase)) Then Begin
-    MBaseFile.Read(TempBase);
+  If MBaseFile.OpenStream (bbsConfig.DataPath + 'mbases.dat', fmOpen, fmRWDN) Then Begin
+    MBaseFile.BlockRead(TempBase, SizeOf(TempBase));
 
     While Not MBaseFile.EOF Do Begin
-      MBaseFile.Read(TempBase);
+      MBaseFile.BlockRead(TempBase, SizeOf(TempBase));
 
       If (TempBase.NewsName = Data) and CheckAccess(User, True, TempBase.ReadACS) Then Begin
         Found := True;
@@ -214,7 +214,7 @@ End;
 
 Procedure TNNTPServer.cmd_LIST;
 Var
-  MBaseFile   : TBufFile;
+  MBaseFile   : TFileBuffer;
   TempBase    : RecMessageBase;
   MsgBase     : PMsgBaseABS;
   LowMessage  : LongInt;
@@ -241,13 +241,13 @@ Begin
     Exit;
   End;
 
-  MBaseFile := TBufFile.Create(FileReadBuffer);
+  MBaseFile := TFileBuffer.Create(FileReadBuffer);
 
-  If MBaseFile.Open(bbsConfig.DataPath + 'mbases.dat', fmOpen, fmRWDN, SizeOf(RecMessageBase)) Then Begin
-    MBaseFile.Read(TempBase);
+  If MBaseFile.OpenStream (bbsConfig.DataPath + 'mbases.dat', fmOpen, fmRWDN) Then Begin
+    MBaseFile.BlockRead(TempBase, SizeOf(TempBase));
 
     While Not MBaseFile.EOF Do Begin
-      MBaseFile.Read(TempBase);
+      MBaseFile.BlockRead(TempBase, SizeOf(TempBase));
 
       If TempBase.NewsName = '' Then Continue;
 

@@ -27,19 +27,20 @@ Type
   End;
 
 Var
-  LinkFile   : TBufFile;
+  LinkFile   : TFileBuffer;
   BaseKills  : Cardinal = 0;
   BaseTotal  : Cardinal = 0;
   TotalKills : Cardinal = 0;
 
   Function GetMessageLink (OldNum: Cardinal; Zero: Boolean) : Cardinal;
   Var
-    L : RecMsgLink;
+    L   : RecMsgLink;
+    Res : LongInt;
   Begin
-    LinkFile.Reset;
+    LinkFile.Seek(0);
 
     While Not LinkFile.EOF Do Begin
-      LinkFile.Read(L);
+      LinkFile.BlockRead(L, SizeOf(L), Res);
 
       If L.OldNum = OldNum Then Begin
         Result := L.NewNum;
@@ -107,9 +108,9 @@ Var
       Exit;
     End;
 
-    LinkFile := TBufFile.Create (8 * 1024);
+    LinkFile := TFileBuffer.Create (8 * 1024);
 
-    LinkFile.Open (TempPath + TempName + '.tmp', fmCreate, fmRWDN, SizeOf(RecMsgLink));
+    LinkFile.OpenStream (TempPath + TempName + '.tmp', fmCreate, fmRWDN);
 
     MsgData^.SeekFirst(1);
 
@@ -162,7 +163,7 @@ Var
         Link.OldNum := MsgData^.GetMsgNum;
         Link.NewNum := NewData^.GetHighMsgNum;
 
-        LinkFile.Write (Link);
+        LinkFile.BlockWrite (Link, SizeOf(Link));
       End;
 
       MsgData^.SeekNext;

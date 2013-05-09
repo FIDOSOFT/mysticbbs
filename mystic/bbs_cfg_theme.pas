@@ -734,17 +734,16 @@ Function Configuration_ThemeEditor (Select: Boolean) : String;
 Var
   Box       : TAnsiMenuBox;
   List      : TAnsiMenuList;
-  ThemeFile : TBufFile;
+  ThemeFile : File of RecTheme;
   Theme     : RecTheme;
   Copied    : RecTheme;
   HasCopy   : Boolean = False;
 Begin
-  ThemeFile := TBufFile.Create(SizeOf(RecTheme));
+  Assign (ThemeFile, Config.DataPath + 'theme.dat');
 
-  If Not ThemeFile.Open(Config.DataPath + 'theme.dat', fmOpenCreate, fmReadWrite + fmDenyNone, SizeOf(RecTheme)) Then Begin
-    ThemeFile.Free;
-    Exit;
-  End;
+  If Not ioReset(ThemeFile, Sizeof(RecTheme), fmRWDN) Then
+    If Not ioReWrite(ThemeFile, SizeOf(RecTheme), fmRWDN) Then
+      Exit;
 
   Box  := TAnsiMenuBox.Create;
   List := TAnsiMenuList.Create;
@@ -764,10 +763,10 @@ Begin
   Repeat
     List.Clear;
 
-    ThemeFile.Reset;
+    Reset(ThemeFile);
 
-    While Not ThemeFile.EOF Do Begin
-      ThemeFile.Read(Theme);
+    While Not EOF(ThemeFile) Do Begin
+      Read (ThemeFile, Theme);
 
       List.Add (strPadR(Theme.FileName, 20, ' ') + '  ' + Theme.Desc, 0);
     End;
@@ -780,7 +779,7 @@ Begin
     Case List.ExitCode of
       '/' : Case GetCommandOption(9, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
               'I' : Begin
-                      ThemeFile.RecordInsert(List.Picked);
+                      AddRecord (ThemeFile, List.Picked, SizeOf(RecTheme));
 
                       FillChar(Theme, SizeOf(Theme), 0);
 
@@ -837,26 +836,26 @@ Begin
                         MAreaList  := VotingBar;
                       End;
 
-                      ThemeFile.Write(Theme);
+                      Write (ThemeFile, Theme);
                     End;
               'D' : If List.Picked <> List.ListMax Then
                       If ShowMsgBox(1, 'Delete this entry?') Then
-                        ThemeFile.RecordDelete (List.Picked);
+                        KillRecord (ThemeFile, List.Picked, SizeOf(RecTheme));
               'C' : If List.Picked <> List.ListMax Then Begin
-                      ThemeFile.Seek (List.Picked - 1);
-                      ThemeFile.Read (Copied);
+                      Seek (ThemeFile, List.Picked - 1);
+                      Read (ThemeFile, Copied);
 
                       HasCopy := True;
                     End;
               'P' : If HasCopy Then Begin
-                      ThemeFile.RecordInsert (List.Picked);
-                      ThemeFile.Write        (Copied);
+                      AddRecord (ThemeFile, List.Picked, SizeOf(RecTheme));
+                      Write     (ThemeFile, Copied);
                     End;
             End;
       #13 : If (List.ListMax > 0) And (List.Picked <> List.ListMax) Then
               If Select Then Begin
-                ThemeFile.Seek (List.Picked - 1);
-                ThemeFile.Read (Theme);
+                Seek (ThemeFile, List.Picked - 1);
+                Read (ThemeFile, Theme);
 
                 Result := strStripB(Copy(List.List[List.Picked]^.Name, 1, 20), ' ');
 
@@ -864,24 +863,26 @@ Begin
               End Else Begin
                 Box.Hide;
 
-                ThemeFile.Seek (List.Picked - 1);
-                ThemeFile.Read (Theme);
+                Seek (ThemeFile, List.Picked - 1);
+                Read (ThemeFile, Theme);
 
                 EditTheme (Theme);
 
-                ThemeFile.Seek  (List.Picked - 1);
-                ThemeFile.Write (Theme);
+                Seek  (ThemeFile, List.Picked - 1);
+                Write (ThemeFile, Theme);
 
                 Box.Show;
               End;
       #27 : Break;
     End;
+
   Until False;
+
+  Close (ThemeFile);
 
   Box.Close;
   Box.Free;
   List.Free;
-  ThemeFile.Free;
 End;
 
 End.

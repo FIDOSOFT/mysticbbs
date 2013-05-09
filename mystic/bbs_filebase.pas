@@ -26,6 +26,8 @@ Uses
   AView,
   {$IFDEF USEALTPROT}
     m_Prot_Base,
+//    m_Prot_Xmodem,
+//    m_Prot_Ymodem,
     m_Prot_Zmodem;
   {$ELSE}
     m_Protocol_Queue,
@@ -296,6 +298,13 @@ Var
     {$ENDIF}
 
     Command := strStripB(strUpper(Command), ' ');
+
+//    If Command = '@XMODEM' Then
+//      Protocol := New(XmodemProtocolPTR, Init(Client, False, False, 0))
+//    Else
+//    If Command = '@YMODEM' Then
+//      Protocol := New(YmodemProtocolPTR, Init(Client, False, False, 0))
+//    Else
 
     If Command = '@ZMODEM' Then
       Protocol := New(ZmodemProtocolPTR, Init(Client, False))
@@ -2400,6 +2409,7 @@ Var
             Session.io.PromptInfo[3] := strI2S(FDir.Downloads);
             Session.io.PromptInfo[4] := Str;
             Session.io.PromptInfo[5] := FDir.Uploader;
+            Session.io.PromptInfo[6] := strI2S(FDir.Downloads);
 
             OK := ShowText(strDesc);
           End Else Begin

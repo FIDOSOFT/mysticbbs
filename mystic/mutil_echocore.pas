@@ -9,7 +9,6 @@ Uses
   m_FileIO,
   m_Strings,
   m_DateTime,
-  MPL_FileIO,
   BBS_Common,
   mUtil_Common;
 
@@ -96,7 +95,7 @@ Type
     Orig      : RecEchoMailAddr;
     Dest      : RecEchoMailAddr;
     MsgHdr    : RecPKTMessageHdr;
-    MsgFile   : PCharFile;
+    MsgFile   : TFileBuffer;
     MsgTo     : String[50];
     MsgFrom   : String[50];
     MsgSubj   : String[80];
@@ -194,16 +193,13 @@ Constructor TPKTReader.Create;
 Begin
   Opened   := False;
   MsgLines := 0;
-  MsgFile  := New (PCharFile, Init(1024 * 16));
+  MsgFile  := TFileBuffer.Create(16 * 1024);
 End;
 
 Destructor TPKTReader.Destroy;
 Begin
   DisposeText;
-
-  If MsgFile.Opened Then MsgFile.Close;
-
-  Dispose (MsgFile, Done);
+  MsgFile.Free;
 
   Inherited Destroy;
 End;
@@ -222,7 +218,7 @@ Procedure TPKTReader.Close;
 Begin
   DisposeText;
 
-  If MsgFile.Opened Then MsgFile.Close;
+  If MsgFile.IsOpened Then MsgFile.CloseStream;
 End;
 
 Function TPKTReader.Open (FN: String) : Boolean;
@@ -231,12 +227,12 @@ Var
 Begin
   Result := False;
 
-  If Not MsgFile.Open(FN) Then Exit;
+  If Not MsgFile.OpenStream (FN, fmOpen, fmRWDN) Then Exit;
 
   MsgFile.BlockRead (PKTHeader, SizeOf(PKTHeader), Res);
 
   If (Res <> SizeOf(PKTHeader)) or (PKTHeader.PKTType <> $0002) Then Begin
-    MsgFile.Close;
+    MsgFile.CloseStream;
 
     Opened := False;
   End Else Begin

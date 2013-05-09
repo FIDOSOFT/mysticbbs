@@ -3310,7 +3310,7 @@
 
  + MUTIL now properly exports echomail and netmail for BSO-style point nodes.
 
- + FIDOPOLL now supports sending/receiving echomail from point systems.
+ + FIDOPOLL now supports sending/receiving echomail for point systems.
 
  ! Fixed a bug in the QWK download system that could cause some networked
    message bases to get corrupted.
@@ -3318,7 +3318,22 @@
  + Mystic now allows the network interface to be defined for its MIS servers.
    If you want it to work the same as before, you MUST set the "Interface"
    value in "System Configuration -> Internet Options" to "0.0.0.0" without
-   the quotes.
+   the quotes.  ALPHA TESTERS: DO NOT SKIP THIS STEP!  USE CTRL-Y WHEN
+   EDITING THIS FIELD AND VALIDATE THAT IT IS BLANK BEFORE SETTING THE
+   VALUE TO 0.0.0.0 (ie no spaces before or after etc).
 
+   If you specify 0.0.0.0 Mystic will try to accept ANY connection on a
+   specified port for all adapters.  If you specify one in particular Mystic
+   will only bind, accept, and use connections from that network interface.
+
+ + Added some new file buffer functions to replace the old stuff.  In areas
+   where this is used (very few for now) there should be some speed up.  Be
+   on the lookout for broken things.
+
+ + When selecting message base during a reply, Mystic will now list all bases
+   the user has access to, instead of just the current group.
+
+ ! Fixed a rare bug that could ocassionally cause some strange behavior
+   during global new scans IF a message was moved.
 
    <ALPHA 33 RELEASED>

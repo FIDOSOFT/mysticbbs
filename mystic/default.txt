@@ -868,6 +868,7 @@
 451 |CR|09Subject: |XX
 ; standard quote header
 452 |15Quote mode: Select a range of text to quote|CR
+; node chat: show users in chat footer
 453  |09|$D77Ä|CR|PA
 ; no history data
 454 |CR|12No history data available.|CR|CR|PA

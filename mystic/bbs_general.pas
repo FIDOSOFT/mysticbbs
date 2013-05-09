@@ -60,10 +60,10 @@ Var
 Begin
   Editor := TEditorANSI.Create(Pointer(Session), Template);
 
+  Editor.Subject := Subj;
+
   For Count := 1 to Lines Do
     Editor.SetLineText (Count, Session.Msgs.MsgText[Count]);
-
-  Editor.Subject := Subj;
 
   Result := Editor.Edit;
   Subj   := Editor.Subject;

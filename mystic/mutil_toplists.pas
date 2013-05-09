@@ -24,7 +24,7 @@ Var
 
 Function GenerateList (ListType: TopListType) : Boolean;
 Var
-  UserFile : TBufFile;
+  UserFile : File of RecUser;
   User     : RecUser;
   Sort     : TQuickSort;
 
@@ -124,8 +124,8 @@ Var
 
                   If (CodeVal[1] in ['0'..'9']) And (CodeVal[2] in ['0'..'9']) Then Begin
                     If Sort.Data[strS2I(CodeVal)] <> NIL Then Begin
-                      UserFile.Seek (Pred(Sort.Data[strS2I(CodeVal)]^.Ptr));
-                      UserFile.Read (User);
+                      Seek (UserFile, Pred(Sort.Data[strS2I(CodeVal)]^.Ptr));
+                      Read (UserFile, User);
                     End Else Begin
                       FillChar (User, SizeOf(User), 0);
 
@@ -178,16 +178,17 @@ Begin
 
   BarOne.Reset;
 
-  UserFile := TBufFile.Create(8192);
-  Sort     := TQuickSort.Create;
+  Sort := TQuickSort.Create;
 
-  If UserFile.Open(bbsConfig.DataPath + 'users.dat', fmOpen, fmRWDN, SizeOf(RecUser)) Then Begin
-    While Not UserFile.EOF Do Begin
-      UserFile.Read (User);
+  Assign (UserFile, bbsConfig.DataPath + 'users.dat');
+
+  If ioReset(UserFile, SizeOf(RecUser), fmRWDN) Then Begin
+    While Not EOF(UserFile) Do Begin
+      Read (UserFile, User);
 
       If User.Flags And UserDeleted <> 0 Then Continue;
 
-      BarOne.Update(UserFile.FilePos, UserFile.FileSize);
+      BarOne.Update(FilePos(UserFile), FileSize(UserFile));
 
       Excluded := False;
 
@@ -213,19 +214,19 @@ Begin
       End;
 
       If Not Excluded Then
-        Sort.Conditional(strPadL(strI2S(GetValue), 10, '0'), UserFile.FilePos, 99, SortMode);
+        Sort.Conditional(strPadL(strI2S(GetValue), 10, '0'), FilePos(UserFile), 99, SortMode);
     End;
 
     Sort.Sort (1, Sort.Total, SortMode);
 
     GenerateOutput;
 
+    Close (UserFile);
   End Else
     Result := False;
 
   BarOne.Update(100, 100);
 
-  UserFile.Free;
   Sort.Free;
 End;
 

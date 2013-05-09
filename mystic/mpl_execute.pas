@@ -6,7 +6,7 @@ Interface
 
 Uses
   DOS,
-  MPL_FileIO,
+  m_FileIO,
   BBS_Common;
 
 {$I MPL_TYPES.PAS}
@@ -19,7 +19,7 @@ Type
     Owner        : Pointer;
     ErrStr       : String;
     ErrNum       : Byte;
-    DataFile     : PCharFile;
+    DataFile     : TFileBuffer;
     CurVarNum    : Word;
     CurVarID     : Word;
     VarData      : VarDataRec;
@@ -119,7 +119,6 @@ Uses
   m_Strings,
   m_DateTime,
   m_Types,
-  m_FileIO,
   BBS_Core,
   BBS_IO,
   BBS_General,
@@ -395,24 +394,24 @@ End;
 
 Procedure TInterpEngine.MoveToPos (Num: LongInt);
 Begin
-  DataFile^.Seek (Num + mplVerLength);
+  DataFile.Seek (Num + mplVerLength);
 End;
 
 Function TInterpEngine.CurFilePos : LongInt;
 Begin
-  Result := DataFile^.FilePos - mplVerLength;
+  Result := DataFile.FilePos - mplVerLength;
 End;
 
 Procedure TInterpEngine.NextChar;
 Begin
-  Ch := DataFile^.Read;
+  Ch := DataFile.Read;
 End;
 
 Procedure TInterpEngine.NextWord;
 Var
   Res  : LongInt;
 Begin
-  DataFile^.BlockRead (W, 2, Res);
+  DataFile.BlockRead (W, 2, Res);
 End;
 
 Procedure TInterpEngine.PrevChar;
@@ -695,7 +694,7 @@ Begin
     opOpenString : Begin
                      NextChar;
                      Result[0] := Ch;
-                     DataFile^.BlockRead (Result[1], Byte(Ch), Res);
+                     DataFile.BlockRead (Result[1], Byte(Ch), Res);
                    End;
     opProcExec   : Case ExecuteProcedure(@Result) of
                      iChar : Begin // convert to string if its a char
@@ -2314,7 +2313,7 @@ Begin
     Else
       Error (mpxUnknownOp, strI2S(Ord(Ch)));
     End;
-  Until (ErrNum <> 0) or Done or DataFile^.EOF;
+  Until (ErrNum <> 0) or Done or DataFile.EOF;
 
   {$IFDEF LOGGING}
     Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock KILL VAR: ' + strI2S(CurVarNum) + ' to ' + strI2S(StartVar + 1));
@@ -2366,7 +2365,7 @@ Begin
   SavedMCI   := Session.io.AllowMCI;
   SavedGroup := Session.User.IgnoreGroup;
   SavedArrow := Session.io.AllowArrow;
-  DataFile   := New(PCharFile, Init(mplExecuteBuffer));
+  DataFile   := TFileBuffer.Create(mplExecuteBuffer);
 
   Session.io.AllowArrow := True;
 
@@ -2387,31 +2386,29 @@ Begin
 
   MPEName := FN;
 
-  If Not DataFile^.Open(FN) Then Begin
-    Dispose(DataFile, Done);
+  If Not DataFile.OpenStream(FN, fmOpen, fmRWDN) Then Begin
+    DataFile.Free;
 
     Exit;
   End;
 
   Result := 1;
 
-  If DataFile^.FileSize < mplVerLength Then Begin
-    DataFile^.Close;
+  If DataFile.FileSize < mplVerLength Then Begin
+    DataFile.Free;
 
-    Error   (mpxInvalidFile, FN);
-    Dispose (DataFile, Done);
+    Error (mpxInvalidFile, FN);
 
     Exit;
   End;
 
-  DataFile^.BlockRead (VerStr[1], mplVerLength, Res);
+  DataFile.BlockRead (VerStr[1], mplVerLength, Res);
   VerStr[0] := Chr(mplVerLength);
 
   If VerStr <> mplVersion Then Begin
-    DataFile^.Close;
+    DataFile.Free;
 
-    Error   (mpxVerMismatch, VerStr);
-    Dispose (DataFile, Done);
+    Error (mpxVerMismatch, VerStr);
 
     Exit;
   End;
@@ -2419,9 +2416,7 @@ Begin
   InitProcedures (Owner, Self, VarData, CurVarNum, CurVarID, 0);
   ExecuteBlock   (CurVarNum);
 
-  DataFile^.Close;
-
-  Dispose(DataFile, Done);
+  DataFile.Free;
 
   Session.io.AllowMCI      := SavedMCI;
   Session.User.IgnoreGroup := SavedGroup;

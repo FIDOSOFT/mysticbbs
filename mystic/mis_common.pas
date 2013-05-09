@@ -29,18 +29,18 @@ Uses
 
 Function SearchForUser (UN: String; Var Rec: RecUser; Var RecPos: LongInt) : Boolean;
 Var
-  UserFile : TBufFile;
+  UserFile : TFileBuffer;
 Begin
   Result := False;
   UN     := strUpper(UN);
 
   If UN = '' Then Exit;
 
-  UserFile := TBufFile.Create(4096);
+  UserFile := TFileBuffer.Create (8 * 1024);
 
-  If UserFile.Open(bbsConfig.DataPath + 'users.dat', fmOpen, fmRWDN, SizeOf(RecUser)) Then
+  If UserFile.OpenStream (bbsConfig.DataPath + 'users.dat', fmOpen, fmRWDN) Then
     While Not UserFile.EOF Do Begin
-      UserFile.Read(Rec);
+      UserFile.BlockRead(Rec, SizeOf(Rec));
 
       If Rec.Flags AND UserDeleted <> 0 Then Continue;
 

@@ -383,7 +383,7 @@ Begin
   If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
   While Not Eof(F) Do Begin
-    ioRead(F, TempBase);
+    ioRead (F, TempBase);
 
     If TempBase.Index = Num Then Begin
       Result := True;
@@ -1179,6 +1179,7 @@ Var
   Total     : LongInt;
   ReplyBase : RecMessageBase;
   IsPrivate : Boolean;
+  IsIgnore  : Boolean;
 Begin
   ReplyBase := MBase;
 
@@ -1192,10 +1193,14 @@ Begin
     Else
       Session.io.OutFull(Session.GetPrompt(510));
 
-    Case Session.io.OneKey (#13#27 + 'QBNE', True) of
+    Case Session.io.OneKey (#13#27 + 'QBE', True) of
       'Q',
       #27 : Exit;
       'B' : Begin
+              IsIgnore := Session.User.IgnoreGroup;
+
+              Session.User.IgnoreGroup := True;
+
               Total := ListAreas(Config.MCompress);
 
               Repeat
@@ -1203,15 +1208,24 @@ Begin
 
                 Case Session.io.OneKeyRange(#13 + '?Q', 1, Total) of
                   #13,
-                  'Q': Exit;
+                  'Q': Begin
+                         Session.User.IgnoreGroup := IsIgnore;
+
+                         Exit;
+                       End;
                   '?': Total := ListAreas(Config.MCompress);
                 Else
                   Break;
                 End;
               Until False;
 
-              If Not GetBaseCompressed(Session.io.RangeValue, ReplyBase) Then
+              If Not GetBaseCompressed(Session.io.RangeValue, ReplyBase) Then Begin
+                Session.User.IgnoreGroup := IsIgnore;
+
                 Exit;
+              End;
+
+              Session.User.IgnoreGroup := IsIgnore;
             End;
       'E' : Begin
               Reset (MBaseFile);
@@ -1571,8 +1585,11 @@ Var
     MsgNew   : PMsgBaseABS;
     Str      : String;
     Addr     : RecEchoMailAddr;
+    Ignore   : Boolean;
   Begin
-    Result                   := False;
+    Result := False;
+    Ignore := Session.User.IgnoreGroup;
+
     Session.User.IgnoreGroup := True;
 
     Repeat
@@ -1646,7 +1663,7 @@ Var
       End;
     Until False;
 
-    Session.User.IgnoreGroup := False;
+    Session.User.IgnoreGroup := Ignore;
   End;
 
   Procedure ExportMessage;
@@ -4341,17 +4358,7 @@ Begin
 
       Session.io.OutFullLn (Session.GetPrompt(235));
     End Else Begin
-//      Session.SystemLog('DEBUG: Arc QWK: Nonlocal mode');
-
       Session.FileBase.ExecuteArchive (Session.TempPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
-
-//      If FileExist(Session.TempPath + Temp) Then
-//       Session.SystemLog('DEBUG: QWK successfully archived')
-//      Else
-//       Session.SystemLog('DEBUG: Could not find QWK archived packet');
-
-//      Session.SystemLog('DEBUG: QWK calling SendFile on "' + Temp + '"');
-
       Session.FileBase.SendFile (Session.TempPath + Temp);
     End;
 

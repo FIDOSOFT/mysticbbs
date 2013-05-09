@@ -1261,10 +1261,18 @@ Begin
       If BufPos MOD BaudEmulator = 0 Then WaitMS(6);
     End;
 
+(*
+    If AllowAbort And (BufPos MOD 128 = 0) Then
+      If InKey(0) = #32 Then Begin
+        AnsiColor(7);
+        Break;
+      End;
+
     If AllowAbort And (InKey(0) = #32) Then Begin
       AnsiColor(7);
       Break;
     End;
+*)
 
     Case Ch of
       #10 : Begin
@@ -2136,9 +2144,9 @@ Var
   FillSize : Byte;
   Attr     : Byte;
 Begin
-  Attr := Screen.TextAttr;
+//  Attr := Screen.TextAttr;
 
-//  Screen.TextAttr := 0;  // kludge to force it to return full ansi codes
+  Screen.TextAttr := 0;  // kludge to force it to return full ansi codes
 
   If Part > Whole Then Part := Whole;
 

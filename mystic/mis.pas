@@ -76,17 +76,17 @@ Var
 
 Procedure ReadConfiguration;
 Var
-  FileConfig : TBufFile;
+  FileConfig : TFileBuffer;
   DatLoc     : String;
 Begin
-  FileConfig := TBufFile.Create(SizeOf(RecConfig));
+  FileConfig := TFileBuffer.Create(SizeOf(RecConfig));
 
-  If Not FileConfig.Open('mystic.dat', fmOpen, fmReadWrite + fmDenyNone, SizeOf(RecConfig)) Then Begin
+  If Not FileConfig.OpenStream ('mystic.dat', fmOpen, fmRWDN) Then Begin
     DatLoc := GetEnv('mysticbbs');
 
     If DatLoc <> '' Then DatLoc := DirSlash(DatLoc);
 
-    If Not FileConfig.Open(DatLoc + 'mystic.dat', fmOpen, fmReadWrite + fmDenyNone, SizeOf(RecConfig)) Then Begin
+    If Not FileConfig.OpenStream (DatLoc + 'mystic.dat', fmOpen, fmRWDN) Then Begin
       If Not DaemonMode Then Begin
         Console.WriteLine (#13#10 + 'ERROR: Unable to read MYSTIC.DAT.  This file must exist in the same');
         Console.WriteLine ('directory as MIS');
@@ -101,7 +101,7 @@ Begin
     End;
   End;
 
-  FileConfig.Read(bbsConfig);
+  FileConfig.BlockRead (bbsConfig, SizeOf(bbsConfig));
   FileConfig.Free;
 
   If bbsConfig.DataChanged <> mysDataChanged Then Begin

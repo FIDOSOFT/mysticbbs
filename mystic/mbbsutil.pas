@@ -868,7 +868,7 @@ End;
 
 Procedure ExportAreasBBS;
 Var
-  MBaseFile : TBufFile;
+  MBaseFile : TFileBuffer;
   MBase     : RecMessageBase;
   OutFile   : Text;
 Begin
@@ -879,13 +879,13 @@ Begin
 
   If IoResult <> 0 Then Exit;
 
-  MBaseFile := TBufFile.Create(8192);
+  MBaseFile := TFileBuffer.Create(8192);
 
-  If MBaseFile.Open(Config.DataPath + 'mbases.dat', fmOpen, fmRWDN, SizeOf(RecMessageBase)) Then Begin
-    MBaseFile.Read(MBase);
+  If MBaseFile.OpenStream (Config.DataPath + 'mbases.dat', fmOpen, fmRWDN) Then Begin
+    MBaseFile.BlockRead (MBase, SizeOf(MBase));
 
     While Not MBaseFile.EOF Do Begin
-      MBaseFile.Read(MBase);
+      MBaseFile.BlockRead (MBase, SizeOf(MBase));
 
       Update_Bar    (MBaseFile.FilePos, MBaseFile.FileSize);
       Update_Status (strStripPipe(MBase.Name));

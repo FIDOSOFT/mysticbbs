@@ -51,7 +51,7 @@ Procedure Configuration_ArchiveEditor;
 Var
   Box     : TAnsiMenuBox;
   List    : TAnsiMenuList;
-  F       : TBufFile;
+  ArcFile : File of RecArchive;
   Arc     : RecArchive;
   Copied  : RecArchive;
   HasCopy : Boolean = False;
@@ -62,9 +62,10 @@ Var
   Begin
     List.Clear;
 
-    F.Reset;
-    While Not F.Eof Do Begin
-      F.Read (Arc);
+    ioReset (ArcFile, SizeOf(RecArchive), fmRWDN);
+
+    While Not Eof(ArcFile) Do Begin
+      Read (ArcFile, Arc);
 
       Case Arc.OSType of
         0 : OS := 'Windows';
@@ -80,9 +81,11 @@ Var
   End;
 
 Begin
-  F := TBufFile.Create(SizeOf(RecArchive));
+  Assign (ArcFile, Config.DataPath + 'archive.dat');
 
-  F.Open (Config.DataPath + 'archive.dat', fmOpenCreate, fmReadWrite + fmDenyNone, SizeOf(RecArchive));
+  If Not ioReset(ArcFile, SizeOf(RecArchive), fmRWDN) Then
+    If Not ioReWrite(ArcFile, SizeOf(RecArchive), fmRWDN) Then
+      Exit;
 
   Box  := TAnsiMenuBox.Create;
   List := TAnsiMenuList.Create;
@@ -108,7 +111,7 @@ Begin
     Case List.ExitCode of
       '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
               'I' : Begin
-                      F.RecordInsert (List.Picked);
+                      AddRecord (ArcFile, List.Picked, SizeOf(RecArchive));
 
                       Arc.OSType := OSType;
                       Arc.Active := False;
@@ -118,42 +121,42 @@ Begin
                       Arc.Unpack := '';
                       Arc.View   := '';
 
-                      F.Write (Arc);
+                      Write (ArcFile, Arc);
 
                       MakeList;
                     End;
               'D' : If ShowMsgBox(1, 'Delete this entry?') Then Begin
-                      F.RecordDelete (List.Picked);
+                      KillRecord (ArcFile, List.Picked, SizeOf(RecArchive));
+
                       MakeList;
                     End;
               'C' : If List.Picked <> List.ListMax Then Begin
-                      F.Seek (List.Picked - 1);
-                      F.Read (Copied);
+                      Seek (ArcFile, List.Picked - 1);
+                      Read (ArcFile, Copied);
 
                       HasCopy := True;
                     End;
               'P' : If HasCopy Then Begin
-                      F.RecordInsert (List.Picked);
-                      F.Write        (Copied);
+                      AddRecord (ArcFile, List.Picked, SizeOf(RecArchive));
+                      Write     (ArcFile, Copied);
 
                       MakeList;
                     End;
             End;
       #13 : If List.Picked <> List.ListMax Then Begin
-              F.Seek (List.Picked - 1);
-              F.Read (Arc);
+              Seek (ArcFile, List.Picked - 1);
+              Read (ArcFile, Arc);
 
               EditArchive(Arc);
 
-              F.Seek  (List.Picked - 1);
-              F.Write (Arc);
+              Seek  (ArcFile, List.Picked - 1);
+              Write (ArcFile, Arc);
             End;
       #27 : Break;
     End;
   Until False;
 
-  F.Close;
-  F.Free;
+  Close (ArcFile);
 
   Box.Close;
   List.Free;

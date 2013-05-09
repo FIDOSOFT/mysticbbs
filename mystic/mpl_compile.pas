@@ -7,8 +7,7 @@ Interface
 Uses
   DOS,
   m_Strings,
-  m_FileIO,
-  MPL_FileIO;
+  m_FileIO;
 
 {$DEFINE MPLPARSER}
 
@@ -39,7 +38,7 @@ Type
   TParserUpdateProc = Procedure (Mode: TParserUpdateInfo);
 
   TParserSourceFile = Record
-    DataFile  : TCharFile;
+    DataFile  : TFileBuffer;
     Position  : LongInt;
     PosSaved  : LongInt;
     Size      : LongInt;
@@ -272,7 +271,7 @@ Begin
   UpdateInfo.ErrorLine := 1;
   UpdateInfo.ErrorCol  := 0;
 
-  If InFile[CurFile].DataFile.Opened Then Begin
+  If Assigned(InFile[CurFile].DataFile) And InFile[CurFile].DataFile.IsOpened Then Begin
     InFile[CurFile].DataFile.Seek(0);
 
     While Not InFile[CurFile].DataFile.EOF And (InFile[CurFile].DataFile.FilePos < InFile[CurFile].Position) Do Begin
@@ -2829,10 +2828,11 @@ Begin
   Else
     UpdateStatus(StatusInclude);
 
-  InFile[CurFile].DataFile.Init(4096);
+  InFile[CurFile].DataFile := TFileBuffer.Create(8 * 1024);
 
-  If Not InFile[CurFile].DataFile.Open(FN) Then Begin
-    InFile[CurFile].DataFile.Done;
+  If Not InFile[CurFile].DataFile.OpenStream(FN, fmOpen, fmRWDN) Then Begin
+    InFile[CurFile].DataFile.Free;
+    InFile[CurFile].DataFile := NIL;
 
     Error (mpsFileNotFound, FN);
 
@@ -2851,8 +2851,8 @@ Begin
   If (UpdateInfo.ErrorType = 0) Then
     UpdateStatus(StatusUpdate);
 
-  InFile[CurFile].DataFile.Close;
-  InFile[CurFile].DataFile.Done;
+  InFile[CurFile].DataFile.Free;
+  InFile[CurFile].DataFile := NIL;
 
   Dec(CurFile);
 End;
@@ -2887,12 +2887,8 @@ Begin
 
   CloseSourceFile;
 
-  For Count := 1 to CurFile Do Begin
-    InFile[Count].DataFile.Close;
-    InFile[Count].DataFile.Done;
-
-    If IoResult <> 0 Then ;
-  End;
+  For Count := 1 to CurFile Do
+    InFile[Count].DataFile.Free;
 
   UpdateStatus(StatusDone);
 

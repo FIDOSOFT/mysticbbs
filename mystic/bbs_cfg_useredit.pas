@@ -253,17 +253,17 @@ Procedure Configuration_UserEditor;
 Var
   Box      : TAnsiMenuBox;
   List     : TAnsiMenuList;
-  UserFile : TBufFile;
+  UserFile : File of RecUser;
   User     : RecUser;
 
   Procedure MakeList;
   Begin
     List.Clear;
 
-    UserFile.Reset;
+    ioReset (UserFile, SizeOf(RecUser), fmRWDN);
 
-    While Not UserFile.EOF Do Begin
-      UserFile.Read (User);
+    While Not EOF(UserFile) Do Begin
+      Read (UserFile, User);
 
       If User.Flags AND UserDeleted <> 0 Then
         List.Add (strPadR(User.Handle, 37, ' ') + 'DELETED', 0)
@@ -275,12 +275,12 @@ Var
   End;
 
 Begin
-  UserFile := TBufFile.Create(8192);
+  Assign (UserFile, Config.DataPath + 'users.dat');
 
-  If Not UserFile.Open(Config.DataPath + 'users.dat', fmOpenCreate, fmRWDN, SizeOf(RecUser)) Then Begin
-    UserFile.Free;
-    Exit;
-  End;
+  If Not ioReset(UserFile, SizeOf(RecUser), fmRWDN) Then
+    If (FileExist(Config.DataPath + 'users.dat')) OR NOT
+       (ioReWrite(UserFile, SizeOf(RecUser), fmRWDN)) Then
+         Exit;
 
   Box  := TAnsiMenuBox.Create;
   List := TAnsiMenuList.Create;
@@ -303,21 +303,21 @@ Begin
 
     Case List.ExitCode of
       #13 : If List.ListMax <> 0 Then Begin
-              UserFile.Seek (List.Picked - 1);
-              UserFile.Read (User);
+              Seek (UserFile, List.Picked - 1);
+              Read (UserFile, User);
 
               Configuration_EditUser(User);
 
-              UserFile.Seek  (List.Picked - 1);
-              UserFile.Write (User);
+              Seek  (UserFile, List.Picked - 1);
+              Write (UserFile, User);
             End;
       #27 : Break;
     End;
   Until False;
 
-  Box.Close;
+  Close (UserFile);
 
-  UserFile.Free;
+  Box.Close;
   List.Free;
   Box.Free;
 End;

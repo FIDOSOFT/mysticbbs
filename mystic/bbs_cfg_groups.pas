@@ -43,7 +43,7 @@ Procedure Configuration_GroupEditor (Msg: Boolean);
 Var
   Box       : TAnsiMenuBox;
   List      : TAnsiMenuList;
-  GroupFile : TBufFile;
+  GroupFile : File of RecGroup;
   Group     : RecGroup;
   Copied    : RecGroup;
   HasCopy   : Boolean = False;
@@ -52,31 +52,26 @@ Var
   Begin
     List.Clear;
 
-    GroupFile.Reset;
+    ioReset (GroupFile, SizeOf(RecGroup), fmRWDN);
 
-    While Not GroupFile.EOF Do Begin
-      GroupFile.Read (Group);
+    While Not EOF(GroupFile) Do Begin
+      Read (GroupFile, Group);
 
-      List.Add(strPadR(strI2S(GroupFile.FilePos), 3, ' ') + '  ' + strStripPipe(Group.Name), 0);
+      List.Add(strPadR(strI2S(FilePos(GroupFile)), 3, ' ') + '  ' + strStripPipe(Group.Name), 0);
     End;
 
     List.Add('', 2);
   End;
 
 Begin
-  GroupFile := TBufFile.Create(2048);
+  If Msg Then
+    Assign (GroupFile, Config.DataPath + 'groups_g.dat')
+  Else
+    Assign (GroupFile, Config.DataPath + 'groups_f.dat');
 
-  If Msg Then Begin
-    If Not GroupFile.Open(Config.DataPath + 'groups_g.dat', fmOpenCreate, fmReadWrite + fmDenyNone, SizeOf(RecGroup)) Then Begin
-      GroupFile.Free;
+  If Not ioReset(GroupFile, SizeOf(RecGroup), fmRWDN) Then
+    If Not ioReWrite(GroupFile, SizeOf(RecGroup), fmRWDN) Then
       Exit;
-    End;
-  End Else Begin
-    If Not GroupFile.Open(Config.DataPath + 'groups_f.dat', fmOpenCreate, fmReadWrite + fmDenyNone, SizeOf(RecGroup)) Then Begin
-      GroupFile.Free;
-      Exit;
-    End;
-  End;
 
   Box  := TAnsiMenuBox.Create;
   List := TAnsiMenuList.Create;
@@ -110,56 +105,56 @@ Begin
     Case List.ExitCode of
       '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|P-Paste|') of
               'I' : If List.Picked > 0 Then Begin
-                      GroupFile.RecordInsert (List.Picked);
+                      AddRecord (GroupFile, List.Picked, SizeOf(RecGroup));
 
                       Group.Name   := 'New Group';
                       Group.ACS    := '';
                       Group.Hidden := False;
 
-                      GroupFile.Write (Group);
+                      Write (GroupFile, Group);
 
                       MakeList;
                     End;
               'D' : If (List.Picked < List.ListMax) Then
                       If ShowMsgBox(1, 'Delete this entry?') Then Begin
-                        GroupFile.Seek (List.Picked - 1);
-                        GroupFile.Read (Group);
+                        Seek (GroupFile, List.Picked - 1);
+                        Read (GroupFile, Group);
 
-                        GroupFile.RecordDelete (List.Picked);
+                        KillRecord (GroupFile, List.Picked, SizeOf(RecGroup));
 
                         MakeList;
                       End;
               'C' : If List.Picked <> List.ListMax Then Begin
-                      GroupFile.Seek (List.Picked - 1);
-                      GroupFile.Read (Copied);
+                      Seek (GroupFile, List.Picked - 1);
+                      Read (GroupFile, Copied);
 
                       HasCopy := True;
                     End;
               'P' : If HasCopy Then Begin
-                      GroupFile.RecordInsert (List.Picked);
-                      GroupFile.Write        (Copied);
+                      AddRecord (GroupFile, List.Picked, SizeOf(RecGroup));
+                      Write     (GroupFile, Copied);
 
                       MakeList;
                     End;
             End;
       #13 : If List.Picked <> List.ListMax Then Begin
-              GroupFile.Seek (List.Picked - 1);
-              GroupFile.Read (Group);
+              Seek (GroupFile, List.Picked - 1);
+              Read (GroupFile, Group);
 
               EditGroup(Group);
 
-              GroupFile.Seek  (List.Picked - 1);
-              GroupFile.Write (Group);
+              Seek  (GroupFile, List.Picked - 1);
+              Write (GroupFile, Group);
             End;
       #27 : Break;
     End;
   Until False;
 
   Box.Close;
-
-  GroupFile.Free;
   List.Free;
   Box.Free;
+
+  Close (GroupFile);
 End;
 
 End.
