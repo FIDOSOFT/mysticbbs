@@ -60,7 +60,10 @@ Var
 Begin
   Editor := TEditorANSI.Create(Pointer(Session), Template);
 
-  Editor.Subject := Subj;
+  Editor.Forced      := Forced;
+  Editor.Subject     := Subj;
+  Editor.MaxMsgLines := MaxLines;
+  Editor.MaxMsgCols  := WrapPos;
 
   For Count := 1 to Lines Do
     Editor.SetLineText (Count, Session.Msgs.MsgText[Count]);

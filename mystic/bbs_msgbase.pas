@@ -1183,7 +1183,7 @@ Var
 Begin
   ReplyBase := MBase;
 
-  If Not Email Then Begin
+  If Not Email And Session.User.Access(Config.AcsExtReply) Then Begin
     Session.io.PromptInfo[1] := MBase.Name;
     Session.io.PromptInfo[2] := MsgBase^.GetFrom;
     Session.io.PromptInfo[3] := MsgBase^.GetSubj;

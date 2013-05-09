@@ -44,6 +44,8 @@ Type
     Done         : Boolean;
     Subject      : String;
     Template     : String;
+    MaxMsgLines  : Word;
+    MaxMsgCols   : Byte;
 
     Constructor Create (Var O: Pointer; TemplateFile: String);
     Destructor  Destroy; Override;
@@ -95,29 +97,31 @@ Constructor TEditorANSI.Create (Var O: Pointer; TemplateFile: String);
 Begin
   Inherited Create;
 
-  Owner      := O;
-  ANSI       := TMsgBaseANSI.Create(NIL, False);
-  WinX1      := 1;
-  WinX2      := 79;
-  WinY1      := 2;
-  WinY2      := 23;
-  WinSize    := WinY2 - WinY1 + 1;
-  RowSize    := WinX2 - WinX1 + 1;
-  CurX       := 1;
-  CurY       := 1;
-  CurLine    := 1;
-  TopLine    := 1;
-  CurAttr    := 7;
-  QuoteAttr  := 9;
-  InsertMode := True;
-  DrawMode   := False;
-  GlyphMode  := False;
-  WrapMode   := True;
-  ClearEOL   := RowSize >= 79;
-  LastLine   := 1;
-  CutPasted  := False;
-  CutTextPos := 0;
-  Template   := TemplateFile;
+  Owner       := O;
+  ANSI        := TMsgBaseANSI.Create(NIL, False);
+  WinX1       := 1;
+  WinX2       := 79;
+  WinY1       := 2;
+  WinY2       := 23;
+  WinSize     := WinY2 - WinY1 + 1;
+  RowSize     := WinX2 - WinX1 + 1;
+  CurX        := 1;
+  CurY        := 1;
+  CurLine     := 1;
+  TopLine     := 1;
+  CurAttr     := 7;
+  QuoteAttr   := 9;
+  InsertMode  := True;
+  DrawMode    := False;
+  GlyphMode   := False;
+  WrapMode    := True;
+  ClearEOL    := RowSize >= 79;
+  LastLine    := 1;
+  CutPasted   := False;
+  CutTextPos  := 0;
+  Template    := TemplateFile;
+  MaxMsgLines := mysMaxMsgLines;
+  MaxMsgCols  := 79;
 
   FillChar (CutText, SizeOf(CutText), 0);
 End;
@@ -156,7 +160,7 @@ End;
 
 Procedure TEditorANSI.FindLastLine;
 Begin
-  LastLine := mysMaxMsgLines;
+  LastLine := MaxMsgLines;
 
   While (LastLine > 1) And IsBlankLine(ANSI.Data[LastLine], 80) Do
     Dec(LastLine);
@@ -226,10 +230,10 @@ Procedure TEditorANSI.DeleteLine (Line: LongInt);
 Var
   Count : LongInt;
 Begin
-  For Count := Line to mysMaxMsgLines - 1 Do
+  For Count := Line to MaxMsgLines - 1 Do
     ANSI.Data[Count] := ANSI.Data[Count + 1];
 
-  FillChar (ANSI.Data[mysMaxMsgLines], SizeOf(RecAnsiBufferLine), #0);
+  FillChar (ANSI.Data[MaxMsgLines], SizeOf(RecAnsiBufferLine), #0);
 
   If LastLine > 1 Then Dec(LastLine);
 End;
@@ -238,12 +242,12 @@ Procedure TEditorANSI.InsertLine (Line: LongInt);
 Var
   Count : LongInt;
 Begin
-  For Count := mysMaxMsgLines DownTo Line + 1 Do
+  For Count := MaxMsgLines DownTo Line + 1 Do
     ANSI.Data[Count] := ANSI.Data[Count - 1];
 
   FillChar(ANSI.Data[Line], SizeOf(RecAnsiBufferLine), #0);
 
-  If LastLine < mysMaxMsgLines Then Inc(LastLine);
+  If LastLine < MaxMsgLines Then Inc(LastLine);
 End;
 
 Function TEditorANSI.GetWrapPos (Var Line; LineSize: Byte; WrapPos: Byte) : Byte;
@@ -305,7 +309,7 @@ Begin
   StartY    := CurY;
   StartLine := Count;
 
-  While Count <= mysMaxMsgLines Do Begin
+  While Count <= MaxMsgLines Do Begin
     If Count > LastLine Then LastLine := Count;
 
     FillChar (TempStr, SizeOf(TempStr), #0);
@@ -315,7 +319,7 @@ Begin
       If IsBlankLine(TempStr, 255) Then Begin
         If Count < LastLine Then Begin
           InsertLine(Count);
-          EndLine := mysMaxMsgLines;
+          EndLine := MaxMsgLines;
         End Else
           EndLine := Count;
 
@@ -397,7 +401,7 @@ Begin
   Session.io.OutFile (Template, True, 0);
 
   WinX1  := 1;
-  WinX2  := 79;
+  WinX2  := MaxMsgCols; //79
 //  WinX1    := Session.io.ScreenInfo[1].X;
 //  WinX2    := Session.io.ScreenInfo[2].X;
   WinY1    := Session.io.ScreenInfo[1].Y;
@@ -405,6 +409,7 @@ Begin
 
   WinSize  := WinY2 - WinY1 + 1;
   RowSize  := WinX2 - WinX1 + 1;
+  // if rowsize > msgmaxcols then rowsize := maxmsgcols;
   ClearEOL := RowSize >= 79;
 
   If Reset Then Begin
@@ -508,7 +513,7 @@ Var
 Begin
   NewTop := TopLine + (WinSize DIV 2) + 1;
 
-  While NewTop >= mysMaxMsgLines Do
+  While NewTop >= MaxMsgLines Do
     Dec (NewTop, 2);
 
   CurY    := CurLine - NewTop + 1;
@@ -543,7 +548,7 @@ Begin
   Result := False;
 
   If CurLine >= LastLine Then Exit;
-//  If CurLine >= mysMaxMsgLines Then Exit;
+//  If CurLine >= MaxMsgLines Then Exit;
 
   Inc (CurLine);
   Inc (CurY);
@@ -585,7 +590,8 @@ Begin
       TBBSCore(Owner).io.AnsiClrEOL;
     End Else Begin
       TBBSCore(Owner).io.AnsiColor (7);
-      TBBSCore(Owner).io.BufAddStr (strRep(' ', LineLen - RowSize));
+      TBBSCore(Owner).io.BufAddStr (strRep(' ', RowSize - LineLen));
+
     End;
 End;
 
@@ -776,7 +782,7 @@ Procedure TEditorANSI.DoEnter;
 Var
   TempLine : RecAnsiBufferLine;
 Begin
-  If InsertMode and IsBlankLine(ANSI.Data[mysMaxMsgLines], 80) Then Begin
+  If InsertMode and IsBlankLine(ANSI.Data[MaxMsgLines], 80) Then Begin
     If CurX > CurLength Then Begin
       InsertLine (CurLine + 1);
 
@@ -855,7 +861,7 @@ Begin
     If Finish = 0 Then Finish := Start;
 
     For NumLines := Start to Finish Do Begin
-      If LastLine = mysMaxMsgLines Then Break;
+      If LastLine = MaxMsgLines Then Break;
 
       If Not IsBlankLine(Ansi.Data[CurLine], 80) Then Begin
         Inc (CurLine);
@@ -872,7 +878,7 @@ Begin
     End;
   End;
 
-  If CurLine < mysMaxMsgLines Then Begin
+  If CurLine < MaxMsgLines Then Begin
     Inc (CurLine);
     Inc (CurY);
 
@@ -1071,7 +1077,7 @@ Begin
     End Else
       Case Ch of
         #27 : Break;
-        #13 : If (LastLine < mysMaxMsgLines) and (Not NoMore) Then Begin
+        #13 : If (LastLine < MaxMsgLines) and (Not NoMore) Then Begin
 
                 If QuoteTopPage + QuoteCurLine = QuoteLines Then NoMore := True;
 
@@ -1107,7 +1113,7 @@ Begin
 
   Session.io.OutFull('|16');
 
-  If CurLine < mysMaxMsgLines Then Begin
+  If CurLine < MaxMsgLines Then Begin
     Inc (CurLine);
     Inc (CurY);
 
@@ -1367,7 +1373,7 @@ Begin
                  CutPasted := True;
 
                  For Count := CutTextPos DownTo 1 Do
-                   If LastLine < mysMaxMsgLines Then Begin
+                   If LastLine < MaxMsgLines Then Begin
                      InsertLine(CurLine);
 
                      ANSI.Data[CurLine] := CutText[Count];

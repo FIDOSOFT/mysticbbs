@@ -3275,8 +3275,10 @@
 
  + FTP server now has the option to allow passive data transfers or not, and
    this has replaced the "Allow Anonymous" which does not exist at this time.
-   Please review your configuration.  If you or users have issues with passive
-   turn it off.  The default should set it to off now.
+   PLEASE REVIEW YOUR CONFIGURATION.  If you or users have issues with passive
+   turn it off or review the network interface setting (see below).
+
+   The default should set it to off now.
 
  + When editing a posted message, Mystic now allows the option to set the
    echomail "sent" flag.  Prompt #296 has been updated for this new option. A
@@ -3335,5 +3337,29 @@
 
  ! Fixed a rare bug that could ocassionally cause some strange behavior
    during global new scans IF a message was moved.
+
+ ! The new FS editor wasn't correctly handling the parameters passed to it
+   via MPL and some other areas (like editing file descriptions).  This has
+   been fixed.  It can do SO much more than it does now, but its going to
+   require a revamp to the editor template files.  More on that later.
+
+ + The "Crosspost ACS" value in the configuration has been renamed as the
+   "Extended Reply ACS".  If this value is met for a user, Mystic will allow
+   the user to select the message base which the reply will go to.  ALPHAS:
+   YOU MUST REVIEW THIS SETTING BECAUSE IT WILL BE S255 BY DEFAULT NOW.
+
+   Crossposting is already allowed because once you post a message you can
+   forward it to other message bases if you are the "owner" of that message,
+   which is basically the same outcome.  This ACS was unused and useless so
+   its now changed to a more appropriate "Extended Reply ACS".
+
+ + Mystic has been ported to ARM Linux (aka Raspberry Pi).  There is still
+   one issue with MIS and FIDOPOLL so I am not releasing a complete install
+   for A33, but once that is sorted out I will do an installable release.
+
+   In the meantime, you can certainly compile the code now and run it.  It
+   runs suprisingly well once you get the console setup correctly.  However,
+   until the issue with MIS is solved you will have to use inetxd or similar
+   for your telnet server.
 
    <ALPHA 33 RELEASED>

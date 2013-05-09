@@ -240,7 +240,7 @@ Type
     ColorTear       : Byte;
     ColorOrigin     : Byte;
     ColorKludge     : Byte;
-    AcsCrossPost    : String[mysMaxAcsSize];
+    AcsExtReply     : String[mysMaxAcsSize];
     AcsFileAttach   : String[mysMaxAcsSize];
     AcsNodeLookup   : String[mysMaxAcsSize];
     FSEditor        : Boolean;

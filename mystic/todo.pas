@@ -8,6 +8,7 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
+! check forced messages in new fs editor might not be enforced.
 ! Weird console slowdown with test.txt in Win7 use MVIEW to test
 ! GE option 32 (change def protocol) might be broken
 ! Node chat goes haywire at 1000 lines scrollback
@@ -26,6 +27,9 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- redo voting booth externalize user storage and allow unlimited questions
+  plus maybe categories.  or at least up it to like 50 questions or
+  something and also add in the "created" date to the voting question itself
 - Fix up new FS editor to use passed template and editor contraints.
      - Test with file description editor.
 - ACS to allow "selecable reply base"

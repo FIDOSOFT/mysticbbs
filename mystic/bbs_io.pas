@@ -2144,7 +2144,7 @@ Var
   FillSize : Byte;
   Attr     : Byte;
 Begin
-//  Attr := Screen.TextAttr;
+  Attr := Screen.TextAttr;
 
   Screen.TextAttr := 0;  // kludge to force it to return full ansi codes
 
