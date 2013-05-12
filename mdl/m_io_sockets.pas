@@ -66,7 +66,7 @@ Type
     Function    Connect         (Address: String; Port: Word) : Boolean;
     Function    ResolveAddress  (Host: String) : LongInt;
     Procedure   WaitInit        (NetInterface: String; Port: Word);
-    Function    WaitConnection  : TIOSocket;
+    Function    WaitConnection  (TimeOut: LongInt) : TIOSocket;
 
     Function    PeekChar        (Num: Byte) : Char; Override;
     Function    ReadChar        : Char; Override;
@@ -492,18 +492,39 @@ Begin
   If Res < 0 Then Result := -1 Else Result := Length(Str);
 End;
 
+{$IFDEF UNIX}
 Function TIOSocket.SetBlocking (Block: Boolean): LongInt;
-//Var
-//  Data : DWord;
+Var
+  Flags : LongInt;
 Begin
   If FSocketHandle = -1 Then Begin
     Result := FSocketHandle;
     Exit;
   End;
 
-//  Data   := Ord(Not Block);
-//  Result := ioctlSocket(FSocketHandle, FIONBIO, Data);
+  Flags := fpFCntl(FSocketHandle, F_GETFL);
+
+  If Block Then
+    Flags := Flags OR O_NONBLOCK
+  Else
+    Flags := Flags AND NOT O_NONBLOCK;
+
+  Result := fpFCntl(FSocketHandle, F_SETFL, Flags);
 End;
+{$ELSE}
+Function TIOSocket.SetBlocking (Block: Boolean): LongInt;
+Var
+  Data : DWord;
+Begin
+  If FSocketHandle = -1 Then Begin
+    Result := FSocketHandle;
+    Exit;
+  End;
+
+  Data   := Ord(Not Block);
+  Result := ioctlSocket(FSocketHandle, FIONBIO, Data);
+End;
+{$ENDIF}
 
 Function TIOSocket.WaitForData (TimeOut: LongInt) : LongInt;
 Var
@@ -594,7 +615,7 @@ Begin
   SetBlocking(True);
 End;
 
-Function TIOSocket.WaitConnection : TIOSocket;
+Function TIOSocket.WaitConnection (TimeOut: LongInt) : TIOSocket;
 Var
   Sock   : LongInt;
   Client : TIOSocket;
@@ -605,7 +626,22 @@ Var
 Begin
   Result := NIL;
 
-  If fpListen(FSocketHandle, 5) = -1 Then Exit;
+  If TimeOut > 0 Then Begin
+    SetBlocking(False);
+
+    If fpListen(FSocketHandle, 5) = -1 Then Begin
+      SetBlocking(True);
+
+      Exit;
+    End;
+
+    If WaitForData(TimeOut) <= 0 Then Begin
+      SetBlocking(True);
+
+      Exit;
+    End;
+  End Else
+    If fpListen(FSocketHandle, 5) = -1 Then Exit;
 
   Temp := SizeOf(SIN);
   Sock := fpAccept(FSocketHandle, @SIN, @Temp);

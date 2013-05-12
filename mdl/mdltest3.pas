@@ -3,20 +3,20 @@ Program Test3;
 {$I m_ops.pas}
 
 Uses
-  m_Socket_Class;
+  m_io_Sockets;
 
 Var
-  Server : TSocketClass;
-  Client : TSocketClass;
+  Server : TIOSocket;
+  Client : TIOSocket;
   Str    : String;
 Begin
-  Server := TSocketClass.Create;
+  Server := TIOSocket.Create;
 
-  Server.WaitInit(23);
+  Server.WaitInit('0.0.0.0', 23);
 
   WriteLn('Waiting on port 23 for TEST4 client example...');
 
-  Client := Server.WaitConnection;
+  Client := Server.WaitConnection(5000);
 
   If Client = NIL Then Begin
     WriteLn ('An error has occured; no client detected');
