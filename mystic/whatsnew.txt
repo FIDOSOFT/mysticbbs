@@ -3363,3 +3363,12 @@
    for your telnet server.
 
    <ALPHA 33 RELEASED>
+
+ ! Mystic was not properly closing some files when resetting the message
+   base new scan pointer date.
+
+ ! The FTP server will now gracefully handle data session timeouts (after
+   10 seconds) which should prevent FTP ghost users when there is a firewall
+   or network adapter configuration issue.
+
+   <ALPHA 34 RELEASED>

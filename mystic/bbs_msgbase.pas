@@ -3242,6 +3242,8 @@ Var
 
       If Not Found Then
         MsgBase^.SetLastRead(Session.User.UserNum, MsgBase^.GetHighMsgNum);
+
+      MsgBase^.CloseMsgBase;
     End;
 
     Dispose (MsgBase, Done);

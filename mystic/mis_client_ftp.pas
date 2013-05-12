@@ -284,7 +284,7 @@ Begin
 
     WaitSock.WaitInit(bbsConfig.inetInterface, DataPort);
 
-    DataSocket := WaitSock.WaitConnection;
+    DataSocket := WaitSock.WaitConnection(10000);
 
     If Not Assigned(DataSocket) Then Begin
       WaitSock.Free;
@@ -467,7 +467,7 @@ Begin
 
     {$IFDEF FTPDEBUG} LOG('PASV Wait'); {$ENDIF}
 
-    DataSocket := WaitSock.WaitConnection;
+    DataSocket := WaitSock.WaitConnection(10000);
 
     {$IFDEF FTPDEBUG} LOG('PASV WaitDone'); {$ENDIF}
 
@@ -771,7 +771,7 @@ Begin
 
       WaitSock.WaitInit(bbsConfig.inetInterface, DataPort);
 
-      DataSocket := WaitSock.WaitConnection;
+      DataSocket := WaitSock.WaitConnection(10000);
 
       If Not Assigned(DataSocket) Then Begin
         WaitSock.Free;

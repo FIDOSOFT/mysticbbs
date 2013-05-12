@@ -211,7 +211,7 @@ Begin
   Status('Opening server socket on port ' + strI2S(Port));
 
   Repeat
-    NewClient := Server.WaitConnection;
+    NewClient := Server.WaitConnection(0);
 
     If NewClient = NIL Then Break; // time to shutdown the server...
 
