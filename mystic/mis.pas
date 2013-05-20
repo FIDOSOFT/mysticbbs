@@ -81,12 +81,12 @@ Var
 Begin
   FileConfig := TFileBuffer.Create(SizeOf(RecConfig));
 
-  If Not FileConfig.OpenStream ('mystic.dat', fmOpen, fmRWDN) Then Begin
+  If Not FileConfig.OpenStream ('mystic.dat', 1, fmOpen, fmRWDN) Then Begin
     DatLoc := GetEnv('mysticbbs');
 
     If DatLoc <> '' Then DatLoc := DirSlash(DatLoc);
 
-    If Not FileConfig.OpenStream (DatLoc + 'mystic.dat', fmOpen, fmRWDN) Then Begin
+    If Not FileConfig.OpenStream (DatLoc + 'mystic.dat', 1, fmOpen, fmRWDN) Then Begin
       If Not DaemonMode Then Begin
         Console.WriteLine (#13#10 + 'ERROR: Unable to read MYSTIC.DAT.  This file must exist in the same');
         Console.WriteLine ('directory as MIS');
@@ -101,19 +101,13 @@ Begin
     End;
   End;
 
-  FileConfig.BlockRead (bbsConfig, SizeOf(bbsConfig));
+  FileConfig.ReadBlock (bbsConfig, SizeOf(bbsConfig));
   FileConfig.Free;
 
   If bbsConfig.DataChanged <> mysDataChanged Then Begin
     WriteLn('ERROR: Data files are not current and must be upgraded.');
     Halt(1);
   End;
-
-  TempPath := bbsConfig.SystemPath + 'temp0' + PathChar;
-
-  {$I-} MkDir (TempPath); {$I+}
-
-  If IoResult <> 0 Then;
 
   DirChange(bbsConfig.SystemPath);
 End;
@@ -260,13 +254,13 @@ Var
 Begin
   Console.TextAttr := 7;
   Console.ClearScreen;
-  Console.WriteStr ('Connecting to 127.0.0.1... ');
+//  Console.WriteStr ('Connecting to 127.0.0.1... ');
 
   Client := TIOSocket.Create;
 
   Client.FTelnetClient := True;
 
-  If Not Client.Connect('127.0.0.1', bbsConfig.InetTNPort) Then
+  If Not Client.Connect(bbsConfig.inetInterface{'127.0.0.1'}, bbsConfig.InetTNPort) Then
     Console.WriteLine('Unable to connect')
   Else Begin
     Done := False;
@@ -403,6 +397,10 @@ Begin
   {$IFDEF UNIX}
     SetUserOwner;
   {$ENDIF}
+
+  TempPath := bbsConfig.SystemPath + 'temp0' + PathChar;
+
+  DirCreate(TempPath);
 End;
 
 {$IFDEF UNIX}

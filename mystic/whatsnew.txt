@@ -3371,4 +3371,50 @@
    10 seconds) which should prevent FTP ghost users when there is a firewall
    or network adapter configuration issue.
 
+ - Removed MPL support for GOTO labels.
+
+ - MPL/IPL syntax for not equal has been changed from "<>" to "!="
+
+ - Removed MakeTheme.  Prompts are not longer required to be compiled.  You
+   can delete *.thm from your DATA directory it is no longer used.  You MUST
+   move your default.txt, etc, from your root Mystic BBS directory into your
+   DATA directory.
+
+ + The N and P keys now go to next and previous pages in the full screen
+   ANSI viewer.
+
+ + The MATRIX login will now use the matrix login prompts for ALL logins
+   from matrix login.  This means that the standard login will now be
+   bypassed for menu command XL.  Make sure your matrix login looks the
+   way you want after upgrading, if you use matrix.
+
+ ! Fixed some quirkiness introduced in A33 around netmail.
+
+ ! Lots of minor bug fixes that were mostly not reported.
+
+ + The prompt to set the message base pointers by date now defaults to the
+   current date.
+
+ + The FS editor quote window template has changed (ANSIQUOT).  It now allows
+   the quote window size to be defined and all attributes.  3 screen info
+   codes are used:
+
+      !1 = Defines the text attribute and Y location where normal text ends
+      !2 = Defines the top Y location of quote window text and attribute
+      !3 = Defines the bot Y location of quote window and lightbar attribute
+
+ + Added 3 new optional Screen Info codes to the FS editor (ANSIEDIT)
+   template which allow different types of text to be colored "on the fly".
+
+   If you do not want to use these features, just do not set them in your
+   template.
+
+      !4 = Defines the color of capital letters
+      !5 = Defines the color of punctuation
+      !6 = Defines the color of numbers
+
+ ! Fixed issues with the ALT-GR key detection for international keyboards in
+   the Windows version.
+
    <ALPHA 34 RELEASED>
+

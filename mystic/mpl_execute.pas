@@ -173,6 +173,7 @@ Begin
   Move (U.LastFGroup, VarData[IdxVarUser + 13]^.Data^, SizeOf(U.LastFGroup));
   Move (U.LastMBase,  VarData[IdxVarUser + 14]^.Data^, SizeOf(U.LastMBase));
   Move (U.LastMGroup, VarData[IdxVarUser + 15]^.Data^, SizeOf(U.LastMGroup));
+  Move (U.Birthday,   VarData[IdxVarUser + 16]^.Data^, SizeOf(U.Birthday));
 End;
 
 Procedure TInterpEngine.PutUserVars (Var U: RecUser);
@@ -193,6 +194,7 @@ Begin
   Move (VarData[IdxVarUser + 13]^.Data^, U.LastFGroup, SizeOf(U.LastFGroup));
   Move (VarData[IdxVarUser + 14]^.Data^, U.LastMBase,  SizeOf(U.LastMBase));
   Move (VarData[IdxVarUser + 15]^.Data^, U.LastMGroup, SizeOf(U.LastMGroup));
+  Move (VarData[IdxVarUser + 16]^.Data^, U.Birthday,   SizeOf(U.Birthday));
 End;
 
 Function TInterpEngine.GetUserRecord (Num: LongInt) : Boolean;
@@ -394,24 +396,24 @@ End;
 
 Procedure TInterpEngine.MoveToPos (Num: LongInt);
 Begin
-  DataFile.Seek (Num + mplVerLength);
+  DataFile.SeekRaw (Num + mplVerLength);
 End;
 
 Function TInterpEngine.CurFilePos : LongInt;
 Begin
-  Result := DataFile.FilePos - mplVerLength;
+  Result := DataFile.FilePosRaw - mplVerLength;
 End;
 
 Procedure TInterpEngine.NextChar;
 Begin
-  Ch := DataFile.Read;
+  Ch := DataFile.ReadChar;
 End;
 
 Procedure TInterpEngine.NextWord;
 Var
   Res  : LongInt;
 Begin
-  DataFile.BlockRead (W, 2, Res);
+  DataFile.ReadBlock (W, 2, Res);
 End;
 
 Procedure TInterpEngine.PrevChar;
@@ -591,7 +593,7 @@ Var
                 ParseNext;
               Until Not (CheckChar in ['0'..'9', '.', 'E']);
 
-              Val(NumStr, Result, Start);
+              Val (NumStr, Result, Start);
             End;
           End;
 
@@ -694,7 +696,7 @@ Begin
     opOpenString : Begin
                      NextChar;
                      Result[0] := Ch;
-                     DataFile.BlockRead (Result[1], Byte(Ch), Res);
+                     DataFile.ReadBlock (Result[1], Byte(Ch), Res);
                    End;
     opProcExec   : Case ExecuteProcedure(@Result) of
                      iChar : Begin // convert to string if its a char
@@ -1867,9 +1869,12 @@ Begin
             Move (Session.io.ScreenInfo[Param[1].B].Y, Param[3].vData^, 1);
             Move (Session.io.ScreenInfo[Param[1].B].A, Param[4].vData^, 1);
           End;
-    530 : If Param[1].B < FileSize(Session.PromptFile) Then Begin
-            Seek  (Session.PromptFile, Param[1].B);
-            Write (Session.PromptFile, Param[2].S);
+    530 : If (Param[1].L > -1) And (Param[1].L <= mysMaxThemeText) Then Begin
+            If Assigned(Session.PromptData[Param[1].L]) Then
+              FreeMem (Session.PromptData[Param[1].L]);
+
+            GetMem (Session.PromptData[Param[1].L], Length(Param[2].S) + 1);
+            Move   (Param[2].S, Session.PromptData[Count]^, Length(Param[2].S) + 1);
           End;
     531 : Begin
             TempChar := Session.io.MorePrompt;
@@ -2235,7 +2240,7 @@ Begin
 
   {$IFDEF LOGGING}
     Inc(Depth);
-    Session.SystemLog('[' + strI2S(Depth) + '] ExecBlock BEGIN Var: ' + strI2S(StartVar) + ' Rec: ' + strI2S(StartRec));
+    Session.SystemLog('[D' + strI2S(Depth) + '] ExecBlock BEGIN Var: ' + strI2S(StartVar));
   {$ENDIF}
 
   NextChar; // block begin character... can we ignore it? at least for case_else
@@ -2250,8 +2255,8 @@ Begin
 
     Case TTokenOpsRec(Byte(Ch)) of
 {0}   opBlockOpen  : Begin
-                       PrevChar;
-                       Self.ExecuteBlock(CurVarNum);
+//                       PrevChar;
+//                       Self.ExecuteBlock(CurVarNum);
                      End;
 {1}   opBlockClose : Break;
 {2}   opVarDeclare : DefineVariable;
@@ -2272,10 +2277,6 @@ Begin
                      End;
 {36}  opWhile      : StatementWhileDo;
 {39}  opRepeat     : StatementRepeatUntil;
-{47}  opGoto       : Begin
-                       NextWord;
-                       MoveToPos(W);
-                     End;
 {49}  opHalt       : Done := True;
 {50}  opCase       : Begin
                        Result := StatementCase;
@@ -2386,7 +2387,7 @@ Begin
 
   MPEName := FN;
 
-  If Not DataFile.OpenStream(FN, fmOpen, fmRWDN) Then Begin
+  If Not DataFile.OpenStream(FN, 1, fmOpen, fmRWDN) Then Begin
     DataFile.Free;
 
     Exit;
@@ -2394,7 +2395,7 @@ Begin
 
   Result := 1;
 
-  If DataFile.FileSize < mplVerLength Then Begin
+  If DataFile.FileSizeRaw < mplVerLength Then Begin
     DataFile.Free;
 
     Error (mpxInvalidFile, FN);
@@ -2402,7 +2403,7 @@ Begin
     Exit;
   End;
 
-  DataFile.BlockRead (VerStr[1], mplVerLength, Res);
+  DataFile.ReadBlock (VerStr[1], mplVerLength, Res);
   VerStr[0] := Chr(mplVerLength);
 
   If VerStr <> mplVersion Then Begin

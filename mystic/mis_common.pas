@@ -38,14 +38,14 @@ Begin
 
   UserFile := TFileBuffer.Create (8 * 1024);
 
-  If UserFile.OpenStream (bbsConfig.DataPath + 'users.dat', fmOpen, fmRWDN) Then
+  If UserFile.OpenStream (bbsConfig.DataPath + 'users.dat', SizeOf(RecUser), fmOpen, fmRWDN) Then
     While Not UserFile.EOF Do Begin
-      UserFile.BlockRead(Rec, SizeOf(Rec));
+      UserFile.ReadRecord (Rec);
 
       If Rec.Flags AND UserDeleted <> 0 Then Continue;
 
       If (UN = strUpper(Rec.RealName)) or (UN = strUpper(Rec.Handle)) Then Begin
-        RecPos := UserFile.FilePos;
+        RecPos := UserFile.FilePosRecord;
         Result := True;
         Break;
       End;

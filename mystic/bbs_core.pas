@@ -78,10 +78,11 @@ Type
     HistoryULs     : Word;
     HistoryULKB    : LongInt;
     HistoryHour    : SmallInt;
-    PromptFile     : File of RecPrompt;
-    Prompt         : RecPrompt;
+//    PromptFile     : File of RecPrompt;
+//    Prompt         : RecPrompt;
     LastScanHadNew : Boolean;
     LastScanHadYou : Boolean;
+    PromptData     : Array[0..mysMaxThemeText] of Pointer;
 
     Constructor Create;
     Destructor  Destroy; Override;
@@ -159,7 +160,7 @@ Begin
   User.Free;
   IO.Free;
 
-  Close (PromptFile);
+//  Close (PromptFile);
 
   {$IFNDEF UNIX}
     Client.Free;
@@ -239,42 +240,6 @@ Begin
   End;
 
   Close (EventFile);
-End;
-
-Function TBBSCore.GetPrompt (N : Word) : String;
-Begin
-  {$I-}
-  Seek (PromptFile, N);
-  Read (PromptFile, Prompt);
-  {$I+}
-
-  If IoResult <> 0 Then Begin
-    FileMode := 66;
-
-    {$I-}
-    Assign (PromptFile, Config.DataPath + Theme.FileName + '.thm');
-    Reset  (PromptFile);
-    Seek   (PromptFile, N);
-    Read   (PromptFile, Prompt);
-    {$I+}
-
-    If IoResult <> 0 Then Begin
-      io.OutFull ('|CR|12Error reading prompt ' + strI2S(N) + '|DE|DE');
-      SystemLog  ('Error reading prompt ' + strI2S(N));
-      Halt       (1);
-    End;
-  End;
-
-  If Prompt[1] = '@' Then Begin
-    io.OutFile (Copy(Prompt, 2, Length(Prompt)), True, 0);
-    Prompt := '';
-  End Else
-  If Prompt[1] = '!' Then Begin
-    ExecuteMPL (NIL, Copy(Prompt, 2, Length(Prompt)));
-    Prompt := '';
-  End;
-
-  Result := Prompt;
 End;
 
 Procedure TBBSCore.SystemLog (Str: String);
@@ -358,6 +323,149 @@ Begin
   TimeLeft := TimerEnd - TimerMinutes;
 End;
 
+Function TBBSCore.GetPrompt (N: Word) : String;
+Begin
+  Result := String(PromptData[N]^);
+
+  If Result[1] = '@' Then Begin
+    io.OutFile (Copy(Result, 2, Length(Result)), True, 0);
+
+    Result := '';
+  End Else
+  If Result[1] = '!' Then Begin
+    ExecuteMPL (NIL, Copy(Result, 2, Length(Result)));
+
+    Result := '';
+  End;
+End;
+
+
+Function TBBSCore.LoadThemeData (Str: String) : Boolean;
+
+  Procedure DisposeThemeData;
+  Var
+    Count : LongInt;
+  Begin
+    For Count := mysMaxThemeText DownTo 0 Do Begin
+      If Assigned(PromptData[Count]) Then
+        FreeMem(PromptData[Count]);
+
+      PromptData[Count] := NIL;
+    End;
+  End;
+
+Var
+  Count      : LongInt;
+  PromptFile : Text;
+  Buffer     : Array[1..1024 * 8] of Char;
+  Temp       : String;
+  TempTheme  : RecTheme;
+Begin
+  Result := False;
+
+  Reset (ThemeFile);
+
+  While Not Eof(ThemeFile) Do Begin
+    Read (ThemeFile, TempTheme);
+
+    If strUpper(TempTheme.FileName) = strUpper(Str) Then Begin
+      Result := True;
+      Theme  := TempTheme;
+
+      Break;
+    End;
+  End;
+
+  Close (ThemeFile);
+
+  If Not Result Then Exit;
+
+  Result   := False;
+  FileMode := 66;
+
+  Assign     (PromptFile, Config.DataPath + Theme.FileName + '.txt');
+  SetTextBuf (PromptFile, Buffer);
+
+  {$I-} Reset (PromptFile); {$I+}
+
+  If IoResult <> 0 Then Exit;
+
+  DisposeThemeData;
+
+  While Not Eof(PromptFile) Do Begin
+    ReadLn (PromptFile, Temp);
+
+    If Copy(Temp, 1, 3) = '000' Then
+      Count := 0
+    Else
+    If strS2I(Copy(Temp, 1, 3)) > 0 Then
+      Count := strS2I(Copy(Temp, 1, 3))
+    Else
+      Count := -1;
+
+    If Count <> -1 Then Begin
+      Temp := Copy(Temp, 5, Length(Temp));
+
+      If Assigned (PromptData[Count]) Then
+        FreeMem(PromptData[Count], SizeOf(PromptData[Count]^));
+
+      GetMem (PromptData[Count], Length(Temp) + 1);
+      Move   (Temp, PromptData[Count]^, Length(Temp) + 1);
+    End;
+  End;
+
+  Close (PromptFile);
+
+  Result := True;
+
+  For Count := 1 to mysMaxThemeText Do
+    If Not Assigned(PromptData[Count]) Then Begin
+      SystemLog ('Missing prompt #' + strI2S(Count));
+      IO.OutFullLn('|12Missing prompt #' + strI2S(Count));
+
+      Result := False;
+    End;
+
+  If Not Result Then Halt(1);
+End;
+
+(*
+Function TBBSCore.GetPrompt (N : Word) : String;
+Begin
+  {$I-}
+  Seek (PromptFile, N);
+  Read (PromptFile, Prompt);
+  {$I+}
+
+  If IoResult <> 0 Then Begin
+    FileMode := 66;
+
+    {$I-}
+    Assign (PromptFile, Config.DataPath + Theme.FileName + '.thm');
+    Reset  (PromptFile);
+    Seek   (PromptFile, N);
+    Read   (PromptFile, Prompt);
+    {$I+}
+
+    If IoResult <> 0 Then Begin
+      io.OutFull ('|CR|12Error reading prompt ' + strI2S(N) + '|DE|DE');
+      SystemLog  ('Error reading prompt ' + strI2S(N));
+      Halt       (1);
+    End;
+  End;
+
+  If Prompt[1] = '@' Then Begin
+    io.OutFile (Copy(Prompt, 2, Length(Prompt)), True, 0);
+    Prompt := '';
+  End Else
+  If Prompt[1] = '!' Then Begin
+    ExecuteMPL (NIL, Copy(Prompt, 2, Length(Prompt)));
+    Prompt := '';
+  End;
+
+  Result := Prompt;
+End;
+
 Function TBBSCore.LoadThemeData (Str: String) : Boolean;
 Var
   TempTheme : RecTheme;
@@ -392,5 +500,6 @@ Begin
 
   If Result Then Theme := TempTheme;
 End;
+*)
 
 End.

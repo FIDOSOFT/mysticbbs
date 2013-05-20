@@ -280,7 +280,7 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'mci2str',        {$ENDIF} 's',       iString);  // 527
           AddProc    ({$IFDEF MPLPARSER} 'getusertime',    {$ENDIF} '',        iInteger); // 528
           AddProc    ({$IFDEF MPLPARSER} 'getscreeninfo',  {$ENDIF} 'bBBB',    iNone);    // 529
-          AddProc    ({$IFDEF MPLPARSER} 'setprompt',      {$ENDIF} 'bs',      iNone);    // 530
+          AddProc    ({$IFDEF MPLPARSER} 'setprompt',      {$ENDIF} 'ls',      iNone);    // 530
           AddProc    ({$IFDEF MPLPARSER} 'moreprompt',     {$ENDIF} '',        iChar);    // 531
           AddProc    ({$IFDEF MPLPARSER} 'pause',          {$ENDIF} '',        iNone);    // 532
           AddProc    ({$IFDEF MPLPARSER} 'setpromptinfo',  {$ENDIF} 'bs',      iNone);    // 533
@@ -318,6 +318,7 @@ Begin
           AddPointer ({$IFDEF MPLPARSER} 'userloginname',{$ENDIF} iString,   31, {$IFNDEF MPLPARSER} @Session.UserLoginName              {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'userloginpw',  {$ENDIF} iString,   16, {$IFNDEF MPLPARSER} @Session.UserLoginPW                {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'rangevalue',   {$ENDIF} iLongInt,   4, {$IFNDEF MPLPARSER} @Session.io.RangeValue              {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'lastscannew',  {$ENDIF} iBool,      1, {$IFNDEF MPLPARSER} @Session.LastScanHadNew             {$ELSE} NIL {$ENDIF});
 
           {$IFNDEF MPLPARSER} TInterpEngine(S).IdxVarDir := X + 1; {$ENDIF}
 
@@ -345,6 +346,7 @@ Begin
           AddVar ({$IFDEF MPLPARSER} 'userfgroup',    {$ENDIF} iLongInt);
           AddVar ({$IFDEF MPLPARSER} 'usermbase',     {$ENDIF} iLongInt);
           AddVar ({$IFDEF MPLPARSER} 'usermgroup',    {$ENDIF} iLongInt);
+          AddVar ({$IFDEF MPLPARSER} 'userbirthday',  {$ENDIF} iLongInt);
         End;
     2 : Begin
           AddPointer ({$IFDEF MPLPARSER} 'cfgsyspath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.SystemPath     {$ELSE} NIL {$ENDIF});

@@ -37,10 +37,10 @@ Var
     L   : RecMsgLink;
     Res : LongInt;
   Begin
-    LinkFile.Seek(0);
+    LinkFile.SeekRaw(0);
 
     While Not LinkFile.EOF Do Begin
-      LinkFile.BlockRead(L, SizeOf(L), Res);
+      LinkFile.ReadBlock (L, SizeOf(L), Res);
 
       If L.OldNum = OldNum Then Begin
         Result := L.NewNum;
@@ -110,7 +110,7 @@ Var
 
     LinkFile := TFileBuffer.Create (8 * 1024);
 
-    LinkFile.OpenStream (TempPath + TempName + '.tmp', fmCreate, fmRWDN);
+    LinkFile.OpenStream (TempPath + TempName + '.tmp', 1, fmCreate, fmRWDN);
 
     MsgData^.SeekFirst(1);
 
@@ -163,7 +163,7 @@ Var
         Link.OldNum := MsgData^.GetMsgNum;
         Link.NewNum := NewData^.GetHighMsgNum;
 
-        LinkFile.BlockWrite (Link, SizeOf(Link));
+        LinkFile.WriteBlock (Link, SizeOf(Link));
       End;
 
       MsgData^.SeekNext;

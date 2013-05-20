@@ -87,7 +87,7 @@ Type
     UpdateProc  : TParserUpdateProc;
     UpdateInfo  : TParserUpdateInfo;
     VarData     : VarDataRec;
-    GotoData    : Array[1..mplMaxGotos]   of PGotoRec;
+//    GotoData    : Array[1..mplMaxGotos]   of PGotoRec;
     RecData     : Array[1..mplMaxRecords] of PRecordRec;
     ConstData   : Array[1..mplMaxConsts]  of PConstRec;
     CurVarNum   : Word;
@@ -96,6 +96,7 @@ Type
     CurConstNum : Word;
     CurVarID    : Word;
     CurRecID    : Word;
+    CurDepth    : LongInt;
     UsesUSER    : Boolean;
     UsesCFG     : Boolean;
     UsesMBASE   : Boolean;
@@ -120,7 +121,7 @@ Type
     Procedure OutPosition       (P: LongInt; W: Word);
  // SEARCH FUNCTIONS
     Function  FindVariable      (Str: String) : Integer;
-    Function  FindGoto          (Str: String) : Integer;
+//    Function  FindGoto          (Str: String) : Integer;
     Function  FindRecord        (Str: String) : Integer;
     Function  FindConst         (Str: String) : Integer;
     Function  FindIdent         (Str: String) : Boolean;
@@ -145,7 +146,7 @@ Type
     Procedure DefineRecordType;
     Procedure DefineVariable;
     Procedure DefineConst;
-    Procedure DefineGoto;
+//    Procedure DefineGoto;
     Procedure DefineProc;
 
     Procedure ExecuteProcedure (VN: Word; Res: Boolean);
@@ -156,7 +157,7 @@ Type
     Procedure StatementRepeatUntil;
     Procedure StatementWhileDo;
     Procedure StatementForLoop;
-    Procedure StatementGoto;
+//    Procedure StatementGoto;
     Procedure StatementUses;
 
  // MISC FUNCTIONS
@@ -195,6 +196,7 @@ Begin
   CurGotoNum  := 0;
   CurRecNum   := 0;
   CurConstNum := 0;
+  CurDepth    := 0;
   UpdateProc  := Update;
   AllowOutput := True;
 
@@ -209,7 +211,7 @@ Var
   Count : LongInt;
 Begin
   For Count := 1 to CurVarNum  Do Dispose (VarData[Count]);
-  For Count := 1 to CurGotoNum Do Dispose (GotoData[Count]);
+//  For Count := 1 to CurGotoNum Do Dispose (GotoData[Count]);
   For Count := 1 to CurRecNum  Do Dispose (RecData[Count]);
 
   CurVarNum  := 0;
@@ -247,7 +249,7 @@ Begin
     mpsExpOperator     : Result := 'Operator expected';
     mpsOverArrayDim    : Result := 'Too many dimensions in array: Max ' + strI2S(mplMaxArrayDem);
     mpsNoInitArray     : Result := 'Cannot init array with value';
-    mpsTooManyGotos    : Result := 'Too many GOTO labels: Max ' + strI2S(mplMaxGotos);
+//    mpsTooManyGotos    : Result := 'Too many GOTO labels: Max ' + strI2S(mplMaxGotos);
     mpsDupLabel        : Result := 'Duplicate label: ' + Str;
     mpsLabelNotFound   : Result := 'Label not found: ' + Str;
     mpsFileParamVar    : Result := 'File parameters must be type FILE';
@@ -272,10 +274,10 @@ Begin
   UpdateInfo.ErrorCol  := 0;
 
   If Assigned(InFile[CurFile].DataFile) And InFile[CurFile].DataFile.IsOpened Then Begin
-    InFile[CurFile].DataFile.Seek(0);
+    InFile[CurFile].DataFile.SeekRaw(0);
 
-    While Not InFile[CurFile].DataFile.EOF And (InFile[CurFile].DataFile.FilePos < InFile[CurFile].Position) Do Begin
-      Case InFile[CurFile].DataFile.Read of
+    While Not InFile[CurFile].DataFile.EOF And (InFile[CurFile].DataFile.FilePosRaw < InFile[CurFile].Position) Do Begin
+      Case InFile[CurFile].DataFile.ReadChar of
         #10 : Begin
                 Inc (UpdateInfo.ErrorLine);
 
@@ -347,6 +349,7 @@ Begin
   Result := (FindVariable(Str) <> 0) or (FindConst(Str) <> 0) or (FindRecord(Str) <> 0);
 End;
 
+(*
 Function TParserEngine.FindGoto (Str: String) : Integer;
 Var
   Count : LongInt;
@@ -366,7 +369,7 @@ Begin
     Inc (Count);
   Until (Count > CurGotoNum);
 End;
-
+*)
 Function TParserEngine.FindRecord (Str: String) : Integer;
 Var
   Count : LongInt;
@@ -432,7 +435,7 @@ Begin
   If UpdateInfo.ErrorType <> 0 Then Exit;
 
   If Not InFile[CurFile].DataFile.Eof Then Begin
-    Ch := InFile[CurFile].DataFile.Read;
+    Ch := InFile[CurFile].DataFile.ReadChar;
 
     Inc (InFile[CurFile].Position);
   End Else
@@ -454,7 +457,7 @@ Begin
 
     Dec (Position);
 
-    DataFile.Seek (DataFile.FilePos - 1);
+    DataFile.SeekRaw (DataFile.FilePosRaw - 1);
   End;
 End;
 
@@ -687,7 +690,7 @@ End;
 Procedure TParserEngine.SavePosition;
 Begin
   With InFile[CurFile] Do Begin
-    PosSaved := DataFile.FilePos + 1;
+    PosSaved := DataFile.FilePosRaw + 1;
   End;
 End;
 
@@ -696,7 +699,7 @@ Begin
   With InFile[CurFile] Do Begin
     Position := PosSaved;
 
-    DataFile.Seek (Position - 1);
+    DataFile.SeekRaw (Position - 1);
   End;
 End;
 
@@ -706,11 +709,13 @@ Var
 Begin
   If (Not AllowOutput) or (UpdateInfo.ErrorType <> 0) Then Exit;
 
-  SavedPos := CurFilePos;
+  SavedPos := FilePos(OutFile);
+//  SavedPos := CurFilePos;
 
   Seek    (OutFile, P + mplVerLength);
   OutWord (W);
-  Seek    (OutFile, SavedPos + mplVerLength);
+//  Seek    (OutFile, SavedPos + mplVerLength);
+  Seek (OutFile, SavedPos);
 End;
 
 Procedure TParserEngine.ParseArray (VN: Word; Forced: Boolean);
@@ -742,7 +747,7 @@ Begin
 
   If Result <> iRecord Then Exit;
 
-  SavedPos := InFile[CurFile].DataFile.FilePos;
+  SavedPos := InFile[CurFile].DataFile.FilePosRaw;
 
   If SkipIdent Then GetIdent(False);
 
@@ -766,7 +771,7 @@ Begin
   NextChar;
 
   If (Ch <> '.') Then Begin
-    InFile[CurFile].DataFile.Seek(SavedPos);
+    InFile[CurFile].DataFile.SeekRaw(SavedPos);
     Exit;
   End;
 
@@ -784,7 +789,7 @@ Begin
   If Not Found Then
     Error (mpsUnknownIdent, '');
 
-  InFile[CurFile].DataFile.Seek(SavedPos);
+  InFile[CurFile].DataFile.SeekRaw(SavedPos);
 End;
 
 Function TParserEngine.ParseElement (VN: Word; TypeCheck: Boolean; VT: TIdentTypes) : TIdentTypes;
@@ -2421,18 +2426,22 @@ Begin
     OutString(Char(opElse));
 
     If GetStr(tkw[wBlockOpen], False, False) Then
-      ParseBlock (CurVarNum, False, True, False)
+      ParseBlock
+      (CurVarNum, False, True, False)
     Else
       ParseBlock (CurVarNum, True, False, False);
   End;
 End;
 
+(*
 Procedure TParserEngine.StatementGoto;
 Var
   GotoNum : LongInt;
 Begin
   OutString (Char(opGoto));
   GetIdent  (False);
+
+writeln('opGoto found at depth ', curdepth);
 
   If UpdateInfo.ErrorType <> 0 Then Exit;
 
@@ -2445,18 +2454,19 @@ Begin
       Inc (CurGotoNum);
       New (GotoData[CurGotoNum]);
 
-      GotoData[CurGotoNum]^.Ident := IdentStr;
-      GotoData[CurGotoNum]^.xPos  := CurFilePos;
-      GotoData[CurGotoNum]^.Stat  := 1;
+      GotoData[CurGotoNum]^.Ident    := IdentStr;
+      GotoData[CurGotoNum]^.Position := CurFilePos;
+      GotoData[CurGotoNum]^.State    := 1;
 
       OutWord(0);
     End;
   End Else Begin
-    GotoData[GotoNum]^.Stat := 0;
+    GotoData[GotoNum]^.State := 0;
 
-    OutWord (GotoData[GotoNum]^.xPos);
+    OutWord (GotoData[GotoNum]^.Position);
   End;
 End;
+*)
 
 Procedure TParserEngine.StatementUses;
 Var
@@ -2537,6 +2547,7 @@ Begin
   Until UpdateInfo.ErrorType <> 0;
 End;
 
+(*
 Procedure TParserEngine.DefineGoto;
 Var
   GotoNum : Word;
@@ -2555,21 +2566,21 @@ Begin
       Inc (CurGotoNum);
       New (GotoData[CurGotoNum]);
 
-      GotoData[CurGotoNum]^.Ident := IdentStr;
-      GotoData[CurGotoNum]^.xPos  := CurFilePos;
-      GotoData[CurGotoNum]^.Stat  := 2;
+      GotoData[CurGotoNum]^.Ident    := IdentStr;
+      GotoData[CurGotoNum]^.Position := CurFilePos;
+      GotoData[CurGotoNum]^.State    := 2;
     End;
   End Else Begin
-    If GotoData[GotoNum]^.Stat = 1 Then Begin
-      GotoData[GotoNum]^.Stat := 0;
+    If GotoData[GotoNum]^.State = 1 Then Begin
+      GotoData[GotoNum]^.State := 0;
       Temp := CurFilePos;
-      OutPosition(GotoData[GotoNum]^.xPos, Temp);
-      GotoData[GotoNum]^.xPos := Temp;
+      OutPosition(GotoData[GotoNum]^.Position, Temp);
+      GotoData[GotoNum]^.Position := Temp;
     End Else
       Error (mpsDupLabel, GotoData[GotoNum]^.Ident);
   End;
 End;
-
+*)
 Function TParserEngine.SetProcResult (VN: Word) : Boolean;
 Begin
   SetProcResult := False;
@@ -2608,7 +2619,7 @@ Begin
     If IdentStr = tkw[wWhile]     Then StatementWhileDo       Else
     If IdentStr = tkw[wRepeat]    Then StatementRepeatUntil   Else
     If IdentStr = tkw[wCaseStart] Then StatementCase          Else
-    If IdentStr = tkw[wGoto]      Then StatementGoto          Else
+//    If IdentStr = tkw[wGoto]      Then StatementGoto          Else
       Error(mpsUnknownIdent, IdentStr);
   End Else Begin
     If VarData[VarNum]^.Proc Then Begin
@@ -2642,7 +2653,7 @@ Procedure TParserEngine.ParseBlock (VarStart: Word; OneLine, CheckBlock, IsRepea
 Var
   Count      : LongInt;
   SavedVar   : LongInt;
-  SavedGoto  : LongInt;
+//  SavedGoto  : LongInt;
   SavedPos   : LongInt;
   SavedConst : LongInt;
   SavedRec   : LongInt;
@@ -2657,10 +2668,12 @@ Begin
 
   If UpdateInfo.ErrorType <> 0 Then Exit;
 
+  Inc (CurDepth);
+
   OutString (Char(opBlockOpen));
 
   SavedPos   := CurFilePos;
-  SavedGoto  := CurGotoNum;
+//  SavedGoto  := CurGotoNum;
   SavedConst := CurConstNum;
   SavedVar   := VarStart;
   SavedRec   := CurRecNum;
@@ -2687,8 +2700,8 @@ Begin
     End Else
     If GetStr(tkw[wBlockOpen], False, False) Then Begin
       If GotOpen And Not OneLine Then Begin
-        PrevChar;
-        ParseBlock (CurVarNum, False, False, False);
+//        PrevChar;
+//        ParseBlock (CurVarNum, False, False, False);
         GotVar   := False;
         GotConst := False;
       End Else Begin
@@ -2718,7 +2731,7 @@ Begin
     End Else
     If GetStr(tkw[wLabel], False, False) Then Begin
       If Not GotOpen Then Error(mpsExpected, 'begin');
-      DefineGoto;
+//      DefineGoto;
       GotVar   := False;
       GotConst := False;
     End Else
@@ -2778,20 +2791,22 @@ Begin
     GotBlock := True;
   Until (UpdateInfo.ErrorType <> 0) or OneLine;
 
+  Dec (CurDepth);
+
   For Count := CurVarNum DownTo SavedVar + 1 Do
     Dispose(VarData[Count]);
 
   CurVarNum := SavedVar;
-
+(*
   For Count := CurGotoNum DownTo SavedGoto + 1 Do Begin
-    If GotoData[Count]^.Stat = 1 Then
+    If GotoData[Count]^.State = 1 Then
       Error(mpsLabelNotFound, GotoData[Count]^.Ident);
 
     Dispose (GotoData[Count]);
   End;
 
   CurGotoNum := SavedGoto;
-
+*)
   For Count := CurRecNum DownTo SavedRec + 1 Do
     Dispose (RecData[Count]);
 
@@ -2830,7 +2845,7 @@ Begin
 
   InFile[CurFile].DataFile := TFileBuffer.Create(8 * 1024);
 
-  If Not InFile[CurFile].DataFile.OpenStream(FN, fmOpen, fmRWDN) Then Begin
+  If Not InFile[CurFile].DataFile.OpenStream(FN, 1, fmOpen, fmRWDN) Then Begin
     InFile[CurFile].DataFile.Free;
     InFile[CurFile].DataFile := NIL;
 
@@ -2841,7 +2856,7 @@ Begin
     Exit;
   End;
 
-  InFile[CurFile].Size := InFile[CurFile].DataFile.FileSize;
+  InFile[CurFile].Size := InFile[CurFile].DataFile.FileSizeRaw;
 End;
 
 Procedure TParserEngine.CloseSourceFile;

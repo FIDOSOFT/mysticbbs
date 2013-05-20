@@ -350,14 +350,14 @@ Begin
 
   FBaseFile := TFileBuffer.Create(FileBufSize);
 
-  If FBaseFile.OpenStream (bbsConfig.DataPath + 'fbases.dat', fmOpen, fmRWDN) Then Begin
+  If FBaseFile.OpenStream (bbsConfig.DataPath + 'fbases.dat', SizeOf(TempBase), fmOpen, fmRWDN) Then Begin
     Found := False;
 
     While Not FBaseFile.EOF Do Begin
-      FBaseFile.BlockRead(TempBase, SizeOf(TempBase));
+      FBaseFile.ReadRecord (TempBase);
 
       If (strUpper(TempBase.FtpName) = strUpper(Data)) and ValidDirectory(TempBase) Then Begin
-        Result := FBaseFile.FilePos;
+        Result := FBaseFile.FilePosRecord;
         Found  := True;
         Break;
       End;
@@ -537,9 +537,9 @@ Begin
 
     DirFile := TFileBuffer.Create(FileBufSize);
 
-    If DirFile.OpenStream (bbsConfig.DataPath + TempBase.FileName + '.dir', fmOpenCreate, fmRWDN) Then Begin
+    If DirFile.OpenStream (bbsConfig.DataPath + TempBase.FileName + '.dir', SizeOf(RecFileList), fmOpenCreate, fmRWDN) Then Begin
       While Not DirFile.EOF Do Begin
-        DirFile.BlockRead(Dir, SizeOf(RecFileList));
+        DirFile.ReadRecord (Dir);
 
         If (Dir.Flags And FDirDeleted <> 0) Then Continue;
         If (Dir.Flags And FDirInvalid <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeUnvalid)) Then Continue;
@@ -592,9 +592,9 @@ Begin
 
       FBaseFile := TFileBuffer.Create(FileBufSize);
 
-      If FBaseFile.OpenStream (bbsConfig.DataPath + 'fbases.dat', fmOpen, fmRWDN) Then Begin
+      If FBaseFile.OpenStream (bbsConfig.DataPath + 'fbases.dat', SizeOf(RecFileBase), fmOpen, fmRWDN) Then Begin
         While Not FBaseFile.EOF Do Begin
-          FBaseFile.BlockRead(TempBase, SizeOf(RecFileBase));
+          FBaseFile.ReadRecord (TempBase);
 
           If ValidDirectory(TempBase) and WildMatch(FileMask, TempBase.FtpName, False) Then
               DataSocket.WriteLine('drwxr-xr-x   1 ftp      ftp             0 Jul 11 23:35 ' + TempBase.FtpName)
@@ -612,9 +612,9 @@ Begin
 
     DirFile := TFileBuffer.Create(FileBufSize);
 
-    If DirFile.OpenStream (bbsConfig.DataPath + TempBase.FileName + '.dir', fmOpenCreate, fmRWDN) Then Begin
+    If DirFile.OpenStream (bbsConfig.DataPath + TempBase.FileName + '.dir', SizeOf(RecFileList), fmOpenCreate, fmRWDN) Then Begin
       While Not DirFile.EOF Do Begin
-        DirFile.BlockRead(Dir, SizeOf(RecFileList));
+        DirFile.ReadRecord (Dir);
 
         If (Dir.Flags And FDirDeleted <> 0) Then Continue;
         If (Dir.Flags and FDirOffline <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeOffline)) Then Continue;
@@ -656,12 +656,12 @@ Begin
     DirFile := TFileBuffer.Create(FileBufSize);
     Found   := -1;
 
-    If DirFile.OpenStream (bbsConfig.DataPath + TempBase.FileName + '.dir', fmOpenCreate, fmRWDN) Then Begin
+    If DirFile.OpenStream (bbsConfig.DataPath + TempBase.FileName + '.dir', SizeOf(RecFileList), fmOpenCreate, fmRWDN) Then Begin
       While Not DirFile.EOF Do Begin
-        DirFile.BlockRead (Dir, SizeOf(RecFileList));
+        DirFile.ReadRecord (Dir);
 
         If WildMatch(FileMask, Dir.FileName, False) Then Begin
-          Found := DirFile.FilePos;
+          Found := DirFile.FilePosRecord;
           Break;
         End;
       End;

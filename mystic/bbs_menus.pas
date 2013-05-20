@@ -323,10 +323,12 @@ Begin
                       Session.io.OutFull (Session.GetPrompt(271));
                   End;
             'L' : If Session.io.GetPW (Session.GetPrompt(272), Session.GetPrompt(423), Config.MatrixPW) Then Begin
-//                    If Session.User.GetMatrixUser Then Begin
+                    If Session.User.GetMatrixUser Then Begin
                       Session.User.MatrixOK := True;
                       Result                := True;
-//                    End;
+                    End;
+
+                    // DEBUG FIX ABOVE COMMENT OUT GETMATRIXUSER
                   End;
             'P' : {$IFNDEF UNIX} If Session.User.GetMatrixUser Then
                     PageForSysopChat (Pos('/F', strUpper(CmdData)) > 0) {$ENDIF};

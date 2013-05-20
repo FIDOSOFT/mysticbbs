@@ -136,6 +136,8 @@ Begin
   If Session.ExitLevel <> 0 Then ExitCode := Session.ExitLevel;
   If Session.EventRunAfter  Then ExitCode := Session.NextEvent.ExecLevel;
 
+  // would be nice flush if not local and still conected: Session.io.BufFlush;
+
   FileMode := 66;
 
   DirClean  (Session.TempPath, '');
@@ -281,7 +283,7 @@ Begin
 
   If Not Session.LoadThemeData(Config.DefThemeFile) Then Begin
     If Not Session.ConfigMode Then Begin
-      Screen.WriteLine ('ERROR: Default theme prompts not found [' + Config.DefThemeFile + '.thm]');
+      Screen.WriteLine ('ERROR: Default theme prompts not found: ' + Config.DefThemeFile + '.txt');
       DisposeClasses;
       Halt(1);
     End;

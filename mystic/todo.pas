@@ -27,6 +27,14 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- ability to download ANSIs while actually viewing them in the gallery
+- optional Menu scroller during input?
+- Menu type: Lightbar/Form  OR  just change standard lightbar to work that
+  way which i think is the best approach actually.
+- ESC moves back in ANSI gallery only exits if dir = root?
+- Color, boxtype, and input configuration for configuration
+- Toggle base scan settings Select [A]ll, [D]eselect All
+- global file editor like msg base
 - redo voting booth externalize user storage and allow unlimited questions
   plus maybe categories.  or at least up it to like 50 questions or
   something and also add in the "created" date to the voting question itself

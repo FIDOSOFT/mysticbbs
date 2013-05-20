@@ -1248,7 +1248,7 @@ Begin
 
   Set_Node_Action (Session.GetPrompt(349));
 
-  IsPrivate := ReplyBase.Flags AND MBPrivate <> 0;
+  IsPrivate := (ReplyBase.Flags AND MBPrivate <> 0) or (ReplyBase.NetType = 3);
 
   If (ReplyBase.Flags AND MBPrivate = 0) AND (ReplyBase.Flags AND MBPrivReply <> 0) Then
     IsPrivate := Session.io.GetYN(Session.GetPrompt(514), False);
@@ -1263,7 +1263,7 @@ Begin
 
     If ToWho = '' Then Exit;
 
-    If Not (Email or IsPrivate) Then Break;
+    If (ReplyBase.NetType = 3) Or Not (Email or IsPrivate) Then Break;
 
     If Not Session.User.FindUser(ToWho, False) Then Begin
       Session.io.PromptInfo[1] := ToWho;
@@ -2801,10 +2801,11 @@ Begin
   If Not (Mode in ['B', 'T', 'S', 'E', 'F', 'G', 'N', 'P', 'Y']) Then Begin
     Session.io.OutFull (Session.GetPrompt(112));
 
-    Mode := Session.io.OneKey('BFNSYQ', True);
+    Mode := Session.io.OneKey(#13 + 'BFNSYQ', True);
   End;
 
   Case Mode of
+    #13 : Mode := 'F';
     'Q' : Exit;
     'S' : If SearchStr = '' Then Begin
             Session.io.OutFull (Session.GetPrompt(396));
@@ -3255,7 +3256,7 @@ Var
 Begin
   Session.io.OutFull (Session.GetPrompt(458));
 
-  InDate := Session.io.GetInput(8, 8, 15, '');
+  InDate := Session.io.GetInput(8, 8, 15, DateDos2Str(CurDateDos, Session.User.ThisUser.DateType));
 
   If Not DateValid(InDate) Then Exit;
 
@@ -4603,3 +4604,18 @@ Begin
 End;
 
 End.
+
+// need one of these for the file list compiler now too which MAYBE can be
+// used in MUTIL also.  lets template and build that out first.. then...
+// create and upload QWK/REP packets without relying on BBS specific stuff
+
+Type
+  TMsgBaseQWK = Class
+    User     : RecUser;
+    Extended : Boolean;
+
+    Constructor Create (UD: RecUser; Ext: Boolean);
+    Function    CreatePacket : Boolean;
+    Function    ProcessReplies : Boolean;
+    Destructor  Destroy; Override;
+  End;

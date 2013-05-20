@@ -736,6 +736,7 @@ Begin
 
   If FBase.FileName <> '' Then Begin
     GetFileScan;
+
     L := FScan.LastNew;
   End Else
     L := CurDateDos;
@@ -746,7 +747,7 @@ Begin
 
   L := DateStr2Dos(Str);
 
-  If Session.io.GetYN (Session.GetPrompt(256), True) Then Begin
+  If Session.io.GetYN (Session.GetPrompt(256), False) Then Begin
     Reset (FBaseFile);
     Old := FBase;
 
@@ -2981,25 +2982,30 @@ Begin
 End;
 
 Procedure TFileBase.UploadFile;
+// ignore group with configured upload base is an issue...
+// how do we fix this up?
 Var
-  FileName   : String;
-  A          : LongInt;
-  OLD        : RecFileBase;
-  Blind      : Boolean;
-  Temp       : String;
-  FullName   : String;
-  DataFile   : File;
-  Found      : Boolean;
-  LogFile    : Text;
-  FileStatus : Boolean;
+  FileName    : String;
+  A           : LongInt;
+  OLD         : RecFileBase;
+  Blind       : Boolean;
+  Temp        : String;
+  FullName    : String;
+  DataFile    : File;
+  Found       : Boolean;
+  LogFile     : Text;
+  FileStatus  : Boolean;
+  SavedIgnore : Boolean;
+
   {$IFNDEF UNIX}
   D          : DirStr;
   N          : NameStr;
   E          : ExtStr;
   {$ENDIF}
 Begin
-  OLD   := FBase;
-  Found := False;
+  OLD         := FBase;
+  Found       := False;
+  SavedIgnore := Session.User.IgnoreGroup;
 
   If Config.UploadBase > 0 Then Begin
     Session.User.IgnoreGroup := True; { just in case ul area is in another group }
@@ -3011,7 +3017,7 @@ Begin
 
     Close (FBaseFile);
 
-    // reset ignoregroup here?
+    Session.User.IgnoreGroup := SavedIgnore;
   End;
 
   If Not Session.User.Access(FBase.ULacs) Then Begin

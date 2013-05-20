@@ -4,8 +4,14 @@ Unit MIS_Client_Telnet;
 
 Interface
 
-{$IFNDEF CPUARM}
-  {$IFDEF LINUX}
+{$IFDEF DARWIN}
+  {$DEFINE USEPROCESS}
+{$ELSE}
+  {$IFDEF UNIX}
+    {$DEFINE USEFORK}
+  {$ENDIF}
+
+  {$IFDEF USEFORK}
     {$IFDEF CPU32}
       {$LinkLib libutil.a}
     {$ENDIF}
@@ -16,7 +22,7 @@ Interface
 {$ENDIF}
 
 Uses
-  {$IFDEF DARWIN}
+  {$IFDEF USEPROCESS}
     Process,
     m_DateTime,
   {$ENDIF}
@@ -35,7 +41,7 @@ Uses
   MIS_NodeData,
   MIS_Server;
 
-{$IFDEF LINUX}
+{$IFDEF USEFORK}
   function forkpty(__amaster:Plongint; __name:Pchar; __termp:Pointer; __winp:Pointer):longint;cdecl;external 'c' name 'forkpty';
 {$ENDIF}
 
@@ -121,7 +127,7 @@ Begin
 End;
 {$ENDIF}
 
-{$IFDEF LINUX}
+{$IFDEF USEFORK}
 Procedure TTelnetServer.Execute;
 Var
   Num     : LongInt;
@@ -201,7 +207,7 @@ Begin
 End;
 {$ENDIF}
 
-{$IFDEF DARWIN}
+{$IFDEF USEPROCESS}
 Procedure TTelnetServer.Execute;
 Var
   Cmd    : String;

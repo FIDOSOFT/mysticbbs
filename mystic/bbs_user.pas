@@ -129,6 +129,7 @@ Function TBBSUser.Access (Str: String) : Boolean;
 Const
   OpCmds  = ['%', '^', '(', ')', '&', '!', '|'];
   AcsCmds = ['A', 'D', 'E', 'F', 'G', 'H', 'M', 'N', 'O', 'S', 'T', 'U', 'W', 'Z'];
+
 Var
   Key   : Char;
   Data  : String;
@@ -156,6 +157,7 @@ Var
               First := True;
               Check := False;
               Data  := '';
+
               Exit;
             End Else
               Res := ThisUser.LastMGroup = strS2I(Data);
@@ -166,17 +168,17 @@ Var
               'A' : Res := Chat.Available;
               'I' : Res := Chat.Invisible;
               'K' : Res := AcsOkFlag;
-              'N' : Res := Session.LastScanHadNew;
               'M' : Begin
                       Res := Access(Session.Msgs.MBase.SysopACS);
 
                       If Session.Msgs.Reading Then
                         Res := Res or IsThisUser(Session.msgs.MsgBase^.GetFrom);
                     End;
+              'N' : Res := Session.LastScanHadNew;
               'P' : If (ThisUser.Calls > 0) And (ThisUser.Flags AND UserNoRatio = 0) Then Begin
-                      Temp1  := Round(Security.PCRatio / 100 * 100);
-                      Temp2  := Round(ThisUser.Posts / ThisUser.Calls * 100);
-                      Res := (Temp2 >= Temp1);
+                      Temp1 := Round(Security.PCRatio / 100 * 100);
+                      Temp2 := Round(ThisUser.Posts / ThisUser.Calls * 100);
+                      Res   := (Temp2 >= Temp1);
                     End Else
                       Res := True;
               'Y' : Res := Session.LastScanHadYou;
@@ -189,12 +191,16 @@ Var
               Check := False;
               First := True;
               Data  := '';
+
               Exit;
             End Else
               Res := strS2I(Data) = ThisUser.LastFGroup;
     End;
 
-    If Res Then Out := Out + '^' Else Out := Out + '%';
+    If Res Then
+      Out := Out + '^'
+    Else
+      Out := Out + '%';
 
     Check := False;
     First := True;
@@ -202,12 +208,13 @@ Var
   End;
 
 Var
-  A      : Byte;
+  Count  : Byte;
   Paran1 : Byte;
   Paran2 : Byte;
   Ch1    : Char;
   Ch2    : Char;
   S1     : String;
+
 Begin
   Data  := '';
   Out   := '';
@@ -215,54 +222,61 @@ Begin
   Str   := strUpper(Str);
   First := True;
 
-  For A := 1 to Length(Str) Do
-    If Str[A] in OpCmds Then Begin
+  For Count := 1 to Length(Str) Do
+    If Str[Count] in OpCmds Then Begin
       If Check Then CheckCommand;
-      Out := Out + Str[A];
+      Out := Out + Str[Count];
     End Else
-    If (Str[A] in AcsCmds) and (First or Check) Then Begin
+    If (Str[Count] in AcsCmds) and (First or Check) Then Begin
       If Check Then CheckCommand;
-      Key := Str[A];
+      Key := Str[Count];
       If First Then First := False;
     End Else Begin
-      Data  := Data + Str[A];
+      Data  := Data + Str[Count];
       Check := True;
-      If A = Length(Str) Then CheckCommand;
+
+      If Count = Length(Str) Then CheckCommand;
     End;
 
   Out := '(' + Out + ')';
 
-  While Pos('&',  Out) <> 0 Do Delete (Out, Pos('&',  Out), 1);
+  While Pos('&', Out) <> 0 Do Delete
+    (Out, Pos('&', Out), 1);
 
   While Pos('(', Out) <> 0 Do Begin
     Paran2 := 1;
+
     While ((Out[Paran2] <> ')') And (Paran2 <= Length(Out))) Do Begin
       If (Out[Paran2] = '(') Then Paran1 := Paran2;
+
       Inc (Paran2);
     End;
 
     S1 := Copy(Out, Paran1 + 1, (Paran2 - Paran1) - 1);
 
     While Pos('!', S1) <> 0 Do Begin
-      A := Pos('!', S1) + 1;
-      If S1[A] = '^' Then S1[A] := '%' Else
-      If S1[A] = '%' Then S1[A] := '^';
-      Delete (S1, A - 1, 1);
+      Count := Pos('!', S1) + 1;
+
+      If S1[Count] = '^' Then S1[Count] := '%' Else
+      If S1[Count] = '%' Then S1[Count] := '^';
+
+      Delete (S1, Count - 1, 1);
     End;
 
     While Pos('|', S1) <> 0 Do Begin
-      A   := Pos('|', S1) - 1;
-      Ch1 := S1[A];
-      Ch2 := S1[A + 2];
+      Count := Pos('|', S1) - 1;
+      Ch1   := S1[Count];
+      Ch2   := S1[Count + 2];
 
       If (Ch1 in ['%', '^']) and (Ch2 in ['%', '^']) Then Begin
-        Delete (S1, A, 3);
+        Delete (S1, Count, 3);
+
         If (Ch1 = '^') or (Ch2 = '^') Then
-          Insert ('^', S1, A)
+          Insert ('^', S1, Count)
         Else
-          Insert ('%', S1, A)
+          Insert ('%', S1, Count)
       End Else
-        Delete (S1, A + 1, 1);
+        Delete (S1, Count + 1, 1);
     End;
 
     While Pos('%%', S1) <> 0 Do Delete (S1, Pos('%%', S1), 1);
@@ -328,7 +342,7 @@ Function TBBSUser.FindUser (Str: String; Adjust: Boolean) : Boolean;
 Var
   RecNum : LongInt;
 Begin
-  FindUser := False;
+  Result := False;
 
   If Str = '' Then Exit;
 
@@ -340,10 +354,11 @@ Begin
   While Not Eof(UserFile) Do Begin
     Read (UserFile, TempUser);
 
-    If ((TempUser.PermIdx = RecNum) or (strUpper(TempUser.RealName) = Str) or (strUpper(TempUser.Handle) = Str)) and (TempUser.Flags And UserDeleted = 0) Then Begin
+    If (((RecNum > 0) And (TempUser.PermIdx = RecNum)) or (strUpper(TempUser.RealName) = Str) or (strUpper(TempUser.Handle) = Str)) and (TempUser.Flags And UserDeleted = 0) Then Begin
       If Adjust Then UserNum := FilePos(UserFile);
 
-      FindUser := True;
+      Result := True;
+
       Break;
     End;
   End;
@@ -359,7 +374,8 @@ Begin
   Result := False;
 
   If UserNum <> -1 Then Begin
-    GetMatrixUser := True;
+    Result := True;
+
     Exit;
   End;
 
@@ -427,6 +443,7 @@ Var
 Begin
   If Session.Theme.Flags AND ThmAllowANSI = 0 Then Begin
     Session.io.Graphics := 0;
+
     Exit;
   End;
 
@@ -436,6 +453,7 @@ Begin
     Session.io.Graphics := 1
   Else Begin
     Session.Client.PurgeInputData(100);
+
     Session.io.OutRaw (#27 + '[6n');
     Session.io.BufFlush;
 
@@ -443,6 +461,7 @@ Begin
       If Session.Client.WaitForData(1000) > 0 Then
         If Session.Client.ReadChar in [#27, '[', '0'..'9', ';', 'R'] Then Begin
           Session.io.Graphics := 1;
+
           Break;
         End;
     End;
@@ -457,6 +476,7 @@ End;
 Procedure TBBSUser.GetGraphics;
 Begin
   Session.io.OutFull (Session.GetPrompt(154));
+
   Session.io.Graphics := strS2I(Session.io.OneKey('01', True));
 End;
 
@@ -535,12 +555,16 @@ Begin
 
   While Not Eof(tFile) Do Begin
     ReadLn (tFile, Str);
+
     If strUpper(Str) = Name Then Begin
       Result := True;
+
       Session.io.OutFullLn (Session.GetPrompt(309));
+
       Break;
     End;
   End;
+
   Close (tFile);
 End;
 
@@ -550,7 +574,9 @@ Var
 Begin
   Repeat
     Session.io.OutFull (Session.GetPrompt(6));
+
     Str := strStripB(Session.io.GetInput(30, 30, 18, ''), ' ');
+
     If Pos(' ', Str) = 0 Then Begin
       Session.io.OutFullLn (Session.GetPrompt(7));
       Str := '';
@@ -574,7 +600,9 @@ Var
 Begin
   Repeat
     Session.io.OutFull (Session.GetPrompt(9));
+
     Str := strStripB(Session.io.GetInput(30, 30, 18, Def), ' ');
+
     If Check_Trash(Str) Then
       Str := ''
     Else
@@ -655,6 +683,7 @@ Begin
     Else
       Str := Session.io.GetInput(15, 15, 12, Str);
   Until (Length(Str) = 12) or (Not Config.UseUSAPhone and (Str <> ''));
+
   ThisUser.HomePhone := Str;
 End;
 
@@ -674,6 +703,7 @@ Begin
     Else
       Str := Session.io.GetInput(15, 15, 12, Str);
   Until (Length(Str) = 12) or (Not Config.UseUSAPhone and (Str <> ''));
+
   ThisUser.DataPhone := Str;
 End;
 
@@ -689,6 +719,7 @@ Begin
       Session.io.OutFull (Session.GetPrompt(15));
     Str := Session.io.GetInput(8, 8, 15, '');
   Until Length(Str) = 8;
+
   ThisUser.Birthday := DateStr2Julian(Str);
 End;
 
@@ -765,7 +796,9 @@ Var
 Begin
   If Edit Then Begin
     Session.io.OutFull(Session.GetPrompt(151));
+
     Str1 := Session.io.GetInput(15, 15, 16, '');
+
     If Str1 <> ThisUser.Password Then Begin
       Session.io.OutFullLn (Session.GetPrompt(418));
       Exit;
@@ -820,13 +853,18 @@ Begin
   Session.io.OutFullLn (Session.GetPrompt(182));
 
   Reset (Session.ThemeFile);
+
   Repeat
     Read (Session.ThemeFile, Session.Theme);
+
     If ((Session.Theme.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0)) or
        ((Session.Theme.Flags AND ThmAllowANSI  = 0) and (Session.io.Graphics = 1)) Then Continue;
+
     Inc (T);
+
     Session.io.PromptInfo[1] := strI2S(T);
     Session.io.PromptInfo[2] := Session.Theme.Desc;
+
     Session.io.OutFullLn (Session.GetPrompt(183));
   Until Eof(Session.ThemeFile);
 
@@ -839,17 +877,22 @@ Begin
   If (A < 1) or (A > T) Then A := 1;
 
   T := 0;
+
   Reset (Session.ThemeFile);
+
   Repeat
     Read (Session.ThemeFile, Session.Theme);
+
     If ((Session.Theme.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0)) or
        ((Session.Theme.Flags AND ThmAllowANSI  = 0) and (Session.io.Graphics = 1)) Then Continue;
+
     Inc (T);
   Until T = A;
 { Close (Session.LangFile);}
 
   If Not Session.LoadThemeData(Session.Theme.FileName) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(185));
+
     Session.Theme := Old;
   End Else
     ThisUser.Theme := Session.Theme.FileName;
@@ -859,6 +902,7 @@ Procedure TBBSUser.CreateNewUser (DefName: String);
 Begin
   If Not Config.AllowNewUsers Then Begin
     Session.io.OutFile ('nonewusr', True, 0);
+
     Halt(0);
   End;
 
@@ -1061,16 +1105,22 @@ Begin
   { Check for forced voting questions }
 
   Reset (Session.VoteFile);
+
   While Not Eof(Session.VoteFile) Do Begin
     Read (Session.VoteFile, Session.Vote);
+
     If Access(Session.Vote.ACS) and Access(Session.Vote.ForceACS) and (ThisUser.Vote[FilePos(Session.VoteFile)] = 0) Then Begin
       Count := FilePos(Session.VoteFile);
+
       Close (Session.VoteFile);
+
       Voting_Booth (True, Count);
+
       Reset (Session.VoteFile);
-      Seek (Session.VoteFile, Count);
+      Seek  (Session.VoteFile, Count);
     End;
   End;
+
   Close (Session.VoteFile);
 
   { END forced voting check }
@@ -1197,7 +1247,9 @@ Begin
   If Config.SystemPW <> '' Then
     If Not Session.io.GetPW(Session.GetPrompt(4), Session.GetPrompt(417), Config.SystemPW) Then Begin
       Session.io.OutFile ('closed', True, 0);
+
       Session.SystemLog('Failed system password');
+
       Halt(0);
     End;
 
@@ -1211,8 +1263,12 @@ Begin
     Session.io.Graphics := 1
   Else Begin
     DetectGraphics;
+
     If (Session.io.Graphics = 0) and (Config.DefTermMode = 2) Then GetGraphics;
   End;
+
+  If FileExist(Config.ScriptPath + 'startup.mpx') Then
+    ExecuteMPL(NIL, 'startup');
 
   If Config.ThemeOnStart Then GetTheme;
 
@@ -1227,17 +1283,21 @@ Begin
     Halt(0);
   End;
 
-  If FileExist(Config.ScriptPath + 'startup.mpx') Then
-    ExecuteMPL(NIL, 'startup');
-
   If Session.UserLoginName <> '' Then Begin
+//    session.systemlog('DEBUG: auto login: ' + session.userloginname);
+
     If Not FindUser(Session.UserLoginName, True) Then
       Halt;
 
+//    session.systemlog('DEBUG: pw check: ' + tempuser.handle);
+
     If strUpper(Session.UserLoginPW) <> TempUser.Password Then Begin
       UserNum := -1;
+
       Halt;
     End;
+
+    ThisUser := TempUser;
   End Else Begin
     If Config.UseMatrix Then Begin
       Repeat
@@ -1247,6 +1307,8 @@ Begin
     End;
 
     Session.io.OutFile ('prelogon', True, 0);
+
+    If UserNum = -1 Then Begin
 
     Count := 1;
 
@@ -1292,11 +1354,13 @@ Begin
   End;
 
   ThisUser := TempUser;
+  End;
 
   Session.SystemLog ('User: ' + ThisUser.Handle + ' logged in');
 
   If Not Session.LoadThemeData(ThisUser.Theme) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(186));
+
     If Session.LoadThemeData(Config.DefThemeFile) Then
       ThisUser.Theme := Config.DefThemeFile;
   End;
@@ -1305,6 +1369,7 @@ Begin
 
   If MPE <> '' Then Begin
     ExecuteMPL(NIL, MPE);
+
     Halt;
   End Else
     UserLogon3;

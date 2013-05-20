@@ -83,7 +83,8 @@ Begin
   Close  (ChatFile);
 
   {$IFDEF WINDOWS}
-    Screen.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum) + ' - ' + Session.User.ThisUser.Handle + ' - ' + strStripPipe(Action));
+    Screen.SetWindowTitle (Config.BBSName + ' Node ' + strI2S(Session.NodeNum) + ' : ' + Session.User.ThisUser.Handle + ' : ' + strStripPipe(Action));
+//    Screen.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum) + ' - ' + Session.User.ThisUser.Handle + ' - ' + strStripPipe(Action));
   {$ENDIF}
 End;
 

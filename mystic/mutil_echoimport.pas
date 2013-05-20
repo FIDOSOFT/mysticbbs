@@ -108,7 +108,7 @@ Var
 
     While PKT.GetMessage Do Begin
       If Status MOD 20 = 0 Then
-        BarOne.Update (PKT.MsgFile.FilePos, PKT.MsgFile.FileSize);
+        BarOne.Update (PKT.MsgFile.FilePosRaw, PKT.MsgFile.FileSizeRaw);
 
       Inc (Status);
 

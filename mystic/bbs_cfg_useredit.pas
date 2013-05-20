@@ -126,7 +126,7 @@ Begin
             Form.AddByte ('S', ' Security'  , 7,  6, 23,  6, 14,  3, 0, 255, @U.Security, Topic + 'User''s security level');
             Form.AddFlag ('1', ' Flags #1'  , 7,  7, 23,  7, 14, @U.AF1, Topic + 'User''s access flags: Set 1');
             Form.AddFlag ('2', ' Flags #2'  , 7,  8, 23,  8, 14, @U.AF2, Topic + 'User''s access flags: Set 2');
-            Form.AddWord ('T', ' Time Left' , 7,  9, 23,  9, 14, 4, 0, 9999, @U.TimeLeft, Topic + 'Total number of minutes left for today');
+            Form.AddWord ('T', ' Time Left' , 7,  9, 23,  9, 14, 4, 0, 1440, @U.TimeLeft, Topic + 'Total number of minutes left for today');
             Form.AddWord ('I', ' Time Bank' , 7, 10, 23, 10, 14,  5, 0, 65000, @U.TimeBank, Topic + 'Total minutes in time bank');
             Form.AddDate ('X', ' Expires'   , 7, 11, 23, 11, 14, @U.Expires, Topic + 'User''s account expiration date (00/00/00: Disabled)');
             Form.AddByte ('O', ' To'        , 7, 12, 23, 12, 14, 3, 0, 255, @U.ExpiresTo, Topic + 'Security profile to give user after expiration');

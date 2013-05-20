@@ -881,13 +881,13 @@ Begin
 
   MBaseFile := TFileBuffer.Create(8192);
 
-  If MBaseFile.OpenStream (Config.DataPath + 'mbases.dat', fmOpen, fmRWDN) Then Begin
-    MBaseFile.BlockRead (MBase, SizeOf(MBase));
+  If MBaseFile.OpenStream (Config.DataPath + 'mbases.dat', SizeOf(MBase), fmOpen, fmRWDN) Then Begin
+    MBaseFile.ReadRecord (MBase);
 
     While Not MBaseFile.EOF Do Begin
-      MBaseFile.BlockRead (MBase, SizeOf(MBase));
+      MBaseFile.ReadRecord (MBase);
 
-      Update_Bar    (MBaseFile.FilePos, MBaseFile.FileSize);
+      Update_Bar    (MBaseFile.FilePosRecord, MBaseFile.FileSizeRecord);
       Update_Status (strStripPipe(MBase.Name));
 
       If MBase.NetType <> 1 Then Continue;
@@ -929,6 +929,7 @@ Var
 
       If (TempBase.Index = Idx) and (FilePos(MBaseFile) <> SavedPos) Then Begin
         Result := True;
+
         Break;
       End;
     End;
@@ -940,7 +941,9 @@ Var
   Var
     TempUser : RecUser;
   Begin
-    Result := False;
+    Result := Idx = 0;
+
+    If Result Then Exit;
 
 //    Close (UserFile);
     Reset (UserFile);
@@ -950,6 +953,7 @@ Var
 
       If (TempUser.PermIdx = Idx) and (FilePos(UserFile) <> SavedPos) Then Begin
         Result := True;
+
         Break;
       End;
     End;
@@ -982,6 +986,8 @@ Var
   NewIndex : Cardinal;
   MaxUser  : Cardinal;
 Begin
+  FileMode := 66;
+
   Write ('Fixing Indexes       :');
 
   Assign (ConfigFile, 'mystic.dat');
@@ -1068,7 +1074,7 @@ Begin
     Update_Bar (FilePos(UserFile), FileSize(UserFile));
 
     If IsDupeUserIndex(FilePos(UserFile), User.PermIdx) Then Begin
-      NewIndex := 0;
+      NewIndex := 1;
 
       While IsDupeUserIndex(FilePos(UserFile), NewIndex) Do
         Inc (NewIndex);

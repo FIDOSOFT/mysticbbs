@@ -19,6 +19,7 @@ Uses
   bbs_Common,
   bbs_Cfg_Common;
 
+(*
 Procedure CompileTheme (Var Theme: RecTheme);
 Var
   LastPer : Byte = 0;
@@ -110,6 +111,7 @@ Begin
     End;
   End;
 End;
+*)
 
 Procedure EditPrompts (Var Theme: RecTheme);
 Const
@@ -149,13 +151,13 @@ Var
   Begin
     Result := False;
 
-    Assign     (InFile, Config.SystemPath + Theme.FileName + '.txt');
+    Assign     (InFile, Config.DataPath + Theme.FileName + '.txt');
     SetTextBuf (InFile, Buffer, SizeOf(Buffer));
 
     {$I-} Reset (InFile); {$I+}
 
     If IoResult <> 0 Then Begin
-      ShowMsgBox (0, 'Unable to open ' + Config.SystemPath + Theme.FileName + '.txt');
+      ShowMsgBox (0, 'Unable to open ' + Config.DataPath + Theme.FileName + '.txt');
       Exit;
     End;
 
@@ -454,7 +456,7 @@ Var
   UndoStr    : String;
   CurStr     : String[3];
   Changed    : Boolean = False;
-  Saved      : Boolean = False;
+//  Saved      : Boolean = False;
   Count      : Integer;
   Image      : TConsoleImageRec;
   SavedTheme : RecTheme;
@@ -567,9 +569,9 @@ Begin
 
   If Changed Then
     If ShowMsgBox(1, 'Save changes?') Then Begin
-      Saved := True;
+//      Saved := True;
 
-      Assign  (InFile, Config.SystemPath + Theme.FileName + '.txt');
+      Assign  (InFile, Config.DataPath + Theme.FileName + '.txt');
       ReWrite (InFile);
 
       For Count := 1 to TotalText Do Begin
@@ -582,8 +584,8 @@ Begin
 
   DisposeStringData;
 
-  If Saved Then
-    CompileTheme(Theme);
+//  If Saved Then
+//    CompileTheme(Theme);
 
   Box.Free;
   Input.Free;

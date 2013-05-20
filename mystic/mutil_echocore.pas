@@ -227,9 +227,9 @@ Var
 Begin
   Result := False;
 
-  If Not MsgFile.OpenStream (FN, fmOpen, fmRWDN) Then Exit;
+  If Not MsgFile.OpenStream (FN, 1, fmOpen, fmRWDN) Then Exit;
 
-  MsgFile.BlockRead (PKTHeader, SizeOf(PKTHeader), Res);
+  MsgFile.ReadBlock (PKTHeader, SizeOf(PKTHeader), Res);
 
   If (Res <> SizeOf(PKTHeader)) or (PKTHeader.PKTType <> $0002) Then Begin
     MsgFile.CloseStream;
@@ -258,7 +258,7 @@ Var
     Result := '';
 
     While Not MsgFile.Eof Do Begin
-      Ch := MsgFile.Read;
+      Ch := MsgFile.ReadChar;
 
       If Ch = TermChar Then Break;
 
@@ -273,7 +273,7 @@ Begin
 
   If Not Opened Then Exit;
 
-  MsgFile.BlockRead (MsgHdr, SizeOf(MsgHdr), Res);
+  MsgFile.ReadBlock (MsgHdr, SizeOf(MsgHdr), Res);
 
   If Res <> SizeOf(MsgHdr) Then Exit;
 
@@ -307,7 +307,7 @@ Begin
   MsgText[MsgLines]^ := '';
 
   Repeat
-    Ch := MsgFile.Read;
+    Ch := MsgFile.ReadChar;
 
     Case Ch of
       #000 : Break;
@@ -315,7 +315,7 @@ Begin
       #013 : Begin
                If MsgLines = mysMaxMsgLines Then Begin
                  Repeat
-                   Ch := MsgFile.Read;
+                   Ch := MsgFile.ReadChar;
                  Until (Ch = #0) or (MsgFile.EOF);
 
                  Break;
@@ -360,7 +360,7 @@ Begin
         End Else Begin
           If MsgLines = mysMaxMsgLines Then Begin
             Repeat
-              Ch := MsgFile.Read;
+              Ch := MsgFile.ReadChar;
             Until (Ch = #0) or (MsgFile.EOF);
 
             Break;

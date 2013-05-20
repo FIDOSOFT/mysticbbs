@@ -6,7 +6,7 @@
 #
 # Language text that begins with "!" will run an MPE program:
 #   Example: 000 !askname
-#   The above line would execute ASKNAME.MPE from the scripts directory.
+#   The above line would execute ASKNAME.MPX from the scripts directory.
 #
 # Language text that begins with "@" will display a display file.
 #   Example: 001 @askname
@@ -155,7 +155,8 @@
 066 |CR|12Disconnect after file transfer? |11
 ; Disconneting in 10 seconds, press a key to abort
 067 |CR|09Disconnecting in 10 seconds: Press a key to abort.
-068 |CR|12You do not have access to upload here!
+; No access to upload to a base
+068 |CR|12You do not have access to upload here!|CR|CR|PA
 069 |CR|12Illegal filename.|DE|DE|DE
 070 |CR|14Searching for duplicate files ...
 071 None found.
@@ -217,6 +218,7 @@
 109 |CR|15Message aborted...
 110 |CR|12You must select a message base first!
 111 |CR|12You don't have access to read in this base!
+; Message reading: select read mode
 112 |CR|07(|14F|07)|15orward, |07(|14N|07)|15ew, |07(|14B|07)|15y You, |07(|14Y|07)|15ours, |07(|14S|07)|15earch, |07(|14Q|07)|15uit? |XX
 113 |15No messages found.
 114 |CR|12There are no messages in |MB.|DE|DE|DE

@@ -394,6 +394,8 @@ Procedure TEditorANSI.ReDrawTemplate (Reset: Boolean);
 Var
   Count : LongInt;
 Begin
+  FillChar (Session.io.ScreenInfo, SizeOf(Session.io.ScreenInfo), 0);
+
   TBBSCore(Owner).io.AllowArrow := True;
 
   Session.io.PromptInfo[2] := Subject;
@@ -683,18 +685,31 @@ Begin
 End;
 
 Procedure TEditorANSI.DoChar (Ch: Char);
+Var
+  CharAttr : Byte;
 Begin
+  If (Session.io.ScreenInfo[6].A <> 0) and (Pos(Ch, '0123456789') > 0) Then
+    CharAttr := Session.io.ScreenInfo[6].A
+  Else
+  If (Session.io.ScreenInfo[5].A <> 0) and (Pos(Ch, '.,!@#$%^&*()_+-=~`''"?;:<>\/[]{}|') > 0) Then
+    CharAttr := Session.io.ScreenInfo[5].A
+  Else
+  If (Session.io.ScreenInfo[4].A <> 0) and (Ch = UpCase(Ch)) Then
+    CharAttr := Session.io.ScreenInfo[4].A
+  Else
+    CharAttr := CurAttr;
+
   If InsertMode Then Begin
     Move (ANSI.Data[CurLine][CurX], ANSI.Data[CurLine][CurX + 1], SizeOf(RecAnsiBufferChar) * (CurLength - CurX + 1));
 
     ANSI.Data[CurLine][CurX].Ch   := Ch;
-    ANSI.Data[CurLine][CurX].Attr := CurAttr;
+    ANSI.Data[CurLine][CurX].Attr := CharAttr;
 
     If CurLength < RowSize {-1} Then Begin
       If CurX <= CurLength Then
         DrawLine (CurLine, CurX, CurY)
       Else Begin
-        TBBSCore(Owner).io.AnsiColor  (CurAttr);
+        TBBSCore(Owner).io.AnsiColor  (CharAttr);
         TBBSCore(Owner).io.BufAddChar (Ch);
       End;
 
@@ -707,9 +722,9 @@ Begin
   End Else
   If CurX <= RowSize Then Begin
     ANSI.Data[CurLine][CurX].Ch   := Ch;
-    ANSI.Data[CurLine][CurX].Attr := CurAttr;
+    ANSI.Data[CurLine][CurX].Attr := CharAttr;
 
-    TBBSCore(Owner).io.AnsiColor  (CurAttr);
+    TBBSCore(Owner).io.AnsiColor  (CharAttr);
     TBBSCore(Owner).io.BufAddChar (Ch);
 
     Inc (CurX);
@@ -895,6 +910,7 @@ End;
 Procedure TEditorANSI.QuoteWindow;
 Var
   QText      : Array[1..mysMaxMsgLines] of String[79];
+  QTextSize  : Byte;
   InFile     : Text;
   QuoteLines : Integer;
   NoMore     : Boolean;
@@ -904,7 +920,7 @@ Var
     Session.io.AnsiGotoXY (1, QuoteCurLine + Session.io.ScreenInfo[2].Y);
 
     If On Then
-      Session.io.AnsiColor (Session.Theme.QuoteColor)
+      Session.io.AnsiColor (Session.io.ScreenInfo[3].A)
     Else
       Session.io.AnsiColor (Session.io.ScreenInfo[2].A);
 
@@ -918,7 +934,7 @@ Var
     Session.io.AnsiGotoXY (1, Session.io.ScreenInfo[2].Y);
     Session.io.AnsiColor  (Session.io.ScreenInfo[2].A);
 
-    For Count := QuoteTopPage to QuoteTopPage + 5 Do Begin
+    For Count := QuoteTopPage to QuoteTopPage + QTextSize - 1 Do Begin
       If Count <= QuoteLines Then Session.io.BufAddStr (QText[Count]);
 
       Session.io.AnsiClrEOL;
@@ -953,7 +969,7 @@ Var
   Var
     Count : Byte;
   Begin
-    Session.io.AnsiColor (QuoteAttr);
+    Session.io.AnsiColor (Session.io.ScreenInfo[1].A);
 
     For Count := 1 to QWinSize + 1 Do Begin
       Session.io.AnsiGotoXY (WinX1, WinY1 + Count - 1);
@@ -988,7 +1004,8 @@ Begin
 
   FillChar (QWinData, SizeOf(QWinData), 0);
 
-  QWinSize := Session.io.ScreenInfo[1].Y - WinY1 + 1;
+  QTextSize := Session.io.ScreenInfo[3].Y - Session.io.ScreenInfo[2].Y + 1;
+  QWinSize  := Session.io.ScreenInfo[1].Y - WinY1 + 1;
 
   For Temp := CurLine - ((QWinSize DIV 2) + 1) To CurLine - 1 Do
     If Temp >= 1 Then AddQuoteWin(GetLineText(Temp));
@@ -1004,6 +1021,7 @@ Begin
         #71 : If QuoteCurLine > 0 Then Begin
                 QuoteTopPage := 1;
                 QuoteCurLine := 0;
+                NoMore       := False;
 
                 UpdateWindow;
               End;
@@ -1025,8 +1043,8 @@ Begin
               End;
         #73,
         #75 : Begin
-                If QuoteTopPage > 6 Then
-                  Dec (QuoteTopPage, 6)
+                If QuoteTopPage > QTextSize Then
+                  Dec (QuoteTopPage, QTextSize)
                 Else Begin
                   QuoteTopPage := 1;
                   QuoteCurLine := 0;
@@ -1037,17 +1055,17 @@ Begin
                 UpdateWindow;
               End;
         #79 : Begin
-                If QuoteLines <= 6 Then
+                If QuoteLines <= QTextSize Then
                   QuoteCurLine := QuoteLines - QuoteTopPage
                 Else Begin
-                  QuoteTopPage := QuoteLines - 5;
-                  QuoteCurLine := 5;
+                  QuoteTopPage := QuoteLines - QTextSize + 1;
+                  QuoteCurLine := QTextSize - 1;
                 End;
 
                 UpdateWindow;
               End;
         #80 : If QuoteTopPage + QuoteCurLine < QuoteLines Then Begin
-                If QuoteCurLine = 5 Then Begin
+                If QuoteCurLine = QTextSize - 1 Then Begin
                   Inc (QuoteTopPage);
 
                   UpdateWindow;
@@ -1061,14 +1079,14 @@ Begin
               End;
         #77,
         #81 : Begin
-                If QuoteLines <= 6 Then
+                If QuoteLines <= QTextSize Then
                   QuoteCurLine := QuoteLines - QuoteTopPage
                 Else
-                If QuoteTopPage + 6 < QuoteLines - 6 Then
-                  Inc (QuoteTopPage, 6)
+                If QuoteTopPage + QTextSize - 1 < QuoteLines - QTextSize + 1 Then
+                  Inc (QuoteTopPage, QTextSize)
                 Else Begin
-                  QuoteTopPage := QuoteLines - 5;
-                  QuoteCurLine := 5;
+                  QuoteTopPage := QuoteLines - QTextSize + 1;
+                  QuoteCurLine := QTextSize - 1;
                 End;
 
                 UpdateWindow;
@@ -1096,7 +1114,7 @@ Begin
                 DrawQWin;
 
                 If QuoteTopPage + QuoteCurLine < QuoteLines Then
-                  If QuoteCurLine = 5 Then Begin
+                  If QuoteCurLine = QTextSize - 1 Then Begin
                     Inc (QuoteTopPage);
 
                     UpdateWindow;

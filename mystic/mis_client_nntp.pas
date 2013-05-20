@@ -59,7 +59,7 @@ Uses
   bbs_MsgBase_Squish;
 
 Const
-  FileReadBuffer   = 2048;
+  FileReadBuffer   = 8 * 1024;
   HackThreshold    = 10000;
 
   re_Greeting      = '200 Mystic BBS NNTP server ready';
@@ -170,11 +170,11 @@ Begin
 
   MBaseFile := TFileBuffer.Create(FileReadBuffer);
 
-  If MBaseFile.OpenStream (bbsConfig.DataPath + 'mbases.dat', fmOpen, fmRWDN) Then Begin
-    MBaseFile.BlockRead(TempBase, SizeOf(TempBase));
+  If MBaseFile.OpenStream (bbsConfig.DataPath + 'mbases.dat', SizeOf(TempBase), fmOpen, fmRWDN) Then Begin
+    MBaseFile.ReadRecord (TempBase);
 
     While Not MBaseFile.EOF Do Begin
-      MBaseFile.BlockRead(TempBase, SizeOf(TempBase));
+      MBaseFile.ReadRecord (TempBase);
 
       If (TempBase.NewsName = Data) and CheckAccess(User, True, TempBase.ReadACS) Then Begin
         Found := True;
@@ -196,7 +196,7 @@ Begin
         Dispose (MsgBase, Done);
 
         MBase      := TempBase;
-        MBasePos   := MBaseFile.FilePos;
+        MBasePos   := MBaseFile.FilePosRecord;
         CurArticle := 0;  // does GROUP reset cur article?  find out
 
         ClientWriteLine('211 ' + strI2S(Active) + ' ' + strI2S(Low) + ' ' + strI2S(High) + ' ' + TempBase.NewsName);
@@ -243,11 +243,11 @@ Begin
 
   MBaseFile := TFileBuffer.Create(FileReadBuffer);
 
-  If MBaseFile.OpenStream (bbsConfig.DataPath + 'mbases.dat', fmOpen, fmRWDN) Then Begin
-    MBaseFile.BlockRead(TempBase, SizeOf(TempBase));
+  If MBaseFile.OpenStream (bbsConfig.DataPath + 'mbases.dat', SizeOf(TempBase), fmOpen, fmRWDN) Then Begin
+    MBaseFile.ReadRecord (TempBase);
 
     While Not MBaseFile.EOF Do Begin
-      MBaseFile.BlockRead(TempBase, SizeOf(TempBase));
+      MBaseFile.ReadRecord (TempBase);
 
       If TempBase.NewsName = '' Then Continue;
 

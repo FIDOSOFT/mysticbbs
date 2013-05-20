@@ -322,6 +322,7 @@ Begin
 		Dispose (Txt[A]);
 End;
 
+(*
 Procedure CompileLanguageFile;
 Type
 	PromptRec = String[255];
@@ -355,6 +356,7 @@ Begin
 	Close (PromptFile);
 	Close (InFile);
 End;
+*)
 
 Procedure CreateDirectories;
 Begin
@@ -472,7 +474,7 @@ Begin
 
 	Close (LangFile);
 
-	CompileLanguageFile;
+//CompileLanguageFile;
 End;
 
 Procedure DoInstall;

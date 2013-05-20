@@ -1644,30 +1644,38 @@ Begin
       Case Ch of
         #71 : If TopLine > 1 Then Begin
                 TopLine := 1;
+
                 Update;
               End;
         #72 : If TopLine > 1 Then Begin
                 Dec (TopLine);
+
                 Update;
               End;
         #73,
         #75 : If TopLine > 1 Then Begin
                 Dec (TopLine, WinSize);
+
                 If TopLine < 1 Then TopLine := 1;
+
                 Update;
               End;
         #79 : If TopLine + WinSize <= Ansi.Lines Then Begin
                 TopLine := Ansi.Lines - WinSize + 1;
+
                 Update;
               End;
         #80 : If TopLine + WinSize <= Ansi.Lines Then Begin
                 Inc (TopLine);
+
                 Update;
               End;
         #77,
         #81 : If TopLine < Ansi.Lines - WinSize Then Begin
                 Inc (TopLine, WinSize);
+
                 If TopLine + WinSize > Ansi.Lines Then TopLine := Ansi.Lines - WinSize + 1;
+
                 Update;
               End;
       End;
@@ -1687,6 +1695,14 @@ Begin
 
                 ReDraw;
               End;
+        'P' : If TopLine < Ansi.Lines - WinSize Then Begin
+                Inc (TopLine, WinSize);
+
+                If TopLine + WinSize > Ansi.Lines Then TopLine := Ansi.Lines - WinSize + 1;
+
+                Update;
+              End;
+        'N',
         #13 : If TopLine < Ansi.Lines - WinSize Then Begin
                 Inc (TopLine, WinSize);
 
@@ -1701,7 +1717,7 @@ Begin
 
   Ansi.Free;
 
-  Session.io.AnsiGotoXY(1, Session.User.ThisUser.ScreenSize);
+  Session.io.AnsiGotoXY (1, Session.User.ThisUser.ScreenSize);
 End;
 
 End.

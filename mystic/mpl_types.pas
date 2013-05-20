@@ -64,7 +64,7 @@ Type
     opArrDef,                    // 45
     opStrSize,                   // 46
     opVarNormal,                 // 47
-    opGoto,                      // 48
+//    opGoto,                      // 48
     opHalt,                      // 49
     opCase,                      // 50
     opNumRange,                  // 51
@@ -86,7 +86,7 @@ Const
   mplMaxFiles      = 20;
   mplMaxIdentLen   = 30;
   mplMaxVars       = 2500;
-  mplMaxGotos      = 100;
+//  mplMaxGotos      = 100;
   mplMaxCaseNums   = 20;
   mplMaxVarDeclare = 20;
   mplMaxArrayDem   = 3;   //cannot be changed yet
@@ -135,7 +135,7 @@ Const
    mpsExpOperator     = 21;
    mpsOverArrayDim    = 22;
    mpsNoInitArray     = 23;
-   mpsTooManyGotos    = 24;
+//   mpsTooManyGotos    = 24;
    mpsDupLabel        = 25;
    mpsLabelNotFound   = 26;
    mpsFileParamVar    = 27;
@@ -162,7 +162,7 @@ Type
                    wElse,         wWhile,       wRepeat,      wUntil,
                    wNot,          wAnd,         wOr,          wOpenArray,
                    wCloseArray,   wArrSep,      wVarDef,      wOpenStrSize,
-                   wCloseStrSize, wGoto,        wLabel,       wHalt,
+                   wCloseStrSize, wLabel,       wHalt,
                    wVarSep2,      wFuncDef,     wArray,       wCaseStart,
                    wCaseOf,       wNumRange,    wType,        wConst,
                    wBreak,        wContinue,    wUses,        wExit,
@@ -195,7 +195,7 @@ Const
              'else',            'while',          'repeat',     'until',
              'not',             'and',            'or',         '[',
              ']',               ',',              '=',          '[',
-             ']',               'goto',           ':',          'halt',
+             ']',               ':',              'halt',
              ':',               'function',       'array',      'case',
              'of',              '..',             'type',       'const',
              'break',           'continue',       'uses',       'exit',
@@ -210,12 +210,12 @@ Const
              '(',               ')',              '+',          ';',
              ':',               ',',              'for',        'to',
              'downto',          'do',             'true',       'false',
-             '==',              '<>',             '>',          '<',
+             '==',              '!=',             '>',          '<',
              '>=',              '<=',             'if',         'then',
              'else',            'while',          'repeat',     'until',
              '!',               '&&',             '||',         '(',
              ')',               ',',              '=',          '[',
-             ']',               'goto',           ':',          'halt',
+             ']',               ':',              'halt',
              ':',               'func',           'array',      'switch',
              'of',              '..',             'type',       'const',
              'break',           'continue',       'uses',       'exit',
@@ -284,13 +284,6 @@ Type
        Proc      : Boolean;
        ArrPos    : Byte;
        RecID     : Word;
-    End;
-
-    PGotoRec = ^TGotoRec;
-    TGotoRec = Record
-      Ident : String[mplMaxIdentLen];
-      xPos  : LongInt;
-      Stat  : Byte;
     End;
 
     VarDataRec = Array[1..mplMaxVars] of PVarRec;

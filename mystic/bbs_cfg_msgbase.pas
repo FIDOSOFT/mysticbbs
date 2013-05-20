@@ -166,9 +166,9 @@ Begin
     Case Form.Execute of
       'D' : MBase.NetAddr := Configuration_EchoMailAddress(False);
       '7' : Configuration_NodeExport (MBase);
-      #27 : If (MBase.NetType > 0) And (MBase.EchoTag = '') And (MBase.NetType <> 3) Then
+      #27 : {If (MBase.NetType > 0) And (MBase.EchoTag = '') And (MBase.NetType <> 3) Then
               ShowMsgBox(0, 'Echo base requires echotag')
-            Else
+            Else}
               Break;
     End;
   Until False;

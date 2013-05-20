@@ -250,7 +250,7 @@ Begin
     Close  (Session.User.UserFile);
   End;
 
-  Reset (Session.PromptFile);
+//  Reset (Session.PromptFile);
 
   {$IFNDEF UNIX}
     If Screen.Active Then
@@ -273,7 +273,7 @@ Begin
     0 : Screen.WriteXY (1, 25, Config.StatusColor3, strPadC(Str, 80, ' '));
     1 : Begin
           Screen.WriteXY ( 1, 25, Config.StatusColor1, ' Alias ' + strRep(' ', 35) + 'Age       SecLevel      TimeLeft      ');
-          Screen.WriteXY ( 8, 25, Config.StatusColor2, Session.User.ThisUser.Handle);
+          Screen.WriteXY ( 8, 25, Config.StatusColor2, Session.User.ThisUser.Handle + ' #' + strI2S(Session.User.ThisUser.PermIdx));
           Screen.WriteXY (47, 25, Config.StatusColor2, Session.User.ThisUser.Gender + '/' + strI2S(DaysAgo(Session.User.ThisUser.Birthday, 1) DIV 365));
           Screen.WriteXY (62, 25, Config.StatusColor2, strI2S(Session.User.ThisUser.Security));
           Screen.WriteXY (76, 25, Config.StatusColor2, strI2S(Session.TimeLeft));

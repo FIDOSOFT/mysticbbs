@@ -119,26 +119,6 @@ Begin
   End;
 End;
 
-Function MonthStr(MonthNo: Word): String;
-Begin
-  Case MonthNo of
-    01: MonthStr := 'Jan';
-    02: MonthStr := 'Feb';
-    03: MonthStr := 'Mar';
-    04: MonthStr := 'Apr';
-    05: MonthStr := 'May';
-    06: MonthStr := 'Jun';
-    07: MonthStr := 'Jul';
-    08: MonthStr := 'Aug';
-    09: MonthStr := 'Sep';
-    10: MonthStr := 'Oct';
-    11: MonthStr := 'Nov';
-    12: MonthStr := 'Dec';
-   Else
-     MonthStr := '???';
-   End;
-End;
-
 Function FormattedDate (DT: DateTime; Mask: String) : String;
 Var
   DStr    : String[2];
@@ -160,7 +140,7 @@ Begin
   HourStr := Copy(strPadL(strI2S(Dt.Hour),  2, '0'),  1, 2);
   MinStr  := Copy(strPadL(strI2S(Dt.Min),   2, '0'),  1, 2);
   SecStr  := Copy(strPadL(strI2S(Dt.Sec),   2, '0'),  1, 2);
-  MNStr   := MonthStr(Dt.Month);
+  MNStr   := MonthString[Dt.Month];
 
   If (Pos('YYYY', Mask) = 0) Then YStr := Copy(YStr, 3, 2);
 
