@@ -134,9 +134,15 @@ Begin
     If InputRec.EventType = key_event then
       If InputRec.Event.KeyEvent.bKeyDown then begin
         If not(InputRec.Event.KeyEvent.wVirtualKeyCode in [VK_SHIFT, VK_MENU, VK_CONTROL, VK_CAPITAL, VK_NUMLOCK, VK_SCROLL]) then begin
+
           If (Ord(InputRec.Event.KeyEvent.AsciiChar) = 0) or (InputRec.Event.KeyEvent.dwControlKeyState and (LEFT_ALT_PRESSED or ENHANCED_KEY or RIGHT_ALT_PRESSED) > 0) Then Begin
             If (Ord(InputRec.Event.KeyEvent.AsciiChar) = 13) and (InputRec.Event.KeyEvent.wVirtualKeyCode = VK_RETURN) Then Begin
               addBuffer(#13);
+              Result := True;
+              Exit;
+            End Else
+            If ((InputRec.Event.KeyEvent.dwControlKeyState AND (RIGHT_ALT_PRESSED OR LEFT_CTRL_PRESSED)) = (RIGHT_ALT_PRESSED OR LEFT_CTRL_PRESSED)) and (Ord(InputRec.Event.KeyEvent.AsciiChar) <> 0) Then Begin
+              AddBuffer(Chr(Ord(InputRec.Event.KeyEvent.AsciiChar)));
               Result := True;
               Exit;
             End Else Begin

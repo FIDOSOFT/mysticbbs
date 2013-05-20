@@ -70,6 +70,7 @@ Type
   TFileBufferRec = Array[0..MaxFileBufferSize - 1] of Char;
 
   TFileBuffer = Class
+    RecSize  : LongInt;
     BufSize  : LongInt;
     Buffer   : PFileBufferRec;
     BufRead  : LongInt;
@@ -84,16 +85,24 @@ Type
     Constructor Create (BufferSize: LongInt);
     Destructor  Destroy; Override;
 
-    Function    OpenStream (FN: String; OpenType: TFileBufferOpenType; OpenMode: Byte) : Boolean;
+    Function    OpenStream   (FN: String; RS: LongInt; OpenType: TFileBufferOpenType; OpenMode: Byte) : Boolean;
     Procedure   CloseStream;
-    Function    Read : Char;
-    Procedure   BlockRead (Var Buf; Size: LongInt; Var Count: LongInt); Overload;
-    Procedure   BlockRead (Var Buf; Size: LongInt); Overload;
-    Procedure   BlockWrite (Var Buf; Size: LongInt);
-    Procedure   Seek (FP : LongInt);
-    Function    FilePos : LongInt;
-    Function    FileSize : LongInt;
-    Function    EOF : Boolean;
+    Function    ReadChar     : Char;
+//    Function    ReadLine     : String;
+    Procedure   ReadBlock    (Var Buf; Size: LongInt; Var Count: LongInt); Overload;
+    Procedure   ReadBlock    (Var Buf; Size: LongInt); Overload;
+    Procedure   ReadRecord   (Var Buf);
+    Procedure   SeekRecord   (RP: LongInt);
+    Procedure   SeekRaw      ( FP : LongInt);
+    Procedure   WriteBlock   (Var Buf; Size: LongInt);
+    Procedure   WriteRecord  (Var Buf);
+
+    Function    FilePosRaw     : LongInt;
+    Function    FilePosRecord  : LongInt;
+    Function    FileSizeRaw    : LongInt;
+    Function    FileSizeRecord : LongInt;
+    Function    EOF            : Boolean;
+
     Procedure   FillBuffer;
     Procedure   FlushBuffer;
   End;
@@ -101,7 +110,7 @@ Type
 Implementation
 
 Uses
-  {$IFDEF WINDOWS}   // FileErase (FPC Erase) hardly EVER FUCKING WORKS.
+  {$IFDEF WINDOWS}   // FileErase (FPC Erase) hardly EVER WORKS
     Windows,
   {$ENDIF}
   DOS,
@@ -110,8 +119,8 @@ Uses
   m_DateTime;
 
 Const
-  ioRetries    = 20;
-  ioWaitTime   = 100;
+  ioRetries  = 20;
+  ioWaitTime = 100;
 
 Function ioReset (Var F: File; RecSize: Word; Mode: Byte) : Boolean;
 Var
@@ -558,6 +567,7 @@ Constructor TFileBuffer.Create (BufferSize: LongInt);
 Begin
   Inherited Create;
 
+  RecSize  := 1;
   BufSize  := BufferSize;
   BufStart := 0;
   BufEnd   := 0;
@@ -574,9 +584,10 @@ Begin
   If IsOpened Then CloseStream;
 End;
 
-Function TFileBuffer.OpenStream (FN: String; OpenType: TFileBufferOpenType; OpenMode: Byte) : Boolean;
+Function TFileBuffer.OpenStream (FN: String; RS: LongInt; OpenType: TFileBufferOpenType; OpenMode: Byte) : Boolean;
 Begin
-  Result := False;
+  Result  := False;
+  RecSize := RS;
 
   If IsOpened Then CloseStream;
 
@@ -618,9 +629,14 @@ Begin
   IsOpened := False;
 End;
 
-Function TFileBuffer.FilePos : LongInt;
+Function TFileBuffer.FilePosRaw : LongInt;
 Begin
-  FilePos := BufStart + BufPos;
+  Result := BufStart + BufPos;
+End;
+
+Function TFileBuffer.FilePosRecord : LongInt;
+Begin
+  Result := (BufStart + BufPos) DIV RecSize;
 End;
 
 Procedure TFileBuffer.FillBuffer;
@@ -637,16 +653,51 @@ Begin
   BufEOF   := System.EOF(InFile);
 End;
 
-Function TFileBuffer.Read : Char;
+Function TFileBuffer.ReadChar : Char;
 Begin
   If BufPos >= BufSize Then FillBuffer;
 
-  Read := Buffer^[BufPos];
+  Result := Buffer^[BufPos];
 
   Inc (BufPos);
 End;
 
-Procedure TFileBuffer.BlockWrite (Var Buf; Size: LongInt);
+(*
+Function TFileBuffer.ReadLine : String;
+Var
+  Ch : Char;
+Begin
+  Result := '';
+
+  While Not Self.EOF Do Begin
+    Ch := Self.ReadChar;
+
+    If LineEnding[1] = Ch Then Begin
+      If Length(LineEnding) = 1 Then Break;
+
+      Ch := Self.ReadChar;
+
+      If LineEnding[2] = Ch Then Break;
+
+      Result := Result + LineEnding[1];
+    End;
+
+    Result := Result + Ch;
+  End;
+End;
+*)
+
+Procedure TFileBuffer.ReadRecord (Var Buf);
+Begin
+  Self.ReadBlock (Buf, RecSize);
+End;
+
+Procedure TFileBuffer.SeekRecord (RP: LongInt);
+Begin
+  Self.SeekRaw (RP * RecSize);
+End;
+
+Procedure TFileBuffer.WriteBlock (Var Buf; Size: LongInt);
 Var
   Offset : LongInt;
 Begin
@@ -673,14 +724,19 @@ Begin
   BufDirty := True;
 End;
 
-Procedure TFileBuffer.BlockRead (Var Buf; Size: LongInt);
+Procedure TFileBuffer.WriteRecord (Var Buf);
+Begin
+  Self.WriteBlock (Buf, RecSize);
+End;
+
+Procedure TFileBuffer.ReadBlock (Var Buf; Size: LongInt);
 Var
   Res : LongInt;
 Begin
-  BlockRead(Buf, Size, Res);
+  Self.ReadBlock (Buf, Size, Res);
 End;
 
-Procedure TFileBuffer.BlockRead (Var Buf; Size: LongInt; Var Count: LongInt);
+Procedure TFileBuffer.ReadBlock (Var Buf; Size: LongInt; Var Count: LongInt);
 Begin
   If BufPos + Size >= BufRead Then Begin
     If BufDirty Then FlushBuffer;
@@ -700,7 +756,7 @@ Begin
   Count := Size;
 End;
 
-Procedure TFileBuffer.Seek (FP : LongInt);
+Procedure TFileBuffer.SeekRaw (FP : LongInt);
 Begin
   If (FP >= BufStart) and (FP < BufEnd) Then
     BufPos := (BufEnd - (BufEnd - FP)) - BufStart
@@ -715,12 +771,19 @@ End;
 
 Function TFileBuffer.EOF : Boolean;
 Begin
-  EOF := (BufStart + BufPos >= BufEnd) and BufEOF;
+  Result := (BufStart + BufPos >= BufEnd) and BufEOF;
 End;
 
-Function TFileBuffer.FileSize : LongInt;
+Function TFileBuffer.FileSizeRaw : LongInt;
 Begin
-  FileSize := System.FileSize(InFile);
+  If BufDirty Then FlushBuffer;
+  Result := System.FileSize(InFile);
+End;
+
+Function TFileBuffer.FileSizeRecord : LongInt;
+Begin
+  If BufDirty Then FlushBuffer;
+  Result := System.FileSize(InFile) DIV RecSize;
 End;
 
 Procedure TFileBuffer.FlushBuffer;

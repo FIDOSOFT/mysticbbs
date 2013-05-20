@@ -309,6 +309,7 @@ Begin
   While Count <= Length(Text) Do Begin
     Buf[Count].Attributes  := A;
     Buf[Count].UnicodeChar := Text[Count];
+
     Inc (Count);
   End;
 

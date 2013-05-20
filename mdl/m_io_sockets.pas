@@ -499,15 +499,16 @@ Var
 Begin
   If FSocketHandle = -1 Then Begin
     Result := FSocketHandle;
+
     Exit;
   End;
 
   Flags := fpFCntl(FSocketHandle, F_GETFL);
 
   If Block Then
-    Flags := Flags OR O_NONBLOCK
+    Flags := Flags AND NOT O_NONBLOCK
   Else
-    Flags := Flags AND NOT O_NONBLOCK;
+    Flags := Flags OR O_NONBLOCK;
 
   Result := fpFCntl(FSocketHandle, F_SETFL, Flags);
 End;
@@ -518,35 +519,38 @@ Var
 Begin
   If FSocketHandle = -1 Then Begin
     Result := FSocketHandle;
+
     Exit;
   End;
 
-  Data   := Ord(Not Block);
-  Result := ioctlSocket(FSocketHandle, FIONBIO, Data);
+  Data   := Ord (Not Block);
+  Result := ioctlSocket (FSocketHandle, FIONBIO, Data);
 End;
 {$ENDIF}
 
 Function TIOSocket.WaitForData (TimeOut: LongInt) : LongInt;
 Var
-  T      : TTimeVal;
+  T       : TTimeVal;
   rFDSET,
   wFDSET,
-  eFDSET : TFDSet;
+  eFDSET  : TFDSet;
 Begin
   T.tv_sec  := 0;
   T.tv_usec := TimeOut * 1000;
 
   {$IFDEF UNIX}
-    fpFD_Zero(rFDSET);
-    fpFD_Zero(wFDSET);
-    fpFD_Zero(eFDSET);
-    fpFD_Set(FSocketHandle, rFDSET);
+    fpFD_Zero (rFDSET);
+    fpFD_Zero (wFDSET);
+    fpFD_Zero (eFDSET);
+    fpFD_Set  (FSocketHandle, rFDSET);
+
     Result := fpSelect(FSocketHandle + 1, @rFDSET, @wFDSET, @eFDSET, @T);
   {$ELSE}
-    FD_Zero(rFDSET);
-    FD_Zero(wFDSET);
-    FD_Zero(eFDSET);
-    FD_Set(FSocketHandle, rFDSET);
+    FD_Zero (rFDSET);
+    FD_Zero (wFDSET);
+    FD_Zero (eFDSET);
+    FD_Set  (FSocketHandle, rFDSET);
+
     Result := Select(FSocketHandle + 1, @rFDSET, @wFDSET, @eFDSET, @T);
   {$ENDIF}
 End;
@@ -596,14 +600,14 @@ Begin
 
   fpSetSockOpt (FSocketHandle, SOL_SOCKET, SO_REUSEADDR, @Opt, SizeOf(Opt));
 
-  SIN.sin_family      := PF_INET;
-//  SIN.sin_addr.s_addr := 0;
+  SIN.sin_family := PF_INET;
+  SIN.sin_port   := htons(Port);
   SIN.sin_addr   := StrToNetAddr(NetInterface);
-  SIN.sin_port        := htons(Port);
 
   {$IFDEF TNDEBUG}
     TNLOG('Attempting to bind to interface ' + NetInterface + ' (' + strI2S(SIN.sin_addr.s_addr) + ')');
     TNLOG('WaitInit Bind');
+
     If fpBind(FSocketHandle, @SIN, SizeOf(SIN)) <> 0 Then
       TNLOG('WaitInit Bind Failed')
     Else
