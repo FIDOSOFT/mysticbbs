@@ -78,7 +78,7 @@ proc rumoradd {
   fassign (f, justpath(progname) + "rumors.dat", 2)
   freset  (f);
 
-  if ioresult <> 0 frewrite(f);
+  if ioresult != 0 frewrite(f);
 
   while !feof(f) && datasize < 50 {
     datasize = datasize + 1
@@ -110,7 +110,7 @@ proc rumorshow {
   fassign (f, justpath(progname) + "rumors.dat", 2)
   freset (f)
 
-  if ioresult <> 0 exit
+  if ioresult != 0 exit
 
   while !feof(f) && datasize < 50 {
     datasize = datasize + 1
@@ -121,7 +121,7 @@ proc rumorshow {
   datasize = 0
 
   freset(f)
-  while datasize <> count {
+  while datasize != count {
     datasize = datasize + 1
     freadln(f, data(datasize))
   }

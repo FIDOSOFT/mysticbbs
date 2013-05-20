@@ -63,18 +63,6 @@ begin
   end;
 end;
 
-procedure testgoto
-begin
-  write('Testing GOTO statement... ')
-  goto start
-:uphere
-  writeln('PASSED');
-  goto end
-:start
-  goto uphere
-:end
-end;
-
 procedure testnumbers;
 var
   num1,
@@ -470,7 +458,6 @@ begin
   writeln ('');
 
   testcase;
-  testgoto;
   testnumbers;
   testrecords;
   testprocedures;
