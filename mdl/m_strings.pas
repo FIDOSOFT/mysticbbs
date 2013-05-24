@@ -231,16 +231,29 @@ Begin
 End;
 
 Function strWordCount (Str: String; Ch: Char) : Byte;
+Var
+  Start : Byte;
 Begin
   Result := 0;
+
+  If Ch = ' ' Then
+    While Str[1] = Ch Do
+      Delete (Str, 1, 1);
 
   If Str = '' Then Exit;
 
   Result := 1;
 
   While Pos(Ch, Str) > 0 Do Begin
-    Inc    (Result);
-    Delete (Str, Pos(Ch, Str), 1);
+    Inc (Result);
+
+    Start := Pos(Ch, Str);
+
+    If Ch = ' ' Then Begin
+      While Str[Start] = Ch Do
+        Delete (Str, Start, 1);
+    End Else
+      Delete (Str, Start, 1);
   End;
 End;
 
@@ -281,16 +294,22 @@ Begin
   Temp   := Str;
 
   If Ch = ' ' Then
-    While Pos(Ch, Temp) = 1 Do Delete (Temp, 1, 1);
+    While Temp[1] = Ch Do
+      Delete (Temp, 1, 1);
 
   While Count < Num Do Begin
     Start := Pos(Ch, Temp);
 
     If Start = 0 Then Exit;
 
-    While Temp[Start] = Ch Do Inc (Start);
+    If Ch = ' ' Then Begin
+      While Temp[Start] = Ch Do
+        Inc (Start);
 
-    Delete (Temp, 1, Start - 1);
+      Dec(Start);
+    End;
+
+    Delete (Temp, 1, Start);
     Inc    (Count);
   End;
 
