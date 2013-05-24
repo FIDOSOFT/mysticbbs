@@ -107,6 +107,27 @@ Implementation
 Uses
   m_Strings;
 
+Procedure DefListBoxSearch (Var Owner: Pointer; Str: String);
+Begin
+  If Str = '' Then
+    Str := strRep(BoxFrameType[TMenuList(Owner).Box.FrameType][7], 17)
+  Else Begin
+    If Length(Str) > 15 Then
+      Str := Copy(Str, Length(Str) - 15 + 1, 255);
+
+    Str := '[' + strLower(Str) + ']';
+
+    While Length(Str) < 17 Do
+      Str := Str + BoxFrameType[TMenuList(Owner).Box.FrameType][7];
+  End;
+
+  TMenuList(Owner).Box.Console.WriteXY (
+           TMenuList(Owner).SearchX,
+           TMenuList(Owner).SearchY,
+           TMenuList(Owner).SearchA,
+           Str);
+End;
+
 Constructor TMenuBox.Create (Var Screen: TOutput);
 Begin
   Inherited Create;
@@ -240,7 +261,7 @@ Begin
   LastBarPos := 0;
   StatusProc := NIL;
   SearchProc := NIL;
-//  SearchProc := DefListBoxSearch;
+  SearchProc := DefListBoxSearch;
   SearchX    := 0;
   SearchY    := 0;
   SearchA    := 0;
@@ -439,6 +460,18 @@ Begin
       #00 : Begin
               Ch := InKey.ReadKey;
 
+              If Pos(Ch, HiChars) > 0 Then Begin
+                If SearchStr <> '' Then Begin
+                  SearchStr := '';
+                  If Assigned(SearchProc) Then
+                    SearchProc(Self, SearchStr);
+                End;
+
+                ExitCode := Ch;
+
+                Exit;
+              End;
+
               Case Ch of
                 #71 : If Picked > 1 Then Begin { home }
                         Picked  := 1;
@@ -490,17 +523,6 @@ Begin
 
                         Update;
                       End;
-              Else
-                If Pos(Ch, HiChars) > 0 Then Begin
-                  If SearchStr <> '' Then Begin
-                    SearchStr := '';
-                    If Assigned(SearchProc) Then
-                      SearchProc(Self, SearchStr);
-                  End;
-
-                  ExitCode := Ch;
-                  Exit;
-                End;
               End;
             End;
     Else
