@@ -11,6 +11,8 @@ BUGS AND POSSIBLE ISSUES
 !!!! MPLC should NOT stop compiling EVERYTHING if it finds a single file
      error.
 
+!!!! Subject: NetRunner change to NetRunner vXXX --- FIX IT NOW BAD BAD BAD
+
 ! check forced messages in new fs editor might not be enforced.
 ! Weird console slowdown with test.txt in Win7 use MVIEW to test
 ! GE option 32 (change def protocol) might be broken
