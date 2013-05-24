@@ -40,7 +40,7 @@ Type
     Function    GetBaseByNum        (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Function    GetBaseCompressed   (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Function    GetBaseByIndex      (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
-    Procedure   GetMessageStats     (List, ShowPrompt, ShowYou: Boolean; Var ListPtr: LongInt; Var TempBase: RecMessageBase; NoFrom, NoRead: Boolean; Var Total, New, Yours: LongInt);
+    Function    GetMessageStats     (List, ShowPrompt, ShowYou: Boolean; Var ListPtr: LongInt; Var TempBase: RecMessageBase; NoFrom, NoRead: Boolean; Var Total, New, Yours: LongInt) : Boolean;
     Procedure   GetMailStats        (Var Total, UnRead: LongInt);
     Function    GetMatchedAddress   (Orig, Dest: RecEchoMailAddr) : RecEchoMailAddr;
     Function    GetTotalBases       (Compressed: Boolean) : LongInt;
@@ -436,13 +436,14 @@ Begin
   End;
 End;
 
-Procedure TMsgBase.GetMessageStats (List, ShowPrompt, ShowYou: Boolean; Var ListPtr: LongInt; Var TempBase: RecMessageBase; NoFrom, NoRead: Boolean; Var Total, New, Yours: LongInt);
+Function TMsgBase.GetMessageStats (List, ShowPrompt, ShowYou: Boolean; Var ListPtr: LongInt; Var TempBase: RecMessageBase; NoFrom, NoRead: Boolean; Var Total, New, Yours: LongInt) : Boolean;
 Var
   TempMsg : PMsgBaseABS;
 Begin
-  Total := 0;
-  New   := 0;
-  Yours := 0;
+  Total  := 0;
+  New    := 0;
+  Yours  := 0;
+  Result := False;
 
   If TempBase.Name = 'None' Then Exit;
 
@@ -502,8 +503,20 @@ Begin
 
         Session.io.OutFullLn(Session.GetPrompt(507));
 
-        If ShowPrompt Then
-          Session.io.OutFull(Session.GetPrompt(487));
+        //write('ptr:', session.io.pauseptr, ' size:', session.user.thisuser.screensize, ' allow:', session.io.allowpause);session.io.getkey;
+
+        If (Session.io.PausePtr >= Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
+          Case Session.io.MorePrompt of
+            'N' : Begin
+                    Result := True;
+
+                    Break;
+                  End;
+            'C' : Session.io.AllowPause := False;
+          End;
+
+//        If ShowPrompt Then
+//          Session.io.OutFull(Session.GetPrompt(487));
 
         Session.io.BufFlush;
       End;
@@ -974,12 +987,14 @@ Begin
 
       If Session.User.Access(Group.ACS) Then Begin
         Session.User.ThisUser.LastMGroup := FilePos(GroupFile);
+
         Close (GroupFile);
 
         If Intro Then Session.io.OutFile ('group' + strI2S(Session.User.ThisUser.LastMGroup), True, 0);
 
         If FirstBase Then Begin
           Session.User.ThisUser.LastMBase := 0;
+
           ChangeArea('+');
         End;
 
@@ -1001,6 +1016,7 @@ Begin
   If Data > 0 Then Begin
     If Data > FileSize(GroupFile) Then Begin
       Close (GroupFile);
+
       Exit;
     End;
 
@@ -1259,7 +1275,7 @@ Begin
     Else
       Session.io.OutFull (Session.GetPrompt(408));
 
-    ToWho := Session.io.GetInput(30, 30, 18, MsgBase^.GetFrom);
+    ToWho := Session.io.GetInput(30, 30, 11, MsgBase^.GetFrom);
 
     If ToWho = '' Then Exit;
 
@@ -3613,6 +3629,7 @@ Procedure TMsgBase.MessageQuickScan (Data: String);
 //   /NOFROM = bypass messages posted FROM the user
 //   /NOREAD = bypass messages addressed to, and read by, the user
 Var
+  Aborted           : Boolean;
   NoFrom            : Boolean;
   NoRead            : Boolean;
   ShowIfNew         : Boolean;
@@ -3633,6 +3650,7 @@ Var
     NewMsgs   : LongInt;
     YourMsgs  : LongInt;
     TotalMsgs : LongInt;
+    Res       : Boolean;
   Begin
     Session.io.PromptInfo[1]  := MBase.Name;
     Session.io.PromptInfo[2]  := strI2S(Global_CurBase);
@@ -3648,7 +3666,9 @@ Var
       Session.io.BufFlush;
     End;
 
-    GetMessageStats(ShowMessage, ShowScanPrompt, ShowIfYou, ShowMessagePTR, MBase, NoFrom, NoRead, TotalMsgs, NewMsgs, YourMsgs);
+    Aborted := GetMessageStats(ShowMessage, ShowScanPrompt, ShowIfYou, ShowMessagePTR, MBase, NoFrom, NoRead, TotalMsgs, NewMsgs, YourMsgs);
+
+    If ShowMessage And Aborted Then Exit;
 
     Inc (Global_TotalMsgs, TotalMsgs);
     Inc (Global_NewMsgs,   NewMsgs);
@@ -3674,6 +3694,8 @@ Var
 Var
   Old : RecMessageBase;
 Begin
+  Session.io.AllowPause  := True;
+  Session.io.PausePtr    := 1;
   Session.LastScanHadNew := False;
   Session.LastScanHadYou := False;
 
@@ -3719,6 +3741,8 @@ Begin
         GetMessageScan;
 
         If MScan.NewScan > 0 Then ScanBase;
+
+        If ShowMessage And Aborted Then Break;
       End;
     End;
 
@@ -3929,7 +3953,8 @@ Begin
 
     Assign     (TF, FN);
     SetTextBuf (TF, Buf, SizeOf(Buf));
-    Reset      (TF);
+
+    {$I-} Reset (TF); {$I+}
 
     If IoResult <> 0 Then Exit;
 
