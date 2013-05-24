@@ -72,6 +72,7 @@ Type
     Procedure EditPercentBar  (Var Bar: RecPercent);
     Function  GetColorAttr    (C: Byte) : Byte;
     Procedure EditAccessFlags (Var Flags: TMenuFormFlagsRec);
+    Procedure EditCharacter   (Var C: Char);
     Procedure AddBasic        (HK: Char; D: String; X, Y, FX, FY, DS, FS, MS: Byte; I: FormItemType; P: Pointer; H: String);
     Procedure BarON;
     Procedure BarOFF          (RecPos: Word);
@@ -219,6 +220,25 @@ Begin
   Box.Close;
 
   Form.Free;
+  Box.Free;
+End;
+
+Procedure TAnsiMenuForm.EditCharacter (Var C: Char);
+Var
+  Box : TAnsiMenuBox;
+  Str : String[3];
+Begin
+  Box := TAnsiMenuBox.Create;
+
+  Box.Open (19, 8, 62, 10);
+
+  WriteXY ( 21, 9, 113, 'Enter ASCII character number (1-254)');
+
+  Str := strI2S(Ord(C));
+  Str := Input.GetStr(58, 9, 3, 3, 1, Str);
+  C   := Chr(strS2I(Str));
+
+  Box.Close;
   Box.Free;
 End;
 
@@ -567,7 +587,6 @@ End;
 
 Procedure TAnsiMenuForm.EditOption;
 Var
-  TempStr  : String;
   TempByte : Byte;
   TempLong : LongInt;
 Begin
@@ -598,11 +617,7 @@ Begin
                           If Not DirCreate(S^) Then
                             ShowMsgBox(0, 'Unable to create');
                     End;
-      ItemChar    : Begin
-                      TempStr := Input.GetStr(FieldX, FieldY, FieldSize, MaxSize, 1, C^);
-                      Changed := TempStr[1] <> C^;
-                      C^      := TempStr[1];
-                    End;
+      ItemChar    : EditCharacter(C^);
       ItemAttr    : Begin
                       TempByte := GetColorAttr(B^);
                       Changed  := TempByte <> B^;
