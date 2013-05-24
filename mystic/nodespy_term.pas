@@ -647,6 +647,12 @@ Var
   Image  : TConsoleImageRec;
   Queue  : TProtocolQueue;
 Begin
+  If Not DirExists(XferPath) Then Begin
+    ShowMsgBox (0, 'Download directory does not exist');
+
+    Exit;
+  End;
+
   Queue  := TProtocolQueue.Create;
   Zmodem := TProtocolZmodem.Create(Client, Queue);
 
