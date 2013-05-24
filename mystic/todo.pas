@@ -8,6 +8,9 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
+!!!! MPLC should NOT stop compiling EVERYTHING if it finds a single file
+     error.
+
 ! check forced messages in new fs editor might not be enforced.
 ! Weird console slowdown with test.txt in Win7 use MVIEW to test
 ! GE option 32 (change def protocol) might be broken
