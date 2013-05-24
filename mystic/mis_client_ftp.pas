@@ -48,13 +48,13 @@ Type
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
 
+    Function    OpenDataSession : Boolean;
+    Procedure   CloseDataSession;   
     Procedure   ResetSession;
     Procedure   UpdateUserStats (TFBase: RecFileBase; FDir: RecFileList; DirPos: LongInt);
     Function    CheckFileLimits (TempFBase: RecFileBase; FDir: RecFileList) : Byte;
-    Function    OpenDataSession : Boolean;
-    Procedure   CloseDataSession;
-    Function    ValidDirectory (TempBase: RecFileBase) : Boolean;
-    Function    FindDirectory (Var TempBase: RecFileBase) : LongInt;
+    Function    ValidDirectory  (TempBase: RecFileBase) : Boolean;
+    Function    FindDirectory   (Var TempBase: RecFileBase) : LongInt;
 
     Procedure   cmdUSER;
     Procedure   cmdPASS;
@@ -67,6 +67,7 @@ Type
     Procedure   cmdLIST;
     Procedure   cmdPWD;
     Procedure   cmdRETR;
+    Procedure   cmdSTOR;
     Procedure   cmdSTRU;
     Procedure   cmdMODE;
     Procedure   cmdSYST;
@@ -497,14 +498,17 @@ Begin
   If LoggedIn Then Begin
     If (Data = '/') or (Copy(Data, 1, 2) = '..') Then Begin
       FBasePos := -1;
+
       Client.WriteLine(re_DirOkay + '"/"');
+
       Exit;
     End;
 
     TempPos := FindDirectory(TempBase);
 
-    If TempPos = -1 Then Begin
+    If (TempPos = -1) Or Not ValidDirectory(TempBase) Then Begin
       Client.WriteLine(re_BadDir);
+
       Exit;
     End;
 
@@ -526,10 +530,10 @@ Begin
   If LoggedIn Then Begin
     TempPos := FindDirectory(TempBase);
 
-    If TempPos = -1 Then Begin
+    If (TempPos = -1) Or Not ValidDirectory(TempBase) Then Begin
       OpenDataSession;
       CloseDataSession;
-      // list files in root directory, so show nothing
+
       Exit;
     End;
 
@@ -608,6 +612,12 @@ Begin
       Exit;
     End;
 
+    If Not ValidDirectory(TempBase) Then Begin
+      Client.WriteLine(re_BadCommand);
+
+      Exit;
+    End;
+
     OpenDataSession;
 
     DirFile := TFileBuffer.Create(FileBufSize);
@@ -631,6 +641,38 @@ Begin
     CloseDataSession;
   End Else
     Client.WriteLine(re_BadCommand);
+End;
+
+Procedure TFTPServer.cmdSTOR;
+Var
+  TempPos  : LongInt;
+  TempBase : RecFileBase;
+Begin
+  If Not LoggedIn Then Begin
+    Client.WriteLine(re_BadCommand);
+
+    Exit;
+  End;
+
+  TempPos := FindDirectory(TempBase);
+
+  If (TempPos = -1) Or Not ValidDirectory(TempBase) Then Begin
+    Client.WriteLine(re_BadFile);
+
+    Exit;
+  End;
+
+  Client.WriteLine(re_BadFile);
+
+  //reasons why i haven't finished this (todo):
+
+  // ratios
+  // diskspace
+  // archive testing
+  // file_id.diz importing
+  // forcing uploads to upload base (if non-zero)
+  // duplicate file checking
+  // upload statistic tracking
 End;
 
 Procedure TFTPServer.cmdRETR;
@@ -823,7 +865,7 @@ Begin
     {$ENDIF}
 
     If Cmd = 'CDUP' Then cmdCDUP Else
-    If Cmd = 'CWD'  Then cmdCWD Else
+    If Cmd = 'CWD'  Then cmdCWD  Else
     If Cmd = 'EPRT' Then cmdEPRT Else
     If Cmd = 'EPSV' Then cmdEPSV Else
     If Cmd = 'LIST' Then cmdLIST Else
@@ -833,15 +875,16 @@ Begin
     If Cmd = 'PASS' Then cmdPASS Else
     If Cmd = 'PASV' Then cmdPASV Else
     If Cmd = 'PORT' Then cmdPORT Else
-    If Cmd = 'PWD'  Then cmdPWD ELse
+    If Cmd = 'PWD'  Then cmdPWD  Else
     If Cmd = 'REIN' Then cmdREIN Else
     If Cmd = 'RETR' Then cmdRETR Else
     If Cmd = 'SIZE' Then cmdSIZE Else
+    If Cmd = 'STOR' Then cmdSTOR Else
     If Cmd = 'STRU' Then cmdSTRU Else
     If Cmd = 'SYST' Then cmdSYST Else
     If Cmd = 'TYPE' Then cmdTYPE Else
     If Cmd = 'USER' Then cmdUSER Else
-    If Cmd = 'XPWD' Then cmdPWD Else
+    If Cmd = 'XPWD' Then cmdPWD  Else
     If Cmd = 'QUIT' Then Begin
       GotQuit := True;
       Break;
