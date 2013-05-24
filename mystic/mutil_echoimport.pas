@@ -19,7 +19,8 @@ Uses
   BBS_MsgBase_Squish,
   mUtil_Common,
   mUtil_Status,
-  mUtil_EchoCore;
+  mUtil_EchoCore,
+  mUtil_EchoFix;
 
 // Also create SavePKTMsgToFile and change export to use it... and for
 // downlinks too
@@ -113,32 +114,32 @@ Var
       Inc (Status);
 
       If PKT.MsgArea = 'NETMAIL' Then Begin
-        // areafix etc here
 
-        If GetMBaseByNetZone (PKT.PKTHeader.DestZone, MBase) Then Begin
-          For Count := 1 to ForwardSize Do
-            If strUpper(strWordGet(1, ForwardList[Count], ';')) = strUpper(PKT.MsgTo) Then
-              PKT.MsgTo := strWordGet(2, ForwardList[Count], ';');
+        If Not ProcessedByAreaFix(PKT) Then
+          If GetMBaseByNetZone (PKT.PKTHeader.DestZone, MBase) Then Begin
+            For Count := 1 to ForwardSize Do
+              If strUpper(strWordGet(1, ForwardList[Count], ';')) = strUpper(PKT.MsgTo) Then
+                PKT.MsgTo := strWordGet(2, ForwardList[Count], ';');
 
-          CurTag := '';
+            CurTag := '';
 
-          If MsgBase <> NIL Then Begin
-            MsgBase^.CloseMsgBase;
+            If MsgBase <> NIL Then Begin
+              MsgBase^.CloseMsgBase;
 
-            Dispose (MsgBase, Done);
+              Dispose (MsgBase, Done);
 
-            MsgBase := NIL;
-          End;
+              MsgBase := NIL;
+            End;
 
-          MessageBaseOpen(MsgBase, MBase);
+            MessageBaseOpen(MsgBase, MBase);
 
-          SavePKTMsgToBase(MsgBase, PKT, True);
+            SavePKTMsgToBase(MsgBase, PKT, True);
 
-          Log (2, '+', '      Netmail from ' + PKT.MsgFrom + ' to ' + PKT.MsgTo);
+            Log (2, '+', '      Netmail from ' + PKT.MsgFrom + ' to ' + PKT.MsgTo);
 
-          Inc (TotalNet);
-        End Else
-          Log (3, '!', '   No NETMAIL base for zone ' + strI2S(PKT.PKTHeader.DestZone));
+            Inc (TotalNet);
+          End Else
+            Log (3, '!', '   No NETMAIL base for zone ' + strI2S(PKT.PKTHeader.DestZone));
       End Else Begin
         If Dupes.IsDuplicate(PKT.MsgCRC) Then Begin
           Log (3, '!', '      Duplicate message found in ' + PKT.MsgArea);
