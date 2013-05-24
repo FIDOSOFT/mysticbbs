@@ -606,43 +606,7 @@ Function GetNodeByRoute (Dest: RecEchoMailAddr; Var TempNode: RecEchoMailNode) :
 
       Result := True;
     End;
-(*
-    Function IsOneMatch (Mask: String) : Boolean;
-    Var
-      Zone  : String;
-      Net   : String;
-      Node  : String;
-      A     : Byte;
-      B     : Byte;
-      Count : Byte;
-    Begin
-      Result := False;
-      Zone   := '';
-      Net    := '';
-      Node   := '';
-      A      := Pos(':', Mask);
-      B      := Pos('/', Mask);
 
-      If A <> 0 Then Begin
-        Zone := Copy(Mask, 1, A - 1);
-
-        If B = 0 Then B := 255;
-
-        Net  := Copy(Mask, A + 1, B - 1 - A);
-        Node := Copy(Mask, B + 1, 255);
-      End;
-
-      If Zone = '' Then Zone := '*';
-      If Net  = '' Then Net  := '*';
-      If Node = '' Then Node := '*';
-
-      If (Zone <> '*') and (Dest.Zone <> strS2I(Zone)) Then Exit;
-      If (Net  <> '*') and (Dest.Net  <> strS2I(Net))  Then Exit;
-      If (Node <> '*') and (Dest.Node <> strS2I(Node)) Then Exit;
-
-      Result := True;
-    End;
-*)
   Var
     Mask   : String = '';
     OneRes : Boolean;
@@ -718,9 +682,9 @@ Begin
   // this?  research it someday
 
   For Count := 1 to 30 Do Begin
-    Result := (bbsConfig.NetAddress[Count].Zone  = Zone) And
-              (bbsConfig.NetAddress[Count].Net   = Net)  And
-              (bbsConfig.NetAddress[Count].Node  = Node);
+    Result := (bbsConfig.NetAddress[Count].Zone = Zone) And
+              (bbsConfig.NetAddress[Count].Net  = Net)  And
+              (bbsConfig.NetAddress[Count].Node = Node);
 
     If Result Then Break;
   End;
