@@ -117,7 +117,8 @@ Type
     OutSize     : Cardinal;
     binkPass    : String[20];
     RouteInfo   : String[128];
-    Res         : Array[1..362] of Byte;
+    AreaFixPass : String[20];
+    Res         : Array[1..341] of Byte;
   End;
 
   RecSauceInfo = Packed Record
@@ -681,7 +682,7 @@ Type
     FieldColor2  : Byte;
     FieldChar    : Char;
     EchoChar     : Char;
-    QuoteColor   : Byte;
+    UNUSED       : Byte;
     TagChar      : Char;
     FileDescHi   : Byte;
     FileDescLo   : Byte;
