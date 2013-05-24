@@ -868,12 +868,10 @@ Begin
     Session.io.OutFullLn (Session.GetPrompt(183));
   Until Eof(Session.ThemeFile);
 
-  { Lang := Old; }
-
   Session.io.OutFull (Session.GetPrompt(184));
+
   A := strS2I(Session.io.GetInput(2, 2, 12, ''));
 
-  {force user to select a language}
   If (A < 1) or (A > T) Then A := 1;
 
   T := 0;
@@ -888,7 +886,8 @@ Begin
 
     Inc (T);
   Until T = A;
-{ Close (Session.LangFile);}
+
+  Close (Session.ThemeFile);
 
   If Not Session.LoadThemeData(Session.Theme.FileName) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(185));
@@ -1302,7 +1301,8 @@ Begin
     If Config.UseMatrix Then Begin
       Repeat
         Session.Menu.MenuName := Config.MatrixMenu;
-        Session.Menu.ExecuteMenu (True, False, False, True);
+
+        Session.Menu.ExecuteMenu (True, True, False, True);
       Until MatrixOK or Session.ShutDown;
     End;
 
@@ -1358,6 +1358,9 @@ Begin
 
   Session.SystemLog ('User: ' + ThisUser.Handle + ' logged in');
 
+  If Config.ThemeOnStart Then
+    ThisUser.Theme := Session.Theme.FileName
+  Else
   If Not Session.LoadThemeData(ThisUser.Theme) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(186));
 
