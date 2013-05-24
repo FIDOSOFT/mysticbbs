@@ -12,12 +12,14 @@ Function ProcessedByAreaFix (Var PKT: TPKTReader) : Boolean;
 Implementation
 
 Uses
-  m_Strings;
+  m_Strings,
+  bbs_Common;
 
 Function ProcessedByAreaFix (Var PKT: TPKTReader) : Boolean;
 Var
   IsAreaFix : Boolean;
   IsFileFix : Boolean;
+  EchoNode  : RecEchoMailNode;
 Begin
   Result    := False;
   IsAreaFix := strUpper(PKT.MsgTo) = 'AREAFIX';
@@ -25,10 +27,39 @@ Begin
 
   If Not (IsAreaFix or IsFileFix) Then Exit;
 
+(*Function GetNodeByAuth (Addr: RecEchoMailAddr; PW: String; Var TempNode: RecEchoMailNode) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, bbsConfig.DataPath + 'echonode.dat');
+
+  If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
+
+  While Not Eof(F) And Not Result Do Begin
+    ioRead(F, TempNode);
+
+    Result := (strUpper(PW) = strUpper(TempNode.AreaFixPass)) and
+              (Addr.Zone = TempNode.Address.Node) and
+              (Addr.Net  = TempNode.Address.Net) and
+              (Addr.Node = TempNode.Address.Node);
+  End;
+
+  Close (F);
+End;
+*)
+
+
   // find recechomailnode
   // check subject against session password
-  //    if bad password do we respond back or just ignore?
-  // if none found then do we toss to badmsgs?
+  // problem is that the PKTMSG header doesnt have ZONE or POINT
+  //   so how do we do this without shite security?
+
+  // if bad password do we respond back or just ignore?
+  // if no node config found then do we toss to badmsgs?
+
+
 
   // commands (AREAFIX):
   // %LIST
