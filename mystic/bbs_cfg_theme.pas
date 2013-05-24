@@ -812,7 +812,6 @@ Begin
                         LineChat1    := 9;
                         Linechat2    := 11;
                         NewMsgChar   := '*';
-                        QuoteColor   := 31;
                         FileDescHi   := 112;
                         FileDescLo   := 11;
 
