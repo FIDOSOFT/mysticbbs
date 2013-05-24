@@ -1,6 +1,6 @@
-{$I M_OPS.PAS}
-
 Unit m_Input_Darwin;
+
+{$I M_OPS.PAS}
 
 Interface
 
@@ -8,33 +8,33 @@ Const
   ttyIn         = 0;
   ttyInBufSize  = 256;
   KeyBufferSize = 20;
-  ttyOut=1;
-  InSize=256;
+  ttyOut        = 1;
+  InSize        = 256;
 
-  AltKeyStr  : string[38]='qwertyuiopasdfghjklzxcvbnm1234567890-=';
-  AltCodeStr : string[38]=#016#017#018#019#020#021#022#023#024#025#030#031#032#033#034#035#036#037#038+
-                          #044#045#046#047#048#049#050#120#121#122#123#124#125#126#127#128#129#130#131;
+  AltKeyStr  : string[38] = 'qwertyuiopasdfghjklzxcvbnm1234567890-=';
+  AltCodeStr : string[38] = #016#017#018#019#020#021#022#023#024#025#030#031#032#033#034#035#036#037#038+
+                            #044#045#046#047#048#049#050#120#121#122#123#124#125#126#127#128#129#130#131;
 
 Type
   TInputDarwin = Class
-    InBuf  : Array[0..ttyInBufSize - 1] of Char;
-    InCnt  : LongInt;
-    InHead : LongInt;
-    InTail : LongInt;
+    InBuf     : Array[0..ttyInBufSize - 1] of Char;
+    InCnt     : LongInt;
+    InHead    : LongInt;
+    InTail    : LongInt;
     KeyBuffer : Array[0..KeyBufferSize-1] of Char;
     KeyPut,
     KeySend   : longint;
 
     Function    ttyRecvChar : Char;
-Procedure PushKey(Ch:char);
-Function PopKey:char;
-Procedure PushExt(b:byte);
-Function FAltKey(ch:char):byte;
-function sysKeyPressed: boolean;
-function KeyWait (MS: LongInt) : boolean;
-Function KeyPressed:Boolean;
-Function ReadKey:char;
-Procedure PurgeInputData;
+    Procedure   PushKey (Ch : Char);
+    Function    PopKey : Char;
+    Procedure   PushExt(b:byte);
+    Function    FAltKey(ch:char):byte;
+    Function    sysKeyPressed: boolean;
+    Function    KeyWait (MS: LongInt) : boolean;
+    Function    KeyPressed:Boolean;
+    Function    ReadKey:char;
+    Procedure   PurgeInputData;
     Constructor Create;
     Destructor  Destroy; Override;
 (*
@@ -177,9 +177,9 @@ begin
 
   if (keysend <> keyput) or (incnt > 0) then exit;
 
-  fpFD_Zero(fdsin);
-  fpFD_Set(ttyin,fdsin);
-  if fpSelect(ttyin+1,@fdsin,nil,nil,ms) <= 0 then
+  fpFD_Zero   (fdsin);
+  fpFD_Set    (ttyin,fdsin);
+  if fpSelect (ttyin + 1, @fdsin, nil, nil, ms) <= 0 then
     result := false;
 end;
 
@@ -211,10 +211,12 @@ Begin
     end;
 
   ch:=ttyRecvChar;
+
 {Esc Found ?}
   CASE ch OF
-  #27: begin
+    #27: begin
      State:=1;
+
      WaitMS(10);
 
 
@@ -391,6 +393,7 @@ Begin
   #127: PushKey(#8);
   else PushKey(ch);
   End;
+
   ReadKey:=PopKey;
 End;
 
