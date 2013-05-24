@@ -360,10 +360,10 @@ Begin
 
       If FCursorY < FWinBot Then
         Inc (FCursorY)
-      Else
+      Else Begin
         ScrollWindow;
-
-      BufFlush;
+        BufFlush;
+      End;
     End;
   End;
 End;
@@ -579,20 +579,28 @@ Procedure TOutputDarwin.PutScreenImage (Image: TConsoleImageRec);
 Var
   CountX : Byte;
   CountY : Byte;
+  OT, OB : Byte;
 Begin
+  OT := FWinTop;
+  OB := FWinBot;
+
+  SetWindow (1, 1, 80, ScreenSize, False);
+
   For CountY := Image.Y1 to Image.Y2 Do Begin
     CursorXY (Image.X1, CountY);
+
+//    Move (Image.Data[CountY][Image.X1], Buffer[CountY + Image.Y1 - 1][Image.X1], (Image.X2 - Image.X1 + 1) * SizeOf(TCharInfo));
 
     For CountX := Image.X1 to Image.X2 Do Begin
       SetTextAttr(Image.Data[CountY][CountX].Attributes);
       If Image.Data[CountY][CountX].UnicodeChar = #0 Then BufAddStr(' ') Else BufAddStr(Image.Data[CountY][CountX].UnicodeChar);
-      // the above is a placeholder until we properly fill the buffers. #0 does not work in ITERM2
       Buffer[CountY][CountX] := Image.Data[CountY][CountX];
     End;
   End;
 
   SetTextAttr (Image.CursorA);
-  CursorXY (Image.CursorX, Image.CursorY);
+  CursorXY    (Image.CursorX, Image.CursorY);
+  SetWindow   (1, OT, 80, OB, False);
 
   BufFlush;
 End;
