@@ -452,7 +452,22 @@ Begin
       If Code = '21' Then BufAddStr(Pipe2Ansi(21)) Else
       If Code = '22' Then BufAddStr(Pipe2Ansi(22)) Else
       If Code = '23' Then BufAddStr(Pipe2Ansi(23)) Else
-      BufAddStr(Str[Count] + Code);
+      If Code = '[X' Then Begin
+        Inc (Count, 2);
+
+        Code := Copy(Str, Count + 1, 2);
+
+        AnsiMoveX(strS2I(Code));
+      End Else
+      If Code = '[Y' Then Begin
+        Inc (Count, 2);
+
+        Code := Copy(Str, Count + 1, 2);
+
+        AnsiMoveY(strS2I(Code));
+      End Else
+        BufAddStr(Str[Count] + Code);
+
       Inc (Count, 2);
     End Else
       BufAddChar(Str[Count]);
@@ -1425,7 +1440,7 @@ Begin
   Handles[0] := Input.ConIn;
 
   If Not TBBSCore(Core).LocalMode Then Begin
-    If TBBSCore(Core).Client.FInBufPos < TBBSCore(Core).Client.FInBufEnd Then
+    If TBBSCore(Core).Client.FInBufPos <= TBBSCore(Core).Client.FInBufEnd Then
       InType := 2
     Else Begin
       Handles[1] := SocketEvent;
@@ -1588,7 +1603,7 @@ End;
 
 Function TBBSIO.GetKey : Char;
 Begin
-  Result  := #255;
+  Result := #255;
 
   TBBSCore(Core).TimeOut := TimerSeconds;
 
@@ -1901,6 +1916,8 @@ Var
   End;
 
 Begin
+  PurgeInputBuffer;
+
   If UseInLimit Then Begin
     Field      := InLimit;
     UseInLimit := False;
@@ -1956,8 +1973,6 @@ Begin
 
   PWrite (Copy(Str, Junk, Field));
 
-  PurgeInputBuffer;
-
   Repeat
     Ch := GetKey;
 
@@ -1968,6 +1983,7 @@ Begin
                 StrPos := 1;
                 Junk   := 1;
                 CurPos := 1;
+
                 ReDraw;
               End;
         #72 : If (BackPos < mysMaxInputHistory) And (BackPos < InputPos) Then Begin
@@ -1975,31 +1991,43 @@ Begin
 
                 If BackPos = 1 Then BackSaved := Str;
 
-                Str := InputData[BackPos];
+                Str    := InputData[BackPos];
                 StrPos := Length(Str) + 1;
                 Junk   := StrPos - Field;
+
                 If Junk < 1 Then Junk := 1;
+
                 CurPos := StrPos - Junk + 1;
+
                 ReDraw;
               End;
         #75 : If StrPos > 1 Then Begin
                 If CurPos = 1 Then ScrollLeft;
+
                 Dec (StrPos);
                 Dec (CurPos);
+
                 If CurPos < 1 then CurPos := 1;
+
                 AnsiMoveX (Screen.CursorX - 1);
               End;
         #77 : If StrPos < Length(Str) + 1 Then Begin
-                If (CurPos = Field) and (StrPos < Length(Str)) Then ScrollRight;
+                If (CurPos = Field) and (StrPos < Length(Str)) Then
+                  ScrollRight;
+
                 Inc (CurPos);
                 Inc (StrPos);
+
                 AnsiMoveX (Screen.CursorX + 1);
               End;
         #79 : Begin
                 StrPos := Length(Str) + 1;
                 Junk   := StrPos - Field;
+
                 If Junk < 1 Then Junk := 1;
+
                 CurPos := StrPos - Junk + 1;
+
                 ReDraw;
               End;
         #80 : If (BackPos > 0) Then Begin
@@ -2012,12 +2040,16 @@ Begin
 
                 StrPos := Length(Str) + 1;
                 Junk   := StrPos - Field;
+
                 If Junk < 1 Then Junk := 1;
+
                 CurPos := StrPos - Junk + 1;
+
                 ReDraw;
               End;
         #83 : If (StrPos <= Length(Str)) and (Length(Str) > 0) Then Begin
                 Delete(Str, StrPos, 1);
+
                 ReDrawPart;
               End;
       End;
@@ -2039,13 +2071,20 @@ Begin
                   ScrollLeft
                 Else
                 If StrPos = Length(Str) + 1 Then Begin
-                  If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor2);
+                  If UseInField Then
+                    AnsiColor(TBBSCore(Core).Theme.FieldColor2);
+
                   BufAddStr (#8 + FieldCh + #8);
-                  If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor1);
+
+                  If UseInField Then
+                    AnsiColor(TBBSCore(Core).Theme.FieldColor1);
+
                   Dec (CurPos);
                 End Else Begin
                   BufAddChar (#8);
+
                   Dec (CurPos);
+
                   ReDrawPart;
                 End;
               End;
