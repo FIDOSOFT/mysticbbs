@@ -3418,3 +3418,26 @@
 
    <ALPHA 34 RELEASED>
 
+ + MBBSUTIL -FSORT will now ignore file casing on case sensitive operating
+   systems.
+
+ + When changing theme options involving single character input (field input
+   percentage bars, etc) Mystic will now prompt for the ASCII character
+   number.
+
+ + When doing a message QuickScan (MQ) with the /LIST option, Mystic will now
+   pause when the users terminal screen is full (and allow them to abort the
+   scan as well).
+
+ ! Mystic would get stuck in an endless loop if the MATRIX menu was turned
+   on but the menu didn't physically exist.  It will not error and log that
+   the menu is missing.
+
+ + When "Ask Theme at Connect" is ON, Mystic will now set the theme selected
+   as the users default theme.  Previously it would reload their last used
+   theme regardless of what was selected on startup.
+
+ + If the download directory doesn't exist when NodeSpy attempts a Zmodem
+   download, it will now tell you instead of crashing.
+
+   <ALPHA 35 RELEASED>
