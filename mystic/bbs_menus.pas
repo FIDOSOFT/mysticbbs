@@ -204,6 +204,7 @@ Begin
                       Session.io.OutFile ('logoff', True, 0);
                     End;
                     Session.SystemLog ('User logged off');
+                    Session.io.BufFlush;
                     Halt(0);
                   End;
             'L' : ShowLastCallers;
@@ -1246,6 +1247,7 @@ Begin
     If Not Result Then Begin
       If Forced Then Begin
         Session.io.OutFullLn ('|CRError Loading ' + MenuName + '.mnu');
+
         Session.SystemLog ('Error Loading Menu: ' + MenuName);
 
         Halt(1);
@@ -1260,8 +1262,8 @@ Procedure TMenuEngine.ExecuteMenu (Load, Forced, View, Action: Boolean);
 Var
   Count : LongInt;
 Begin
-  SetAction  := Action;
-  ViewOnly   := View;
+  SetAction := Action;
+  ViewOnly  := View;
 
   If ViewOnly Then Begin
     Case Data.Info.MenuType of
@@ -1286,6 +1288,7 @@ Begin
   If Not TBBSCore(Owner).User.Access(Data.Info.Access) Then Begin
     If Data.Info.Fallback <> '' Then Begin
       MenuName := Data.Info.Fallback;
+
       Exit;
     End;
 
