@@ -168,11 +168,7 @@ Begin
       While Not Eof(FDirFile) Do Begin
         Read (FDirFile, FDir);
         If (FDir.Flags AND FDirDeleted = 0) Then
-          {$IFDEF FS_SENSITIVE}
-            SortList.Add(FDir.FileName, FilePos(FDirFile) - 1);
-          {$ELSE}
-            SortList.Add(strUpper(FDir.FileName), FilePos(FDirFile) - 1);
-          {$ENDIF}
+          SortList.Add(strUpper(FDir.FileName), FilePos(FDirFile) - 1);
       End;
 
       SortList.Sort(1, SortList.Total, qAscending);
