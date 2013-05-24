@@ -659,7 +659,7 @@ Begin
     Config.AskScreenCols  := False;
 
     Config.ColorKludge    := 08;
-    Config.AcsCrossPost   := 's255';
+    Config.AcsExtReply    := 's10';
     Config.AcsFileAttach  := 's255';
     Config.AcsNodeLookup  := 's255';
     Config.FSEditor       := False;
@@ -917,7 +917,6 @@ Begin
     Theme.FieldColor2  := OldLang.FieldCol2;
     Theme.FieldChar    := OldLang.FieldChar;
     Theme.EchoChar     := OldLang.EchoCh;
-    Theme.QuoteColor   := OldLang.QuoteColor;
     Theme.TagChar      := OldLang.TagCh;
     Theme.FileDescHi   := OldLang.FileHi;
     Theme.FileDescLo   := OldLang.FileLo;
