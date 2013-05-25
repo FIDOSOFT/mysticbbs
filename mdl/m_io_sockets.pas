@@ -30,11 +30,6 @@ Type
     FPeerName      : String;
     FPeerIP        : String;
     FHostIP        : String;
-    FInBuf         : TIOBuffer;
-    FInBufPos      : LongInt;
-    FInBufEnd      : LongInt;
-    FOutBuf        : TIOBuffer;
-    FOutBufPos     : LongInt;
     FTelnetState   : Byte;
     FTelnetReply   : Array[1..14] of Char;
     FTelnetCmd     : Char;
