@@ -236,7 +236,7 @@ Var
     MH.OrigNet  := MsgBase^.GetOrigAddr.Net;
     MH.DestNet  := EchoNode.Address.Net;
 
-    TempStr1 := FormattedDate(DT, 'DD NNN YY  HH:MM:SS') + #0;
+    TempStr1 := FormatDate(DT, 'DD NNN YY  HH:II:SS') + #0;
     Move (TempStr1[1], MH.DateTime[0], 20);
 
     If MsgBase^.IsLocal    Then MH.Attribute := MH.Attribute OR pktLocal;

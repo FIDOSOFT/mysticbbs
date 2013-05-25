@@ -33,6 +33,7 @@ Uses
 
 Type
   PhoneRec = Record
+    Position  : LongInt;
     Name      : String[26];
     Address   : String[60];
     User      : String[30];
@@ -164,6 +165,7 @@ Begin
     Book[Count].StatusBar := INI.ReadString(strI2S(Count), 'statusbar', '1') = '1';
     Book[Count].LastCall  := INI.ReadString(strI2S(Count), 'last', '');
     Book[Count].Calls     := INI.ReadString(strI2S(Count), 'calls', '');
+    Book[Count].Position  := Count;
   End;
 
   INI.Free;
@@ -704,18 +706,60 @@ Begin
   Screen.PutScreenImage(Image);
 End;
 
-Procedure TelnetClient (Dial: PhoneRec);
+Procedure EditEntry (Var Book: PhoneBookRec; Num: SmallInt);
+Var
+  Box    : TMenuBox;
+  Form   : TMenuForm;
+  NewRec : PhoneRec;
+Begin
+  NewRec := Book[Num];
+  Box    := TMenuBox.Create(TOutput(Screen));
+  Form   := TMenuForm.Create(TOutput(Screen));
 
-  Procedure DrawStatus;
+  Box.HeadAttr := 1 + 7 * 16;
+  Box.Header   := ' Book Editor ';
+
+  Box.Open (17, 8, 63, 16);
+
+  Form.HelpSize := 0;
+
+  Form.AddStr  ('N', ' Name'   ,   24, 10, 32, 10,  6, 26, 26, @NewRec.Name, '');
+  Form.AddStr  ('A', ' Address',   21, 11, 32, 11,  9, 30, 60, @NewRec.Address, '');
+  Form.AddStr  ('U', ' User Name', 19, 12, 32, 12, 11, 30, 30, @NewRec.User, '');
+  Form.AddPass ('P', ' Password',  20, 13, 32, 13, 10, 20, 20, @NewRec.Password, '');
+  Form.AddBol  ('S', ' StatusBar', 19, 14, 32, 14, 11,  3, @NewRec.StatusBar, '');
+
+  Form.Execute;
+
+  If Form.Changed Then
+    If ShowMsgBox(1, 'Save changes?') Then Begin
+      Book[Num] := NewRec;
+      WriteBook(Book);
+    End;
+
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
+Procedure TelnetClient (Var Book: PhoneBookRec; Dial: PhoneRec);
+
+  Procedure DrawStatus (Toggle: Boolean);
   Begin
     If Dial.StatusBar Then Begin
       Screen.SetWindow (1, 1, 80, 24, False);
-      Screen.WriteXY   (1, 25, Config.StatusColor3, strPadC('ALT/B-Scrollback   ALT/L-Send Login   ALT/T-Zmodem   ALT-H/Hangup   ALT-X/Quit', 80, ' '));
+      Screen.WriteXY   (1, 25, Config.StatusColor3, strPadC('ALT/B-Scrollback   ALT/L-Send Login   ALT/T-Zmodem    ALT-E/Edit    ALT-X/Quit', 80, ' '));
+    End Else
+    If Toggle Then Begin
+      Screen.SetWindow (1, 1, 80, 25, False);
+      Screen.WriteXY   (1, 25, 7, strRep(' ', 79));
     End;
   End;
 
 Const
   BufferSize = 1024 * 4;
+
 Var
   Client : TIOSocket;
   Res    : LongInt;
@@ -733,13 +777,20 @@ Begin
   If Not Client.Connect(StripAddressPort(Dial.Address), GetAddressPort(Dial.Address)) Then
     ShowMsgBox (0, 'Unable to connect')
   Else Begin
+    Book[Dial.Position].LastCall := DateDos2Str(CurDateDos, 1);
+    Book[Dial.Position].Calls    := strI2S(strS2I(Dial.Calls) + 1);
+
+    WriteBook(Book);
+
+    Dial := Book[Dial.Position];
+
     Screen.TextAttr := 7;
     Screen.ClearScreen;
 
     Done := False;
     Term := TTermAnsi.Create(TOutput(Screen));
 
-    DrawStatus;
+    DrawStatus(False);
 
     Term.SetReplyClient(TIOBase(Client));
 
@@ -748,8 +799,6 @@ Begin
         Res := Client.ReadBuf (Buffer, BufferSize);
 
         If Res < 0 Then Begin
-          ShowMsgBox (0, 'Connection terminated');
-
           Done := True;
 
           Break;
@@ -785,13 +834,23 @@ Begin
 
         Case Ch of
           #00 : Case Keyboard.ReadKey of
+                  #18 : Begin
+                          EditEntry(Book, Dial.Position);
+
+                          If Dial.StatusBar <> Book[Dial.Position].StatusBar Then Begin
+                            Dial := Book[Dial.Position];
+
+                            DrawStatus (True);
+                          End Else
+                            Dial := Book[Dial.Position];
+                        End;
                   #20 : Begin
                           Case GetTransferType of
                             1 : DoZmodemDownload(TIOBase(Client));
                             2 : DoZmodemUpload(TIOBase(Client));
                           End;
 
-                          DrawStatus;
+                          DrawStatus(False);
                         End;
                   #35 : Done := True;
                   #38 : Begin
@@ -801,7 +860,7 @@ Begin
                   #45 : Break;
                   #48 : Begin
                           ActivateScrollBack;
-                          DrawStatus;
+                          DrawStatus(False);
                         End;
                   #71 : Client.WriteStr(#27 + '[H');
                   #72 : Client.WriteStr(#27 + '[A');
@@ -827,46 +886,10 @@ Begin
 
   Client.Free;
 
+  ShowMsgBox (0, 'Connection terminated');
+
   Screen.TextAttr := 7;
   Screen.SetWindow (1, 1, 80, 25, True);
-End;
-
-Procedure EditEntry (Var Book: PhoneBookRec; Num: SmallInt);
-Var
-  Box    : TMenuBox;
-  Form   : TMenuForm;
-  NewRec : PhoneRec;
-Begin
-  NewRec := Book[Num];
-  Box    := TMenuBox.Create(TOutput(Screen));
-  Form   := TMenuForm.Create(TOutput(Screen));
-
-  Box.HeadAttr := 1 + 7 * 16;
-  Box.Header   := ' Book Editor ';
-
-  Box.Open (17, 8, 63, 16);
-
-  Form.HelpSize := 0;
-
-  Form.AddStr  ('N', ' Name'   ,   24, 10, 32, 10,  6, 26, 26, @NewRec.Name, '');
-  Form.AddStr  ('A', ' Address',   21, 11, 32, 11,  9, 30, 60, @NewRec.Address, '');
-  Form.AddStr  ('U', ' User Name', 19, 12, 32, 12, 11, 30, 30, @NewRec.User, '');
-  Form.AddPass ('P', ' Password',  20, 13, 32, 13, 10, 20, 20, @NewRec.Password, '');
-  Form.AddBol  ('S', ' StatusBar', 19, 14, 32, 14, 11,  3, @NewRec.StatusBar, '');
-
-
-  Form.Execute;
-
-  If Form.Changed Then
-    If ShowMsgBox(1, 'Save changes?') Then Begin
-      Book[Num] := NewRec;
-      WriteBook(Book);
-    End;
-
-  Form.Free;
-
-  Box.Close;
-  Box.Free;
 End;
 
 Procedure SearchEntry (Var Owner: Pointer; Str: String);
@@ -943,13 +966,6 @@ Begin
       #13 : If Book[List.Picked].Address = '' Then
               ShowMsgBox(0, 'Address is empty')
             Else Begin
-              With Book[List.Picked] Do Begin
-                LastCall := DateDos2Str(CurDateDos, 1);
-                Calls    := strI2S(strS2I(Calls) + 1);
-              End;
-
-              WriteBook(Book);
-
               Dial   := Book[List.Picked];
               Result := True;
 
@@ -1005,7 +1021,7 @@ Begin
   Repeat
     If Not GetTerminalEntry(Book, Dial) Then Break;
 
-    TelnetClient(Dial);
+    TelnetClient(Book, Dial);
   Until False;
 End;
 

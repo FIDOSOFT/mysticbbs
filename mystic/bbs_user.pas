@@ -1309,51 +1309,53 @@ Begin
     Session.io.OutFile ('prelogon', True, 0);
 
     If UserNum = -1 Then Begin
+      Count := 1;
 
-    Count := 1;
+      Repeat
+        If Count > Config.LoginAttempts Then Halt;
 
-    Repeat
-      If Count > Config.LoginAttempts Then Halt;
+        Session.io.PromptInfo[1] := strI2S(Count);
+        Session.io.PromptInfo[2] := strI2S(Config.LoginAttempts);
+        Session.io.PromptInfo[3] := strI2S(Config.LoginAttempts - Count);
 
-      Session.io.PromptInfo[1] := strI2S(Count);
-      Session.io.PromptInfo[2] := strI2S(Config.LoginAttempts);
-      Session.io.PromptInfo[3] := strI2S(Config.LoginAttempts - Count);
+        Session.io.OutFull (Session.GetPrompt(0));
 
-      Session.io.OutFull (Session.GetPrompt(0));
+        Str := strStripB(Session.io.GetInput(30, 30, 18, ''), ' ');
 
-      Str := strStripB(Session.io.GetInput(30, 30, 18, ''), ' ');
+        If Not FindUser(Str, True) Then Begin
+          Session.io.OutFile ('newuser', True, 0);
 
-      If Not FindUser(Str, True) Then Begin
-        Session.io.OutFile ('newuser', True, 0);
+          If Session.io.GetYN(Session.GetPrompt(1), False) Then Begin
+            CreateNewUser(Str);
+            UserLogon2;
+            UserLogon3;
 
-        If Session.io.GetYN(Session.GetPrompt(1), False) Then Begin
-          CreateNewUser(Str);
-          UserLogon2;
-          UserLogon3;
-          Exit;
-        End;
+            Exit;
+          End;
 
-        Inc (Count);
-      End Else Break;
-    Until False;
+          Inc (Count);
+        End Else
+          Break;
+      Until False;
 
-    A := UserNum;   {If user would drop carrier here itd save their info }
-    UserNum := -1;  {which is only User.ThisUser.realname at this time        }
+      A := UserNum;   {If user would drop carrier here itd save their info }
+      UserNum := -1;  {which is only User.ThisUser.realname at this time        }
 
-    If Not Session.io.GetPW(Session.GetPrompt(2), Session.GetPrompt(3), TempUser.Password) Then Begin
-      If Config.PWInquiry Then
-        If Session.io.GetYN(Session.GetPrompt(475), False) Then
-          Session.Msgs.PostMessage(True, '/TO:' + strReplace(Config.FeedbackTo, ' ', '_') + ' /SUBJ:Password_Inquiry');
+      If Not Session.io.GetPW(Session.GetPrompt(2), Session.GetPrompt(3), TempUser.Password) Then Begin
+        If Config.PWInquiry Then
+          If Session.io.GetYN(Session.GetPrompt(475), False) Then
+            Session.Msgs.PostMessage(True, '/TO:' + strReplace(Config.FeedbackTo, ' ', '_') + ' /SUBJ:Password_Inquiry');
 
-      Session.Msgs.PostTextFile('hackwarn.txt;0;' + Config.SysopName + ';' + TempUser.Handle + ';Possible hack attempt', True);
+        Session.Msgs.PostTextFile('hackwarn.txt;0;' + Config.SysopName + ';' + TempUser.Handle + ';Possible hack attempt', True);
 
-      Halt(0);
+        Halt(0);
+      End;
+
+      UserNum  := A;
+      ThisUser := TempUser;
     End;
 
-    UserNum := A;
-  End;
-
-  ThisUser := TempUser;
+//    ThisUser := TempUser;
   End;
 
   Session.SystemLog ('User: ' + ThisUser.Handle + ' logged in');

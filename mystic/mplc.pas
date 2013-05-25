@@ -33,6 +33,7 @@ Uses
 
 Var
   SavedX   : Byte;
+  SavedY   : Byte;
   Console  : TOutput;
   WasError : Boolean;
 
@@ -72,15 +73,17 @@ Begin
   Else Begin
     If Pos('-ALL', strUpper(ParamStr(1))) > 0 Then Begin
       FindFirst ('*.mps', AnyFile - Directory - VolumeID, Dir);
+
       While DosError = 0 Do Begin
         Parser := TParserEngine.Create(Status);
-        If Not Parser.Compile(Dir.Name) Then Begin
-          Parser.Free;
-          Break;
-        End;
-        FindNext(Dir);
+
+        Parser.Compile(Dir.Name);
+
         Parser.Free;
+
+        FindNext(Dir);
       End;
+
       FindClose(Dir);
     End Else Begin
       Parser := TParserEngine.Create(Status);

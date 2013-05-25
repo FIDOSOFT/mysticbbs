@@ -1000,7 +1000,7 @@ Begin
   TmpDt.Hour  := strS2I(Copy(SqInfo^.StrTime,1,2));
   TmpDt.Min   := strS2I(Copy(SqInfo^.StrTime, 4,2));
   TmpDt.Sec   := 0;
-  TmpStr      := FormattedDate(TmpDT, 'DD NNN YY  ') + Copy(SqInfo^.StrTime, 1, 5) + ':00';
+  TmpStr      := FormatDate(TmpDT, 'DD NNN YY  ') + Copy(SqInfo^.StrTime, 1, 5) + ':00';
 
   PackTime (TmpDT, TmpDate);
 

@@ -159,7 +159,8 @@ Var
   Excluded : Boolean;
   SortMode : TSortMethod;
 Begin
-  Result := True;
+  Result   := True;
+  FileMode := 66;
 
   Case ListType of
     TopCall : ProcessStatus('Top Callers', False);
@@ -206,6 +207,7 @@ Begin
 
           If (strUpper(User.Handle) = Str) or (strUpper(User.RealName) = Str) Then Begin
             Excluded := True;
+
             Break;
           End;
         End;

@@ -1276,13 +1276,12 @@ Begin
       If BufPos MOD BaudEmulator = 0 Then WaitMS(6);
     End;
 
-(*
-    If AllowAbort And (BufPos MOD 128 = 0) Then
-      If InKey(0) = #32 Then Begin
+    If AllowAbort And (BufPos MOD 128 = 0) And Not Session.LocalMode Then
+      If Session.Client.DataWaiting And (InKey(0) = #32) Then Begin
         AnsiColor(7);
         Break;
       End;
-
+(*
     If AllowAbort And (InKey(0) = #32) Then Begin
       AnsiColor(7);
       Break;
@@ -1440,7 +1439,7 @@ Begin
   Handles[0] := Input.ConIn;
 
   If Not TBBSCore(Core).LocalMode Then Begin
-    If TBBSCore(Core).Client.FInBufPos <= TBBSCore(Core).Client.FInBufEnd Then
+    If TBBSCore(Core).Client.FInBufPos < TBBSCore(Core).Client.FInBufEnd Then
       InType := 2
     Else Begin
       Handles[1] := SocketEvent;
@@ -1916,7 +1915,7 @@ Var
   End;
 
 Begin
-  PurgeInputBuffer;
+//  PurgeInputBuffer;
 
   If UseInLimit Then Begin
     Field      := InLimit;

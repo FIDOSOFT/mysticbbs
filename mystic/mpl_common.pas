@@ -64,55 +64,63 @@ Procedure InitProcedures (O: Pointer; S: Pointer; Var CV: VarDataRec; Var X: Wor
 
   Procedure AddProc ({$IFDEF MPLPARSER} I: String; {$ENDIF} P: String; T: TIdentTypes);
   Begin
-    Inc(X);
-    New(CV[X]);
+    Inc (X);
+    New (CV[X]);
 
     With CV[X]^ Do Begin
-      VarID     := IW;
-      Inc(IW);
+      VarID  := IW;
       vType  := T;
-      Move(P[1], Params, Ord(P[0]));
-      NumParams := Ord(p[0]);
+      ArrPos := 0;
+
+      Move (P[1], Params, Ord(P[0]));
+
+      NumParams := Ord(P[0]);
+
+      Inc(IW);
+
     {$IFNDEF MPLPARSER}
       VarSize  := 0;
       DataSize := 0;
       Data     := NIL;
       ProcPos  := 0;
       Kill     := True;
+
       FillChar (pID, SizeOf(pID), 0);
     {$ELSE}
       Ident  := I;
       InProc := False;
       Proc   := True;
     {$ENDIF}
-      ArrPos := 0;
     End;
   End;
 
   Procedure AddStr ({$IFDEF MPLPARSER} I: String; {$ENDIF} T: TIdentTypes; SI: Word);
   Begin
-    Inc(X);
-    New(CV[X]);
+    Inc (X);
+    New (CV[X]);
 
-    With cV[x]^ Do Begin
+    With CV[X]^ Do Begin
       VarID     := IW;
-      Inc(IW);
-      vType  := T;
+      vType     := T;
       NumParams := 0;
+      ArrPos    := 0;
+
+      Inc(IW);
+
     {$IFNDEF MPLPARSER}
+      ProcPos   := 0;
+      Kill      := True;
       VarSize   := SI + 1;
       DataSize  := VarSize;
+
       GetMem   (Data,  DataSize);
       FillChar (Data^, DataSize, 0);
       FillChar (pID, SizeOf(pID), 0);  //cant we just assign it to 0 here?
-      ProcPos   := 0;
-      Kill   := True;
     {$ELSE}
       Ident  := I;
       InProc := False;
-      Proc := False;
+      Proc   := False;
     {$ENDIF}
-      ArrPos := 0;
     End;
   End;
 
@@ -123,27 +131,31 @@ Procedure InitProcedures (O: Pointer; S: Pointer; Var CV: VarDataRec; Var X: Wor
 
   Procedure AddPointer ({$IFDEF MPLPARSER} I: String; {$ENDIF} T: TIdentTypes; SI: Word; PD: Pointer);
   Begin
-    Inc(x);
-    New(cV[x]);
+    Inc (X);
+    New (CV[X]);
 
-    With cV[x]^ Do Begin
+    With CV[X]^ Do Begin
       VarID     := IW;
-      Inc(IW);
-      vType  := t;
+      vType     := T;
       NumParams := 0;
+      ArrPos    := 0;
+
+      Inc (IW);
+
     {$IFNDEF MPLPARSER}
       If T = iString Then VarSize := SI + 1 Else VarSize := SI;
+
       DataSize  := VarSize;
-      Data   := PD;
+      Data      := PD;
+      ProcPos   := 0;
+      Kill      := False;
+
       FillChar (pID, SizeOf(pID), 0);
-      ProcPos := 0;
-      Kill   := False;
     {$ELSE}
       Ident  := I;
       InProc := False;
-      Proc := False;
+      Proc   := False;
     {$ENDIF}
-      ArrPos := 0;
     End;
   End;
 

@@ -3440,4 +3440,25 @@
  + If the download directory doesn't exist when NodeSpy attempts a Zmodem
    download, it will now tell you instead of crashing.
 
+ + NodeSpy Terminal now allows the current connected phone book entry to be
+   edited while connected.  This allows the password to be set, statusbar to
+   be turned on/off, etc.
+
+ + NodeSpy Terminal now only updates the last call date and times called if
+   the connection was successful.
+
+ + NodeSpy terminal now fully disconnects the session before displaying the
+   "connection terminated" box.
+
+ + MPLC will now continue to attempt to compile subsequent MPL programs even
+   if one compilation fails.
+
+ + Message Base QWK scan and regular scan settings now have the ability to
+   toggle ALL bases on or off at one time.  An updated prompt goes along with
+   this:
+
+      ; Message base new and qwk scan toggle prompt:
+      095 Toggle: |09[|11#-#,#|09], Select [|11A|09]ll, [|11D|09]eselect All, [|11?|09/|11List|09]: |XX
+
+
    <ALPHA 35 RELEASED>

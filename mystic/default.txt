@@ -197,7 +197,8 @@
 ; &1 = base number      &2 = base name      &3 = scan base? (Yes or No)
 093  |07|$R04|&1|15|$R03|&3  |07|$R29|&2
 094 |CR|12There are no available message bases!
-095 |09Selection |01[|10##|01]|09, |01[|10##|01-|10##|01,|10##|01]|09, |01[|10?|01/|10List|01]|09, or |01[|10Q|01]|09uit: |XX
+; Message base new and qwk scan toggle prompt:
+095 Toggle: |09[|11#-#,#|09], Select [|11A|09]ll, [|11D|09]eselect All, [|11?|09/|11List|09]: |XX
 ; For strings 096 - 099: &1 = message base name
 096 |CR |11|&1 will NOT be scanned in QWK packets!|CR
 097 |CR |11|&1 will be scanned in QWK packets!|CR

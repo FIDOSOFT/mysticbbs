@@ -10,7 +10,7 @@ Uses
   SysUtils,
   m_Strings,
   m_FileIO,
-  m_Socket_Class,
+  m_io_Sockets,
   m_DateTime,
   MIS_Server,
   MIS_NodeData,
@@ -19,7 +19,7 @@ Uses
   BBS_MsgBase_JAM,
   BBS_MsgBase_Squish;
 
-Function CreateHTTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateHTTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
 Type
   THTTPServer = Class(TServerClient)
@@ -30,7 +30,7 @@ Type
     Cmd      : String;
     Data     : String;
 
-    Constructor Create (Owner: TServerManager; CliSock: TSocketClass);
+    Constructor Create (Owner: TServerManager; CliSock: TIOSocket);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
 
@@ -39,12 +39,12 @@ Type
 
 Implementation
 
-Function CreateHTTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TSocketClass) : TServerClient;
+Function CreateHTTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 Begin
   Result := THTTPServer.Create(Owner, CliSock);
 End;
 
-Constructor THTTPServer.Create (Owner: TServerManager; CliSock: TSocketClass);
+Constructor THTTPServer.Create (Owner: TServerManager; CliSock: TIOSocket);
 Begin
   Inherited Create(Owner, CliSock);
 
@@ -83,6 +83,7 @@ Begin
 
     If Cmd = 'QUIT' Then Begin
       GotQuit := True;
+
       Break;
     End Else
       Client.WriteLine(re_UnknownCommand);

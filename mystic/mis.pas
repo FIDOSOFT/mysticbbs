@@ -316,7 +316,9 @@ Begin
   Console.SetWindow (1, 1, 80, 25, True);
 
   FocusCurrent := FocusMax;
+
   DrawStatusScreen;
+
   SwitchFocus;
 End;
 

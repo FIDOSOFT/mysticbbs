@@ -350,6 +350,7 @@ Var
 Begin
   If Not Config.MCompress Then Begin
     Result := GetBaseByNum(Num, TempBase);
+
     Exit;
   End;
 
@@ -826,31 +827,13 @@ Var
         End;
     End;
 
+    Close (MBaseFile);
+
     Session.io.OutFull (Session.GetPrompt(430));
   End;
 
-  Procedure ToggleBase (A : Word);
-  Var
-    B : Word;
+  Procedure ToggleCurrent (Forced: LongInt);
   Begin
-    If A = 0 Then Exit;
-
-    B        := 0;
-    FileMode := 66;
-
-    Reset (MBaseFile);
-
-    Repeat
-      {$I-} Read (MBaseFile, MBase); {$I+}
-
-      If IoResult <> 0 Then Exit;
-
-      If Session.User.Access(MBase.ListACS) Then
-        Inc(B);
-
-      If A = B Then Break;
-    Until False;
-
     GetMessageScan;
 
     Session.io.PromptInfo[1] := MBase.Name;
@@ -858,30 +841,72 @@ Var
     If QWK Then Begin
       Case MScan.QwkScan of
         0 : Begin
-              MScan.QwkScan := 1;
-              Session.io.OutFullLn (Session.GetPrompt(97));
+              If Forced <> -1 Then
+                MScan.QwkScan := Forced
+              Else Begin
+                MScan.QwkScan := 1;
+
+                Session.io.OutFullLn (Session.GetPrompt(97));
+              End;
             End;
         1 : Begin
-              MScan.QwkScan := 0;
-              Session.io.OutFullLn (Session.GetPrompt(96));
+              If Forced <> -1 Then
+                MScan.QwkScan := Forced
+              Else Begin
+                MScan.QwkScan := 0;
+
+                Session.io.OutFullLn (Session.GetPrompt(96));
+              End;
             End;
-        2 : Session.io.OutFullLn (Session.GetPrompt(302));
+        2 : If Forced <> -1 Then
+              Session.io.OutFullLn (Session.GetPrompt(302));
       End;
     End Else Begin
       Case MScan.NewScan of
         0 : Begin
-              MScan.NewScan := 1;
-              Session.io.OutFullLn (Session.GetPrompt(99));
+              If Forced <> -1 Then
+                MScan.NewScan := Forced
+              Else Begin
+                MScan.NewScan := 1;
+
+                Session.io.OutFullLn (Session.GetPrompt(99));
+              End;
             End;
         1 : Begin
-              MScan.NewScan := 0;
-              Session.io.OutFullLn (Session.GetPrompt(98));
+              If Forced <> -1 Then
+                MScan.NewScan := Forced
+              Else Begin
+                MScan.NewScan := 0;
+
+                Session.io.OutFullLn (Session.GetPrompt(98));
+              End;
             End;
-        2 : Session.io.OutFullLn (Session.GetPrompt(302));
+        2 : If Forced <> -1 Then
+              Session.io.OutFullLn (Session.GetPrompt(302));
       End;
     End;
 
     SetMessageScan;
+  End;
+
+  Procedure ToggleAll (Value: Byte);
+  Begin
+    Reset (MBaseFile);
+
+    While Not Eof(MBaseFile) Do Begin
+      Read (MBaseFile, MBase);
+
+      If Session.User.Access(MBase.ListACS) Then
+        ToggleCurrent(Value);
+    End;
+
+    Close (MBaseFile);
+  End;
+
+  Procedure ToggleByNumber (BaseNumber: LongInt);
+  Begin
+    If (BaseNumber > 0) And GetBaseCompressed(BaseNumber, MBase) Then
+      ToggleCurrent(-1);
   End;
 
 Var
@@ -892,7 +917,8 @@ Var
   Num1   : String[40];
   Num2   : String[40];
 Begin
-  Old := MBase;
+  Old      := MBase;
+  FileMode := 66;
 
   Session.User.IgnoreGroup := Pos('/ALLGROUP', strUpper(Data)) > 0;
 
@@ -900,8 +926,11 @@ Begin
 
   If Total = 0 Then Begin
     Session.io.OutFullLn (Session.GetPrompt(94));
+
     MBase := Old;
+
     Session.User.IgnoreGroup := False;
+
     Exit;
   End;
 
@@ -912,8 +941,14 @@ Begin
 
     If (Temp = '') or (Temp = 'Q') Then Break;
 
+    If Temp = 'A' Then
+      ToggleAll(1)
+    Else
+    If Temp = 'D' Then
+      ToggleAll(0)
+    Else
     If Temp = '?' Then
-      List_Bases
+      // do nothing
     Else Begin
       Num1 := '';
       Num2 := '';
@@ -924,9 +959,9 @@ Begin
         If Temp[Count1] = ',' Then Begin
           If Num2 <> '' Then Begin
             For Count2 := strS2I(Num2) to strS2I(Num1) Do
-              ToggleBase(Count2);
+              ToggleByNumber(Count2);
           End Else
-            ToggleBase(strS2I(Num1));
+            ToggleByNumber(strS2I(Num1));
 
           Num1 := '';
           Num2 := '';
@@ -940,15 +975,13 @@ Begin
 
       If Num2 <> '' Then Begin
         For Count1 := strS2I(Num2) to strS2I(Num1) Do
-          ToggleBase(Count1);
+          ToggleByNumber(Count1);
       End Else
-        ToggleBase(strS2I(Num1));
-
-      List_Bases;
+        ToggleByNumber(strS2I(Num1));
     End;
-  Until False;
 
-  Close (MBaseFile);
+    List_Bases;
+  Until False;
 
   MBase := Old;
 
