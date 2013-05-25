@@ -30,6 +30,7 @@ Function  TimeDos2Str       (Date: LongInt; Mode: Byte) : String;
 Function  DayOfWeek         (Date: LongInt) : Byte;
 Function  DaysAgo           (Date: LongInt; dType: Byte) : LongInt;
 Function  TimeSecToStr      (Secs: LongInt) : String;
+Function  FormatDate        (DT: DateTime; Mask: String) : String;
 
 Implementation
 
@@ -353,6 +354,22 @@ Begin
     Temp := Temp + 360000;
 
   Result := (Temp - Secs) >= 0;
+End;
+
+Function FormatDate (DT: DateTime; Mask: String) : String;
+Var
+  YearStr : String[4];
+Begin
+  Result  := Mask;
+  YearStr := strI2S(DT.Year);
+  Result  := strReplace(Result, 'YYYY', YearStr);
+  Result  := strReplace(Result, 'YY', Copy(YearStr, 3, 2));
+  Result  := strReplace(Result, 'MM', strZero(DT.Month)) +
+             strReplace(Result, 'DD', strZero(DT.Day)) +
+             strReplace(Result, 'HH', strZero(DT.Hour)) +
+             strReplace(Result, 'II', strZero(DT.Min)) +
+             strReplace(Result, 'SS', strZero(DT.Sec)) +
+             strReplace(Result, 'NNN', MonthString[DT.Month]);
 End;
 
 End.
