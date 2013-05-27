@@ -696,7 +696,7 @@ Begin
   Zmodem.StatusProc := @ProtocolStatusUpdate;
   Zmodem.AbortProc  := @ProtocolAbort;
 
-  Queue.Add(JustPath(FileName), JustFile(FileName), '');
+  Queue.Add(True, JustPath(FileName), JustFile(FileName), '');
 
   Zmodem.QueueSend;
 

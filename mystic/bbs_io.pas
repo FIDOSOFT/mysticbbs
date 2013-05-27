@@ -1277,7 +1277,7 @@ Begin
     End;
 
     If AllowAbort And (BufPos MOD 128 = 0) And Not Session.LocalMode Then
-      If Session.Client.DataWaiting And (InKey(0) = #32) Then Begin
+      If InKey(0) = #32 Then Begin
         AnsiColor(7);
         Break;
       End;
@@ -1858,6 +1858,7 @@ Var
 
     pWrite (Copy(Str, Junk, Field));
     If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor2);
+
     pWrite (strRep(FieldCh, Field - Length(Copy(Str, Junk, Field))));
     If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor1);
 
@@ -1868,6 +1869,7 @@ Var
   Begin
     pWrite (Copy(Str, StrPos, Field - CurPos + 1));
     If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor2);
+
     pWrite (strRep(FieldCh, (Field - CurPos + 1) - Length(Copy(Str, StrPos, Field - CurPos + 1))));
     If UseInField Then AnsiColor(TBBSCore(Core).Theme.FieldColor1);
 

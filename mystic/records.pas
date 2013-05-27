@@ -23,7 +23,7 @@
 Const
   mysSoftwareID  = 'Mystic BBS';
   mysCopyYear    = '1997-2013';                                 // its been a long time!
-  mysVersion     = '1.10 A35';                                  // current version
+  mysVersion     = '1.10 A36';                                  // current version
   mysDataChanged = '1.10 A11';                                  // version of last records change
 
   {$IFDEF WIN32}

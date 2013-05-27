@@ -22,6 +22,7 @@ Type
     DataFile     : TFileBuffer;
     CurVarNum    : Word;
     CurVarID     : Word;
+//    CurClassNum  : Word;
     VarData      : VarDataRec;
     Ch           : Char;
     W            : Word;

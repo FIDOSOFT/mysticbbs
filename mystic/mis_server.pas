@@ -80,7 +80,7 @@ Begin
   ServerStatus  := TStringList.Create;
   StatusUpdated := False;
   ClientList    := TList.Create;
-  TextPath      := Config.DataPath;
+  TextPath      := Cfg.DataPath;
   NodeInfo      := ND;
   Config        := Cfg;
 

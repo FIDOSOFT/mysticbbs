@@ -944,7 +944,7 @@ Begin
     If Temp = 'A' Then
       ToggleAll(1)
     Else
-    If Temp = 'D' Then
+    If Temp = 'R' Then
       ToggleAll(0)
     Else
     If Temp = '?' Then
@@ -3683,7 +3683,6 @@ Var
     NewMsgs   : LongInt;
     YourMsgs  : LongInt;
     TotalMsgs : LongInt;
-    Res       : Boolean;
   Begin
     Session.io.PromptInfo[1]  := MBase.Name;
     Session.io.PromptInfo[2]  := strI2S(Global_CurBase);

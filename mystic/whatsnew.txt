@@ -3458,7 +3458,20 @@
    this:
 
       ; Message base new and qwk scan toggle prompt:
-      095 Toggle: |09[|11#-#,#|09], Select [|11A|09]ll, [|11D|09]eselect All, [|11?|09/|11List|09]: |XX
+      095 Toggle: |09[|11#-#,#|09], Select [|11A|09]dd ll, [|11R|09]emove All, [|11?|09/|11List|09]: |XX
 
+ ! Fixed a bug in the matrix login after creating a new user.
+
+ ! Fixed a bug when searching or doing new scans on a single file base which
+   could sometimes cause a crash.
+
+ ! Broke BADIP.TXT recently.  Fixed now.
+
+ ! Fixed a bug with NodeSpy Zmodem download which would cause it to crash,
+   hopefully it will work better now?  At least it shouldn't crash now either
+   way.
+
+ ! Fixed a few other bugs and did some minor enhancements that no one will
+   notice. ;)
 
    <ALPHA 35 RELEASED>

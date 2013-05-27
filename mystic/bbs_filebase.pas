@@ -431,7 +431,7 @@ Var
     Case Mode of
       0,
       1  : Protocol.ReceivePath := DirSlash(FName);
-      2  : Queue.Add(JustPath(FName), JustFile(FName));
+      2  : Queue.Add(True, JustPath(FName), JustFile(FName));
       3  : Begin
              Assign (T, Session.TempPath + 'file.lst');
              Reset  (T);
@@ -439,7 +439,7 @@ Var
              While Not Eof(T) Do Begin
                ReadLn (T, Res);
 
-               Queue.Add(JustPath(Res), JustFile(Res));
+               Queue.Add(True, JustPath(Res), JustFile(Res));
              End;
 
              Close (T);
@@ -1510,7 +1510,7 @@ Begin
     Inc(A);
   End;
 
-  Session.SystemLog('DEBUG: ExecArc build exec for: ' + Temp);
+  //Session.SystemLog('DEBUG: ExecArc build exec for: ' + Temp);
 
   ShellDOS ('', Temp);
 End;
@@ -1735,6 +1735,7 @@ Begin
 
         If FirstBase Then Begin
           Session.User.ThisUser.LastFBase := 0;
+
           ChangeFileArea ('+');
         End;
 
@@ -1771,6 +1772,7 @@ Begin
 
     If FirstBase Then Begin
       Session.User.ThisUser.LastFBase := 0;
+
       ChangeFileArea ('+');
     End;
 
@@ -1939,7 +1941,9 @@ Begin
 
       If Session.User.Access(FBase.ListACS) Then Begin
         Session.User.ThisUser.LastFBase := FilePos(FBaseFile);
+
         Close (FBaseFile);
+
         Exit;
       End;
     Until False;
@@ -2788,6 +2792,7 @@ Var
               End;
         'Q' : Begin
                 Result := 1;
+
                 Break;
               End;
         'V' : Begin
@@ -3373,10 +3378,12 @@ Begin
   Timer := TimerSet(1000);
 
   Session.io.OutFull(Session.GetPrompt(67));
+  Session.io.BufFlush;
 
   While Not TimerUp(Timer) Do
     If Session.io.InKey(1000) <> #255 Then Begin
       Session.io.OutRawLn('');
+
       Exit;
     End;
 
@@ -3464,8 +3471,10 @@ Begin
 
         If (FDir.FileName = Batch[A].FileName) And (FDir.Flags And FDirDeleted = 0) Then Begin
           Inc (FDir.Downloads);
+
           Seek  (FDirFile, FilePos(FDirFile) - 1);
           Write (FDirFile, FDir);
+
           Break;
         End;
       End;
@@ -3497,8 +3506,10 @@ Var
   Procedure Scan_Base;
   Begin
     Session.io.PromptInfo[1] := FBase.Name;
+
     Session.io.OutBS   (Screen.CursorX, True);
     Session.io.OutFull (Session.GetPrompt(87));
+
     Session.io.BufFlush;
 
     Case ListFiles (3, Str) of
@@ -3537,17 +3548,26 @@ Begin
     Session.io.OutRawLn ('');
 
     Reset (FBaseFile);
+
     While (Not Eof(FBaseFile)) and (Not Done) Do Begin
       Found := False;
+
       Read (FBaseFile, FBase);
-      If Session.User.Access(FBase.ListACS) Then Scan_Base;
+
+      If Session.User.Access(FBase.ListACS) Then
+        Scan_Base;
     End;
 
     Close (FBaseFile);
   End Else Begin
     Session.io.OutRawLn ('');
+
     Reset (FBaseFile);
+    Seek  (FBaseFile, Session.User.ThisUser.LastFBase - 1);
+    Read  (FBaseFile, FBase);
+
     Scan_Base;
+
     Close (FBaseFile);
   End;
 
@@ -3630,8 +3650,13 @@ Begin
       Session.io.OutFullLn(Session.GetPrompt(038))
     Else Begin
       GetFileScan;
+
       Reset (FBaseFile);
+      Seek  (FBaseFile, Session.User.ThisUser.LastFBase - 1);
+      Read  (FBaseFile, FBase);
+
       Scan_Current_Base;
+
       Close (FBaseFile);
     End;
   End;
