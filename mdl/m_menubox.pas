@@ -199,9 +199,9 @@ Begin
 
   If Shadow Then Begin
     For A := Y1 + 1 to Y2 + 1 Do
-      For B := X2 to X2 + 1 Do Begin
+      For B := X2 + 1 to X2 + 2 Do Begin
         Ch := Console.ReadCharXY(B, A);
-        Console.WriteXY (B + 1, A, ShadowAttr, Ch);
+        Console.WriteXY (B, A, ShadowAttr, Ch);
       End;
 
     A := Y2 + 1;
