@@ -2246,6 +2246,7 @@ Begin
       If TempChar = #0 Then TempChar := ' ';
 
       Session.io.BufAddChar(TempChar);
+
       Inc (BufPos, 2);
     End;
   End;

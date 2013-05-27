@@ -354,7 +354,7 @@ Var
 Begin
   If Not WasOpened Then
     If Shadow Then
-      Screen.GetScreenImage(X1, Y1, X2 + 2{3}, Y2 + 1, Image)
+      Screen.GetScreenImage(X1, Y1, X2 + 2, Y2 + 1, Image)
     Else
       Screen.GetScreenImage(X1, Y1, X2, Y2, Image);
 
@@ -388,9 +388,9 @@ Begin
 
   If Shadow Then Begin
     For A := Y1 + 1 to Y2 + 1 Do
-      For B := X2 to X2 + 1 Do Begin
+      For B := X2 + 1 to X2 + 2 Do Begin
         Ch := Screen.ReadCharXY(B, A);
-        WriteXY (B + 1, A, ShadowAttr, Ch);
+        WriteXY (B, A, ShadowAttr, Ch);
       End;
 
     A := Y2 + 1;

@@ -77,7 +77,7 @@ Type
   );
 
 Const
-  mplVer           = '11Z';
+  mplVer           = '11Y';
   mplVersion       = '[MPX ' + mplVer +']' + #26;
   mplVerLength     = 10;
   mplExtSource     = '.mps';
@@ -90,7 +90,7 @@ Const
   mplMaxCaseNums   = 20;
   mplMaxVarDeclare = 20;
   mplMaxArrayDem   = 3;   //cannot be changed yet
-  mplMaxProcParams = 8;
+  mplMaxProcParams = 12;
   mplMaxRecords    = 20;
   mplMaxRecFields  = 40;
   mplMaxDataSize   = 65535;
@@ -111,6 +111,9 @@ Const
    mpxBadInit         = 5;
    mpxDivisionByZero  = 6;
    mpxMathematical    = 7;
+   mpxTooManyClasses  = 8;
+   mpxInvalidClass    = 9;
+   mpxInvalidClassH   = 10;
 {$ELSE}
    mpsEndOfFile       = 1;
    mpsFileNotfound    = 2;

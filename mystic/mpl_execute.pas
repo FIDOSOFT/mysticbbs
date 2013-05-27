@@ -13,8 +13,18 @@ Uses
 
 Const
   mplExecuteBuffer = 8 * 1024;
+  mplMaxClassStack = 50;
+
+Const
+  mplClass_Box   = 1;
+  mplClass_Input = 2;
 
 Type
+  TClassStack = Record
+    ClassPtr  : Pointer;
+    ClassType : Byte;
+  End;
+
   TInterpEngine = Class
     Owner        : Pointer;
     ErrStr       : String;
@@ -22,8 +32,8 @@ Type
     DataFile     : TFileBuffer;
     CurVarNum    : Word;
     CurVarID     : Word;
-//    CurClassNum  : Word;
     VarData      : VarDataRec;
+    ClassData    : Array[1..mplMaxClassStack] of TClassStack;
     Ch           : Char;
     W            : Word;
     IoError      : LongInt;
@@ -102,6 +112,10 @@ Type
     Procedure GetFGroupVars   (Var G: RecGroup);
     Function  GetFGroupRecord (Num: LongInt) : Boolean;
 
+    Procedure ClassCreate (Var Num: LongInt; Str: String);
+    Function  ClassValid  (Num: LongInt; cType: Byte) : Boolean;
+    Procedure ClassFree   (Num: LongInt);
+
     Constructor Create (O: Pointer);
     Destructor  Destroy; Override;
     Function    Execute (FN: String) : Byte;
@@ -123,7 +137,8 @@ Uses
   BBS_Core,
   BBS_IO,
   BBS_General,
-  BBS_Ansi_MenuBox;
+  BBS_Ansi_MenuBox,
+  BBS_Ansi_MenuInput;
 
 {$I MPL_COMMON.PAS}
 
@@ -342,6 +357,8 @@ Begin
 End;
 
 Constructor TInterpEngine.Create (O: Pointer);
+Var
+  Count : LongInt;
 Begin
   Inherited Create;
 
@@ -350,6 +367,11 @@ Begin
   ErrStr    := '';
   Ch        := #0;
   W         := 0;
+
+  For Count := 1 to mplMaxClassStack Do Begin
+    ClassData[Count].ClassPtr  := NIL;
+    ClassData[Count].ClassType := 0;
+  End;
 
   {$IFDEF LOGGING}
     Depth   := 0;
@@ -369,6 +391,12 @@ Begin
 
   CurVarNum := 0;
 
+  For Count := 1 to mplMaxClassStack Do
+    If Assigned(ClassData[Count].ClassPtr) Then
+      Case ClassData[Count].ClassType of
+        mplClass_Box : TAnsiMenuBox(ClassData[Count].ClassPtr).Free;
+      End;
+
   Inherited Destroy;
 End;
 
@@ -384,6 +412,9 @@ Begin
     mpxBadInit        : Result := 'Unable to initialize variable';
     mpxDivisionByZero : Result := 'Division by zero';
     mpxMathematical   : Result := 'Parsing error';
+    mpxTooManyClasses : Result := 'Too many open classes';
+    mpxInvalidClass   : Result := 'Invalid class type: ' + ErrStr;
+    mpxInvalidClassH  : Result := 'Invalid class handle';
   End;
 End;
 
@@ -1209,6 +1240,60 @@ Begin
   IoError := IoResult;
 End;
 
+Procedure TInterpEngine.ClassCreate (Var Num: LongInt; Str: String);
+Var
+  Count : LongInt;
+Begin
+  Num := -1;
+
+  For Count := 1 to mplMaxClassStack Do
+    If Not Assigned(ClassData[Count].ClassPtr) Then Begin
+      Num := Count;
+
+      Break;
+    End;
+
+  If Num = -1 Then Begin
+    Error(mpxTooManyClasses, '');
+
+    Exit;
+  End;
+
+  If Str = 'BOX' Then Begin
+    ClassData[Num].ClassPtr  := TAnsiMenuBox.Create;
+    ClassData[Num].ClassType := mplClass_Box;
+  End Else
+  If Str = 'INPUT' Then Begin
+    ClassData[Num].ClassPtr  := TAnsiMenuInput.Create;
+    ClassData[Num].ClassType := mplClass_Input;
+  End Else
+   Error(mpxInvalidClass, Str);
+End;
+
+Procedure TInterpEngine.ClassFree (Num: LongInt);
+Begin
+  If (Num > 0) and (Num <= mplMaxClassStack) Then
+    If Assigned(ClassData[Num].ClassPtr) Then Begin
+      Case ClassData[Num].ClassType of
+        mplClass_Box   : TAnsiMenuBox(ClassData[Num].ClassPtr).Free;
+        mplClass_Input : TAnsiMenuInput(ClassData[Num].ClassPtr).Free;
+      End;
+
+      ClassData[Num].ClassPtr := NIL;
+    End;
+End;
+
+Function TInterpEngine.ClassValid (Num: LongInt; cType: Byte) : Boolean;
+Begin
+  If Assigned(ClassData[Num].ClassPtr) and (ClassData[Num].ClassType = cType) Then
+    Result := True
+  Else Begin
+    Result := False;
+
+    Error(mpxInvalidClassH, '');
+  End;
+End;
+
 Function TInterpEngine.ExecuteProcedure (DP: Pointer) : TIdentTypes;
 // okay... change this to:
 // array[1..mplmaxprocparams] of record
@@ -1780,6 +1865,8 @@ Begin
             TempLong := Abs(Param[1].L);
             Store (TempLong, 4);
           End;
+    95  : ClassCreate(LongInt(Pointer(Param[1].vData)^), strUpper(Param[2].S));
+    96  : ClassFree(Param[1].L);
     500 : Begin
             TempStr := Session.io.GetInput(Param[1].B, Param[2].B, Param[3].B, Param[4].S);
             Store (TempStr, 256);
@@ -1947,6 +2034,48 @@ Begin
             Store (TempLong, 4);
           End;
     549 : Session.Msgs.GetMailStats (LongInt(Pointer(Param[1].vData)^), LongInt(Pointer(Param[2].vData)^));
+    550 : If ClassValid(Param[1].L, mplClass_Box) Then
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).Open(Param[2].B, Param[3].B, Param[4].B, Param[5].B);
+    551 : If ClassValid(Param[1].L, mplClass_Box) Then
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).Close;
+    552 : If ClassValid(Param[1].L, mplClass_Box) Then Begin
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).HeadType := Param[2].B;
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).HeadAttr := Param[3].B;
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).Header   := Param[4].S;
+          End;
+    553 : If ClassValid(Param[1].L, mplClass_Box) Then Begin
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).FrameType  := Param[2].B;
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).Box3D      := Param[3].O;
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).BoxAttr    := Param[4].B;
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).BoxAttr2   := Param[5].B;
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).BoxAttr3   := Param[6].B;
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).BoxAttr4   := Param[7].B;
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).Shadow     := Param[8].O;
+            TAnsiMenuBox(ClassData[Param[1].L].ClassPtr).ShadowAttr := Param[9].B;
+          End;
+    554 : If ClassValid(Param[1].L, mplClass_Input) Then Begin
+            TempStr := TAnsiMenuInput(ClassData[Param[1].L].ClassPtr).GetStr(Param[2].B, Param[3].B, Param[4].B, Param[5].B, Param[6].B, Param[7].S);
+            Store (TempStr, 255);
+          End;
+    555 : If ClassValid(Param[1].L, mplClass_Input) Then Begin
+            TAnsiMenuInput(ClassData[Param[1].L].ClassPtr).Attr     := Param[2].B;
+            TAnsiMenuInput(ClassData[Param[1].L].ClassPtr).FillAttr := Param[3].B;
+            TAnsiMenuInput(ClassData[Param[1].L].ClassPtr).FillChar := Param[4].C;
+            TAnsiMenuInput(ClassData[Param[1].L].ClassPtr).LoChars  := Param[5].S;
+            TAnsiMenuInput(ClassData[Param[1].L].ClassPtr).HiChars  := Param[6].S;
+          End;
+    556 : If ClassValid(Param[1].L, mplClass_Input) Then Begin
+            TempChar := TAnsiMenuInput(ClassData[Param[1].L].ClassPtr).ExitCode;
+            Store (TempChar, 1);
+          End;
+    557 : If ClassValid(Param[1].L, mplClass_Input) Then Begin
+            TempLong := TAnsiMenuInput(ClassData[Param[1].L].ClassPtr).GetNum(Param[2].B, Param[3].B, Param[4].B, Param[5].B, Param[6].L, Param[7].L, Param[8].L);
+            Store (TempLong, 4);
+          End;
+    558 : If ClassValid(Param[1].L, mplClass_Input) Then Begin
+            TempBool := TAnsiMenuInput(ClassData[Param[1].L].ClassPtr).GetEnter(Param[2].B, Param[3].B, Param[4].B, Param[5].S);
+            Store (TempBool, 1);
+          End;
   End;
 End;
 
@@ -1954,6 +2083,7 @@ Procedure TInterpEngine.SkipBlock;
 begin
   NextChar;
   NextWord;
+
   MoveToPos (CurFilePos + W);
 end;
 

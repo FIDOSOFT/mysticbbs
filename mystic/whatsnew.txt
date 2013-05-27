@@ -3475,3 +3475,38 @@
    notice. ;)
 
    <ALPHA 35 RELEASED>
+
+ ! Fixed a memory leak in the new theme prompt system.  Mystic was leaking
+   about 30kb per login.
+
+ ! Mystic should now will properly display the file base "display file"
+   before listing files.
+
+ + MPL now has the ability to interface directly with internal Mystic BBS
+   classes.  This opens up a whole world of new possibilities in the future
+   (for example) sockets, full remote ANSI screen library (boxes, listboxes)
+   data sorting, and more.
+
+   Classes must first be created and then freed after using.  Mystic will
+   create the class instance and return a handle to that specific class to
+   use with the functions.  Finally, the class is freed.  Two new functions
+   go with this:
+
+      ClassCreate (ClassHandle, ClassType)
+      ClassFree (ClassHandle)
+
+ + MPL now supports the ANSI box class.  There are three functions which
+   go along with this: BoxOpen, BoxClose, and BoxOptions.  The Box class
+   will automatically save and and subsequently restore the text under the
+   box when it is closed.
+
+   See TESTBOX.MPS for an example.
+
+ + MPL now supports the ANSI input class.  There are several functions which
+   go along with this: InputString, InputNumber, InputEnter, InputOptions.
+   This class allows you more freedom over input functions than the standard
+   MPL input functions do.
+
+   See TESTINPUT.MPS for an example.
+
+   <ALPHA 36 RELEASED>

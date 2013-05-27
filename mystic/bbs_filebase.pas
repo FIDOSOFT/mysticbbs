@@ -2866,6 +2866,9 @@ Begin
   {$I-} Reset (DataFile, 1); {$I+}
   If IoResult <> 0 Then ReWrite (DataFile, 1);
 
+  If Mode = 1 Then
+    Session.io.OutFile(FBase.DispFile, True, 0);
+
   Result  := 0;
   CurPage := 0;
   TopPage := 0;
