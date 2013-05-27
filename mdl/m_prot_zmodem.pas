@@ -704,7 +704,7 @@ Hex:
   begin
     ProtocolStatus := ecNoHeader;
 
-    while APort.DataWaiting do begin
+    while aport.connected and APort.DataWaiting do begin
       {Only get the next char if we don't know the header type yet}
       case HeaderState of
         hsNone, hsGotZPad, hsGotZDle :
@@ -1095,7 +1095,7 @@ Begin
 
   StatusTimer := TimerSet(StatusInterval);
 
-  APort.PurgeInputdata(0);
+  APort.PurgeInputData(0);
 
   HeaderType     := ZrInit;
   ZmodemState    := rzRqstFile;
@@ -1131,7 +1131,7 @@ Begin
     rzWaitFile,
     rzStartData,
     rzWaitEof    : Begin
-                     If Not APort.DataWaiting Then
+                     If Not APort.DataWaiting {And APort.Connected} Then
                        APort.WaitForData(1000);
 
                      If APort.DataWaiting Then Begin
@@ -1202,9 +1202,11 @@ Begin
             ZmodemState := rzError;
         end else if TimerUp(ReplyTimer) then begin
           Inc(BlockErrors);
+
           if BlockErrors < HandshakeRetry then begin
             PutHexHeader(ZNak);
-            ReplyTimer := TimerSet(HandshakeWait);
+
+            ReplyTimer  := TimerSet(HandshakeWait);
             ZmodemState := rzWaitFile;
             HeaderState := hsNone;
           end else
@@ -1362,9 +1364,12 @@ Begin
               end;
             else begin          {Fatal error opening file}
               SaveStatus := ProtocolStatus;
+
               CancelTransfer;
+
               ProtocolStatus := SaveStatus;
-              ZModemState := rzError;
+              ZModemState    := rzError;
+
               goto ExitPoint;
             end;
           end;
@@ -1681,7 +1686,7 @@ Begin
     end;
 
 ExitPoint:
-    {Set function result}
+
     case ZmodemState of
       rzRqstFile,
       rzSendInit,
@@ -2485,7 +2490,7 @@ Begin
   If ConvertToLower Then
     PacketStr := strLower(PacketStr);
 
-  PacketStr := PacketStr + #0 + strI2S(SrcFileLen);
+  PacketStr := PacketStr + #0 + strI2S(SrcFileLen) + #0;
   PacketLen := Length(PacketStr);
 
   Move(PacketStr[1], DataBlock^, PacketLen);

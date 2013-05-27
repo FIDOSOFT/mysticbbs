@@ -34,7 +34,7 @@ Type
     Constructor Create;
     Destructor  Destroy; Override;
 
-    Function    Add    (fPath, fName, fNew: String) : Boolean;
+    Function    Add    (CheckValid: Boolean; fPath, fName, fNew: String) : Boolean;
     Procedure   Delete (Idx: Word);
     Procedure   Clear;
     Function    Next : Boolean;
@@ -56,7 +56,7 @@ Begin
   Clear;
 End;
 
-Function TProtocolQueue.Add (fPath, fName, fNew: String) : Boolean;
+Function TProtocolQueue.Add (CheckValid: Boolean; fPath, fName, fNew: String) : Boolean;
 Var
   F : File;
 Begin
@@ -87,14 +87,14 @@ Begin
     Inc (QFSize, QData[QSize]^.FileSize);
 
     Close(F);
-  End Else Begin
+  End Else
+  If CheckValid Then Begin
     Dispose (QData[QSize]);
     Dec     (QSize);
 
     Exit;
-
-    // QData[QSize]^.Status := QueueNoFile;
-  End;
+  End Else
+    QData[QSize]^.Status := QueueNoFile;
 
   Result := True;
 End;

@@ -396,7 +396,7 @@ End;
   procedure AbstractProtocol.PrepareReceivePart;
     {-Parent-level inits for derived protocols}
   begin
-    GotOneFile := False;
+    GotOneFile     := False;
     ProtocolStatus := ecOk;
   end;
 
@@ -412,13 +412,14 @@ End;
     State : ProtocolStateType;
   begin
     PrepareReceivePart;
-    if ProtocolStatus <> ecOk then
-      Exit;
+
+    if ProtocolStatus <> ecOk then exit;
+
     repeat
       State := ProtocolReceivePart;
 
       aport.bufflush;
-    until State = psFinished;
+    until (State = psFinished) or not aport.connected;
   end;
 
   procedure AbstractProtocol.apResetStatus;

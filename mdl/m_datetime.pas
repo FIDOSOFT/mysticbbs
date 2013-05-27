@@ -364,12 +364,12 @@ Begin
   YearStr := strI2S(DT.Year);
   Result  := strReplace(Result, 'YYYY', YearStr);
   Result  := strReplace(Result, 'YY', Copy(YearStr, 3, 2));
-  Result  := strReplace(Result, 'MM', strZero(DT.Month)) +
-             strReplace(Result, 'DD', strZero(DT.Day)) +
-             strReplace(Result, 'HH', strZero(DT.Hour)) +
-             strReplace(Result, 'II', strZero(DT.Min)) +
-             strReplace(Result, 'SS', strZero(DT.Sec)) +
-             strReplace(Result, 'NNN', MonthString[DT.Month]);
+  Result  := strReplace(Result, 'MM', strZero(DT.Month));
+  Result  := strReplace(Result, 'DD', strZero(DT.Day));
+  Result  := strReplace(Result, 'HH', strZero(DT.Hour));
+  Result  := strReplace(Result, 'II', strZero(DT.Min));
+  Result  := strReplace(Result, 'SS', strZero(DT.Sec));
+  Result  := strReplace(Result, 'NNN', MonthString[DT.Month]);
 End;
 
 End.
