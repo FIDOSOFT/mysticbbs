@@ -49,7 +49,7 @@ Type
     Destructor  Destroy; Override;
 
     Function    OpenDataSession : Boolean;
-    Procedure   CloseDataSession;   
+    Procedure   CloseDataSession;
     Procedure   ResetSession;
     Procedure   UpdateUserStats (TFBase: RecFileBase; FDir: RecFileList; DirPos: LongInt);
     Function    CheckFileLimits (TempFBase: RecFileBase; FDir: RecFileList) : Byte;
@@ -411,7 +411,9 @@ End;
 Procedure TFTPServer.cmdREIN;
 Begin
   ResetSession;
-  Client.WriteLine(re_Greeting);
+
+  If Not Client.WriteFile('220', bbsConfig.DataPath + 'ftpbanner.txt') Then
+    Client.WriteLine (re_Greeting);
 End;
 
 Procedure TFTPServer.cmdPORT;
@@ -866,9 +868,11 @@ Begin
 
     If Cmd = 'CDUP' Then cmdCDUP Else
     If Cmd = 'CWD'  Then cmdCWD  Else
+//    If Cmd = 'DELE' Then Client.WriteLine(re_NoAccess) Else
     If Cmd = 'EPRT' Then cmdEPRT Else
     If Cmd = 'EPSV' Then cmdEPSV Else
     If Cmd = 'LIST' Then cmdLIST Else
+//    If Cmd = 'MKD'  Then Client.WriteLine(re_NoAccess) Else
     If Cmd = 'MODE' Then cmdMODE Else
     If Cmd = 'NLST' Then cmdNLST Else
     If Cmd = 'NOOP' Then Client.WriteLine(re_CommandOK) Else
@@ -878,6 +882,7 @@ Begin
     If Cmd = 'PWD'  Then cmdPWD  Else
     If Cmd = 'REIN' Then cmdREIN Else
     If Cmd = 'RETR' Then cmdRETR Else
+//    If Cmd = 'RMD'  Then Client.WriteLine(re_NoAccess) Else
     If Cmd = 'SIZE' Then cmdSIZE Else
     If Cmd = 'STOR' Then cmdSTOR Else
     If Cmd = 'STRU' Then cmdSTRU Else

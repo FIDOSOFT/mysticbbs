@@ -1395,9 +1395,11 @@ Begin
   SavedP2 := Session.io.PromptInfo[2];
   Result  := Session.User.ThisUser.Protocol;
 
+  If Result = 'Q' Then Result := #0;
+
 //Session.SystemLog('DEBUG: In SelectProtocol');
 
-  If Not LoadByKey(Result) Then Begin
+  If Not LoadByKey(Result) Or Not UseDefault Then Begin
     Keys := 'Q';
 
     Session.io.OutFullLn(Session.GetPrompt(359));

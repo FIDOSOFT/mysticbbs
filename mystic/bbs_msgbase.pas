@@ -1800,6 +1800,7 @@ Var
               Res := True;
         1 : Res := Session.User.IsThisUser(MsgBase^.GetTo);
         2 : Res := Session.User.IsThisUser(MsgBase^.GetTo) or Session.User.IsThisUser(MsgBase^.GetFrom);
+(*
         3 : Begin
               Res := (Pos(SearchStr, strUpper(MsgBase^.GetTo)) > 0) or (Pos(SearchStr, strUpper(MsgBase^.GetFrom)) > 0) or
                      (Pos(SearchStr, strUpper(MsgBase^.GetSubj)) > 0);
@@ -1813,7 +1814,22 @@ Var
                 End;
               End;
             End;
+*)
         4 : Res := Session.User.IsThisUser(MsgBase^.GetFrom);
+      End;
+
+      If (SearchStr <> '') And (((ScanMode = 2) And Res) Or (ScanMode = 3)) Then Begin
+        Res := (Pos(SearchStr, strUpper(MsgBase^.GetTo)) > 0) or (Pos(SearchStr, strUpper(MsgBase^.GetFrom)) > 0) or
+               (Pos(SearchStr, strUpper(MsgBase^.GetSubj)) > 0);
+
+        If Not Res Then Begin
+          MsgBase^.MsgTxtStartUp;
+
+          While Not Res And Not MsgBase^.EOM Do Begin
+            Str := strUpper(MsgBase^.GetString(79));
+            Res := Pos(SearchStr, Str) > 0;
+          End;
+        End;
       End;
 
       If NoFrom And Session.User.IsThisUser(MsgBase^.GetFrom) Then
@@ -2869,7 +2885,7 @@ Begin
 
   Case MBase.BaseType of
     0 : MsgBase := New(PMsgBaseJAM, Init);
-    1 : MsgBase := New(PMsgbaseSquish, Init);
+    1 : MsgBase := New(PMsgBaseSquish, Init);
   End;
 
   MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
@@ -2901,6 +2917,9 @@ Begin
     ScanMode := 4
   Else
     ScanMode := 0;
+
+//  session.io.outfull('read '  + mbase.filename + ' ' + mode + ' ' + searchstr + ' ' + stri2s(scanmode) + '|PN');
+//  session.io.bufflush;
 
   LastRead := MsgBase^.GetLastRead(Session.User.UserNum);
   MsgNum   := 1;
@@ -2937,9 +2956,11 @@ Begin
 
   If (Session.User.ThisUser.MReadType = 1) and (Session.io.Graphics > 0) Then Begin
     ListMode := 1;
+
     Ansi_Read_Messages;
   End Else Begin
     ListMode := 0;
+
     Ascii_Read_Messages;
   End;
 
@@ -3403,8 +3424,9 @@ Procedure TMsgBase.GlobalMessageSearch (Mode : Char);
 { G = all areas in group }
 { A = all areas in all groups }
 Var
-  SearchStr : String;
-  Old       : RecMessageBase;
+  SearchStr   : String;
+  SavedIgnore : Boolean;
+  Old         : RecMessageBase;
 Begin
   If Not (Mode in ['A', 'C', 'G']) Then Mode := 'G';
 
@@ -3416,6 +3438,8 @@ Begin
 
   OLD         := MBase;
   WereMsgs    := False;
+  SavedIgnore := Session.User.IgnoreGroup;
+
   Session.User.IgnoreGroup := Mode = 'A';
 
   If Mode = 'C' Then
@@ -3435,6 +3459,7 @@ Begin
         If MScan.NewScan > 0 Then Begin
           If Not ReadMessages('T', '', SearchStr) Then Begin
             Session.io.OutRawLn('');
+
             Break;
           End;
 
@@ -3448,7 +3473,7 @@ Begin
     Close (MBaseFile);
   End;
 
-  Session.User.IgnoreGroup := False;
+  Session.User.IgnoreGroup := SavedIgnore;
   MBase                    := OLD;
 End;
 

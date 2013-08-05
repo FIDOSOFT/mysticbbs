@@ -513,7 +513,7 @@ Begin
 
   Form.AddBol  ('A', ' Allow New Users',    22,  7, 41,  7, 17, 3, @Config.AllowNewUsers, Topic);
   Form.AddByte ('S', ' Security',           29,  8, 41,  8, 10, 3, 1, 255, @Config.NewUserSec, Topic);
-  Form.AddStr  ('P', ' Password',           29,  9, 41,  9, 10, 15, 15, @Config.NewUserPW, Topic);
+  Form.AddPass ('P', ' Password',           29,  9, 41,  9, 10, 15, 15, @Config.NewUserPW, Topic);
   Form.AddBol  ('N', ' New User Feedback',  20, 10, 41, 10, 19, 3, @Config.NewUserEmail, Topic);
   Form.AddBol  ('U', ' Use USA Phone',      24, 11, 41, 11, 15, 3, @Config.UseUSAPhone, Topic);
   Form.AddTog  ('E', ' User Name Format',   21, 12, 41, 12, 18, 8, 0, 3, 'As_Typed Upper Lower Proper', @Config.UserNameFormat, Topic);

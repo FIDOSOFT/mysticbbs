@@ -3509,4 +3509,12 @@
 
    See TESTINPUT.MPS for an example.
 
+ + MIS FTP server now will display 'ftpbanner.txt' from the DATA directory
+   if it exists when a user connects via FTP.
+
+ ! Once a default protocol was selected, the GE command (option 22) to change
+   the default was not working.
+
+ + MPL now supports ANSI screen class.  NEED TO DOCUMENT AND SHOW EXAMPLE
+
    <ALPHA 36 RELEASED>

@@ -322,7 +322,9 @@ Begin
           AddProc    ({$IFDEF MPLPARSER} 'inputoptions',   {$ENDIF} 'lbbcss',    iNone);    // 555
           AddProc    ({$IFDEF MPLPARSER} 'inputexit',      {$ENDIF} 'l',         iChar);    // 556
           AddProc    ({$IFDEF MPLPARSER} 'inputnumber',    {$ENDIF} 'lbbbblll',  iLongInt); // 557
-          AddProc    ({$IFDEF MPLPARSER} 'inputenter',     {$ENDIF} 'lbbbs',     iBool);
+          AddProc    ({$IFDEF MPLPARSER} 'inputenter',     {$ENDIF} 'lbbbs',     iBool);    // 558
+          AddProc    ({$IFDEF MPLPARSER} 'imageget',       {$ENDIF} 'lbbbb',     iNone);    // 559
+          AddProc    ({$IFDEF MPLPARSER} 'imageput',       {$ENDIF} 'l',         iNone);    // 560
 
 { END OF PROCEDURE DEFINITIONS }
 
@@ -370,6 +372,18 @@ Begin
           AddVar ({$IFDEF MPLPARSER} 'usermbase',     {$ENDIF} iLongInt);
           AddVar ({$IFDEF MPLPARSER} 'usermgroup',    {$ENDIF} iLongInt);
           AddVar ({$IFDEF MPLPARSER} 'userbirthday',  {$ENDIF} iLongInt);
+          AddStr ({$IFDEF MPLPARSER} 'usercity',      {$ENDIF} iString, 25);
+          AddStr ({$IFDEF MPLPARSER} 'useremail',     {$ENDIF} iString, 60);
+          AddStr ({$IFDEF MPLPARSER} 'userinfo',      {$ENDIF} iString, 30);
+
+          AddStr ({$IFDEF MPLPARSER} 'useropts',     {$ENDIF} iString, 10 * 60 - 1);
+          CV[X]^.ArrPos := 1;
+          {$IFNDEF MPLPARSER}
+            CV[X]^.VarSize   := 61;
+            CV[X]^.ArrDim[1] := 10;
+          {$ENDIF}
+
+          AddVar ({$IFDEF MPLPARSER} 'userfsreader',   {$ENDIF} iBool);
         End;
     2 : Begin
           AddPointer ({$IFDEF MPLPARSER} 'cfgsyspath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.SystemPath     {$ELSE} NIL {$ENDIF});

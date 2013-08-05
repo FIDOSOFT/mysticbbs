@@ -107,7 +107,7 @@ Begin
   ThisUser.LastFGroup  := Config.StartFGroup;
   ThisUser.LastMGroup  := Config.StartMGroup;
   ThisUser.UseLBQuote  := True;
-  ThisUser.UseFulLChat := True;
+  ThisUser.UseFullChat := True;
   ThisUser.CodePage    := Config.StartCodePage;
 
   IgnoreGroup   := False;
@@ -946,9 +946,9 @@ Begin
       If AskBirthdate  Then GetBirthdate(False);
       If AskEmail      Then GetEmail(False);
       If AskUserNote   Then GetUserNote(False);
-      If OptionalField[1].Ask    Then GetOption1(False);
-      If OptionalField[2].Ask    Then GetOption2(False);
-      If OptionalField[3].Ask    Then GetOption3(False);
+      If OptionalField[1].Ask Then GetOption1(False);
+      If OptionalField[2].Ask Then GetOption2(False);
+      If OptionalField[3].Ask Then GetOption3(False);
       If UserEditorType = 2 Then GetEditor(False) Else ThisUser.EditType := UserEditorType;
 
       If UserQuoteWin = 2 Then

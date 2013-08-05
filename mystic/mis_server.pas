@@ -220,7 +220,7 @@ Begin
 
       Status ('BUSY: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
 
-      If Not NewClient.WriteFile(TextPath + 'busy.txt') Then
+      If Not NewClient.WriteFile('', TextPath + 'busy.txt') Then
         NewClient.WriteLine('BUSY');
 
       WaitMS(3000);
@@ -232,7 +232,7 @@ Begin
 
       Status('BLOCK: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
 
-      If Not NewClient.WriteFile(TextPath + 'blocked.txt') Then
+      If Not NewClient.WriteFile('', TextPath + 'blocked.txt') Then
         NewClient.WriteLine('BLOCKED');
 
       WaitMS(3000);
@@ -244,7 +244,7 @@ Begin
 
       Status('MULTI: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
 
-      If Not NewClient.WriteFile(TextPath + 'dupeip.txt') Then
+      If Not NewClient.WriteFile('', TextPath + 'dupeip.txt') Then
         NewClient.WriteLine('Only ' + strI2S(ClientMaxIPs) + ' connection(s) per user');
 
       WaitMS(3000);

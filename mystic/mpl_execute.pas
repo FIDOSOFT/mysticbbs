@@ -18,6 +18,7 @@ Const
 Const
   mplClass_Box   = 1;
   mplClass_Input = 2;
+  mplClass_Image = 3;
 
 Type
   TClassStack = Record
@@ -190,6 +191,11 @@ Begin
   Move (U.LastMBase,  VarData[IdxVarUser + 14]^.Data^, SizeOf(U.LastMBase));
   Move (U.LastMGroup, VarData[IdxVarUser + 15]^.Data^, SizeOf(U.LastMGroup));
   Move (U.Birthday,   VarData[IdxVarUser + 16]^.Data^, SizeOf(U.Birthday));
+  Move (U.City,       VarData[IdxVarUser + 17]^.Data^, SizeOf(U.City));
+  Move (U.Email,      VarData[IdxVarUser + 18]^.Data^, SizeOf(U.Email));
+  Move (U.UserInfo,   VarData[IdxVarUser + 19]^.Data^, SizeOf(U.UserInfo));
+  Move (U.OptionData, VarData[IdxVarUser + 20]^.Data^, SizeOf(U.OptionData));
+  Move (U.MReadType,  VarData[IdxVarUser + 21]^.Data^, SizeOf(U.MReadType));
 End;
 
 Procedure TInterpEngine.PutUserVars (Var U: RecUser);
@@ -211,6 +217,11 @@ Begin
   Move (VarData[IdxVarUser + 14]^.Data^, U.LastMBase,  SizeOf(U.LastMBase));
   Move (VarData[IdxVarUser + 15]^.Data^, U.LastMGroup, SizeOf(U.LastMGroup));
   Move (VarData[IdxVarUser + 16]^.Data^, U.Birthday,   SizeOf(U.Birthday));
+  Move (VarData[IdxVarUser + 17]^.Data^, U.City,       SizeOf(U.City));
+  Move (VarData[IdxVarUser + 18]^.Data^, U.Email,      SizeOf(U.Email));
+  Move (VarData[IdxVarUser + 19]^.Data^, U.UserInfo,   SizeOf(U.UserInfo));
+  Move (VarData[IdxVarUser + 20]^.Data^, U.OptionData, SizeOf(U.OptionData));
+  Move (VarData[IdxVarUser + 21]^.Data^, U.MReadType,  SizeOf(U.MReadType));
 End;
 
 Function TInterpEngine.GetUserRecord (Num: LongInt) : Boolean;
@@ -393,9 +404,7 @@ Begin
 
   For Count := 1 to mplMaxClassStack Do
     If Assigned(ClassData[Count].ClassPtr) Then
-      Case ClassData[Count].ClassType of
-        mplClass_Box : TAnsiMenuBox(ClassData[Count].ClassPtr).Free;
-      End;
+      ClassFree(Count);
 
   Inherited Destroy;
 End;
@@ -1267,6 +1276,11 @@ Begin
     ClassData[Num].ClassPtr  := TAnsiMenuInput.Create;
     ClassData[Num].ClassType := mplClass_Input;
   End Else
+  If Str = 'IMAGE' Then Begin
+    GetMem (ClassData[Num].ClassPtr, SizeOf(TConsoleImageRec));
+
+    ClassData[Num].ClassType := mplClass_Image;
+  End Else
    Error(mpxInvalidClass, Str);
 End;
 
@@ -1277,6 +1291,7 @@ Begin
       Case ClassData[Num].ClassType of
         mplClass_Box   : TAnsiMenuBox(ClassData[Num].ClassPtr).Free;
         mplClass_Input : TAnsiMenuInput(ClassData[Num].ClassPtr).Free;
+        mplClass_Image : FreeMem(ClassData[Num].ClassPtr);
       End;
 
       ClassData[Num].ClassPtr := NIL;
@@ -2076,6 +2091,10 @@ Begin
             TempBool := TAnsiMenuInput(ClassData[Param[1].L].ClassPtr).GetEnter(Param[2].B, Param[3].B, Param[4].B, Param[5].S);
             Store (TempBool, 1);
           End;
+    559 : If ClassValid(Param[1].L, mplClass_Image) Then
+            Screen.GetScreenImage (Param[2].B, Param[3].B, Param[4].B, Param[5].B, TConsoleImageRec(ClassData[Param[1].L].ClassPtr^));
+    560 : If ClassValid(Param[1].L, mplClass_Image) Then
+            Session.io.RemoteRestore(TConsoleImageRec(ClassData[Param[1].L].ClassPtr^));
   End;
 End;
 

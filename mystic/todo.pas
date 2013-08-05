@@ -32,6 +32,9 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- global user editor for user flags, def protocol, etc etc
+- ability to configure auto signatures (2 of them) one for handle and one
+  for real names
 - ability to download ANSIs while actually viewing them in the gallery
 - optional Menu scroller during input?
 - Menu type: Lightbar/Form  OR  just change standard lightbar to work that
@@ -254,6 +257,8 @@ ReplaceLine
 
 1.11
 ====
+- MUTIL option to create bases to (msgbase path + domainname) directory.
+- MUTIL option to scan recursively when creatign bases by data files
 - Rewrite user login functions and MATRIX
 - Change temp directories.  Add MIS/MUTIL/FTN/NODE
 - User directories (research disk performance with a zillion dirs)

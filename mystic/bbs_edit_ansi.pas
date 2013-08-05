@@ -387,7 +387,7 @@ Begin
   Session.io.AnsiColor  (Session.io.ScreenInfo[3].A);
   Session.io.AnsiGotoXY (Session.io.ScreenInfo[3].X, Session.io.ScreenInfo[3].Y);
 
-  If InsertMode Then Session.io.BufAddStr('INS') else Session.io.BufAddStr('OVR'); { ++lang }
+  If InsertMode Then Session.io.BufAddStr('INS') else Session.io.BufAddStr('OVR'); { ++lang++ }
 End;
 
 Procedure TEditorANSI.ReDrawTemplate (Reset: Boolean);
