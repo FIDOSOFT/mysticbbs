@@ -21,6 +21,7 @@
               $LINUX   : Set if target OS is linux
               $WINDOWS : Set if target OS is windows
               $DARWIN  : Set if target OS is Mac OSX
+              $OS2     : Set if target OS is OS2
 
             FILE SYSTEMS:
               $FS_SENSITIVE : Set if target file system is case sensitive
@@ -48,6 +49,10 @@
 
 {$IFDEF WIN32}
   {$DEFINE WINDOWS}
+  {$DEFINE FS_IGNORE}
+{$ENDIF}
+
+{$IFDEF OS2}
   {$DEFINE FS_IGNORE}
 {$ENDIF}
 

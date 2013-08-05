@@ -75,8 +75,10 @@ Begin
   Result := True;
 
   For Count := 1 to 80 Do
-    If (Buffer[Line][Count].UnicodeChar <> #0) and ((Buffer[Line][Count].UnicodeChar <> ' ') and (Buffer[Line][Count].Attributes <> 7)) Then Begin
+//    If (Buffer[Line][Count].UnicodeChar <> #0) and ((Buffer[Line][Count].UnicodeChar <> ' ') and (Buffer[Line][Count].Attributes <> 7)) Then Begin
+    If (Buffer[Line][Count].UnicodeChar <> #0) and ((Buffer[Line][Count].UnicodeChar <> ' ') or (Buffer[Line][Count].Attributes <> 7)) Then Begin
       Result := False;
+
       Exit;
     End;
 End;
@@ -95,6 +97,7 @@ Begin
 
     While Line > 0 Do Begin
       If Not IsBlankLine(Line) Then Break;
+
       Dec(Line);
     End;
 

@@ -51,7 +51,7 @@ Type
     Procedure   BufWriteStr     (Str: String); Override;
     Function    WriteLine       (Str: String) : LongInt; Override;
     Function    WriteStr        (Str: String) : LongInt; Override;
-    Function    WriteFile       (Str: String) : Boolean;
+    Function    WriteFile       (Prefix, FileName: String) : Boolean;
     Function    WriteBufEscaped (Var Buf: TIOBuffer; Var Len: LongInt) : LongInt;
     Procedure   TelnetInBuffer  (Var Buf: TIOBuffer; Var Len: LongInt);
     Function    ReadBuf         (Var Buf; Len: LongInt) : LongInt; Override;
@@ -228,6 +228,37 @@ Begin
   Result := fpSend(FSocketHandle, @Str[1], Length(Str), FPSENDOPT);
 End;
 
+Function TIOSocket.WriteFile (Prefix, FileName: String) : Boolean;
+Var
+  T : Text;
+  S : String;
+Begin
+  Result   := False;
+  FileMode := 66;
+
+  Assign (T, FileName);
+  Reset  (T);
+
+  If IoResult <> 0 Then Exit;
+
+  While Not Eof(T) Do Begin
+    ReadLn (T, S);
+
+    If Prefix <> '' Then
+      If EOF(T) Then
+        S := Prefix + ' ' + S
+      Else
+        S := Prefix + '- ' + S;
+
+    WriteLine(S);
+  End;
+
+  Close (T);
+
+  Result := True;
+End;
+
+(*
 Function TIOSocket.WriteFile (Str: String) : Boolean;
 Var
   Buf  : Array[1..4096] of Char;
@@ -255,6 +286,7 @@ Begin
 
   Result := True;
 End;
+*)
 
 Function TIOSocket.WriteBufEscaped (Var Buf: TIOBuffer; Var Len: LongInt) : LongInt;
 Var
