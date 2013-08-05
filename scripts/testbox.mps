@@ -77,8 +77,6 @@ Begin
 
   SetBoxDefaults (BoxHandle, ' My Window Header ');
 
-  // We are done with the box class, so free it from MPL class stack.
-
   BoxOpen (BoxHandle, 20, 5, 60, 10);
 
   ReadKey;
