@@ -19,6 +19,7 @@ Var
 Function SearchForUser    (UN: String; Var Rec: RecUser; Var RecPos: LongInt) : Boolean;
 Function CheckAccess      (User: RecUser; IgnoreGroup: Boolean; Str: String) : Boolean;
 Function GetSecurityLevel (Level: Byte; SecLevel: RecSecurity) : Boolean;
+Function strAddr2Str      (Addr : RecEchoMailAddr) : String;
 
 Implementation
 
@@ -212,6 +213,18 @@ Begin
   Close  (SecLevelFile);
 
   Result := True;
+End;
+
+Function strAddr2Str (Addr : RecEchoMailAddr) : String;
+Var
+  Temp : String[20];
+Begin
+  Temp := strI2S(Addr.Zone) + ':' + strI2S(Addr.Net) + '/' +
+          strI2S(Addr.Node);
+
+  If Addr.Point <> 0 Then Temp := Temp + '.' + strI2S(Addr.Point);
+
+  Result := Temp;
 End;
 
 End.

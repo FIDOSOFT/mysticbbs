@@ -32,6 +32,9 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- when mutil is tossing a packet and auto creates an area figure out if there
+  can be a way to automatically create the uplink back to the originating
+  node.
 - global user editor for user flags, def protocol, etc etc
 - ability to configure auto signatures (2 of them) one for handle and one
   for real names

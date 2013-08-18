@@ -376,7 +376,7 @@ Begin
           AddStr ({$IFDEF MPLPARSER} 'useremail',     {$ENDIF} iString, 60);
           AddStr ({$IFDEF MPLPARSER} 'userinfo',      {$ENDIF} iString, 30);
 
-          AddStr ({$IFDEF MPLPARSER} 'useropts',     {$ENDIF} iString, 10 * 60 - 1);
+          AddStr ({$IFDEF MPLPARSER} 'useropts',     {$ENDIF} iString, 10 * 61 - 1);
           CV[X]^.ArrPos := 1;
           {$IFNDEF MPLPARSER}
             CV[X]^.VarSize   := 61;

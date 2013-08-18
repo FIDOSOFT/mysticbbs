@@ -204,7 +204,7 @@ Begin
               End;
           End;
       2 : Begin
-            BoxOpen      (25, 4, 53, 11);
+            BoxOpen      (25, 4, 53, 13);
             CoolBoxOpen  (24, 'Servers');
 
             Form.AddNone ('I', ' I Internet Server Options', 26,  5, 26,  5, 27, '');
@@ -213,6 +213,8 @@ Begin
             Form.AddNone ('3', ' 3 POP3 Server Options',     26,  8, 26,  8, 27, '');
             Form.AddNone ('4', ' 4 SMTP Server Options',     26,  9, 26,  9, 27, '');
             Form.AddNone ('5', ' 5 NNTP Server Options',     26, 10, 26, 10, 27, '');
+            Form.AddNone ('6', ' 6 BINKP Server Options',    26, 11, 26, 11, 27, '');
+            Form.AddNone ('7', ' 7 FTN-FTP Server Options',  26, 12, 26, 12, 27, '');
 
             Res        := Form.Execute;
             MenuPos[2] := Form.ItemPos;
@@ -232,6 +234,8 @@ Begin
                 '3' : Configuration_POP3Server;
                 '4' : Configuration_SMTPServer;
                 '5' : Configuration_NNTPServer;
+                '6' : Configuration_BINKPServer;
+//                '7' : Configuration_FTNFTPServer;
                 'X' : Break;
               Else
                 MenuPtr := 0;

@@ -48,7 +48,8 @@ Uses
   MIS_Client_SMTP,
   MIS_Client_POP3,
   MIS_Client_FTP,
-  MIS_Client_NNTP;
+  MIS_Client_NNTP,
+  MIS_Client_BINKP;
 
 Const
   FocusTelnet = 0;
@@ -56,7 +57,8 @@ Const
   FocusPOP3   = 2;
   FocusFTP    = 3;
   FocusNNTP   = 4;
-  FocusMax    = 4;
+  FocusBINKP  = 5;
+  FocusMax    = 5;
 
 Var
   Keyboard     : TInput;
@@ -65,6 +67,7 @@ Var
   POP3Server   : TServerManager;
   SMTPServer   : TServerManager;
   NNTPServer   : TServerManager;
+  BINKPServer  : TServerManager;
   FocusPTR     : TServerManager;
   FocusCurrent : Byte;
   TopPage      : Integer;
@@ -122,6 +125,7 @@ Begin
     FocusPOP3   : GetFocusPtr := POP3Server;
     FocusFTP    : GetFocusPtr := FTPServer;
     FocusNNTP   : GetFocusPtr := NNTPServer;
+    FocusBINKP  : GetFocusPtr := BINKPServer;
   End;
 End;
 
@@ -160,7 +164,8 @@ Begin
         1,
         2,
         3,
-        4: If (Count <= FocusPtr.ClientList.Count) And (FocusPtr.ClientList[Count - 1] <> NIL) Then Begin
+        4,
+        5 : If (Count <= FocusPtr.ClientList.Count) And (FocusPtr.ClientList[Count - 1] <> NIL) Then Begin
               Console.WriteXY (3, 3 + PosY, Attr,
                 strPadL(strI2S(Count), 3, '0') + ' ' +
                 strPadR(TFTPServer(FocusPtr.ClientList[Count - 1]).User.Handle, 31, ' ') + ' ' +
@@ -219,17 +224,19 @@ Begin
       FocusPOP3   : If Pop3Server   <> NIL Then Break;
       FocusFTP    : If FtpServer    <> NIL Then Break;
       FocusNNTP   : If NNTPServer   <> NIL Then Break;
+      FocusBINKP  : If BINKPServer  <> NIL Then Break;
     End;
   Until False;
 
-  Console.WriteXY (50, 1, 112, 'telnet/smtp/pop3/ftp/nntp/http');
+  Console.WriteXY (49, 1, 112, 'telnet/smtp/pop3/ftp/nntp/binkp');
 
   Case FocusCurrent of
-    FocusTelnet : Console.WriteXY (50, 1, 113, 'TELNET');
-    FocusSMTP   : Console.WriteXY (57, 1, 113, 'SMTP');
-    FocusPOP3   : Console.WriteXY (62, 1, 113, 'POP3');
-    FocusFTP    : Console.WriteXY (67, 1, 113, 'FTP');
-    FocusNNTP   : Console.WriteXY (71, 1, 113, 'NNTP');
+    FocusTelnet : Console.WriteXY (49, 1, 113, 'TELNET');
+    FocusSMTP   : Console.WriteXY (56, 1, 113, 'SMTP');
+    FocusPOP3   : Console.WriteXY (61, 1, 113, 'POP3');
+    FocusFTP    : Console.WriteXY (66, 1, 113, 'FTP');
+    FocusNNTP   : Console.WriteXY (70, 1, 113, 'NNTP');
+    FocusBINKP  : Console.WriteXY (75, 1, 113, 'BINKP');
   End;
 
   FocusPtr := GetFocusPtr;
@@ -348,7 +355,9 @@ Begin
   TelnetServer := NIL;
   FTPServer    := NIL;
   POP3Server   := NIL;
+  SMTPServer   := NIL;
   NNTPServer   := NIL;
+  BINKPServer  := NIL;
   NodeData     := TNodeData.Create(bbsConfig.INetTNNodes);
 
   If bbsConfig.InetTNUse Then Begin
@@ -392,6 +401,15 @@ Begin
 
     NNTPServer.Server.FTelnetServer := False;
     NNTPServer.ClientMaxIPs         := bbsConfig.inetNNTPDupes;
+
+    Result := True;
+  End;
+
+  If bbsConfig.InetBINKPUse Then Begin
+    BINKPServer := TServerManager.Create(bbsConfig, bbsConfig.InetBINKPPort, bbsConfig.inetBINKPMax, NodeData, @CreateBINKP);
+
+    BINKPServer.Server.FTelnetServer := False;
+    BINKPServer.ClientMaxIPs         := bbsConfig.inetBINKPDupes;
 
     Result := True;
   End;
@@ -451,6 +469,7 @@ Begin
                 POP3Server.Free;
                 FTPServer.Free;
                 NNTPServer.Free;
+                BinkPServer.Free;
                 NodeData.Free;
                 Halt(0);
               End;
@@ -487,6 +506,7 @@ Begin
 
   Repeat
     WaitMS(60000);  // Heartbeat
+    // change to wait 45 and check for event
   Until False;
 End;
 {$ENDIF}
@@ -518,8 +538,7 @@ Begin
 
   If Not ServerStartup Then Begin
     Console.ClearScreen;
-    Console.WriteLine('ERROR: No servers are configured as active.  Run MYSTIC -CFG to configure');
-    Console.WriteLine('Internet server options.');
+    Console.WriteLine('ERROR: No servers are configured as active.');
 
     NodeData.Free;
     Keyboard.Free;
@@ -618,6 +637,9 @@ Begin
 
   Console.WriteStr (' NNTP');
   NNTPServer.Free;
+
+  Console.WriteStr (' BINKP');
+  BINKPServer.Free;
 
   Console.WriteLine (' (DONE)');
 

@@ -206,7 +206,7 @@ Begin
   If Terminated Then Exit;
 
   If ClientMax = 0 Then
-  	Status('WARNING: At least one server is configured with 0 max clients.');
+  	Status('WARNING: At least one server is configured 0 max clients');
 
   Status('Opening server socket on port ' + strI2S(Port));
 

@@ -3482,6 +3482,8 @@
  ! Mystic should now will properly display the file base "display file"
    before listing files.
 
+ ! Date corruption with MUTIL echomail export has hopefully been fixed.
+
  + MPL now has the ability to interface directly with internal Mystic BBS
    classes.  This opens up a whole world of new possibilities in the future
    (for example) sockets, full remote ANSI screen library (boxes, listboxes)
@@ -3515,6 +3517,29 @@
  ! Once a default protocol was selected, the GE command (option 22) to change
    the default was not working.
 
- + MPL now supports ANSI screen class.  NEED TO DOCUMENT AND SHOW EXAMPLE
+ + MPL now supports ANSI screen class.  This allows the ability to save and
+   restore portions of the user's screen.  The example below saves the screen
+   coordinates defined as: X1:20, Y1:5, X2:60, Y2:10.  It then clears the
+   screen and then restores the saved portion of the screen.
+
+      Var SavedScreen : LongInt;
+
+      ClassCreate (SavedScreen, 'image');
+      ImageGet    (SavedScreen, 20, 5, 60, 10);
+
+      ClrScr;
+      WriteLn ('Press a key to restore');
+
+      Pause;
+
+      ImagePut (SavedScreen);
+      ClassFree (SavedScreen);
+
+      Pause;
 
    <ALPHA 36 RELEASED>
+
+ ! Fixed an issue with useropts variable in MPL which could cause memory
+   corruption.
+
+   <ALPHA 37 RELEASED>

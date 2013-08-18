@@ -145,30 +145,54 @@ Uses
 
 {$IFDEF LOGGING}
 Procedure TInterpEngine.LogVarInformation (Num: LongInt);
+Var
+  TypeStr : String;
+  DimStr  : String;
+  Count   : LongInt;
 Begin
   Session.SystemLog('     DUMP VAR ' + strI2S(Num));
 
+  Case VarData[Num]^.vType of
+    iNone     : TypeStr := 'None';
+    iString   : TypeStr := 'String';
+    iChar     : TypeStr := 'Char';
+    iByte     : TypeStr := 'Byte';
+    iShort    : TypeStr := 'Short';
+    iWord     : TypeStr := 'Word';
+    iInteger  : TypeStr := 'Integer';
+    iLongInt  : TypeStr := 'LongInt';
+    iCardinal : TypeStr := 'Cardinal';
+    iReal     : TypeStr := 'Real';
+    iBool     : TypeStr := 'Boolean';
+    iFile     : TypeStr := 'File';
+    iRecord   : TypeStr := 'Record';
+    iPointer  : TypeStr := 'Pointer';
+  Else
+    TypeStr := 'Unknown';
+  End;
+
+  DimStr := '';
+
+  For Count := 1 to VarData[Num]^.ArrPos Do Begin
+    If DimStr <> '' Then DimStr := DimStr + ',';
+    DimStr := DimStr + strI2S(VarData[Num]^.ArrDim[Count]);
+  End;
+
   With VarData[Num]^ Do Begin
     Session.SystemLog('           ID: ' + strI2S(VarID));
-    Session.SystemLog('         Type: ' + strI2S(Ord(vType)));
+    Session.SystemLog('         Type: ' + strI2S(Ord(vType)) + ', ' + TypeStr);
     Session.SystemLog('     DataSize: ' + strI2S(DataSize));
     Session.SystemLog('      VarSize: ' + strI2S(VarSize));
     Session.SystemLog('         Kill: ' + strI2S(Ord(Kill)));
+    Session.SystemLog('      ProcPos: ' + strI2S(ProcPos));
+    Session.SystemLog('    NumParams: ' + strI2S(NumParams));
+    Session.SystemLog('       ArrPos: ' + strI2S(ArrPos) + '(' + DimStr + ')');
 
     If Data <> NIL Then
       Session.SystemLog('         Data: Assigned')
     Else
       Session.SystemLog('         Data: NIL');
   End;
-
-//       Params    : Array[1..mplMaxProcParams] of Char;
-//       NumParams : Byte;
-//       pID       : Array[1..mplMaxProcParams] of Word;
-//       ProcPos   : LongInt;
-//       Data      : PStack;
-//       ArrPos    : Byte;
-//       ArrDims    : TArrayInfo;
-
 End;
 {$ENDIF}
 
@@ -2405,8 +2429,8 @@ Begin
 
     Case TTokenOpsRec(Byte(Ch)) of
 {0}   opBlockOpen  : Begin
-//                       PrevChar;
-//                       Self.ExecuteBlock(CurVarNum);
+                       //PrevChar;
+                       //Self.ExecuteBlock(CurVarNum);
                      End;
 {1}   opBlockClose : Break;
 {2}   opVarDeclare : DefineVariable;
@@ -2564,6 +2588,11 @@ Begin
     Exit;
   End;
 
+  {$IFDEF LOGGING}
+    Session.SystemLog('-');
+    Session.SystemLog('[!] BEGIN EXECUTION: ' + FN);
+  {$ENDIF}
+
   InitProcedures (Owner, Self, VarData, CurVarNum, CurVarID, 0);
   ExecuteBlock   (CurVarNum);
 
@@ -2574,6 +2603,10 @@ Begin
   Session.io.AllowArrow    := SavedArrow;
 
   Result := Ord(ReloadMenu) + 1;
+
+  {$IFDEF LOGGING}
+    Session.SystemLog('[!] END EXECUTION: ' + FN);
+  {$ENDIF}
 End;
 
 Function ExecuteMPL (Owner: Pointer; Str: String) : Byte;

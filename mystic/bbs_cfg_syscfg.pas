@@ -16,6 +16,7 @@ Procedure Configuration_TelnetServer;
 Procedure Configuration_POP3Server;
 Procedure Configuration_SMTPServer;
 Procedure Configuration_NNTPServer;
+Procedure Configuration_BINKPServer;
 Procedure Configuration_MessageSettings;
 Procedure Configuration_NewUser1Settings;
 Procedure Configuration_NewUser2Settings;
@@ -379,6 +380,37 @@ Begin
   Form.AddByte ('I', ' Dupe IP Limit',   30, 13, 47, 13, 15, 3, 1, 255,   @Config.inetPOP3Dupes, Topic + 'Max connections with same IP');
   Form.AddWord ('T', ' Timeout',         36, 14, 47, 14,  9, 5, 0, 65535, @Config.inetPOP3Timeout, Topic + 'Connection timeout (seconds)');
   Form.AddBol  ('D', ' Delete',          37, 15, 47, 15,  8, 3, @Config.inetPOP3Delete, Topic + 'Delete email on retreive');
+
+  Form.Execute;
+  Form.Free;
+
+  Box.Close;
+  Box.Free;
+End;
+
+Procedure Configuration_BINKPServer;
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String[80];
+Begin
+  Topic := '|03(|09BINKP Server|03) |01-|09> |15';
+
+  Box  := TAnsiMenuBox.Create;
+  Form := TAnsiMenuForm.Create;
+
+  Box.Header := ' BINKP Server ';
+
+  Box.Open (27, 8, 53, 17);
+
+  VerticalLine (45, 10, 15);
+
+  Form.AddBol  ('U', ' Use Server',      33, 10, 47, 10, 12, 3, @Config.inetBINKPUse, Topic + 'Enable BINKP server');
+  Form.AddWord ('P', ' Server Port',     32, 11, 47, 11, 13, 5, 0, 65535, @Config.inetBINKPPort, Topic + 'BINKP Server port');
+  Form.AddByte ('N', ' Max Connections', 28, 12, 47, 12, 17, 3, 1, 255, @Config.inetBINKPMax, Topic + 'Max Connections');
+  Form.AddByte ('I', ' Dupe IP Limit',   30, 13, 47, 13, 15, 3, 1, 255,   @Config.inetBINKPDupes, Topic + 'Max connections with same IP');
+  Form.AddWord ('T', ' Timeout',         36, 14, 47, 14,  9, 5, 0, 65535, @Config.inetBINKPTimeout, Topic + 'Connection timeout (seconds)');
+  Form.AddBol  ('F', ' Force CRAM-MD5',  29, 15, 47, 15, 16, 3, @Config.inetBINKPCram5, Topic + 'Force CRAM-MD5 auth');
 
   Form.Execute;
   Form.Free;
