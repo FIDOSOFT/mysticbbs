@@ -42,6 +42,9 @@ Const
   M_SKIP = 10;
   M_DATA = 255;
 
+  // needs to be 32k... can't remember what the problem was that made me
+  // limit it temporarily to 30k
+
   BinkPMaxBufferSize = 30 * 1024;
   TempFileTime       = 1363944820;
 
@@ -192,6 +195,12 @@ Var
   Matched  : Boolean;
 Begin
   // Scan all FLO files in outbound directory, and PRUNE them all.
+
+  // possible issue if multiple BINKP connections are going.  we need
+  // to revamp this to perform appropriate file locking and waiting.
+  // also should be moved to mis_common since FTN-FTP will also perform
+  // the same procedure.
+  // could also perform a critical section as a cheesy way to do this.
 
   FindFirst (SetOutPath + '*.?lo', AnyFile, DirInfo);
 
@@ -524,8 +533,6 @@ Begin
                      End;
                    End;
     End;
-
-//    DoFrameCheck;
 
     Case TxState of
       TxGetEOF   : Begin
