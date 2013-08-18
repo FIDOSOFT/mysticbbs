@@ -316,7 +316,7 @@ Procedure TOutputCRT.WriteXYPipe (X, Y, Attr, Pad: Integer; Text: String);
 
   Procedure AddChar (Ch: Char);
   Begin
-    If CursorX > 80 Then Exit;
+    If FCursorX > 80 Then Exit;
 
     Buffer[CursorY][CursorX].Attributes  := FTextAttr;
     Buffer[CursorY][CursorX].UnicodeChar := Ch;

@@ -54,10 +54,10 @@ Const
   keyDELETE            = #83;
 
   AppInputSize         = 128;
+  SDLFontSize   : Byte = 24;
+  SDLFontSpace  : Byte = 0;
   SDLAppWindowX : Word = 800;
   SDLAppWindowY : Word = 600;
-  SDLFontSize   : Byte = 17;
-  SDLFontSpace  : Byte = 0;
 
 Type
   TSDLScreenMode = (mode_80x25, mode_80x50, mode_132x50);
@@ -154,7 +154,8 @@ Begin
 
   If TTF_Init = -1 Then Halt;
 
-  Font := TTF_OpenFont('ASCII.ttf', SDLFontSize);
+//  Font := TTF_OpenFont('ASCII.ttf', SDLFontSize);
+  Font := TTF_OpenFont('\dev\sdl\Perfect DOS VGA 437.ttf', SDLFontSize);
 
   If Font = NIL Then Halt;
 

@@ -66,84 +66,92 @@ Begin
 End;
 
 Function Digest2String (Digest: String) : String;
-var
-  count : byte;
+Var
+  Count : Byte;
 Begin
-  result := '';
+  Result := '';
 
-  for count := 1 to 16 do
-    result :=  result + byte2hex(byte(digest[count]));
+  For Count := 1 to 16 Do
+    Result :=  Result + Byte2Hex(Byte(Digest[Count]));
 
-  result[0] := #32;
+  Result[0] := #32;
 End;
 
-Function String2Digest (Str: string) : string;
-var
-  count : byte;
-begin
-  result := '';
-  count  := 1;
+Function String2Digest (Str: String) : String;
+Var
+  Count : Byte;
+Begin
+  Result := '';
+  Count  := 1;
 
-  while count < length(str) do begin
-    result := result + char(hextobyte(copy(str, count, 2)));
-    inc (count, 2);
-  end;
-end;
+  While Count < Length(Str) Do Begin
+    Result := Result + Char(HexToByte(Copy(Str, Count, 2)));
+    Inc (Count, 2);
+  End;
+End;
 
-procedure MDInit(var MDContext: TMDCtx);
-var
-  n: integer;
-begin
+Procedure MDInit(var MDContext: TMDCtx);
+Var
+  N: Integer;
+Begin
   MDContext.Count[0] := 0;
   MDContext.Count[1] := 0;
 
-  for n := 0 to high(MDContext.BufAnsiChar) do
+  For N := 0 to High(MDContext.BufAnsiChar) Do
     MDContext.BufAnsiChar[n] := 0;
 
-  for n := 0 to high(MDContext.BufLong) do
+  For N := 0 to High(MDContext.BufLong) Do
     MDContext.BufLong[n] := 0;
 
   MDContext.State[0] := Integer($67452301);
   MDContext.State[1] := Integer($EFCDAB89);
   MDContext.State[2] := Integer($98BADCFE);
   MDContext.State[3] := Integer($10325476);
-end;
+End;
 
-procedure ArrLongToByte(var ArLong: Array of Integer; var ArByte: Array of byte);
-begin
-  if (High(ArByte) + 1) < ((High(ArLong) + 1) * 4) then
+Procedure ArrLongToByte (Var ArLong: Array of Integer; Var ArByte: Array of Byte);
+Begin
+  If (High(ArByte) + 1) < ((High(ArLong) + 1) * 4) Then
     Exit;
 
-  Move(ArLong[0], ArByte[0], High(ArByte) + 1);
-end;
+  Move (ArLong[0], ArByte[0], High(ArByte) + 1);
+End;
 
-procedure ArrByteToLong(var ArByte: Array of byte; var ArLong: Array of Integer);
-begin
-  if (High(ArByte) + 1) > ((High(ArLong) + 1) * 4) then
+Procedure ArrByteToLong (Var ArByte: Array of Byte; Var ArLong: Array of Integer);
+Begin
+  if (High(ArByte) + 1) > ((High(ArLong) + 1) * 4) Then
     Exit;
 
-  Move(ArByte[0], ArLong[0], High(ArByte) + 1);
-end;
+  Move (ArByte[0], ArLong[0], High(ArByte) + 1);
+End;
 
-procedure MDUpdate(var MDContext: TMDCtx; const Data: string; transform: TMDTransform);
-var
-  Index, partLen, InputLen, I: integer;
-begin
+Procedure MDUpdate (Var MDContext: TMDCtx; Const Data: String; Transform: TMDTransform);
+Var
+  Index, partLen, InputLen, I: Integer;
+Begin
   InputLen := Length(Data);
 
-  with MDContext do begin
+  With MDContext do begin
     Index := (Count[0] shr 3) and $3F;
+
     Inc(Count[0], InputLen shl 3);
+
     if Count[0] < (InputLen shl 3) then
       Inc(Count[1]);
+
     Inc(Count[1], InputLen shr 29);
+
     partLen := 64 - Index;
 
     if InputLen >= partLen then begin
       ArrLongToByte(BufLong, BufAnsiChar);
+
       Move(Data[1], BufAnsiChar[Index], partLen);
+
       ArrByteToLong(BufAnsiChar, BufLong);
+
       Transform(State, Buflong);
+
       I := partLen;
 
   		while I + 63 < InputLen do begin

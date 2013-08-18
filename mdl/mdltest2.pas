@@ -87,6 +87,8 @@ Var
   MyForm : TMenuForm;
   Data   : Array[1..9] of String;
 Begin
+  FillChar (Data, SizeOf(Data), #0);
+
   MyBox  := TMenuBox.Create(Screen);
   MyForm := TMenuForm.Create(Screen);
 

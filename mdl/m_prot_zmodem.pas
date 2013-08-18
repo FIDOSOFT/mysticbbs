@@ -492,7 +492,7 @@ Begin
   If EscapePending Then
     Goto Escape;
 
-  C := Aport.ReadChar;
+  C := APort.ReadChar;
 
   Case C of
     cXON,
