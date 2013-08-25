@@ -100,8 +100,8 @@ Type
     SetBlockSize : Word;
     SetOutPath   : String;
     SetTimeOut   : Word;
-    InAddress    : String;
-
+    HaveNode     : Boolean;
+    EchoNode     : RecEchoMailNode;
     Client       : TIOSocket;
     IsClient     : Boolean;
     UseMD5       : Boolean;
@@ -122,7 +122,10 @@ Type
     Constructor Create (Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
     Destructor  Destroy; Override;
 
+    // TO BE REWRITTEN/MOVED/REMOVED
     Procedure   RemoveFilesFromFLO (FN: String);
+    Function    FindNodeByAddress  (AddrList: String) : Boolean;
+
     Function    GetDataStr : String;
     Procedure   SendFrame     (CmdType: Byte; CmdData: String);
     Procedure   SendDataFrame (Var Buf; BufSize: Word);
@@ -143,7 +146,7 @@ Begin
   Client       := C;
   FileList     := FL;
   IsClient     := IsCli;
-  UseMD5       := False;
+  UseMD5       := True;
   ForceMD5     := False;
   RxBufSize    := 0;
   RxState      := RxNone;
@@ -152,7 +155,7 @@ Begin
   NeedHeader   := True;
   HaveHeader   := False;
   MD5Challenge := '';
-  InAddress    := '';
+  HaveNode     := False;
   AuthState    := SendWelcome;
 
   If Not IsClient and UseMD5 Then
@@ -162,6 +165,31 @@ End;
 Destructor TBinkP.Destroy;
 Begin
   Inherited Destroy;
+End;
+
+Function TBinkP.FindNodeByAddress (AddrList: String) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, bbsConfig.DataPath + 'echonode.dat');
+
+  If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
+
+  While Not Eof(F) Do Begin
+    ioRead(F, EchoNode);
+
+    // cycle through addrList and find a match.
+
+//    If EchoNode.Address = InAddress Then Begin
+//      Result := True;
+
+//      Break;
+//    End;
+  End;
+
+  Close (F);
 End;
 
 Procedure TBinkP.RemoveFilesFromFLO (FN: String);
@@ -231,7 +259,7 @@ Begin
   If RxBufSize > 255 Then
     SZ := 255
   Else
-    SZ := RxBufSize;
+    SZ := RxBufSize - 1;
 
   Move (RxBuffer[1], Result[1], SZ);
 
@@ -345,11 +373,14 @@ Begin
 //    WriteLn ('AuthState: ', Ord(AuthState), ', HasHeader: ', HaveHeader, ' Data: ', GetDataStr);
 //waitms(100);
     Case AuthState of
-      SendChallenge : Begin  // Send MD5 digest
-                        // generate value into md5challenge
-                        MD5Challenge := '';
-                        SendFrame (M_NUL, 'MD5-' + MD5Challenge);
-                        // ^^ double check format
+      SendChallenge : Begin
+                        For Count := 1 to 16 Do
+                          Str[Count] := Char(Random(255));
+
+                        MD5Challenge := Digest2String(Str);
+
+                        SendFrame (M_NUL, 'OPT MD5-' + MD5Challenge);
+
                         AuthState := SendWelcome;
                       End;
       SendWelcome   : Begin
@@ -374,14 +405,12 @@ Begin
                         If IsClient Then
                           AuthState := SendPassword
                         Else Begin
-                          // if use MD5 then sendchallenge else...
-                          // note: right now create statys with sendchallenge
                           HaveHeader := False;
                           NeedHeader := True;
                           AuthState  := WaitAddress;
                         End;
                       End;
-      SendPassword  : If HaveHeader Then Begin // wait for header to see if we support CRAMMD5
+      SendPassword  : If HaveHeader Then Begin
                         If UseMD5 And (MD5Challenge <> '') Then Begin
                           MD5Challenge := Digest2String(HMAC_MD5(String2Digest(MD5Challenge), SetPassword));
 
@@ -407,26 +436,38 @@ Begin
                           // Client did not send ADR
                           AuthState := AuthFailed;
                         End Else Begin
-                          InAddress := GetDataStr;
-                          AuthState := WaitPassword;
+                          HaveNode   := FindNodeByAddress(GetDataStr);
+                          AuthState  := WaitPassword;
+                          NeedHeader := True;
+                          HaveHeader := False;
                         End;
                       End;
-//                      End Else
-//                        NeedHeader := True;
       WaitPassword  : If HaveHeader Then Begin
-                        If RxCommand <> M_PWD Then
-                          AuthState := AuthFailed
-                        Else Begin
+                        AuthState := AuthFailed;
+
+                        If (RxCommand = M_PWD) And HaveNode Then Begin
                           Str := GetDataStr;
 
                           If Pos('CRAM-MD5-', Str) > 0 Then Begin
-                            // check address
-                            // generate hash and check for a match
-                            // if match send M_OK, state pass else authfailed
+                            Delete(Str, 1, Pos('CRAM-MD5-', Str) + 8);
+
+                            MD5Challenge := Digest2String(HMAC_MD5(String2Digest(MD5Challenge), EchoNode.binkPass));
+
+                            If Str = MD5Challenge Then Begin
+                              SendFrame (M_OK, '');
+
+                              AuthState := AuthOK;
+                            End;
                           End Else Begin
-                            // if forced MD5 then error
-                            // check address and password
-                            // if match send M_OK, state pass else authfailed
+                            If ForceMD5 Then
+                              SendFrame (M_ERR, 'Required CRAM-MD5 authentication')
+                            Else Begin
+                              If Str = EchoNode.binkPass Then Begin
+                                SendFrame (M_OK, '');
+
+                                AuthState := AuthOK;
+                              End;
+                            End;
                           End;
                         End;
                       End;
