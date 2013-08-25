@@ -8,6 +8,11 @@ design elements/issues.
 BUGS AND POSSIBLE ISSUES
 ========================
 
+! Auto create of message bases is including periods in the filename?
+
+! Gender character is asking for ASCII number.  Make new functions for areas
+  where we don't want that.
+
 !!!! MPLC should NOT stop compiling EVERYTHING if it finds a single file
      error.
 

@@ -201,6 +201,8 @@ Procedure LinuxEventSignal (Sig : LongInt); cdecl;
 Begin
   FileMode := 66;
 
+  Session.SystemLog('DEBUG: Signal received: ' + strI2S(Sig));
+
   Case Sig of
 //    SIGHUP  : Halt;
 //    SIGTERM : Halt;

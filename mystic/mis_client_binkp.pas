@@ -67,7 +67,6 @@ Type
   TBinkAuthState = (
     SendChallenge,
     SendWelcome,
-    SendAddress,
     SendPassword,
     WaitAddress,
     WaitPassword,
@@ -99,8 +98,9 @@ Type
   TBinkP = Class
     SetPassword  : String;
     SetBlockSize : Word;
-    SetTimeOut   : Word;
     SetOutPath   : String;
+    SetTimeOut   : Word;
+    InAddress    : String;
 
     Client       : TIOSocket;
     IsClient     : Boolean;
@@ -133,29 +133,6 @@ Type
 
 Implementation
 
-// SERVER CLASS IMPLEMENTATION
-
-Function CreateBINKP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
-Begin
-  Result := TBINKPServer.Create(Owner, CliSock);
-End;
-
-Constructor TBINKPServer.Create (Owner: TServerManager; CliSock: TIOSocket);
-Begin
-  Inherited Create(Owner, CliSock);
-
-  Server := Owner;
-End;
-
-Procedure TBINKPServer.Execute;
-Begin
-End;
-
-Destructor TBINKPServer.Destroy;
-Begin
-  Inherited Destroy;
-End;
-
 // PROTOCOL CLASS IMPLEMENTATION
 
 Constructor TBinkP.Create (Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
@@ -171,10 +148,11 @@ Begin
   RxBufSize    := 0;
   RxState      := RxNone;
   TxState      := TxNone;
-  TimeOut      := TimerSet(SetTimeout);
+  TimeOut      := TimerSet(SetTimeOut);
   NeedHeader   := True;
   HaveHeader   := False;
   MD5Challenge := '';
+  InAddress    := '';
   AuthState    := SendWelcome;
 
   If Not IsClient and UseMD5 Then
@@ -270,6 +248,7 @@ Begin
   Client.BufFlush;
 
   WriteLn ('    S ' + BinkCmdStr[CmdType] + ' ' + CmdData);
+//  waitms(1000);
   //WriteLn ('Put Command Frame (', BinkCmdStr[CmdType], ') Data: ', CmdData);
 End;
 
@@ -329,9 +308,10 @@ Begin
 //      Command : If (RxCommand = M_NUL) or (RxCommand = M_ERR) Then
 //                  WriteLn ('    R ', BinkCmdStr[RxCommand], ' ', GetDataStr);
         Command : WriteLn ('    R ', BinkCmdStr[RxCommand], ' ', GetDataStr);
-//      Data    : WriteLn ('Got Data Frame (Read ', InPos, ' of ', RxBufSize, ')');
+      Data    : WriteLn ('Got Data Frame (Read ', InPos, ' of ', RxBufSize, ')');
     End;
   End;
+
 End;
 
 Function TBinkP.DoAuthentication;
@@ -362,23 +342,21 @@ Begin
     End;
 
 //    WriteLn ('AuthState: ', GetStateStr(AuthState), ', HasHeader: ', HaveHeader, ' Data: ', GetDataStr);
-
+//    WriteLn ('AuthState: ', Ord(AuthState), ', HasHeader: ', HaveHeader, ' Data: ', GetDataStr);
+//waitms(100);
     Case AuthState of
       SendChallenge : Begin  // Send MD5 digest
+                        // generate value into md5challenge
+                        MD5Challenge := '';
+                        SendFrame (M_NUL, 'MD5-' + MD5Challenge);
+                        // ^^ double check format
+                        AuthState := SendWelcome;
                       End;
       SendWelcome   : Begin
                         SendFrame (M_NUL, 'SYS ' + bbsConfig.BBSName);
                         SendFrame (M_NUL, 'ZYZ ' + bbsConfig.SysopName);
-//                        SendFrame (M_NUL, 'LOC Philadelphia, PA');
                         SendFrame (M_NUL, 'VER Mystic/' + Copy(mysVersion, 1, 4) + ' binkp/1.0');
 
-                        If IsClient Then
-                          AuthState := SendAddress
-                        Else
-                          AuthState := WaitAddress;
-                      End;
-
-      SendAddress   : Begin
                         Str := '';
 
                         For Count := 1 to 30 Do
@@ -393,7 +371,15 @@ Begin
 
                         SendFrame (M_ADR, Str);
 
-                        AuthState := SendPassword;
+                        If IsClient Then
+                          AuthState := SendPassword
+                        Else Begin
+                          // if use MD5 then sendchallenge else...
+                          // note: right now create statys with sendchallenge
+                          HaveHeader := False;
+                          NeedHeader := True;
+                          AuthState  := WaitAddress;
+                        End;
                       End;
       SendPassword  : If HaveHeader Then Begin // wait for header to see if we support CRAMMD5
                         If UseMD5 And (MD5Challenge <> '') Then Begin
@@ -416,11 +402,34 @@ Begin
                         If AuthState <> AuthFailed Then
                           AuthState  := WaitPwdOK;
                       End;
-      WaitAddress   : Begin
-                        // get address
-                        AuthState := WaitPassword;
+      WaitAddress   : If HaveHeader Then Begin
+                        If RxCommand <> M_ADR Then Begin
+                          // Client did not send ADR
+                          AuthState := AuthFailed;
+                        End Else Begin
+                          InAddress := GetDataStr;
+                          AuthState := WaitPassword;
+                        End;
                       End;
-      WaitPassword  : ;
+//                      End Else
+//                        NeedHeader := True;
+      WaitPassword  : If HaveHeader Then Begin
+                        If RxCommand <> M_PWD Then
+                          AuthState := AuthFailed
+                        Else Begin
+                          Str := GetDataStr;
+
+                          If Pos('CRAM-MD5-', Str) > 0 Then Begin
+                            // check address
+                            // generate hash and check for a match
+                            // if match send M_OK, state pass else authfailed
+                          End Else Begin
+                            // if forced MD5 then error
+                            // check address and password
+                            // if match send M_OK, state pass else authfailed
+                          End;
+                        End;
+                      End;
       WaitPwdOK     : If HaveHeader Then Begin
                         If RxCommand <> M_OK Then
                           AuthState := AuthFailed
@@ -593,6 +602,44 @@ Begin
   Until ((RxState = RxDone) and (TxState = TxDone)) or (Not Client.Connected) or (TimerUp(TimeOut));
 
   If Client.Connected Then Client.BufFlush;
+End;
+
+// SERVER CLASS IMPLEMENTATION
+
+Function CreateBINKP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
+Begin
+  Result := TBINKPServer.Create(Owner, CliSock);
+End;
+
+Constructor TBINKPServer.Create (Owner: TServerManager; CliSock: TIOSocket);
+Begin
+  Inherited Create(Owner, CliSock);
+
+  Server := Owner;
+  Client := CliSock;
+End;
+
+Procedure TBINKPServer.Execute;
+Var
+  Queue : TProtocolQueue;
+  BinkP : TBinkP;
+Begin
+  Queue := TProtocolQueue.Create;
+  BinkP := TBinkP.Create (Client, Queue, False, bbsConfig.inetBINKPTimeOut);
+
+  If BinkP.DoAuthentication Then Begin
+    // Pull address and build send queue
+
+    BinkP.DoTransfers;
+  End;
+
+  BinkP.Free;
+  Queue.Free;
+End;
+
+Destructor TBINKPServer.Destroy;
+Begin
+  Inherited Destroy;
 End;
 
 End.
