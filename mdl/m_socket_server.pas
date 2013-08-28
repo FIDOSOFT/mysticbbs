@@ -210,19 +210,19 @@ Begin
     If (ClientMax > 0) And (ClientActive >= ClientMax) Then Begin
       Inc (ClientRefused);
       Status ('BUSY: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
-      If Not NewClient.WriteFile(TextPath + 'busy.txt') Then NewClient.WriteLine('BUSY');
+      If Not NewClient.WriteFile('', TextPath + 'busy.txt') Then NewClient.WriteLine('BUSY');
       NewClient.Free;
     End Else
     If IsBlockedIP(NewClient) Then Begin
       Inc (ClientBlocked);
       Status('BLOCK: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
-      If Not NewClient.WriteFile(TextPath + 'blocked.txt') Then NewClient.WriteLine('BLOCKED');
+      If Not NewClient.WriteFile('', TextPath + 'blocked.txt') Then NewClient.WriteLine('BLOCKED');
       NewClient.Free;
     End Else
     If (ClientMaxIPs > 0) and (DuplicateIPs(NewClient) > ClientMaxIPs) Then Begin
       Inc (ClientRefused);
       Status('MULTI: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
-      If Not NewClient.WriteFile(TextPath + 'dupeip.txt') Then NewClient.WriteLine('Only ' + strI2S(ClientMaxIPs) + ' connection(s) per user');
+      If Not NewClient.WriteFile('', TextPath + 'dupeip.txt') Then NewClient.WriteLine('Only ' + strI2S(ClientMaxIPs) + ' connection(s) per user');
       NewClient.Free;
     End Else Begin
       Inc (ClientTotal);
