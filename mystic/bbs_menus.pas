@@ -6,6 +6,7 @@ Interface
 
 Uses
   BBS_Common,
+  bbs_dataBase,
   BBS_MenuData,
   MPL_Execute;
 
@@ -312,18 +313,18 @@ Begin
                       Session.User.CreateNewUser('');
                       Session.User.UserLogon2;
 
-                      MenuName := Config.MatrixMenu;
+                      MenuName := bbsCfg.MatrixMenu;
                       Result   := True;
                     End;
                   End;
             'C' : If Session.User.GetMatrixUser Then Begin
-                    If Session.User.Access(Config.MatrixAcs) Then Begin
-                      Session.io.PromptInfo[1] := Config.MatrixPW;
+                    If Session.User.Access(bbsCfg.MatrixAcs) Then Begin
+                      Session.io.PromptInfo[1] := bbsCfg.MatrixPW;
                       Session.io.OutFull (Session.GetPrompt(270));
                     End Else
                       Session.io.OutFull (Session.GetPrompt(271));
                   End;
-            'L' : If Session.io.GetPW (Session.GetPrompt(272), Session.GetPrompt(423), Config.MatrixPW) Then Begin
+            'L' : If Session.io.GetPW (Session.GetPrompt(272), Session.GetPrompt(423), bbsCfg.MatrixPW) Then Begin
                     If Session.User.GetMatrixUser Then Begin
                       Session.User.MatrixOK := True;
                       Result                := True;
@@ -335,7 +336,7 @@ Begin
                     PageForSysopChat (Pos('/F', strUpper(CmdData)) > 0) {$ENDIF};
           End;
     '*' : Begin
-            If Not Session.io.GetPW (Session.GetPrompt(493), Session.GetPrompt(417), Config.SysopPW) Then Exit;
+            If Not Session.io.GetPW (Session.GetPrompt(493), Session.GetPrompt(417), bbsCfg.SysopPW) Then Exit;
 
             Case Cmd[2] of
               '#' : Begin
@@ -1242,7 +1243,7 @@ Begin
     Result := False;
 
     If TBBSCore(Owner).Theme.Flags AND thmFallback <> 0 Then
-      Result := Data.Load (False, Config.MenuPath + MenuName + '.mnu');
+      Result := Data.Load (False, bbsCfg.MenuPath + MenuName + '.mnu');
 
     If Not Result Then Begin
       If Forced Then Begin
@@ -1302,7 +1303,7 @@ Begin
   If Data.Info.Global Then
     If Not Data.Load (True, TBBSCore(Owner).Theme.MenuPath + 'global.mnu') Then
       If TBBSCore(Owner).Theme.Flags AND thmFallback <> 0 Then
-        Data.Load (True, Config.MenuPath + 'global.mnu');
+        Data.Load (True, bbsCfg.MenuPath + 'global.mnu');
 
   If Data.Info.InputType = 0 Then
     UseHotKeys := TBBSCore(Owner).User.ThisUser.HotKeys

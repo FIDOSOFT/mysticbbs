@@ -12,6 +12,7 @@ Uses
   m_Strings,
   m_FileIO,
   bbs_Common,
+  bbs_dataBase,
   bbs_Ansi_MenuBox,
   bbs_Ansi_MenuForm,
   bbs_Cfg_Common;
@@ -87,7 +88,7 @@ Var
 Begin
   HideMode := True;
 
-  Assign (SecFile, Config.DataPath + 'security.dat');
+  Assign (SecFile, bbsCfg.DataPath + 'security.dat');
 
   If Not ioReset(SecFile, SizeOf(RecSecurity), fmReadWrite + fmDenyNone) Then Begin
     ReWrite (SecFile, SizeOf(RecSecurity));

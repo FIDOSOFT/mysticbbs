@@ -17,6 +17,7 @@ Uses
   bbs_Ansi_MenuInput,
   bbs_Core,
   bbs_Common,
+  bbs_dataBase,
   bbs_Cfg_Common;
 
 (*
@@ -45,7 +46,7 @@ Var
   Temp       : String;
   DoneNum    : Integer;
 Begin
-  Assign (PromptFile, Config.DataPath + Theme.FileName + '.thm');
+  Assign (PromptFile, bbsCfg.DataPath + Theme.FileName + '.thm');
 
   {$I-} ReWrite (PromptFile); {$I+}
 
@@ -54,7 +55,7 @@ Begin
     Exit;
   End;
 
-  Assign (InFile, Config.SystemPath + Theme.FileName + '.txt');
+  Assign (InFile, bbsCfg.SystemPath + Theme.FileName + '.txt');
   Reset  (InFile);
 
   ShowMsgBox (3, 'Compiling:                           ');
@@ -151,13 +152,13 @@ Var
   Begin
     Result := False;
 
-    Assign     (InFile, Config.DataPath + Theme.FileName + '.txt');
+    Assign     (InFile, bbsCfg.DataPath + Theme.FileName + '.txt');
     SetTextBuf (InFile, Buffer, SizeOf(Buffer));
 
     {$I-} Reset (InFile); {$I+}
 
     If IoResult <> 0 Then Begin
-      ShowMsgBox (0, 'Unable to open ' + Config.DataPath + Theme.FileName + '.txt');
+      ShowMsgBox (0, 'Unable to open ' + bbsCfg.DataPath + Theme.FileName + '.txt');
       Exit;
     End;
 
@@ -571,7 +572,7 @@ Begin
     If ShowMsgBox(1, 'Save changes?') Then Begin
 //      Saved := True;
 
-      Assign  (InFile, Config.DataPath + Theme.FileName + '.txt');
+      Assign  (InFile, bbsCfg.DataPath + Theme.FileName + '.txt');
       ReWrite (InFile);
 
       For Count := 1 to TotalText Do Begin
@@ -741,7 +742,7 @@ Var
   Copied    : RecTheme;
   HasCopy   : Boolean = False;
 Begin
-  Assign (ThemeFile, Config.DataPath + 'theme.dat');
+  Assign (ThemeFile, bbsCfg.DataPath + 'theme.dat');
 
   If Not ioReset(ThemeFile, Sizeof(RecTheme), fmRWDN) Then
     If Not ioReWrite(ThemeFile, SizeOf(RecTheme), fmRWDN) Then
@@ -789,10 +790,10 @@ Begin
                         Flags        := ThmAllowANSI OR ThmAllowASCII OR ThmFallback OR ThmLightbarYN;
                         FileName     := 'new';
                         Desc         := FileName;
-                        TextPath     := Config.TextPath;
-                        MenuPath     := Config.MenuPath;
-                        ScriptPath   := Config.ScriptPath;
-                        TemplatePath := Config.TextPath;
+                        TextPath     := bbsCfg.TextPath;
+                        MenuPath     := bbsCfg.MenuPath;
+                        ScriptPath   := bbsCfg.ScriptPath;
+                        TemplatePath := bbsCfg.TextPath;
                         Colors[0]    := 1;
                         Colors[1]    := 9;
                         Colors[2]    := 11;

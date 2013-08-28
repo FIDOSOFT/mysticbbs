@@ -15,6 +15,7 @@ Uses
   m_DateTime,
   bbs_Core,
   bbs_Common,
+  bbs_dataBase,
   bbs_NodeInfo;
 
 Procedure PageUserForChat;
@@ -26,7 +27,7 @@ Begin
   Repeat
     Session.io.OutFull (Session.GetPrompt(479));
 
-    Case Session.io.OneKeyRange('Q?', 1, Config.INetTNNodes) of
+    Case Session.io.OneKeyRange('Q?', 1, bbsCfg.INetTNNodes) of
       #00 : Break;
       'Q' : Exit;
       '?' : WhosOnline;
@@ -41,12 +42,12 @@ Begin
        Exit;
   End;
 
-  If Session.User.Access(Config.ACSSysop) Then
+  If Session.User.Access(bbsCfg.ACSSysop) Then
     If Session.io.GetYN(Session.GetPrompt(481), False) Then
       ReqType := 9;
 
-  FileErase (Config.DataPath + 'userchat.' + strI2S(ToNode));
-  FileErase (Config.DataPath + 'userchat.' + strI2S(Session.NodeNum));
+  FileErase (bbsCfg.DataPath + 'userchat.' + strI2S(ToNode));
+  FileErase (bbsCfg.DataPath + 'userchat.' + strI2S(Session.NodeNum));
 
   Session.io.PromptInfo[1] := TempChat.Name;
   Session.io.PromptInfo[2] := strI2S(ToNode);
@@ -132,8 +133,8 @@ Var
 Begin
   Session.io.OutFullLn(Session.GetPrompt(483));
 
-  Assign (fOut, Config.DataPath + 'userchat.' + strI2S(ToNode));
-  Assign (fIn,  Config.DataPath + 'userchat.' + strI2S(Session.NodeNum));
+  Assign (fOut, bbsCfg.DataPath + 'userchat.' + strI2S(ToNode));
+  Assign (fIn,  bbsCfg.DataPath + 'userchat.' + strI2S(Session.NodeNum));
 
   FileMode := 66;
 

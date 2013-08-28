@@ -19,6 +19,7 @@ Uses
   m_DateTime,
   m_FileIO,
   bbs_Common,
+  bbs_dataBase,
   bbs_Core,
   bbs_User;
 
@@ -63,16 +64,16 @@ Begin
   Assign  (tFile, Session.TempPath + 'DORINFO1.DEF');
   Rewrite (tFile);
 
-  Write (tFile, Config.BBSName + Ending);
+  Write (tFile, bbsCfg.BBSName + Ending);
 
-  A := Pos(' ', Config.SysopName);
+  A := Pos(' ', bbsCfg.SysopName);
   If A > 0 Then
-    Write (tFile, Copy(Config.SysopName, 1, A-1) + Ending)
+    Write (tFile, Copy(bbsCfg.SysopName, 1, A-1) + Ending)
   Else
-    Write (tFile, Config.SysopName + Ending);
+    Write (tFile, bbsCfg.SysopName + Ending);
 
   If A > 0 Then
-    Write (tFile, Copy(Config.SysopName, A+1, 255) + Ending)
+    Write (tFile, Copy(bbsCfg.SysopName, A+1, 255) + Ending)
   Else
     Write (tFile, '' + Ending);
 
@@ -124,15 +125,15 @@ Begin
   Write (tFile, Ord(Not Session.LocalMode), Ending);
   Write (tFile, (Session.TimeLeft * 60), Ending);
   Write (tFile, Session.Theme.TextPath + Ending);
-  Write (tFile, Config.DataPath + Ending);
+  Write (tFile, bbsCfg.DataPath + Ending);
   Write (tFile, 'SYSOP.', Session.NodeNum, Ending);
   If Session.LocalMode Then
     Write (tFile, 'KB' + Ending)
   Else
     Write (tFile, Session.Baud, Ending);
   Write (tFile, '1', Ending);
-  Write (tFile, Config.BBSName + Ending);
-  Write (tFile, Config.SysopName + Ending);
+  Write (tFile, bbsCfg.BBSName + Ending);
+  Write (tFile, bbsCfg.SysopName + Ending);
   Write (tFile, TimerSeconds, Ending);
   Write (tFile, '0' + Ending); {seconds online}
   Write (tFile, Session.User.ThisUser.ULk, Ending);
@@ -186,9 +187,9 @@ Begin
   Write (tFile, Session.User.ThisUser.DLk, Ending);
   Write (tFile, Session.User.Security.MaxDLk, Ending);
   Write (tFile, Session.User.ThisUser.Birthday, Ending);
-  Write (tFile, Config.DataPath + Ending);
-  Write (tFile, Config.MsgsPath + Ending);
-  Write (tFile, Config.SysopName + Ending);
+  Write (tFile, bbsCfg.DataPath + Ending);
+  Write (tFile, bbsCfg.MsgsPath + Ending);
+  Write (tFile, bbsCfg.SysopName + Ending);
   Write (tFile, Session.User.ThisUser.Handle + Ending);
   Write (tFile, TimeDos2Str(Session.NextEvent.ExecTime, 0) + Ending); {next event start time hh:mm}
   Write (tFile, 'Y' + Ending); {error-free connection}
@@ -253,7 +254,7 @@ Begin
     PI) Then
       WaitForSingleObject (PI.hProcess, INFINITE);
 
-  DirChange(Config.SystemPath);
+  DirChange(bbsCfg.SystemPath);
 
   If Session.User.UserNum <> -1 Then Begin
     Reset  (Session.User.UserFile);

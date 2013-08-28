@@ -47,7 +47,7 @@ Uses
   mUtil_MsgPost,
   mUtil_EchoExport,
   mUtil_EchoImport,
-  bbs_Common;
+  bbs_DataBase;
 
 {$I MUTIL_ANSI.PAS}
 

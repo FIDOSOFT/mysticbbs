@@ -6,7 +6,8 @@ Interface
 
 Uses
   BBS_Core,
-  BBS_Common;
+  BBS_Common,
+  bbs_dataBase;
 
 Function  GetNodeByIndex       (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
 Procedure AddExportByBase      (Var MBase: RecMessageBase; Idx: LongInt);
@@ -93,7 +94,7 @@ Var
   MBaseFile : File of RecMessageBase;
   MBase     : RecMessageBase;
 Begin
-  Assign (MBaseFile, Config.DataPath + 'mbases.dat');
+  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
@@ -112,7 +113,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, Config.DataPath + 'echonode.dat');
+  Assign (F, bbsCfg.DataPath + 'echonode.dat');
 
   If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
 
@@ -205,7 +206,7 @@ Var
 Var
   NewIdx : LongInt;
 Begin
-  Assign (MBaseFile, Config.DataPath + 'mbases.dat');
+  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then
     Exit;
@@ -333,7 +334,7 @@ Var
 Begin
   Result := -1;
 
-  Assign (EchoFile, Config.DataPath + 'echonode.dat');
+  Assign (EchoFile, bbsCfg.DataPath + 'echonode.dat');
 
   If Not ioReset(EchoFile, SizeOf(EchoNode), fmRWDN) Then
     If Not ioReWrite(EchoFile, SizeOf(EchoNode), fmRWDN) Then
@@ -439,27 +440,30 @@ Function Configuration_EchomailAddress (Edit: Boolean) : Byte;
 
     WriteXY (21, 8, 112, 'Address');
 
-    Form.AddWord ('Z', ' Zone'       , 23,  9, 31,  9,  6,  5,  0, 65535, @Config.NetAddress[Num].Zone, Topic + 'Network Zone');
-    Form.AddWord ('N', ' Net'        , 24, 10, 31, 10,  5,  5,  0, 65535, @Config.NetAddress[Num].Net, Topic + 'Network Net');
-    Form.AddWord ('O', ' Node'       , 23, 11, 31, 11,  6,  5,  0, 65535, @Config.NetAddress[Num].Node, Topic + 'Network Node');
-    Form.AddWord ('P', ' Point'      , 22, 12, 31, 12,  7,  5,  0, 65535, @Config.NetAddress[Num].Point, Topic + 'Network Point');
+    Form.AddWord ('Z', ' Zone'       , 23,  9, 31,  9,  6,  5,  0, 65535, @bbsCfg.NetAddress[Num].Zone, Topic + 'Network Zone');
+    Form.AddWord ('N', ' Net'        , 24, 10, 31, 10,  5,  5,  0, 65535, @bbsCfg.NetAddress[Num].Net, Topic + 'Network Net');
+    Form.AddWord ('O', ' Node'       , 23, 11, 31, 11,  6,  5,  0, 65535, @bbsCfg.NetAddress[Num].Node, Topic + 'Network Node');
+    Form.AddWord ('P', ' Point'      , 22, 12, 31, 12,  7,  5,  0, 65535, @bbsCfg.NetAddress[Num].Point, Topic + 'Network Point');
 
-    Form.AddStr  ('M', ' Domain',      21, 14, 31, 14,  8,  8,  8, @Config.NetDomain[Num], Topic + 'Network domain');
-    Form.AddStr  ('D', ' Description', 16, 15, 31, 15, 13, 25, 25, @Config.NetDesc[Num], Topic + 'Network description');
-    Form.AddBol  ('I', ' Primary',     20, 16, 31, 16,  9,  3, @Config.NetPrimary[Num], Topic + 'Is this a primary address?');
+    Form.AddStr  ('M', ' Domain',      21, 14, 31, 14,  8,  8,  8, @bbsCfg.NetDomain[Num], Topic + 'Network domain');
+    Form.AddStr  ('D', ' Description', 16, 15, 31, 15, 13, 25, 25, @bbsCfg.NetDesc[Num], Topic + 'Network description');
+    Form.AddBol  ('I', ' Primary',     20, 16, 31, 16,  9,  3, @bbsCfg.NetPrimary[Num], Topic + 'Is this a primary address?');
 
     Form.Execute;
 
-    If Config.NetPrimary[Num] Then
+    If bbsCfg.NetPrimary[Num] Then
       For Count := 1 to 30 Do
-        If Config.NetPrimary[Count] and (Count <> Num) Then
-          Config.NetPrimary[Count] := False;
+        If bbsCfg.NetPrimary[Count] and (Count <> Num) Then
+          bbsCfg.NetPrimary[Count] := False;
 
     Box.Close;
     Form.Free;
     Box.Free;
 
-    If Config.NetDomain[Num] = '' Then Begin
+    If strAddr2Str(bbsCfg.NetAddress[Num]) = '0:0/0' Then
+      bbsCfg.NetDomain[Num] := ''
+    Else
+    If bbsCfg.NetDomain[Num] = '' Then Begin
       ShowMsgBox(0, 'You must supply a domain');
       Goto Start;
     End;
@@ -476,7 +480,7 @@ Var
     List.Clear;
 
     For A := 1 to 30 Do
-      List.Add(strPadR(strAddr2Str(Config.NetAddress[A]), 23, ' ') + ' ' + strPadR(Config.NetDomain[A], 8, ' ') + '  ' + strPadR(strYN(Config.NetPrimary[A]), 3, ' ') + '  ' + Config.NetDesc[A], 0);
+      List.Add(strPadR(strAddr2Str(bbsCfg.NetAddress[A]), 23, ' ') + ' ' + strPadR(bbsCfg.NetDomain[A], 8, ' ') + '  ' + strPadR(strYN(bbsCfg.NetPrimary[A]), 3, ' ') + '  ' + bbsCfg.NetDesc[A], 0);
   End;
 
 Begin

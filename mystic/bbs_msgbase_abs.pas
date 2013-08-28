@@ -7,7 +7,7 @@ Unit BBS_MsgBase_ABS;
 Interface
 
 Uses
-  BBS_Common;
+  bbs_dataBase;
 
 Type
   MsgMailType = (mmtNormal, mmtEchoMail, mmtNetMail);

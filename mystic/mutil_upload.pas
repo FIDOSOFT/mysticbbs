@@ -13,7 +13,7 @@ Uses
   m_DateTime,
   mUtil_Common,
   mUtil_Status,
-  bbs_Common;
+  bbs_DataBase;
 
 Procedure uMassUpload;
 Var

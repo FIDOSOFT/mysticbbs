@@ -43,6 +43,7 @@ Uses
   bbs_Ansi_MenuBox,
   bbs_Core,
   bbs_Common,
+  bbs_dataBase,
   MPL_Execute;
 
 Constructor TAnsiMenuHelp.Create;
@@ -261,7 +262,6 @@ Var
       Delete (Key, 1, 1);
 
       Temp := strWordGet(1, Key, ']');
-
       Cmd  := strWordGet(1, Temp, ';');
       Data := strWordGet(2, Temp, ';');
 
@@ -434,6 +434,7 @@ Begin
                     CurKey := Keyword
                   Else Begin
                     CurKey := LastKey[LastPos];
+
                     Dec (LastPos);
                   End;
 
@@ -459,7 +460,7 @@ Begin
                       '!' : Begin
                               Session.io.AnsiColor(7);
 
-                              ExecuteMPL(NIL, Copy(Text[TopPage + CurLine - 1].Link[CurLPos].Key, 2, 255));
+                              ExecuteMPL (NIL, Copy(Text[TopPage + CurLine - 1].Link[CurLPos].Key, 2, 255));
 
                               ShowTemplate;
                             End;

@@ -20,6 +20,7 @@ Uses
   BBS_Core,
   BBS_Common,
   BBS_MenuData,
+  bbs_dataBase,
   bbs_cfg_Theme,
   bbs_cfg_Common;
 

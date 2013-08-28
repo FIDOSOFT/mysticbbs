@@ -5,7 +5,8 @@ Unit bbs_NodeInfo;
 Interface
 
 Uses
-  bbs_Common;
+  bbs_Common,
+  bbs_dataBase;
 
 Function  GetChatRecord     (Node: Byte; Var Chat: ChatRec) : Boolean;
 Function  IsUserOnline      (UserName: String) : Word;
@@ -29,7 +30,7 @@ Function GetChatRecord (Node: Byte; Var Chat: ChatRec) : Boolean;
 Begin
   Result := False;
 
-  Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Node) + '.dat');
+  Assign (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Node) + '.dat');
 
   If Not ioReset(ChatFile, SizeOf(ChatFile), fmRWDN) Then Exit;
 
@@ -46,7 +47,7 @@ Var
 Begin
   Result := 0;
 
-  For Count := 1 to Config.INetTNNodes Do Begin
+  For Count := 1 to bbsCfg.INetTNNodes Do Begin
     If GetChatRecord(Count, TempChat) Then
       If (Count <> Session.NodeNum) and (TempChat.Active) and (TempChat.Name = UserName) Then Begin
         Result := Count;
@@ -57,7 +58,7 @@ End;
 
 Procedure Set_Node_Action (Action: String);
 Begin
-  Assign  (ChatFile, Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+  Assign  (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
   ReWrite (ChatFile);
 
   If Action <> '' Then Begin
@@ -83,7 +84,7 @@ Begin
   Close  (ChatFile);
 
   {$IFDEF WINDOWS}
-    Screen.SetWindowTitle (Config.BBSName + ' Node ' + strI2S(Session.NodeNum) + ' : ' + Session.User.ThisUser.Handle + ' : ' + strStripPipe(Action));
+    Screen.SetWindowTitle (bbsCfg.BBSName + ' Node ' + strI2S(Session.NodeNum) + ' : ' + Session.User.ThisUser.Handle + ' : ' + strStripPipe(Action));
 //    Screen.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum) + ' - ' + Session.User.ThisUser.Handle + ' - ' + strStripPipe(Action));
   {$ENDIF}
 End;
@@ -95,7 +96,7 @@ Var
 Begin
   Session.io.OutFullLn (Session.GetPrompt(138));
 
-  For Count := 1 to Config.INetTNNodes Do Begin
+  For Count := 1 to bbsCfg.INetTNNodes Do Begin
     Session.io.PromptInfo[1] := strI2S(Count);
 
     If Not GetChatRecord (Count, TChat) Then Begin
@@ -104,7 +105,7 @@ Begin
       Continue;
     End;
 
-    If TChat.Active and ((Not TChat.Invisible) or (TChat.Invisible and Session.User.Access(Config.AcsSeeInvis))) Then Begin
+    If TChat.Active and ((Not TChat.Invisible) or (TChat.Invisible and Session.User.Access(bbsCfg.AcsSeeInvis))) Then Begin
       Session.io.PromptInfo[2] := TChat.Name;
       Session.io.PromptInfo[3] := TChat.Action;
       Session.io.PromptInfo[4] := TChat.Location;
@@ -134,7 +135,7 @@ Begin
     Repeat
       Session.io.OutFull (Session.GetPrompt(146));
 
-      Case Session.io.OneKeyRange('?Q', 1, Config.INetTNNodes) of
+      Case Session.io.OneKeyRange('?Q', 1, bbsCfg.INetTNNodes) of
         #00 : Break;
         '?' : WhosOnline;
         'Q' : Break;
@@ -143,7 +144,7 @@ Begin
 
     ToNode := Session.io.RangeValue;
 
-    If (ToNode < 0) or (ToNode > Config.INetTNNodes) Then Begin
+    If (ToNode < 0) or (ToNode > bbsCfg.INetTNNodes) Then Begin
       Session.io.OutFullLn (Session.GetPrompt(147));
       Exit;
     End;
@@ -159,7 +160,7 @@ Begin
 
     If ToNode = 0 Then Begin
       B := 1;
-      C := Config.INetTNNodes;
+      C := bbsCfg.INetTNNodes;
 
       If MsgType = 3 Then Begin
         MsgType     := 2;
@@ -206,7 +207,7 @@ Begin
 
         FileMode := 66;
 
-        Assign (NodeMsgFile, Config.SystemPath + 'temp' + strI2S(A) + PathChar + 'chat.tmp');
+        Assign (NodeMsgFile, bbsCfg.SystemPath + 'temp' + strI2S(A) + PathChar + 'chat.tmp');
 
         If Not ioReset (NodeMsgFile, SizeOf(NodeMsg), fmReadWrite + fmDenyAll) Then
           ioReWrite(NodeMsgFile, SizeOf(NodeMsg), fmReadWrite + fmDenyAll);

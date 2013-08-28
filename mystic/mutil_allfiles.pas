@@ -14,7 +14,7 @@ Uses
   m_FileIO,
   mUtil_Common,
   mUtil_Status,
-  bbs_Common;
+  bbs_DataBase;
 
 Const
   TotalFiles : Cardinal = 0;

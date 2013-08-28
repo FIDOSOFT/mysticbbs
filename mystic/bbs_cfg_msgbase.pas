@@ -18,7 +18,8 @@ Uses
   bbs_Ansi_MenuForm,
   bbs_Cfg_Common,
   bbs_Cfg_EchoMail,
-  bbs_Common;
+  bbs_Common,
+  bbs_dataBase;
 
 Type
   RecMessageBaseFile = File of RecMessageBase;
@@ -60,12 +61,12 @@ Begin
   Sort.Sort (1, Sort.Total, qAscending);
 
   Close  (MBaseFile);
-  ReName (MBaseFile, Config.DataPath + 'mbases.sortbak');
+  ReName (MBaseFile, bbsCfg.DataPath + 'mbases.sortbak');
 
-  Assign (TempFile, Config.DataPath + 'mbases.sortbak');
+  Assign (TempFile, bbsCfg.DataPath + 'mbases.sortbak');
   Reset  (TempFile);
 
-  Assign  (MBaseFile, Config.DataPath + 'mbases.dat');
+  Assign  (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
   ReWrite (MBaseFile);
 
   While FilePos(TempFile) < SortFirst - 1 Do Begin
@@ -152,7 +153,7 @@ Begin
   Form.AddBits ('9', ' Pvt Reply'   , 55, 21, 68, 21, 11, MBPrivReply, @MBase.Flags, Topic + 'Allow private posts in public?');
 
   Repeat
-    WriteXY (19, 15, 113, strPadR(strAddr2Str(Config.NetAddress[MBase.NetAddr]), 19, ' '));
+    WriteXY (19, 15, 113, strPadR(strAddr2Str(bbsCfg.NetAddress[MBase.NetAddr]), 19, ' '));
 
     Links := FileByteSize(MBase.Path + MBase.FileName + '.lnk');
 
@@ -281,7 +282,7 @@ Var
     Form.LoExitChars := #21#27;
 
     Repeat
-      WriteXY (28, 12, 113, strPadR(strAddr2Str(Config.NetAddress[Global.NetAddr]), 19, ' '));
+      WriteXY (28, 12, 113, strPadR(strAddr2Str(bbsCfg.NetAddress[Global.NetAddr]), 19, ' '));
 
       If AddStr <> '' Then
         WriteXY (28, 20, 113, strPadR(AddStr, 12, ' '));
@@ -383,7 +384,7 @@ Var
       If MBase.NetType = 0 Then
         Addr := 'Local'
       Else
-        Addr := strAddr2Str(Config.NetAddress[MBase.NetAddr]);
+        Addr := strAddr2Str(bbsCfg.NetAddress[MBase.NetAddr]);
 
       List.Add(strPadR(strI2S(FilePos(MBaseFile) - 1), 5, ' ') + '  ' + strPadR(strStripMCI(MBase.Name), 35, ' ') + ' ' + strPadL(Addr, 12, ' '), Tag);
     End;
@@ -426,7 +427,7 @@ Var
 
       Created     := CurDateDos;
       FileName    := 'new';
-      Path        := Config.MsgsPath;
+      Path        := bbsCfg.MsgsPath;
       Name        := 'New Base';
       DefNScan    := 1;
       DefQScan    := 1;
@@ -437,12 +438,12 @@ Var
       ITemplate   := 'ansimlst';
       SysopACS    := 's255';
       NetAddr     := 1;
-      Origin      := Config.Origin;
-      ColQuote    := Config.ColorQuote;
-      ColText     := Config.ColorText;
-      ColTear     := Config.ColorTear;
-      ColOrigin   := Config.ColorOrigin;
-      ColKludge   := Config.ColorKludge;
+      Origin      := bbsCfg.Origin;
+      ColQuote    := bbsCfg.ColorQuote;
+      ColText     := bbsCfg.ColorText;
+      ColTear     := bbsCfg.ColorTear;
+      ColOrigin   := bbsCfg.ColorOrigin;
+      ColKludge   := bbsCfg.ColorKludge;
       Flags       := MBAutoSigs or MBKillKludge;
 
       If Email Then Begin
@@ -475,7 +476,7 @@ Var
 Begin
   Result := -1;
 
-  Assign (MBaseFile, Config.DataPath + 'mbases.dat');
+  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(MBaseFile, SizeOf(MBase), fmRWDN) Then
     Exit;

@@ -17,9 +17,8 @@ Uses
   m_Output,
   m_Input,
   m_DateTime,
-  m_FileIO;
-
-{$I RECORDS.PAS}
+  m_FileIO,
+  bbs_dataBase;
 
 // This unit is very old (like 1994) and its functions need to be phased out
 // This is the stuff that hasn't been worked into a class somewhere or
@@ -41,7 +40,6 @@ Var
   Room        : RoomRec;
   LastOnFile  : File of RecLastOn;
   LastOn      : RecLastOn;
-  Config      : RecConfig;
   StatusPtr   : Byte = 1;
 
 Function  DrawAccessFlags (Var Flags: AccessFlagType) : String;
@@ -241,7 +239,7 @@ Begin
     Screen.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum));
   {$ENDIF}
 
-  DirChange(Config.SystemPath);
+  DirChange(bbsCfg.SystemPath);
 
   If Session.User.UserNum <> -1 Then Begin
     Reset  (Session.User.UserFile);
@@ -265,35 +263,35 @@ End;
 {$IFNDEF UNIX}
 Procedure UpdateStatusLine (Mode: Byte; Str: String);
 Begin
-  If Not Config.UseStatusBar Then Exit;
+  If Not bbsCfg.UseStatusBar Then Exit;
 
   Screen.SetWindow (1, 1, 80, 25, False);
 
   Case Mode of
-    0 : Screen.WriteXY (1, 25, Config.StatusColor3, strPadC(Str, 80, ' '));
+    0 : Screen.WriteXY (1, 25, bbsCfg.StatusColor3, strPadC(Str, 80, ' '));
     1 : Begin
-          Screen.WriteXY ( 1, 25, Config.StatusColor1, ' Alias ' + strRep(' ', 35) + 'Age       SecLevel      TimeLeft      ');
-          Screen.WriteXY ( 8, 25, Config.StatusColor2, Session.User.ThisUser.Handle + ' #' + strI2S(Session.User.ThisUser.PermIdx));
-          Screen.WriteXY (47, 25, Config.StatusColor2, Session.User.ThisUser.Gender + '/' + strI2S(DaysAgo(Session.User.ThisUser.Birthday, 1) DIV 365));
-          Screen.WriteXY (62, 25, Config.StatusColor2, strI2S(Session.User.ThisUser.Security));
-          Screen.WriteXY (76, 25, Config.StatusColor2, strI2S(Session.TimeLeft));
+          Screen.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' Alias ' + strRep(' ', 35) + 'Age       SecLevel      TimeLeft      ');
+          Screen.WriteXY ( 8, 25, bbsCfg.StatusColor2, Session.User.ThisUser.Handle + ' #' + strI2S(Session.User.ThisUser.PermIdx));
+          Screen.WriteXY (47, 25, bbsCfg.StatusColor2, Session.User.ThisUser.Gender + '/' + strI2S(DaysAgo(Session.User.ThisUser.Birthday, 1) DIV 365));
+          Screen.WriteXY (62, 25, bbsCfg.StatusColor2, strI2S(Session.User.ThisUser.Security));
+          Screen.WriteXY (76, 25, bbsCfg.StatusColor2, strI2S(Session.TimeLeft));
         End;
     2 : Begin
-          Screen.WriteXY ( 1, 25, Config.StatusColor1, ' Email ' + strRep(' ', 35) + ' Location ' + strRep(' ', 27) + ' ');
-          Screen.WriteXY ( 8, 25, Config.StatusColor2, strPadR(Session.User.ThisUser.Email, 36, ' '));
-          Screen.WriteXY (53, 25, Config.StatusColor2, strPadR(Session.User.ThisUser.City, 27, ' '));
+          Screen.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' Email ' + strRep(' ', 35) + ' Location ' + strRep(' ', 27) + ' ');
+          Screen.WriteXY ( 8, 25, bbsCfg.StatusColor2, strPadR(Session.User.ThisUser.Email, 36, ' '));
+          Screen.WriteXY (53, 25, bbsCfg.StatusColor2, strPadR(Session.User.ThisUser.City, 27, ' '));
         End;
     3 : Begin
-          Screen.WriteXY ( 1, 25, Config.StatusColor1, ' IP ' + strRep(' ', 19) + ' Host ' + strRep(' ', 49) + ' ');
-          Screen.WriteXY ( 5, 25, Config.StatusColor2, Session.UserIPInfo);
-          Screen.WriteXY (31, 25, Config.StatusColor2, strPadR(Session.UserHostInfo, 49, ' '));
+          Screen.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' IP ' + strRep(' ', 19) + ' Host ' + strRep(' ', 49) + ' ');
+          Screen.WriteXY ( 5, 25, bbsCfg.StatusColor2, Session.UserIPInfo);
+          Screen.WriteXY (31, 25, bbsCfg.StatusColor2, strPadR(Session.UserHostInfo, 49, ' '));
         End;
     4 : Begin
-          Screen.WriteXY ( 1, 25, Config.StatusColor1, ' Flags 1 ' + strRep(' ', 35) + ' Flags 2 ');
-          Screen.WriteXY (10, 25, Config.StatusColor2, DrawAccessFlags(Session.User.ThisUser.AF1));
-          Screen.WriteXY (54, 25, Config.StatusColor2, DrawAccessFlags(Session.User.ThisUser.AF2));
+          Screen.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' Flags 1 ' + strRep(' ', 35) + ' Flags 2 ');
+          Screen.WriteXY (10, 25, bbsCfg.StatusColor2, DrawAccessFlags(Session.User.ThisUser.AF1));
+          Screen.WriteXY (54, 25, bbsCfg.StatusColor2, DrawAccessFlags(Session.User.ThisUser.AF2));
         End;
-    5 : Screen.WriteXY (1, 25, Config.StatusColor3, '  ALTS/C Chat ALTE Edit ALTH Hangup ALT+/- Time ALTB Info ALTT Bar ALTV Screen  ');
+    5 : Screen.WriteXY (1, 25, bbsCfg.StatusColor3, '  ALTS/C Chat ALTE Edit ALTH Hangup ALT+/- Time ALTB Info ALTT Bar ALTV Screen  ');
   End;
 
   Screen.SetWindow (1, 1, 80, 24, False);
@@ -307,9 +305,9 @@ Begin
 {E} #18 : If (Not Session.InUserEdit) and (Session.User.UserNum <> -1) Then
             Configuration_LocalUserEdit;
 {T} #20 : Begin
-            Config.UseStatusBar := Not Config.UseStatusBar;
+            bbsCfg.UseStatusBar := Not bbsCfg.UseStatusBar;
 
-            If Not Config.UseStatusBar Then Begin
+            If Not bbsCfg.UseStatusBar Then Begin
               Screen.WriteXY   (1, 25, 0, strRep(' ', 80));
               Screen.SetWindow (1, 1, 80, 25, False);
             End Else
@@ -335,7 +333,7 @@ Begin
           End;
     #59..
     #62 : Begin
-            Session.io.InMacroStr := Config.SysopMacro[Ord(Cmd) - 58];
+            Session.io.InMacroStr := bbsCfg.SysopMacro[Ord(Cmd) - 58];
 
             If Session.io.InMacroStr[1] = '!' Then
               ExecuteMPL (NIL, Copy(Session.io.InMacroStr, 2, 255))

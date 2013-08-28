@@ -16,18 +16,6 @@ Uses
   MIS_NodeData,
   MIS_Common;
 
-Function CreateBINKP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
-
-Type
-  TBINKPServer = Class(TServerClient)
-    Server   : TServerManager;
-    UserName : String[30];
-
-    Constructor Create (Owner: TServerManager; CliSock: TIOSocket);
-    Procedure   Execute; Override;
-    Destructor  Destroy; Override;
-  End;
-
 Const
   M_NUL  = 0;
   M_ADR  = 1;
@@ -95,7 +83,11 @@ Type
     Data
   );
 
+  TBinkPStatusUpdate = Procedure (Owner: Pointer; Str: String);
+
   TBinkP = Class
+    Owner        : Pointer;
+    StatusUpdate : TBinkPStatusUpdate;
     SetPassword  : String;
     SetBlockSize : Word;
     SetOutPath   : String;
@@ -117,33 +109,53 @@ Type
     HaveHeader   : Boolean;
     NeedHeader   : Boolean;
     MD5Challenge : String;
+    AddressList  : String;
+    Password     : String;
+    PasswordMD5  : Boolean;
     FileList     : TProtocolQueue;
 
-    Constructor Create (Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
+    Constructor Create (O: Pointer; Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
     Destructor  Destroy; Override;
-
-    // TO BE REWRITTEN/MOVED/REMOVED
     Procedure   RemoveFilesFromFLO (FN: String);
-    Function    FindNodeByAddress  (AddrList: String) : Boolean;
-
+    Function    AuthenticateNode (AddrList: String) : Boolean;
     Function    GetDataStr : String;
-    Procedure   SendFrame     (CmdType: Byte; CmdData: String);
+    Procedure   SendFrame (CmdType: Byte; CmdData: String);
     Procedure   SendDataFrame (Var Buf; BufSize: Word);
     Procedure   DoFrameCheck;
     Function    DoAuthentication : Boolean;
     Procedure   DoTransfers;
   End;
 
+Function CreateBINKP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
+
+Type
+  TBINKPServer = Class(TServerClient)
+    Server   : TServerManager;
+    UserName : String[30];
+
+    Constructor Create (Owner: TServerManager; CliSock: TIOSocket);
+    Procedure   Execute; Override;
+//    Procedure   Status (Str: String);
+    Destructor  Destroy; Override;
+  End;
+
 Implementation
 
 // PROTOCOL CLASS IMPLEMENTATION
 
-Constructor TBinkP.Create (Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
+Procedure DefaultBinkPStatusProc (Owner: Pointer; Str: String);
+Begin
+//writeln(str);
+End;
+
+Constructor TBinkP.Create (O: Pointer; Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
 Begin
   Inherited Create;
 
+  StatusUpdate := @DefaultBinkPStatusProc;
   SetTimeOut   := TOV;
   Client       := C;
+  Owner        := O;
   FileList     := FL;
   IsClient     := IsCli;
   UseMD5       := True;
@@ -154,7 +166,9 @@ Begin
   TimeOut      := TimerSet(SetTimeOut);
   NeedHeader   := True;
   HaveHeader   := False;
+  AddressList  := '';
   MD5Challenge := '';
+  Password     := '';
   HaveNode     := False;
   AuthState    := SendWelcome;
 
@@ -167,29 +181,52 @@ Begin
   Inherited Destroy;
 End;
 
-Function TBinkP.FindNodeByAddress (AddrList: String) : Boolean;
+Function TBinkP.AuthenticateNode (AddrList: String) : Boolean;
 Var
-  F : File;
+  EchoFile  : File;
+  Count     : Byte;
+  Addr1     : String;
+  Addr2     : String;
+  UseDomain : Boolean;
 Begin
   Result := False;
 
-  Assign (F, bbsConfig.DataPath + 'echonode.dat');
+  Assign (EchoFile, bbsConfig.DataPath + 'echonode.dat');
 
-  If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
+  If Not ioReset(EchoFile, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
 
-  While Not Eof(F) Do Begin
-    ioRead(F, EchoNode);
+  While Not Eof(EchoFile) Do Begin
+    ioRead(EchoFile, EchoNode);
 
-    // cycle through addrList and find a match.
+    For Count := 1 to strWordCount(AddrList, ' ') Do Begin
+      Addr1     := strWordGet(Count, AddrList, ' ');
+      Addr2     := strAddr2Str(EchoNode.Address);
+      UseDomain := Pos('@', Addr1) > 0;
 
-//    If EchoNode.Address = InAddress Then Begin
-//      Result := True;
+      If UseDomain Then
+        Addr2 := Addr2 + '@' + EchoNode.Domain;
 
-//      Break;
-//    End;
+      If strUpper(Addr1) = strUpper(Addr2) Then Begin
+        If PasswordMD5 Then Begin
+          If strUpper(Password) = strUpper(Digest2String(HMAC_MD5(String2Digest(MD5Challenge), EchoNode.binkPass))) Then Begin
+            Result := True;
+
+            Break;
+          End;
+        End Else Begin
+          If Password = EchoNode.binkPass Then Begin
+            Result := True;
+
+            Break;
+          End;
+        End;
+      End;
+    End;
+
+    If Result Then Break;
   End;
 
-  Close (F);
+  Close (EchoFile);
 End;
 
 Procedure TBinkP.RemoveFilesFromFLO (FN: String);
@@ -206,7 +243,7 @@ Begin
   // to revamp this to perform appropriate file locking and waiting.
   // also should be moved to mis_common since FTN-FTP will also perform
   // the same procedure.
-  // could also perform a critical section as a cheesy way to do this.
+  // could also perform a critical section as a cheesy way to do this?
 
   FindFirst (SetOutPath + '*.?lo', AnyFile, DirInfo);
 
@@ -275,7 +312,7 @@ Begin
   Client.BufWriteStr(Char(Hi(DataSize)) + Char(Lo(DataSize)) + Char(CmdType) + CmdData + #0);
   Client.BufFlush;
 
-  WriteLn ('    S ' + BinkCmdStr[CmdType] + ' ' + CmdData);
+//  WriteLn ('    S ' + BinkCmdStr[CmdType] + ' ' + CmdData);
 //  waitms(1000);
   //WriteLn ('Put Command Frame (', BinkCmdStr[CmdType], ') Data: ', CmdData);
 End;
@@ -332,12 +369,12 @@ Begin
       HaveHeader := True;
     End;
 
-    Case RxFrameType of
+//    Case RxFrameType of
 //      Command : If (RxCommand = M_NUL) or (RxCommand = M_ERR) Then
 //                  WriteLn ('    R ', BinkCmdStr[RxCommand], ' ', GetDataStr);
-        Command : WriteLn ('    R ', BinkCmdStr[RxCommand], ' ', GetDataStr);
-      Data    : WriteLn ('Got Data Frame (Read ', InPos, ' of ', RxBufSize, ')');
-    End;
+//        Command : WriteLn ('    R ', BinkCmdStr[RxCommand], ' ', GetDataStr);
+//      Data    : WriteLn ('Got Data Frame (Read ', InPos, ' of ', RxBufSize, ')');
+//    End;
   End;
 
 End;
@@ -367,6 +404,9 @@ Begin
 
       If Count > 0 Then
         MD5Challenge := Copy(Str, Count + 4, 255);
+
+      If Not IsClient Then
+        StatusUpdate (Owner, Str);
     End;
 
 //    WriteLn ('AuthState: ', GetStateStr(AuthState), ', HasHeader: ', HaveHeader, ' Data: ', GetDataStr);
@@ -436,24 +476,26 @@ Begin
                           // Client did not send ADR
                           AuthState := AuthFailed;
                         End Else Begin
-                          HaveNode   := FindNodeByAddress(GetDataStr);
-                          AuthState  := WaitPassword;
-                          NeedHeader := True;
-                          HaveHeader := False;
+                          AddressList := GetDataStr;
+                          AuthState   := WaitPassword;
+                          NeedHeader  := True;
+                          HaveHeader  := False;
+
+                          StatusUpdate (Owner, 'ADR ' + AddressList);
                         End;
                       End;
       WaitPassword  : If HaveHeader Then Begin
                         AuthState := AuthFailed;
 
-                        If (RxCommand = M_PWD) And HaveNode Then Begin
-                          Str := GetDataStr;
+                        If (RxCommand = M_PWD) Then Begin
+                          Password := GetDataStr;
 
-                          If Pos('CRAM-MD5-', Str) > 0 Then Begin
-                            Delete(Str, 1, Pos('CRAM-MD5-', Str) + 8);
+                          If Pos('CRAM-MD5-', Password) > 0 Then Begin
+                            Delete(Password, 1, Pos('CRAM-MD5-', Password) + 8);
 
-                            MD5Challenge := Digest2String(HMAC_MD5(String2Digest(MD5Challenge), EchoNode.binkPass));
+                            PasswordMD5 := True;
 
-                            If Str = MD5Challenge Then Begin
+                            If AuthenticateNode(AddressList) Then Begin
                               SendFrame (M_OK, '');
 
                               AuthState := AuthOK;
@@ -462,7 +504,9 @@ Begin
                             If ForceMD5 Then
                               SendFrame (M_ERR, 'Required CRAM-MD5 authentication')
                             Else Begin
-                              If Str = EchoNode.binkPass Then Begin
+                              PasswordMD5 := False;
+
+                              If AuthenticateNode(AddressList) Then Begin
                                 SendFrame (M_OK, '');
 
                                 AuthState := AuthOK;
@@ -470,6 +514,9 @@ Begin
                             End;
                           End;
                         End;
+
+                        If AuthState <> AuthOK Then
+                          StatusUpdate(Owner, 'Auth failed');
                       End;
       WaitPwdOK     : If HaveHeader Then Begin
                         If RxCommand <> M_OK Then
@@ -546,6 +593,8 @@ Begin
                          End Else Begin
                            SendFrame (M_GET, InFN + ' ' + strI2S(FSize) + ' ' + strI2S(InTime));
 
+                           StatusUpdate(Owner, 'Receiving: ' + InFN);
+
                            InPos := FSize;
                          End;
                        End;
@@ -607,6 +656,8 @@ Begin
                      // need to escape filename here and fix file time
                      SendFrame (M_FILE, FileList.QData[FileList.QPos].FileNew + ' ' + strI2S(FileList.QData[FileList.QPos].FileSize) + ' ' + strI2S(TempFileTime) + ' 0');
 
+                     StatusUpdate (Owner, 'Sending ' + FileList.QData[FileList.QPos].FileNew);
+
                      TxState := TxSendData;
                    End Else Begin
                      SendFrame (M_EOB, '');
@@ -642,7 +693,124 @@ Begin
     End;
   Until ((RxState = RxDone) and (TxState = TxDone)) or (Not Client.Connected) or (TimerUp(TimeOut));
 
+  If Not IsClient Then
+    StatusUpdate(Owner, 'Session complete');
+
   If Client.Connected Then Client.BufFlush;
+End;
+
+// GENERAL FIDO STUFF SHOULD BE RELOCATED SOMEWHERE ELSE?
+
+Function IsFTNPrimary (EchoNode: RecEchoMailNode) : Boolean;
+Var
+  Count : Byte;
+Begin
+  For Count := 1 to 30 Do
+    If (strUpper(EchoNode.Domain) = strUpper(bbsConfig.NetDomain[Count])) and
+       (EchoNode.Address.Zone = bbsConfig.NetAddress[Count].Zone) and
+       (bbsConfig.NetPrimary[Count]) Then Begin
+         Result := True;
+
+         Exit;
+    End;
+
+  Result := False;
+End;
+
+Function GetFTNFlowName (Dest: RecEchoMailAddr) : String;
+Begin
+  If Dest.Point = 0 Then
+    Result := strI2H((Dest.Net SHL 16) OR Dest.Node, 8)
+  Else
+    Result := strI2H(Dest.Point, 8);
+End;
+
+Function GetFTNOutPath (EchoNode: RecEchoMailNode) : String;
+Begin;
+  If IsFTNPrimary(EchoNode) Then
+    Result := bbsConfig.OutboundPath
+  Else
+    Result := DirLast(bbsConfig.OutboundPath) + strLower(EchoNode.Domain + '.' + strPadL(strI2H(EchoNode.Address.Zone, 3), 3, '0')) + PathChar;
+
+  If EchoNode.Address.Point <> 0 Then
+    Result := Result + strI2H((EchoNode.Address.Net SHL 16) OR EchoNode.Address.Node, 8) + '.pnt' + PathChar;
+End;
+
+Procedure QueueByNode (Var Queue: TProtocolQueue; SkipHold: Boolean; EchoNode: RecEchoMailNode);
+Var
+  DirInfo : SearchRec;
+  FLOFile : Text;
+  Str     : String;
+  FN      : String;
+  Path    : String;
+  OutPath : String;
+Begin
+  OutPath := GetFTNOutPath(EchoNode);
+
+  // QUEUE BY FLOW FILES
+
+  FindFirst (OutPath + '*.?lo', AnyFile, DirInfo);
+
+  While DosError = 0 Do Begin
+
+    If SkipHold And (UpCase(JustFileExt(DirInfo.Name)[1]) = 'H') Then Begin
+      FindNext (DirInfo);
+
+      Continue;
+    End;
+
+    If Not ((strUpper(JustFileName(DirInfo.Name)) = strUpper(GetFTNFlowName(EchoNode.Address))) and EchoNode.Active and (EchoNode.ProtType = 0)) Then Begin
+      FindNext (DirInfo);
+
+      Continue;
+    End;
+
+    Assign (FLOFile, OutPath + DirInfo.Name);
+    Reset  (FLOFile);
+
+    While Not Eof(FLOFile) Do Begin
+      ReadLn (FLOFile, Str);
+
+      If (Str = '') or (Str[1] = '!') Then Continue;
+
+      Str  := strStripB(Copy(Str, 2, 255), ' ');
+      FN   := JustFile(Str);
+      Path := JustPath(Str);
+
+      Queue.Add (True, Path, FN, '');
+    End;
+
+    Close (FLOFile);
+
+    FindNext (DirInfo);
+  End;
+
+  FindClose (DirInfo);
+
+  // QUEUE BY RAW PACKET
+
+  FindFirst (OutPath + '*.?ut', AnyFile, DirInfo);
+
+  While DosError = 0 Do Begin
+
+    If SkipHold And (UpCase(JustFileExt(DirInfo.Name)[1]) = 'H') Then Begin
+      FindNext (DirInfo);
+
+      Continue;
+    End;
+
+    If Not ((strUpper(JustFileName(DirInfo.Name)) = strUpper(GetFTNFlowName(EchoNode.Address))) and EchoNode.Active and (EchoNode.ProtType = 0)) Then Begin
+      FindNext (DirInfo);
+
+      Continue;
+    End;
+
+    Queue.Add (True, OutPath, DirInfo.Name, FileNewExt(DirInfo.Name, 'pkt'));
+
+    FindNext (DirInfo);
+  End;
+
+  FindClose (DirInfo);
 End;
 
 // SERVER CLASS IMPLEMENTATION
@@ -650,6 +818,11 @@ End;
 Function CreateBINKP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 Begin
   Result := TBINKPServer.Create(Owner, CliSock);
+End;
+
+Procedure Status (Owner: Pointer; Str: String);
+Begin
+  TServerManager(Owner).Status(Str);
 End;
 
 Constructor TBINKPServer.Create (Owner: TServerManager; CliSock: TIOSocket);
@@ -662,15 +835,26 @@ End;
 
 Procedure TBINKPServer.Execute;
 Var
-  Queue : TProtocolQueue;
-  BinkP : TBinkP;
+  Queue   : TProtocolQueue;
+  BinkP   : TBinkP;
+  Count   : Integer;
+  Address : String;
 Begin
   Queue := TProtocolQueue.Create;
-  BinkP := TBinkP.Create (Client, Queue, False, bbsConfig.inetBINKPTimeOut);
+  BinkP := TBinkP.Create (Server, Client, Queue, False, bbsConfig.inetBINKPTimeOut);
+
+  BinkP.StatusUpdate := @Status;
 
   If BinkP.DoAuthentication Then Begin
-    // Pull address and build send queue
 
+    For Count := 1 to strWordCount(BinkP.AddressList, ' ') Do Begin
+      Address := strWordGet(Count, BinkP.AddressList, ' ');
+
+      If BinkP.AuthenticateNode(Address) Then
+        QueueByNode(Queue, False, BinkP.EchoNode);
+    End;
+
+    BinkP.FileList := Queue;
     BinkP.DoTransfers;
   End;
 

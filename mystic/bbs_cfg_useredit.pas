@@ -3,7 +3,8 @@ Unit bbs_Cfg_UserEdit;
 Interface
 
 Uses
-  bbs_Common;
+  bbs_Common,
+  bbs_dataBase;
 
 Procedure Configuration_EditUser       (Var U: RecUser);
 Procedure Configuration_UserEditor;
@@ -175,9 +176,9 @@ Begin
             Form.Clear;
 
             For Temp := 1 to 9 Do
-              Form.AddStr (strI2S(Temp)[1], ' ' + Config.OptionalField[Temp].Desc, 7, 5 + Temp, 23, 5 + Temp, 14, 33, 60, @U.OptionData[Temp], Topic + 'User optional field #' + strI2S(Temp));
+              Form.AddStr (strI2S(Temp)[1], ' ' + bbsCfg.OptionalField[Temp].Desc, 7, 5 + Temp, 23, 5 + Temp, 14, 33, 60, @U.OptionData[Temp], Topic + 'User optional field #' + strI2S(Temp));
 
-            Form.AddStr ('0', ' ' + Config.OptionalField[10].Desc, 7, 15, 23, 15, 14, 33, 60, @U.OptionData[10], Topic + 'User optional field #10');
+            Form.AddStr ('0', ' ' + bbsCfg.OptionalField[10].Desc, 7, 15, 23, 15, 14, 33, 60, @U.OptionData[10], Topic + 'User optional field #10');
           End;
       6 : Begin
             Form.Clear;
@@ -275,10 +276,10 @@ Var
   End;
 
 Begin
-  Assign (UserFile, Config.DataPath + 'users.dat');
+  Assign (UserFile, bbsCfg.DataPath + 'users.dat');
 
   If Not ioReset(UserFile, SizeOf(RecUser), fmRWDN) Then
-    If (FileExist(Config.DataPath + 'users.dat')) OR NOT
+    If (FileExist(bbsCfg.DataPath + 'users.dat')) OR NOT
        (ioReWrite(UserFile, SizeOf(RecUser), fmRWDN)) Then
          Exit;
 

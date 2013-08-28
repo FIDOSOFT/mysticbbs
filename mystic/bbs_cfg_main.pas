@@ -15,6 +15,7 @@ Uses
   bbs_Core,
   bbs_IO,
   bbs_Common,
+  bbs_DataBase,
   bbs_Ansi_MenuBox,
   bbs_Ansi_MenuForm,
   bbs_cfg_SysCfg,
@@ -112,7 +113,7 @@ Var
   End;
 
 Begin
-  Session.io.OutFile(Config.DataPath + 'cfgroot', False, 0);
+  Session.io.OutFile(bbsCfg.DataPath + 'cfgroot', False, 0);
 
   Form := TAnsiMenuForm.Create;
 
@@ -315,7 +316,7 @@ Begin
   Form.Free;
 
   ReWrite (ConfigFile);
-  Write   (ConfigFile, Config);
+  Write   (ConfigFile, bbsCfg);
   Close   (ConfigFile);
 End;
 

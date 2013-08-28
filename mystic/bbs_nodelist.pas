@@ -5,7 +5,8 @@ Unit BBS_NodeList;
 Interface
 
 Uses
-  BBS_Common;
+  BBS_Common,
+  bbs_DataBase;
 
 Type
   RecNodeSearch = Record

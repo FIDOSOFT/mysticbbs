@@ -13,7 +13,8 @@ Uses
   m_Strings,
   m_Pipe,
   m_DateTime,
-  BBS_Common,
+  bbs_dataBase,
+//  BBS_Common,
   BBS_IO,
   BBS_MsgBase,
   BBS_User,
@@ -174,7 +175,7 @@ Var
 Begin
   If User.ThisUser.Flags AND UserNoHistory <> 0 Then Exit;
 
-  Assign (HistoryFile, Config.DataPath + 'history.dat');
+  Assign (HistoryFile, bbsCfg.DataPath + 'history.dat');
 
   If Not ioReset (HistoryFile, SizeOf(RecHistory), fmRWDN) Then
     ioReWrite(HistoryFile, SizeOf(RecHistory), fmRWDW);
@@ -222,7 +223,7 @@ Begin
 
   MinCheck := -1;
 
-  Assign  (EventFile, Config.DataPath + 'event.dat');
+  Assign  (EventFile, bbsCfg.DataPath + 'event.dat');
 
   If Not ioReset (EventFile, SizeOf(RecEvent), fmRWDN) Then
     ioReWrite (EventFile, SizeOf(RecEvent), fmRWDN);
@@ -245,7 +246,7 @@ Procedure TBBSCore.SystemLog (Str: String);
 Var
   tLOG : Text;
 Begin
-  Assign (tLOG, Config.LogsPath + 'sysop.' + strI2S(NodeNum));
+  Assign (tLOG, bbsCfg.LogsPath + 'sysop.' + strI2S(NodeNum));
   {$I-} Append(tLOG); {$I+}
   If IoResult <> 0 Then ReWrite (tLOG);
 
@@ -380,7 +381,7 @@ Begin
   Result   := False;
   FileMode := 66;
 
-  Assign     (PromptFile, Config.DataPath + Theme.FileName + '.txt');
+  Assign     (PromptFile, bbsCfg.DataPath + Theme.FileName + '.txt');
   SetTextBuf (PromptFile, Buffer);
 
   {$I-} Reset (PromptFile); {$I+}

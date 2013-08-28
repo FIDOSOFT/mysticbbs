@@ -13,6 +13,7 @@ Uses
   m_DateTime,
   m_FileIO,
   bbs_Common,
+  bbs_dataBase,
   bbs_ansi_MenuBox,
   bbs_ansi_MenuForm,
   bbs_cfg_Common;
@@ -110,7 +111,7 @@ Var
   End;
 
 Begin
-  Assign (F, Config.DataPath + 'event.dat');
+  Assign (F, bbsCfg.DataPath + 'event.dat');
 
   If Not ioReset(F, SizeOf(Event), fmRWDN) Then
     ioReWrite (F, SizeOf(Event), fmRWDN);

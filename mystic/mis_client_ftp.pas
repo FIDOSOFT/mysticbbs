@@ -23,6 +23,7 @@ Uses
 
 Function CreateFTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
+// user login type: FTPFTN, or regular
 Type
   TFTPServer = Class(TServerClient)
     Server     : TServerManager;

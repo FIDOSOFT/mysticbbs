@@ -7,6 +7,7 @@ Interface
 Uses
   m_Types,
   bbs_Ansi_MenuInput,
+  bbs_dataBase,
   bbs_Common;
 
 Const

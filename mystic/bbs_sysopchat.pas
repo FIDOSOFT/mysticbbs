@@ -13,6 +13,7 @@ Uses
   m_Strings,
   m_DateTime,
   bbs_Common,
+  bbs_DataBase,
   bbs_Core,
   bbs_User;
 
@@ -37,7 +38,7 @@ Var
 Procedure Total_ReDraw;
 Begin
   Session.io.PromptInfo[1] := Session.User.ThisUser.Handle;
-  Session.io.PromptInfo[2] := Config.SysopName;
+  Session.io.PromptInfo[2] := bbsCfg.SysopName;
 
   Session.io.ScreenInfo[9].X := 0;
   Session.io.ScreenInfo[0].X := 0;
@@ -130,7 +131,7 @@ Begin
                 end;
                 Session.io.OutRaw(sysopstr);
               end;
-              If Config.ChatLogging Then WriteLn (tFile, 'S> ' + SysopSTR);
+              If bbsCfg.ChatLogging Then WriteLn (tFile, 'S> ' + SysopSTR);
               inc (sysopy);
               sysopstr := '';
               Session.io.AnsiGotoXY (sysopx, sysopy);
@@ -145,7 +146,7 @@ Begin
                 Session.io.OutRaw(userstr);
               end;
               inc (usery);
-              If Config.ChatLogging Then WriteLn (tFile, 'U> ' + UserSTR);
+              If bbsCfg.ChatLogging Then WriteLn (tFile, 'U> ' + UserSTR);
               userstr := '';
               Session.io.AnsiGotoXY (userx, usery);
             End;
@@ -158,7 +159,7 @@ Begin
         if sysopx > Session.io.ScreenInfo[8].x then begin
           strwrap (sysopstr, temp2, Session.io.ScreenInfo[8].x - session.io.screeninfo[7].x + 1);
           temp1 := sysopstr;
-          If Config.ChatLogging Then WriteLn (tFile, 'S> ' + SysopSTR);
+          If bbsCfg.ChatLogging Then WriteLn (tFile, 'S> ' + SysopSTR);
           sysopstr := temp2;
           Session.io.OutBS (length(temp2), True);
           if sysopy=Session.io.ScreenInfo[6].y then begin
@@ -181,7 +182,7 @@ Begin
         if userx > Session.io.ScreenInfo[4].x then begin
           strwrap (userstr, temp2, Session.io.ScreenInfo[4].x - session.io.screeninfo[3].x + 1);
           temp1 := userstr;
-          If Config.ChatLogging Then WriteLn (tFile, 'U> ' + UserSTR);
+          If bbsCfg.ChatLogging Then WriteLn (tFile, 'U> ' + UserSTR);
           userstr := temp2;
           Session.io.OutBS (length(temp2), True);
           if usery=Session.io.ScreenInfo[2].y then begin
@@ -223,7 +224,7 @@ Begin
     Case Ch of
       #27 : If Session.io.LocalInput Then Break;
       #13 : Begin
-              If Config.ChatLogging Then WriteLn (tFile, Str1);
+              If bbsCfg.ChatLogging Then WriteLn (tFile, Str1);
               Session.io.OutRawLn('');
               Str1 := '';
             End;
@@ -242,7 +243,7 @@ Begin
         Session.io.OutRawLn ('');
         Session.io.OutRaw (Str2);
 
-        If Config.ChatLogging Then WriteLn (tFile, Str1);
+        If bbsCfg.ChatLogging Then WriteLn (tFile, Str1);
 
         Str1 := Str2;
       End;
@@ -262,8 +263,8 @@ Begin
 
   UpdateStatusLine (0, '(ESC) to Quit, (Ctrl-R) to Redraw');
 
-  If Config.ChatLogging Then Begin
-    Assign (tFile, Config.LogsPath + 'chat.log');
+  If bbsCfg.ChatLogging Then Begin
+    Assign (tFile, bbsCfg.LogsPath + 'chat.log');
     {$I-} Append (tFile); {$I+}
 
     If IoResult <> 0 Then ReWrite (tFile);
@@ -276,7 +277,7 @@ Begin
 
   If ((Split) And (Session.io.Graphics > 0)) Then Split_Chat Else Line_Chat;
 
-  If Config.ChatLogging Then Begin
+  If bbsCfg.ChatLogging Then Begin
     WriteLn (tFile, strRep('-', 70));
     Close (tFile);
   End;

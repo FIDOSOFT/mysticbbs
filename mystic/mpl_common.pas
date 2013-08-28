@@ -386,21 +386,21 @@ Begin
           AddVar ({$IFDEF MPLPARSER} 'userfsreader',   {$ENDIF} iBool);
         End;
     2 : Begin
-          AddPointer ({$IFDEF MPLPARSER} 'cfgsyspath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.SystemPath     {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'cfgdatapath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.DataPath       {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'cfglogspath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.LogsPath       {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'cfgmsgspath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.MsgsPath       {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'cfgattpath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.AttachPath     {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'cfgqwkpath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.QwkPath        {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgsyspath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @bbsCfg.SystemPath     {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgdatapath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @bbsCfg.DataPath       {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfglogspath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @bbsCfg.LogsPath       {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgmsgspath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @bbsCfg.MsgsPath       {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgattpath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @bbsCfg.AttachPath     {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgqwkpath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @bbsCfg.QwkPath        {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'cfgmenupath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Session.Theme.MenuPath {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'cfgtextpath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Session.Theme.TextPath {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'cfgmpepath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Config.ScriptPath     {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgmpepath',     {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @bbsCfg.ScriptPath     {$ELSE} NIL {$ENDIF});
           AddPointer ({$IFDEF MPLPARSER} 'cfgtemppath',    {$ENDIF} iString, mysMaxPathSize, {$IFNDEF MPLPARSER} @Session.TempPath      {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'cfgtimeout',     {$ENDIF} iWord,   4,              {$IFNDEF MPLPARSER} @Config.Inactivity     {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'cfgseeinvis',    {$ENDIF} iString, 20,             {$IFNDEF MPLPARSER} @Config.AcsSeeInvis    {$ELSE} NIL {$ENDIF});
-          AddPointer ({$IFDEF MPLPARSER} 'cfgtnnodes',     {$ENDIF} iByte,    1,             {$IFNDEF MPLPARSER} @Config.INetTNNodes    {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgtimeout',     {$ENDIF} iWord,   4,              {$IFNDEF MPLPARSER} @bbsCfg.Inactivity     {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgseeinvis',    {$ENDIF} iString, 20,             {$IFNDEF MPLPARSER} @bbsCfg.AcsSeeInvis    {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgtnnodes',     {$ENDIF} iByte,    1,             {$IFNDEF MPLPARSER} @bbsCfg.INetTNNodes    {$ELSE} NIL {$ENDIF});
 
-          AddPointer ({$IFDEF MPLPARSER} 'cfgnetdesc',     {$ENDIF} iString, 30 * 25 - 1, {$IFNDEF MPLPARSER} @Config.NetDesc {$ELSE} NIL {$ENDIF});
+          AddPointer ({$IFDEF MPLPARSER} 'cfgnetdesc',     {$ENDIF} iString, 30 * 25 - 1, {$IFNDEF MPLPARSER} @bbsCfg.NetDesc {$ELSE} NIL {$ENDIF});
           CV[X]^.ArrPos := 1;
           {$IFNDEF MPLPARSER}
             CV[X]^.VarSize   := 26;

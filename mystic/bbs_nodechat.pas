@@ -14,6 +14,7 @@ Uses
   m_FileIO,
   bbs_NodeInfo,
   bbs_Common,
+  bbs_dataBase,
   bbs_User,
   bbs_Core;
 
@@ -61,7 +62,7 @@ Begin
   Chat.Room := R;
   CurRoom   := R;
 
-  Assign (CF, Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+  Assign (CF, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
   Reset  (CF);
   Write  (CF, Chat);
   Close  (CF);
@@ -253,7 +254,7 @@ Procedure Node_Chat;
   Begin
     Session.io.OutFullLn (Session.GetPrompt(332));
 
-    For A := 1 to Config.INetTNNodes Do
+    For A := 1 to bbsCfg.INetTNNodes Do
       If GetChatRecord(A, Temp) Then
         If Temp.InChat Then Begin
           Reset (RoomFile);
@@ -287,7 +288,7 @@ Procedure Node_Chat;
 
     If Text = '' Then Exit;
 
-    For Count := 1 to Config.INetTNNodes Do
+    For Count := 1 to bbsCfg.INetTNNodes Do
       If GetChatRecord(Count, Temp) Then
         If strUpper(Temp.Name) = UserName Then Begin
           Send_Node_Message (4, strI2S(Count) + ';' + Text, 0);
@@ -370,7 +371,7 @@ Begin
   Chat.InChat    := True;
   Chat.Available := False;
 
-  Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+  Assign (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
   Reset  (ChatFile);
   Write  (ChatFile, Chat);
   Close  (ChatFile);
@@ -482,7 +483,7 @@ Begin
 
   Session.AllowMessages := True;
 
-  Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+  Assign (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
   Reset  (ChatFile);
   Write  (ChatFile, Chat);
   Close  (ChatFile);

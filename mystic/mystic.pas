@@ -42,6 +42,7 @@ Uses
   m_Input,
   m_Pipe,
   bbs_Common,
+  bbs_DataBase,
   bbs_Core,
   bbs_NodeInfo,
   bbs_Cfg_Main;
@@ -63,14 +64,14 @@ Begin
   Assign (ConfigFile, 'mystic.dat');
 
   if ioReset(ConfigFile, SizeOf(RecConfig), fmReadWrite + fmDenyNone) Then Begin
-    Read  (ConfigFile, Config);
+    Read  (ConfigFile, bbsCfg);
     Close (ConfigFile);
   End Else Begin
     WriteLn('ERROR: Unable to read mystic.dat');
     Halt(1);
   End;
 
-  If Config.DataChanged <> mysDataChanged Then Begin
+  If bbsCfg.DataChanged <> mysDataChanged Then Begin
     WriteLn('ERROR: Data files are not current and must be upgraded');
     Halt(1);
   End;
@@ -141,7 +142,7 @@ Begin
   FileMode := 66;
 
   DirClean  (Session.TempPath, '');
-  FileErase (Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+  FileErase (bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
 
   {$IFNDEF LOGGING}
     {$IFNDEF UNIX}
@@ -176,8 +177,8 @@ Var
 Begin
   Session.NodeNum := 0;
 
-  For Count := 1 to Config.INetTNNodes Do Begin
-    Assign (ChatFile, Config.DataPath + 'chat' + strI2S(Count) + '.dat');
+  For Count := 1 to bbsCfg.INetTNNodes Do Begin
+    Assign (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Count) + '.dat');
 
     If Not ioReset (ChatFile, Sizeof(ChatRec), fmRWDN) Then Begin
       Session.NodeNum := Count;
@@ -245,21 +246,21 @@ Begin
   Randomize;
 
   FileMode         := 66;
-  Session.TempPath := Config.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
-  Session.Pipe     := TPipe.Create(Config.DataPath, False, Session.NodeNum);
+  Session.TempPath := bbsCfg.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
+  Session.Pipe     := TPipe.Create(bbsCfg.DataPath, False, Session.NodeNum);
 
   {$I-}
-  MkDir (Config.SystemPath + 'temp' + strI2S(Session.NodeNum));
+  MkDir (bbsCfg.SystemPath + 'temp' + strI2S(Session.NodeNum));
   {$I+}
 
   If IoResult <> 0 Then;
 
   DirClean (Session.TempPath, '');
 
-  Assign (Session.User.UserFile, Config.DataPath + 'users.dat');
+  Assign (Session.User.UserFile, bbsCfg.DataPath + 'users.dat');
   {$I-} Reset (Session.User.UserFile); {$I+}
   If IoResult <> 0 Then Begin
-    If FileExist(Config.DataPath + 'users.dat') Then Begin
+    If FileExist(bbsCfg.DataPath + 'users.dat') Then Begin
       Screen.WriteLine ('ERROR: Unable to access USERS.DAT');
       DisposeClasses;
       Halt(1);
@@ -269,12 +270,12 @@ Begin
   End;
   Close (Session.User.UserFile);
 
-  Assign (Session.VoteFile, Config.DataPath + 'votes.dat');
+  Assign (Session.VoteFile, bbsCfg.DataPath + 'votes.dat');
   {$I-} Reset (Session.VoteFile); {$I+}
   If IoResult <> 0 Then ReWrite (Session.VoteFile);
   Close (Session.VoteFile);
 
-  Assign (Session.ThemeFile, Config.DataPath + 'theme.dat');
+  Assign (Session.ThemeFile, bbsCfg.DataPath + 'theme.dat');
   {$I-} Reset (Session.ThemeFile); {$I+}
   If IoResult <> 0 Then Begin
     Screen.WriteLine ('ERROR: No theme configuration.');
@@ -283,9 +284,9 @@ Begin
   End;
   Close (Session.ThemeFile);
 
-  If Not Session.LoadThemeData(Config.DefThemeFile) Then Begin
+  If Not Session.LoadThemeData(bbsCfg.DefThemeFile) Then Begin
     If Not Session.ConfigMode Then Begin
-      Screen.WriteLine ('ERROR: Default theme prompts not found: ' + Config.DefThemeFile + '.txt');
+      Screen.WriteLine ('ERROR: Default theme prompts not found: ' + bbsCfg.DefThemeFile + '.txt');
       DisposeClasses;
       Halt(1);
     End;
@@ -293,16 +294,16 @@ Begin
 
   If Session.ConfigMode Then Exit;
 
-  CheckDIR (Config.SystemPath);
-  CheckDIR (Config.AttachPath);
-  CheckDIR (Config.DataPath);
-  CheckDIR (Config.MsgsPath);
-  CheckDIR (Config.SemaPath);
-  CheckDIR (Config.QwkPath);
-  CheckDIR (Config.ScriptPath);
-  CheckDIR (Config.LogsPath);
+  CheckDIR (bbsCfg.SystemPath);
+  CheckDIR (bbsCfg.AttachPath);
+  CheckDIR (bbsCfg.DataPath);
+  CheckDIR (bbsCfg.MsgsPath);
+  CheckDIR (bbsCfg.SemaPath);
+  CheckDIR (bbsCfg.QwkPath);
+  CheckDIR (bbsCfg.ScriptPath);
+  CheckDIR (bbsCfg.LogsPath);
 
-  Assign (RoomFile, Config.DataPath + 'chatroom.dat');
+  Assign (RoomFile, bbsCfg.DataPath + 'chatroom.dat');
   {$I-} Reset (RoomFile); {$I+}
   If IoResult <> 0 Then Begin
     ReWrite (RoomFile);
@@ -312,12 +313,12 @@ Begin
   End;
   Close (RoomFile);
 
-  Assign (Session.FileBase.FBaseFile, Config.DataPath + 'fbases.dat');
+  Assign (Session.FileBase.FBaseFile, bbsCfg.DataPath + 'fbases.dat');
   {$I-} Reset(Session.FileBase.FBaseFile); {$I+}
   If IoResult <> 0 Then ReWrite(Session.FileBase.FBaseFile);
   Close (Session.FileBase.FBaseFile);
 
-  Assign (Session.Msgs.MBaseFile, Config.DataPath + 'mbases.dat');
+  Assign (Session.Msgs.MBaseFile, bbsCfg.DataPath + 'mbases.dat');
   {$I-} Reset(Session.Msgs.MBaseFile); {$I+}
   If IoResult <> 0 Then Begin
     Screen.WriteLine ('ERROR: No message base configuration. Use MYSTIC -CFG');
@@ -326,17 +327,17 @@ Begin
   End;
   Close (Session.Msgs.MBaseFile);
 
-  Assign (Session.Msgs.GroupFile, Config.DataPath + 'groups_g.dat');
+  Assign (Session.Msgs.GroupFile, bbsCfg.DataPath + 'groups_g.dat');
   {$I-} Reset (Session.Msgs.GroupFile); {$I-}
   If IoResult <> 0 Then ReWrite(Session.Msgs.GroupFile);
   Close (Session.Msgs.GroupFile);
 
-  Assign (Session.FileBase.FGroupFile, Config.DataPath + 'groups_f.dat');
+  Assign (Session.FileBase.FGroupFile, bbsCfg.DataPath + 'groups_f.dat');
   {$I-} Reset (Session.FileBase.FGroupFile); {$I+}
   If IoResult <> 0 Then ReWrite (Session.FileBase.FGroupFile);
   Close (Session.FileBase.FGroupFile);
 
-  Assign (Session.User.SecurityFile, Config.DataPath + 'security.dat');
+  Assign (Session.User.SecurityFile, bbsCfg.DataPath + 'security.dat');
   {$I-} Reset (Session.User.SecurityFile); {$I+}
   If IoResult <> 0 Then Begin
     ReWrite(Session.User.SecurityFile);
@@ -346,17 +347,17 @@ Begin
   End;
   Close (Session.User.SecurityFile);
 
-  Assign (LastOnFile, Config.DataPath + 'callers.dat');
+  Assign (LastOnFile, bbsCfg.DataPath + 'callers.dat');
   {$I-} Reset(LastOnFile); {$I+}
   If IoResult <> 0 Then ReWrite(LastOnFile);
   Close (LastOnFile);
 
-  Assign (Session.FileBase.ArcFile, Config.DataPath + 'archive.dat');
+  Assign (Session.FileBase.ArcFile, bbsCfg.DataPath + 'archive.dat');
   {$I-} Reset(Session.FileBase.ArcFile); {$I+}
   If IoResult <> 0 Then ReWrite(Session.FileBase.ArcFile);
   Close (Session.FileBase.ArcFile);
 
-  Assign (Session.FileBase.ProtocolFile, Config.DataPath + 'protocol.dat');
+  Assign (Session.FileBase.ProtocolFile, bbsCfg.DataPath + 'protocol.dat');
   {$I-} Reset (Session.FileBase.ProtocolFile); {$I+}
   If IoResult <> 0 Then ReWrite (Session.FileBase.ProtocolFile);
   Close (Session.FileBase.ProtocolFile);
@@ -470,7 +471,7 @@ Begin
   If Session.TimeOffset > 0 Then
     Session.SetTimeLeft(Session.TimeOffset)
   Else
-    Session.SetTimeLeft(Config.LoginTime);
+    Session.SetTimeLeft(bbsCfg.LoginTime);
 
   {$IFNDEF UNIX}
     Screen.TextAttr := 7;
@@ -494,7 +495,7 @@ Begin
   If Session.User.ThisUser.StartMenu <> '' Then
     Session.Menu.MenuName := Session.User.ThisUser.StartMenu
   Else
-    Session.Menu.MenuName := Config.DefStartMenu;
+    Session.Menu.MenuName := bbsCfg.DefStartMenu;
 
   Repeat
     Session.Menu.ExecuteMenu (True, True, False, True);

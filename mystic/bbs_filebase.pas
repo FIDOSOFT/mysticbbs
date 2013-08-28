@@ -20,6 +20,7 @@ Uses
   m_FileIO,
   m_DateTime,
   bbs_Common,
+  bbs_dataBase,
   bbs_General,
   bbs_NodeInfo,
   bbs_Ansi_MenuBox,
@@ -566,7 +567,7 @@ Var
       ShellDOS (Path, Session.TempPath + 'xfer.bat');
     {$ENDIF}
 
-    DirChange (Config.SystemPath);
+    DirChange (bbsCfg.SystemPath);
   End;
 
 Begin
@@ -664,7 +665,7 @@ Begin
 
       If Length(Session.Msgs.MsgText[FDir.DescLines]) > mysMaxFileDescLen Then Session.Msgs.MsgText[FDir.DescLines][0] := Chr(mysMaxFileDescLen);
 
-      If FDir.DescLines = Config.MaxFileDesc Then Break;
+      If FDir.DescLines = bbsCfg.MaxFileDesc Then Break;
     End;
 
     Close (DizFile);
@@ -689,7 +690,7 @@ Begin
 
   If Temp.NewScan = 2 Then Dec (Temp.NewScan);
 
-  Assign (FScanFile, Config.DataPath + FBase.FileName + '.scn');
+  Assign (FScanFile, bbsCfg.DataPath + FBase.FileName + '.scn');
   {$I-} Reset (FScanFile); {$I+}
 
   If IoResult <> 0 Then ReWrite (FScanFile);
@@ -713,7 +714,7 @@ Begin
 
   If FScan.NewScan = 2 Then Dec(FScan.NewScan);
 
-  Assign (FScanFile, Config.DataPath + FBase.FileName + '.scn');
+  Assign (FScanFile, bbsCfg.DataPath + FBase.FileName + '.scn');
   {$I-} Reset (FScanFile); {$I+}
 
   If IoResult <> 0 Then Exit;
@@ -877,10 +878,10 @@ Begin
     AreaFiles := 0;
     AreaSize  := 0;
 
-    Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
+    Assign (FDirFile, bbsCfg.DataPath + FBase.FileName + '.dir');
     {$I-} Reset (FDirFile); {$I+}
     If IoResult = 0 Then Begin
-      Assign (DF, Config.DataPath + FBase.FileName + '.des');
+      Assign (DF, bbsCfg.DataPath + FBase.FileName + '.des');
       {$I-} Reset (DF, 1); {$I+}
 
       If IoResult <> 0 Then ReWrite (DF, 1);
@@ -1027,8 +1028,8 @@ Begin
 
   If FDir.Flags And FDirOffline <> 0 Then Exit;
 
-  If (FDir.Flags And FDirInvalid <> 0) And Not Session.User.Access(Config.AcsDLUnvalid) Then Exit;
-  If (FDir.Flags And FDirFailed  <> 0) And Not Session.User.Access(Config.AcsDLFailed)  Then Exit;
+  If (FDir.Flags And FDirInvalid <> 0) And Not Session.User.Access(bbsCfg.AcsDLUnvalid) Then Exit;
+  If (FDir.Flags And FDirFailed  <> 0) And Not Session.User.Access(bbsCfg.AcsDLFailed)  Then Exit;
 
   If (FDir.Flags And FDirFree <> 0) or (Session.User.ThisUser.Flags and UserNoRatio <> 0) or (FBase.Flags and FBFreeFiles <> 0) Then Begin
     Result := 0;
@@ -1168,10 +1169,10 @@ Var
 
         Session.io.OutFull (Session.GetPrompt(201));
 
-        If (Total MOD Config.FColumns = 0) And (Total > 0) Then Session.io.OutRawLn('');
+        If (Total MOD bbsCfg.FColumns = 0) And (Total > 0) Then Session.io.OutRawLn('');
       End;
 
-      If EOF(FBaseFile) and (Total MOD Config.FColumns <> 0) Then Session.io.OutRawLn('');
+      If EOF(FBaseFile) and (Total MOD bbsCfg.FColumns <> 0) Then Session.io.OutRawLn('');
 
       If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
         Case Session.io.MorePrompt of
@@ -1539,7 +1540,7 @@ Begin
 
     If Session.User.Access(FBase.ListACS) Then Begin
 
-      Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
+      Assign (FDirFile, bbsCfg.DataPath + FBase.FileName + '.dir');
       {$I-} Reset (FDirFile); {$I+}
       If IoResult <> 0 Then ReWrite (FDirFile);
 
@@ -1624,7 +1625,7 @@ Begin
 
     If Session.User.Access(FBase.ListACS) and Session.User.Access(FBase.DLACS) Then Begin
 
-      Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
+      Assign (FDirFile, bbsCfg.DataPath + FBase.FileName + '.dir');
       {$I-} Reset (FDirFile); {$I+}
       If IoResult <> 0 Then ReWrite (FDirFile);
 
@@ -1883,7 +1884,7 @@ Begin
       Session.io.PromptInfo[2] := FBase.Name;
       Session.io.PromptInfo[3] := '0';
 
-      Assign (TDirFile, Config.DataPath + FBase.FileName + '.dir');
+      Assign (TDirFile, bbsCfg.DataPath + FBase.FileName + '.dir');
       {$I-} Reset (TDirFile); {$I+}
 
       If IoResult = 0 Then Begin
@@ -1893,10 +1894,10 @@ Begin
 
       Session.io.OutFull (Session.GetPrompt(34));
 
-      If (Listed MOD Config.FColumns = 0) and (Listed > 0) Then Session.io.OutRawLn('');
+      If (Listed MOD bbsCfg.FColumns = 0) and (Listed > 0) Then Session.io.OutRawLn('');
     End;
 
-    If EOF(FBaseFile) and (Listed MOD Config.FColumns <> 0) Then Session.io.OutRawLn('');
+    If EOF(FBaseFile) and (Listed MOD bbsCfg.FColumns <> 0) Then Session.io.OutRawLn('');
 
     If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
       Case Session.io.MorePrompt of
@@ -1921,7 +1922,7 @@ Var
   Compress : Boolean;
 Begin
   Old      := FBase;
-  Compress := Config.FCompress;
+  Compress := bbsCfg.FCompress;
 
   If (Data = '+') or (Data = '-') Then Begin
     Reset (FBaseFile);
@@ -1992,7 +1993,7 @@ Begin
 
       Case Session.io.OneKeyRange(#13 + '?Q', 1, Total) of
         '?': Begin
-               Compress := Config.FCompress;
+               Compress := bbsCfg.FCompress;
                Total    := ListFileAreas(Compress);
              End;
       Else
@@ -2074,9 +2075,9 @@ Var
     OkFile := False;
 
     If (FDir.Flags And FDirDeleted <> 0) Then Exit;
-    If (FDir.Flags AND FDirOffline <> 0) And (Not Session.User.Access(Config.AcsSeeOffline)) Then Exit;
-    If (FDir.Flags And FDirInvalid <> 0) And (Not Session.User.Access(Config.AcsSeeUnvalid)) Then Exit;
-    If (FDir.Flags And FDirFailed  <> 0) And (Not Session.User.Access(Config.AcsSeeFailed)) Then Exit;
+    If (FDir.Flags AND FDirOffline <> 0) And (Not Session.User.Access(bbsCfg.AcsSeeOffline)) Then Exit;
+    If (FDir.Flags And FDirInvalid <> 0) And (Not Session.User.Access(bbsCfg.AcsSeeUnvalid)) Then Exit;
+    If (FDir.Flags And FDirFailed  <> 0) And (Not Session.User.Access(bbsCfg.AcsSeeFailed)) Then Exit;
 
     Case Mode of
       1 : If Data <> '' Then
@@ -2291,7 +2292,7 @@ Var
     Case ListType of
       0 : If First Then Begin
             First := False;
-            If Config.FShowHeader or (CurPage = 1) Then Begin
+            If bbsCfg.FShowHeader or (CurPage = 1) Then Begin
               Session.io.PausePtr := 1;
               Session.io.OutFullLn(Session.GetPrompt(41))
             End Else Begin
@@ -2850,7 +2851,7 @@ Begin
 
   Set_Node_Action (Session.GetPrompt(350));
 
-  Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
+  Assign (FDirFile, bbsCfg.DataPath + FBase.FileName + '.dir');
   {$I-} Reset (FDirFile); {$I+}
 
   If IoResult <> 0 Then Begin
@@ -2864,7 +2865,7 @@ Begin
     Exit;
   End;
 
-  Assign (DataFile, Config.DataPath + FBase.FileName + '.des');
+  Assign (DataFile, bbsCfg.DataPath + FBase.FileName + '.des');
   {$I-} Reset (DataFile, 1); {$I+}
   If IoResult <> 0 Then ReWrite (DataFile, 1);
 
@@ -2926,7 +2927,7 @@ Var
     TempFile : File of RecFileList;
     Temp     : RecFileList;
   Begin
-    Assign (TempFile, Config.DataPath + FBase.FileName + '.dir');
+    Assign (TempFile, bbsCfg.DataPath + FBase.FileName + '.dir');
     {$I-} Reset (TempFile); {$I+}
 
     If IoResult <> 0 Then ReWrite (TempFile);
@@ -2968,14 +2969,14 @@ Procedure TFileBase.GetFileDescription (FN : String);
 Var
   A : Byte;
 Begin
-  Session.io.PromptInfo[1] := strI2S(Config.MaxFileDesc);
+  Session.io.PromptInfo[1] := strI2S(bbsCfg.MaxFileDesc);
   Session.io.PromptInfo[2] := FN;
 
   Session.io.OutFullLn (Session.GetPrompt(72));
 
-  FDir.DescLines := Config.MaxFileDesc;
+  FDir.DescLines := bbsCfg.MaxFileDesc;
 
-  For A := 1 to Config.MaxFileDesc Do Begin
+  For A := 1 to bbsCfg.MaxFileDesc Do Begin
     Session.io.PromptInfo[1] := strZero(A);
     Session.io.OutFull (Session.GetPrompt(207));
     Session.Msgs.MsgText[A] := Session.io.GetInput(mysMaxFileDescLen, mysMaxFileDescLen, 11, '');
@@ -3017,11 +3018,11 @@ Begin
   Found       := False;
   SavedIgnore := Session.User.IgnoreGroup;
 
-  If Config.UploadBase > 0 Then Begin
+  If bbsCfg.UploadBase > 0 Then Begin
     Session.User.IgnoreGroup := True; { just in case ul area is in another group }
 
     Reset (FBaseFile);
-    {$I-} Seek (FBaseFile, Config.UploadBase - 1); {$I+}
+    {$I-} Seek (FBaseFile, bbsCfg.UploadBase - 1); {$I+}
 
     If IoResult = 0 Then Read (FBaseFile, FBase);
 
@@ -3050,9 +3051,9 @@ Begin
     Exit;
   End;
 
-  If Config.FreeUL > 0 Then Begin
+  If bbsCfg.FreeUL > 0 Then Begin
     {$IFDEF UNIX}
-      If DiskFree(0) DIV 1024 < Config.FreeUL Then Begin
+      If DiskFree(0) DIV 1024 < bbsCfg.FreeUL Then Begin
         Session.io.OutFullLn (Session.GetPrompt(81));
         FBase := OLD;
         Exit;
@@ -3060,7 +3061,7 @@ Begin
     {$ELSE}
       FSplit (FBase.Path, D, N, E);
 
-      If DiskFree(Ord(UpCase(D[1])) - 64) DIV 1024 < Config.FreeUL Then Begin
+      If DiskFree(Ord(UpCase(D[1])) - 64) DIV 1024 < bbsCfg.FreeUL Then Begin
         Session.io.OutFullLn (Session.GetPrompt(81));
         FBase := OLD;
         Exit;
@@ -3085,10 +3086,10 @@ Begin
       Exit;
     End;
 
-    If Config.FDupeScan > 0 Then Begin
+    If bbsCfg.FDupeScan > 0 Then Begin
       Session.io.OutFull (Session.GetPrompt(70));
 
-      If IsDupeFile(FileName, Config.FDupeScan = 2) Then Begin
+      If IsDupeFile(FileName, bbsCfg.FDupeScan = 2) Then Begin
         Session.io.OutFullLn (Session.GetPrompt(205));
         FBase := OLD;
         Exit;
@@ -3112,7 +3113,7 @@ Begin
 
   Session.io.OutFull (Session.GetPrompt(376));
 
-  Assign (DataFile, Config.DataPath + FBase.FileName + '.des');
+  Assign (DataFile, bbsCfg.DataPath + FBase.FileName + '.des');
   {$I-} Reset (DataFile, 1); {$I+}
   If IoResult <> 0 Then ReWrite(DataFile, 1);
 
@@ -3154,10 +3155,10 @@ Begin
         FDir.Downloads := 0;
         FDir.Rating    := 0;
 
-        If Config.FDupeScan > 0 Then Begin
+        If bbsCfg.FDupeScan > 0 Then Begin
           Session.io.OutFull (Session.GetPrompt(377));
 
-          If IsDupeFile(FileName, Config.FDupeScan = 2) Then Begin
+          If IsDupeFile(FileName, bbsCfg.FDupeScan = 2) Then Begin
             Session.io.OutFullLn (Session.GetPrompt(378));
 
             Continue;
@@ -3165,30 +3166,30 @@ Begin
             Session.io.OutFullLn (Session.GetPrompt(379));
         End;
 
-        If Config.TestUploads and (Config.TestCmdLine <> '') Then Begin
+        If bbsCfg.TestUploads and (bbsCfg.TestCmdLine <> '') Then Begin
           Session.io.OutFull (Session.GetPrompt(206));
 
           Temp := '';
           A    := 1;
 
-          While A <= Length(Config.TestCmdLine) Do Begin
-            If Config.TestCmdLine[A] = '%' Then Begin
+          While A <= Length(bbsCfg.TestCmdLine) Do Begin
+            If bbsCfg.TestCmdLine[A] = '%' Then Begin
               Inc(A);
               {$IFDEF UNIX}
-              If Config.TestCmdLine[A] = '0' Then Temp := Temp + '1' Else
+              If bbsCfg.TestCmdLine[A] = '0' Then Temp := Temp + '1' Else
               {$ELSE}
-              If Config.TestCmdLine[A] = '0' Then Temp := Temp + strI2S(TIOSocket(Session.Client).FSocketHandle) Else
+              If bbsCfg.TestCmdLine[A] = '0' Then Temp := Temp + strI2S(TIOSocket(Session.Client).FSocketHandle) Else
               {$ENDIF}
-              If Config.TestCmdLine[A] = '1' Then Temp := Temp + '1' Else
-              If Config.TestCmdLine[A] = '2' Then Temp := Temp + '38400' Else
-              If Config.TestCmdLine[A] = '3' Then Temp := Temp + FullName {FBase.Path + FileName};
+              If bbsCfg.TestCmdLine[A] = '1' Then Temp := Temp + '1' Else
+              If bbsCfg.TestCmdLine[A] = '2' Then Temp := Temp + '38400' Else
+              If bbsCfg.TestCmdLine[A] = '3' Then Temp := Temp + FullName {FBase.Path + FileName};
             End Else
-              Temp := Temp + Config.TestCmdLine[A];
+              Temp := Temp + bbsCfg.TestCmdLine[A];
 
             Inc(A);
           End;
 
-          If ShellDOS('', Temp) <> Config.TestPassLevel Then Begin
+          If ShellDOS('', Temp) <> bbsCfg.TestPassLevel Then Begin
             Session.io.OutFullLn (Session.GetPrompt(35));
 
             Session.SystemLog (FileName + ' has failed upload test');
@@ -3198,7 +3199,7 @@ Begin
             Session.io.OutFullLn (Session.GetPrompt(55));
         End;
 
-        If Config.ImportDIZ Then Begin
+        If bbsCfg.ImportDIZ Then Begin
           Session.io.OutFull (Session.GetPrompt(380));
 
           If ImportDIZ(FileName) Then
@@ -3223,9 +3224,9 @@ Begin
           FDir.Size  := 0;
         End;
 
-        If Not Session.User.Access(Config.AcsValidate) Then FDir.Flags := FDir.Flags Or FDirInvalid;
+        If Not Session.User.Access(bbsCfg.AcsValidate) Then FDir.Flags := FDir.Flags Or FDirInvalid;
 
-        Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
+        Assign (FDirFile, bbsCfg.DataPath + FBase.FileName + '.dir');
         {$I-} Reset (FDirFile); {$I+}
 
         If IoResult <> 0 Then ReWrite (FDirFile);
@@ -3266,8 +3267,8 @@ Begin
 
     Copied := True;
 
-    If Config.FreeCDROM > 0 Then
-      Copied := DiskFree(0) DIV 1024 >= Config.FreeCDROM;
+    If bbsCfg.FreeCDROM > 0 Then
+      Copied := DiskFree(0) DIV 1024 >= bbsCfg.FreeCDROM;
 
     If Copied Then Copied := DiskFree(0) >= FDir.Size;
 
@@ -3308,7 +3309,7 @@ Begin
 
   Session.io.OutFullLn (Session.GetPrompt(77));
 
-  Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
+  Assign (FDirFile, bbsCfg.DataPath + FBase.FileName + '.dir');
   {$I-} Reset (FDirFile); {$I+}
   If IoResult <> 0 Then ReWrite (FDirFile);
 
@@ -3468,7 +3469,7 @@ Begin
       Seek (FBaseFile, Batch[A].Area - 1);
       Read (FBaseFile, Old);
 
-      Assign (FDirFile, Config.DataPath + Old.FileName + '.dir');
+      Assign (FDirFile, bbsCfg.DataPath + Old.FileName + '.dir');
       Reset  (FDirFile);
 
       While Not Eof(FDirFile) Do Begin
@@ -3734,7 +3735,7 @@ Begin
 
   Session.SystemLog ('File DIR editor');
 
-  Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
+  Assign (FDirFile, bbsCfg.DataPath + FBase.FileName + '.dir');
   {$I-} Reset (FDirFile); {$I+}
   If IoResult <> 0 Then Begin
     Session.io.OutFullLn (Session.GetPrompt(40));
@@ -3747,7 +3748,7 @@ Begin
     Exit;
   End;
 
-  Assign (DataFile, Config.DataPath + FBase.FileName + '.des');
+  Assign (DataFile, bbsCfg.DataPath + FBase.FileName + '.des');
   {$I-} Reset (DataFile, 1); {$I+}
   If IoResult <> 0 Then ReWrite (DataFile, 1);
 
@@ -3873,11 +3874,11 @@ Begin
                       A := FilePos(FDirFile);
                       Close (FDirFile);
 
-                      Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
+                      Assign (FDirFile, bbsCfg.DataPath + FBase.FileName + '.dir');
                       {$I-} Reset (FDirFile); {$I+}
                       If IoResult <> 0 Then ReWrite(FDirFile);
 
-                      Assign (DataFile2, Config.DataPath + FBase.FileName + '.des');
+                      Assign (DataFile2, bbsCfg.DataPath + FBase.FileName + '.des');
                       {$I-} Reset (DataFile2, 1); {$I+}
                       If IoResult <> 0 Then ReWrite (DataFile2, 1);
 
@@ -3898,7 +3899,7 @@ Begin
 
                       FBase := Old;
 
-                      Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
+                      Assign (FDirFile, bbsCfg.DataPath + FBase.FileName + '.dir');
                       Reset  (FDirFile);
                       Seek   (FDirFile, A - 1);
                       Read   (FDirFile, FDir);
@@ -3952,7 +3953,7 @@ Begin
               End;
         '!' : Begin
                 Seek (DataFile, FDir.DescPtr);
-                If FDir.DescLines > Config.MaxFileDesc Then FDir.DescLines := Config.MaxFileDesc;
+                If FDir.DescLines > bbsCfg.MaxFileDesc Then FDir.DescLines := bbsCfg.MaxFileDesc;
 
                 For A := 1 to FDir.DescLines Do Begin
                   BlockRead (DataFile, Session.Msgs.MsgText[A][0], 1);
@@ -3962,7 +3963,7 @@ Begin
                 Temp := 'Description Editor';
                 B    := FDir.DescLines;
 
-                If Editor(B, mysMaxFileDescLen, Config.MaxFileDesc, False, fn_tplTextEdit, Temp) Then Begin
+                If Editor(B, mysMaxFileDescLen, bbsCfg.MaxFileDesc, False, fn_tplTextEdit, Temp) Then Begin
                   FDir.DescLines   := B;
                   FDir.DescPtr     := FileSize(DataFile);
 
@@ -4017,7 +4018,7 @@ Var
 
     Session.io.OutFullLn ('|CR|03Processing |14|FB|03...');
 
-    Assign (DataFile, Config.DataPath + FBase.FileName + '.des');
+    Assign (DataFile, bbsCfg.DataPath + FBase.FileName + '.des');
     {$I-} Reset (DataFile, 1); {$I+}
 
     If IoResult = 0 Then
@@ -4025,7 +4026,7 @@ Var
     Else
       ReWrite (DataFile, 1);
 
-    Assign (FDirFile, Config.DataPath + FBase.FileName + '.dir');
+    Assign (FDirFile, bbsCfg.DataPath + FBase.FileName + '.dir');
 
     FindFirst(FBase.Path + '*', Archive, DirInfo);
 
@@ -4070,7 +4071,7 @@ Var
         FDir.DescLines := 0;
         FDir.Rating    := 0;
 
-        If Config.ImportDIZ Then
+        If bbsCfg.ImportDIZ Then
           If Not ImportDIZ(DirInfo.Name) Then
             If Not AutoArea Then
               GetFileDescription(DirInfo.Name);
@@ -4085,23 +4086,23 @@ Var
         For A := 1 to FDir.DescLines Do
           BlockWrite (DataFile, Session.Msgs.MsgText[A][0], Length(Session.Msgs.MsgText[A]) + 1);
 
-        If Config.TestUploads and (Config.TestCmdLine <> '') Then Begin
+        If bbsCfg.TestUploads and (bbsCfg.TestCmdLine <> '') Then Begin
           Temp := '';
           A    := 1;
 
-          While A <= Length(Config.TestCmdLine) Do Begin
-            If Config.TestCmdLine[A] = '%' Then Begin
+          While A <= Length(bbsCfg.TestCmdLine) Do Begin
+            If bbsCfg.TestCmdLine[A] = '%' Then Begin
               Inc(A);
-              If Config.TestCmdLine[A] = '1' Then Temp := Temp + '1' Else
-              If Config.TestCmdLine[A] = '2' Then Temp := Temp + '38400' Else
-              If Config.TestCmdLine[A] = '3' Then Temp := Temp + FBase.Path + FDir.FileName;
+              If bbsCfg.TestCmdLine[A] = '1' Then Temp := Temp + '1' Else
+              If bbsCfg.TestCmdLine[A] = '2' Then Temp := Temp + '38400' Else
+              If bbsCfg.TestCmdLine[A] = '3' Then Temp := Temp + FBase.Path + FDir.FileName;
             End Else
-              Temp := Temp + Config.TestCmdLine[A];
+              Temp := Temp + bbsCfg.TestCmdLine[A];
 
             Inc (A);
           End;
 
-          If ShellDOS('', Temp) <> Config.TestPassLevel Then
+          If ShellDOS('', Temp) <> bbsCfg.TestPassLevel Then
             FDir.Flags := FDir.Flags OR FDirFailed;
         End;
 

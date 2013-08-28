@@ -7,6 +7,7 @@ Interface
 Uses
   BBS_MsgBase_Abs,
   BBS_Common,
+  bbs_dataBase,
   DOS;
 
 Const

@@ -90,6 +90,7 @@ Implementation
 Uses
   m_Strings,
   bbs_Core,
+  bbs_DataBase,
   bbs_Common,
   bbs_Ansi_MenuBox;
 

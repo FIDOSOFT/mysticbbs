@@ -17,7 +17,7 @@ Uses
   mUtil_Common,
   mUtil_Status,
   mUtil_EchoCore,
-  bbs_Common,
+  bbs_DataBase,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
   bbs_MsgBase_Squish;

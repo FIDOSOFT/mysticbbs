@@ -7,6 +7,7 @@ Interface
 Uses
   DOS,
   m_FileIO,
+  bbs_dataBase,
   BBS_Common;
 
 {$I MPL_TYPES.PAS}
@@ -255,7 +256,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, Config.DataPath + 'users.dat');
+  Assign (F, bbsCfg.DataPath + 'users.dat');
   If Not ioReset(F, SizeOf(RecUser), fmRWDN) Then Exit;
 
   If ioSeek(F, Pred(Num)) And (ioRead(F, U)) Then Begin
@@ -271,7 +272,7 @@ Var
   F : File;
   U : RecUser;
 Begin
-  Assign (F, Config.DataPath + 'users.dat');
+  Assign (F, bbsCfg.DataPath + 'users.dat');
 
   If Not ioReset(F, SizeOf(RecUser), fmRWDN) Then Exit;
 
@@ -330,7 +331,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, Config.DataPath + 'groups_g.dat');
+  Assign (F, bbsCfg.DataPath + 'groups_g.dat');
   If Not ioReset(F, SizeOf(RecGroup), fmRWDN) Then Exit;
 
   If ioSeek(F, Pred(Num)) And (ioRead(F, G)) Then Begin
@@ -355,7 +356,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, Config.DataPath + 'fbases.dat');
+  Assign (F, bbsCfg.DataPath + 'fbases.dat');
   If Not ioReset(F, SizeOf(RecFileBase), fmRWDN) Then Exit;
 
   If ioSeek(F, Pred(Num)) And (ioRead(F, FB)) Then Begin
@@ -380,7 +381,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, Config.DataPath + 'groups_f.dat');
+  Assign (F, bbsCfg.DataPath + 'groups_f.dat');
   If Not ioReset(F, SizeOf(RecGroup), fmRWDN) Then Exit;
 
   If ioSeek(F, Pred(Num)) And (ioRead(F, G)) Then Begin
@@ -2557,7 +2558,7 @@ Begin
       FN := Session.Theme.ScriptPath + FN
     Else
     If Session.Theme.Flags and thmFallBack <> 0 Then
-      FN := Config.ScriptPath + FN;
+      FN := bbsCfg.ScriptPath + FN;
 
   MPEName := FN;
 

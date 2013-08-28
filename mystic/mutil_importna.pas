@@ -12,7 +12,7 @@ Uses
   m_Strings,
   mUtil_Common,
   mUtil_Status,
-  bbs_Common;
+  bbs_DataBase;
 
 Procedure uImportNA;
 Var

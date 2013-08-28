@@ -12,6 +12,7 @@ Uses
   bbs_Ansi_MenuBox,
   bbs_Ansi_MenuForm,
   bbs_cfg_Common,
+  bbs_dataBase,
   bbs_Common;
 
 Procedure EditGroup (Var Group: RecGroup);
@@ -65,9 +66,9 @@ Var
 
 Begin
   If Msg Then
-    Assign (GroupFile, Config.DataPath + 'groups_g.dat')
+    Assign (GroupFile, bbsCfg.DataPath + 'groups_g.dat')
   Else
-    Assign (GroupFile, Config.DataPath + 'groups_f.dat');
+    Assign (GroupFile, bbsCfg.DataPath + 'groups_f.dat');
 
   If Not ioReset(GroupFile, SizeOf(RecGroup), fmRWDN) Then
     If Not ioReWrite(GroupFile, SizeOf(RecGroup), fmRWDN) Then

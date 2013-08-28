@@ -9,6 +9,7 @@ Uses
   m_Strings,
   m_DateTime,
   bbs_Common,
+  bbs_dataBase,
   bbs_General,
   bbs_MsgBase,
   bbs_FileBase,
@@ -91,9 +92,9 @@ Begin
   FillChar (Security, SizeOf(Security), #0);
 
   UserNum              := -1;
-  ThisUser.ScreenSize  := Config.DefScreenSize;
-  ThisUser.Theme       := Config.DefThemeFile;
-  ThisUser.StartMenu   := Config.DefStartMenu;
+  ThisUser.ScreenSize  := bbsCfg.DefScreenSize;
+  ThisUser.Theme       := bbsCfg.DefThemeFile;
+  ThisUser.StartMenu   := bbsCfg.DefStartMenu;
   ThisUser.DateType    := 1;
   ThisUser.HotKeys     := True;
   ThisUser.RealName    := 'Unknown';
@@ -102,13 +103,13 @@ Begin
   ThisUser.Birthday    := CurDateJulian;
   ThisUser.Gender      := 'U';
   ThisUser.FirstOn     := CurDateDos;
-  ThisUser.TimeLeft    := Config.LoginTime;
-  ThisUser.Archive     := Config.qwkArchive;
-  ThisUser.LastFGroup  := Config.StartFGroup;
-  ThisUser.LastMGroup  := Config.StartMGroup;
+  ThisUser.TimeLeft    := bbsCfg.LoginTime;
+  ThisUser.Archive     := bbsCfg.qwkArchive;
+  ThisUser.LastFGroup  := bbsCfg.StartFGroup;
+  ThisUser.LastMGroup  := bbsCfg.StartMGroup;
   ThisUser.UseLBQuote  := True;
   ThisUser.UseFullChat := True;
-  ThisUser.CodePage    := Config.StartCodePage;
+  ThisUser.CodePage    := bbsCfg.StartCodePage;
 
   IgnoreGroup   := False;
   InChat        := False;
@@ -120,7 +121,7 @@ Function TBBSUser.IsThisUser (Str: String) : Boolean;
 Begin
   Str := strUpper(Str);
 
-  //If Str = 'SYSOP' Then Str := Config.SysopName;
+  //If Str = 'SYSOP' Then Str := bbsCfg.SysopName;
 
   Result := (strUpper(ThisUser.RealName) = Str) or (strUpper(ThisUser.Handle) = Str);
 End;
@@ -299,7 +300,7 @@ Begin
   Str := strUpper(Str);
 
   If Str = 'SYSOP' Then
-    Str := strUpper(Config.SysopName);
+    Str := strUpper(bbsCfg.SysopName);
 
   Found := False;
   First := True;
@@ -389,11 +390,11 @@ Begin
   UserNum  := -1;
 
   If Not Session.io.GetPW(Session.GetPrompt(274), Session.GetPrompt(293), TempUser.Password) Then Begin
-    If Config.PWInquiry Then
+    If bbsCfg.PWInquiry Then
       If Session.io.GetYN(Session.GetPrompt(475), False) Then
-        Session.Msgs.PostMessage(True, '/TO:' + strReplace(Config.FeedbackTo, ' ', '_') + ' /SUBJ:Password_Inquiry');
+        Session.Msgs.PostMessage(True, '/TO:' + strReplace(bbsCfg.FeedbackTo, ' ', '_') + ' /SUBJ:Password_Inquiry');
 
-    Session.Msgs.PostTextFile('hackwarn.txt;0;' + Config.SysopName + ';' + TempUser.Handle + ';Possible hack attempt', True);
+    Session.Msgs.PostTextFile('hackwarn.txt;0;' + bbsCfg.SysopName + ';' + TempUser.Handle + ';Possible hack attempt', True);
 
     Exit;
   End;
@@ -548,7 +549,7 @@ Begin
   Result := False;
   Name   := strUpper(Name);
 
-  Assign (tFile, Config.DataPath + 'trashcan.dat');
+  Assign (tFile, bbsCfg.DataPath + 'trashcan.dat');
   {$I-} Reset (tFile); {$I+}
 
   If IoResult <> 0 Then Exit;
@@ -678,11 +679,11 @@ Begin
       Session.io.OutFull (Session.GetPrompt(367))
     Else
       Session.io.OutFull (Session.GetPrompt(13));
-    If Config.UseUSAPhone Then
+    If bbsCfg.UseUSAPhone Then
       Str := Session.io.GetInput(12, 12, 14, Str)
     Else
       Str := Session.io.GetInput(15, 15, 12, Str);
-  Until (Length(Str) = 12) or (Not Config.UseUSAPhone and (Str <> ''));
+  Until (Length(Str) = 12) or (Not bbsCfg.UseUSAPhone and (Str <> ''));
 
   ThisUser.HomePhone := Str;
 End;
@@ -698,11 +699,11 @@ Begin
       Session.io.OutFull (Session.GetPrompt(368))
     Else
       Session.io.OutFull (Session.GetPrompt(14));
-    If Config.UseUSAPhone Then
+    If bbsCfg.UseUSAPhone Then
       Str := Session.io.GetInput(12, 12, 14, Str)
     Else
       Str := Session.io.GetInput(15, 15, 12, Str);
-  Until (Length(Str) = 12) or (Not Config.UseUSAPhone and (Str <> ''));
+  Until (Length(Str) = 12) or (Not bbsCfg.UseUSAPhone and (Str <> ''));
 
   ThisUser.DataPhone := Str;
 End;
@@ -775,16 +776,16 @@ Procedure TBBSUser.GetScreenLength (Edit: Boolean);
 Var
   A : Byte;
 Begin
-  Session.io.PromptInfo[1] := strI2S(Config.DefScreenSize);
+  Session.io.PromptInfo[1] := strI2S(bbsCfg.DefScreenSize);
 
   If Edit Then
     Session.io.OutFull (Session.GetPrompt(372))
   Else
     Session.io.OutFull (Session.GetPrompt(153));
 
-  A := strS2I(Session.io.GetInput(2, 2, 12, strI2S(Config.DefScreenSize)));
+  A := strS2I(Session.io.GetInput(2, 2, 12, strI2S(bbsCfg.DefScreenSize)));
 
-  If (A < 1) or (A > 255) Then A := Config.DefScreenSize;
+  If (A < 1) or (A > 255) Then A := bbsCfg.DefScreenSize;
 
   ThisUser.ScreenSize := A;
 End;
@@ -899,14 +900,14 @@ End;
 
 Procedure TBBSUser.CreateNewUser (DefName: String);
 Begin
-  If Not Config.AllowNewUsers Then Begin
+  If Not bbsCfg.AllowNewUsers Then Begin
     Session.io.OutFile ('nonewusr', True, 0);
 
     Halt(0);
   End;
 
-  If Config.NewUserPW <> '' Then
-    If Not Session.io.GetPW(Session.GetPrompt(5), Session.GetPrompt(422), Config.NewUserPW) Then Halt(0);
+  If bbsCfg.NewUserPW <> '' Then
+    If Not Session.io.GetPW(Session.GetPrompt(5), Session.GetPrompt(422), bbsCfg.NewUserPW) Then Halt(0);
 
   Session.SystemLog ('NEW USER');
 
@@ -932,7 +933,7 @@ Begin
   End Else Begin
     If strUpper(DefName) = 'NEW' Then DefName := '';
 
-    With Config Do Begin
+    With bbsCfg Do Begin
       If AskTheme      Then GetTheme Else ThisUser.Theme := DefThemeFile;
       If AskAlias      Then GetAlias(False, DefName);
       If AskRealName   Then GetRealName(False);
@@ -977,32 +978,32 @@ Begin
       If UserHotKeys = 2 Then GetHotKeys(False) Else ThisUser.HotKeys := Boolean(UserHotKeys);
     End;
 
-    If Config.AskScreenSize Then
+    If bbsCfg.AskScreenSize Then
       GetScreenLength(False)
     Else
-      ThisUser.ScreenSize := Config.DefScreenSize;
+      ThisUser.ScreenSize := bbsCfg.DefScreenSize;
 
-    Case Config.UserProtocol of
+    Case bbsCfg.UserProtocol of
       0 : ThisUser.Protocol := #0;
-      1 : ThisUser.Protocol := Config.FProtocol;
+      1 : ThisUser.Protocol := bbsCfg.FProtocol;
       2 : ThisUser.Protocol := Session.FileBase.SelectProtocol(False, True);
     End;
 
     GetPassword(False);
   End;
 
-  Upgrade_User_Level (True, ThisUser, Config.NewUserSec);
+  Upgrade_User_Level (True, ThisUser, bbsCfg.NewUserSec);
 
 //  ThisUser.FirstOn    := CurDateDos;
-//  ThisUser.Archive    := Config.qwkArchive;
+//  ThisUser.Archive    := bbsCfg.qwkArchive;
 //  ThisUser.LastFBase  := 0;
-//  ThisUser.LastFGroup := Config.StartFGroup;
-//  ThisUser.LastMGroup := Config.StartMGroup;
+//  ThisUser.LastFGroup := bbsCfg.StartFGroup;
+//  ThisUser.LastMGroup := bbsCfg.StartMGroup;
 //  ThisUser.LastMBase  := 0;
 //  ThisUser.Flags      := 0;
 
-  If Not Config.AskRealName Then ThisUser.RealName := ThisUser.Handle;
-  If Not Config.AskAlias    Then ThisUser.Handle   := ThisUser.RealName;
+  If Not bbsCfg.AskRealName Then ThisUser.RealName := ThisUser.Handle;
+  If Not bbsCfg.AskAlias    Then ThisUser.Handle   := ThisUser.RealName;
   {If either handles or realnames are toggled off, fill the gaps}
 
   Session.Menu.MenuName := 'newinfo';
@@ -1013,32 +1014,32 @@ Begin
   Reset (UserFile);
   UserNum := Succ(FileSize(UserFile));
 
-  Inc (Config.UserIdxPos);
-  ThisUser.PermIdx := Config.UserIdxPos;
+  Inc (bbsCfg.UserIdxPos);
+  ThisUser.PermIdx := bbsCfg.UserIdxPos;
 
   Seek  (UserFile, UserNum - 1);
   Write (UserFile, ThisUser);
   Close (UserFile);
 
   Reset (ConfigFile);
-  Write (ConfigFile, Config);
+  Write (ConfigFile, bbsCfg);
   Close (ConfigFile);
 
   Session.SystemLog ('Created Account: ' + ThisUser.Handle);
 
-  If Config.NewUserEmail Then Begin
+  If bbsCfg.NewUserEmail Then Begin
     Session.io.OutFile('feedback', True, 0);
-    If Session.Menu.ExecuteCommand ('MW', '/TO:' + strReplace(Config.FeedbackTo, ' ', '_') + ' /SUBJ:New_User_Feedback /F') Then;
+    If Session.Menu.ExecuteCommand ('MW', '/TO:' + strReplace(bbsCfg.FeedbackTo, ' ', '_') + ' /SUBJ:New_User_Feedback /F') Then;
   End;
 
-  If FileExist(Config.ScriptPath + 'newuser.mpx') Then
+  If FileExist(bbsCfg.ScriptPath + 'newuser.mpx') Then
     ExecuteMPL(NIL, 'newuser');
 
-  If FileExist(Config.DataPath + 'newletter.txt') Then
-    Session.Msgs.PostTextFile('newletter.txt;0;' + Config.SysopName + ';' + ThisUser.Handle + ';Welcome', True);
+  If FileExist(bbsCfg.DataPath + 'newletter.txt') Then
+    Session.Msgs.PostTextFile('newletter.txt;0;' + bbsCfg.SysopName + ';' + ThisUser.Handle + ';Welcome', True);
 
-  If FileExist(Config.DataPath + 'sysletter.txt') Then
-    Session.Msgs.PostTextFile('sysletter.txt;0;' + Config.SysopName + ';' + Config.SysopName + ';New account created', True);
+  If FileExist(bbsCfg.DataPath + 'sysletter.txt') Then
+    Session.Msgs.PostTextFile('sysletter.txt;0;' + bbsCfg.SysopName + ';' + bbsCfg.SysopName + ';New account created', True);
 End;
 
 Procedure TBBSUser.UserLogon3;
@@ -1050,7 +1051,7 @@ Begin
 
   Chat.Available := True;
 
-  If Access(Config.AcsInvisLogin) Then
+  If Access(bbsCfg.AcsInvisLogin) Then
     Chat.Invisible := Session.io.GetYN(Session.GetPrompt(308), False);
 
 { update last caller information }
@@ -1065,7 +1066,7 @@ Begin
     LastOn.City          := ThisUser.City;
     LastOn.Node          := Session.NodeNum;
     LastOn.DateTime      := CurDateDos;
-    LastOn.CallNum       := Config.SystemCalls;
+    LastOn.CallNum       := bbsCfg.SystemCalls;
     LastOn.Address       := ThisUser.Address;
     LastOn.EmailAddr     := ThisUser.Email;
     LastOn.UserInfo      := ThisUser.UserInfo;
@@ -1143,18 +1144,18 @@ Begin
 
   If Not Session.LocalMode And (ThisUser.Flags AND UserNoLastCall = 0) Then Begin
     Reset (ConfigFile);
-    Read  (ConfigFile, Config);
-    Inc   (Config.SystemCalls);
+    Read  (ConfigFile, bbsCfg);
+    Inc   (bbsCfg.SystemCalls);
 
     Reset (ConfigFile);
-    Write (ConfigFile, Config);
+    Write (ConfigFile, bbsCfg);
     Close (ConfigFile);
   End;
 
   Inc (ThisUser.Calls);
   Inc (ThisUser.CallsToday);
 
-  If (Not Access(Config.AcsMultiLogin)) and (IsUserOnline(ThisUser.Handle) <> 0) Then Begin
+  If (Not Access(bbsCfg.AcsMultiLogin)) and (IsUserOnline(ThisUser.Handle) <> 0) Then Begin
     Session.io.OutFullLn(Session.GetPrompt(426));
     Halt(0);
   End;
@@ -1211,11 +1212,11 @@ Begin
         Session.io.OutFullLn(Session.GetPrompt(476));
     End;
 
-  If (Config.PWChange > 0) and (Session.User.ThisUser.Flags AND UserNoPWChange = 0) Then
+  If (bbsCfg.PWChange > 0) and (Session.User.ThisUser.Flags AND UserNoPWChange = 0) Then
     If Not DateValid(Session.User.ThisUser.LastPWChange) Then
       Session.User.ThisUser.LastPWChange := DateDos2Str(CurDateDos, 1)
     Else
-    If CurDateJulian - DateStr2Julian(Session.User.ThisUser.LastPWChange) >= Config.PWChange Then Begin
+    If CurDateJulian - DateStr2Julian(Session.User.ThisUser.LastPWChange) >= bbsCfg.PWChange Then Begin
       Session.SystemLog('Required password change');
       Session.io.OutFullLn(Session.GetPrompt(478));
       Session.User.GetPassword(False);
@@ -1243,8 +1244,8 @@ Begin
 
   Session.HistoryHour := strS2I(Copy(TimeDos2Str(CurDateDos, 0), 1, 2));
 
-  If Config.SystemPW <> '' Then
-    If Not Session.io.GetPW(Session.GetPrompt(4), Session.GetPrompt(417), Config.SystemPW) Then Begin
+  If bbsCfg.SystemPW <> '' Then
+    If Not Session.io.GetPW(Session.GetPrompt(4), Session.GetPrompt(417), bbsCfg.SystemPW) Then Begin
       Session.io.OutFile ('closed', True, 0);
 
       Session.SystemLog('Failed system password');
@@ -1255,21 +1256,21 @@ Begin
   Session.io.OutFullLn ('|CL' + mysSoftwareID + ' v' + mysVersion + ' for ' + OSID + ' Node |ND');
   Session.io.OutFullLn (CopyID);
 
-  If Config.DefTermMode = 0 Then
+  If bbsCfg.DefTermMode = 0 Then
     GetGraphics
   Else
-  If Config.DefTermMode = 3 Then
+  If bbsCfg.DefTermMode = 3 Then
     Session.io.Graphics := 1
   Else Begin
     DetectGraphics;
 
-    If (Session.io.Graphics = 0) and (Config.DefTermMode = 2) Then GetGraphics;
+    If (Session.io.Graphics = 0) and (bbsCfg.DefTermMode = 2) Then GetGraphics;
   End;
 
-  If FileExist(Config.ScriptPath + 'startup.mpx') Then
+  If FileExist(bbsCfg.ScriptPath + 'startup.mpx') Then
     ExecuteMPL(NIL, 'startup');
 
-  If Config.ThemeOnStart Then GetTheme;
+  If bbsCfg.ThemeOnStart Then GetTheme;
 
   If (Session.Theme.Flags AND ThmAllowASCII = 0) and (Session.io.Graphics = 0) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(321));
@@ -1298,9 +1299,9 @@ Begin
 
     ThisUser := TempUser;
   End Else Begin
-    If Config.UseMatrix Then Begin
+    If bbsCfg.UseMatrix Then Begin
       Repeat
-        Session.Menu.MenuName := Config.MatrixMenu;
+        Session.Menu.MenuName := bbsCfg.MatrixMenu;
 
         Session.Menu.ExecuteMenu (True, True, False, True);
       Until MatrixOK or Session.ShutDown;
@@ -1312,11 +1313,11 @@ Begin
       Count := 1;
 
       Repeat
-        If Count > Config.LoginAttempts Then Halt;
+        If Count > bbsCfg.LoginAttempts Then Halt;
 
         Session.io.PromptInfo[1] := strI2S(Count);
-        Session.io.PromptInfo[2] := strI2S(Config.LoginAttempts);
-        Session.io.PromptInfo[3] := strI2S(Config.LoginAttempts - Count);
+        Session.io.PromptInfo[2] := strI2S(bbsCfg.LoginAttempts);
+        Session.io.PromptInfo[3] := strI2S(bbsCfg.LoginAttempts - Count);
 
         Session.io.OutFull (Session.GetPrompt(0));
 
@@ -1342,11 +1343,11 @@ Begin
       UserNum := -1;  {which is only User.ThisUser.realname at this time        }
 
       If Not Session.io.GetPW(Session.GetPrompt(2), Session.GetPrompt(3), TempUser.Password) Then Begin
-        If Config.PWInquiry Then
+        If bbsCfg.PWInquiry Then
           If Session.io.GetYN(Session.GetPrompt(475), False) Then
-            Session.Msgs.PostMessage(True, '/TO:' + strReplace(Config.FeedbackTo, ' ', '_') + ' /SUBJ:Password_Inquiry');
+            Session.Msgs.PostMessage(True, '/TO:' + strReplace(bbsCfg.FeedbackTo, ' ', '_') + ' /SUBJ:Password_Inquiry');
 
-        Session.Msgs.PostTextFile('hackwarn.txt;0;' + Config.SysopName + ';' + TempUser.Handle + ';Possible hack attempt', True);
+        Session.Msgs.PostTextFile('hackwarn.txt;0;' + bbsCfg.SysopName + ';' + TempUser.Handle + ';Possible hack attempt', True);
 
         Halt(0);
       End;
@@ -1360,14 +1361,14 @@ Begin
 
   Session.SystemLog ('User: ' + ThisUser.Handle + ' logged in');
 
-  If Config.ThemeOnStart Then
+  If bbsCfg.ThemeOnStart Then
     ThisUser.Theme := Session.Theme.FileName
   Else
   If Not Session.LoadThemeData(ThisUser.Theme) Then Begin
     Session.io.OutFullLn (Session.GetPrompt(186));
 
-    If Session.LoadThemeData(Config.DefThemeFile) Then
-      ThisUser.Theme := Config.DefThemeFile;
+    If Session.LoadThemeData(bbsCfg.DefThemeFile) Then
+      ThisUser.Theme := bbsCfg.DefThemeFile;
   End;
 
   UserLogon2;
@@ -1416,7 +1417,7 @@ Begin
           Else
             Session.LoadThemeData(Data);
     15  : GetEditor(True);
-    16  : If Access(Config.AcsInvisLogin) Then Begin
+    16  : If Access(bbsCfg.AcsInvisLogin) Then Begin
             Chat.Invisible := Not Chat.Invisible;
             Set_Node_Action (Chat.Action);
           End;

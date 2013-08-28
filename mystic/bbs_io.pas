@@ -18,7 +18,8 @@ Uses
   m_FileIO,
   m_Strings,
   m_Term_Ansi,
-  bbs_Common;
+  bbs_Common,
+  bbs_dataBase;
 
 Const
   TBBSIOBufferSize = 4 * 1024 - 1;
@@ -610,7 +611,7 @@ Begin
                     LastMCIValue := 'TELNET'; {++lang }
             'E' : LastMCIValue := ^G;
             'I' : LastMCIValue := DateJulian2Str(TBBSCore(Core).User.ThisUser.Birthday, TBBSCore(Core).User.ThisUser.DateType);
-            'N' : LastMCIValue := Config.BBSName;
+            'N' : LastMCIValue := bbsCfg.BBSName;
             'S' : OutBS(1, True);
           End;
     'C' : Case Code[2] of
@@ -643,6 +644,7 @@ Begin
             'G' : LastMCIValue := TBBSCore(Core).FileBase.FGroup.Name;
             'K' : LastMCIValue := strI2S(TBBSCore(Core).User.ThisUser.ULk);
             'O' : LastMCIValue := DateDos2Str(TBBSCore(Core).User.ThisUser.FirstOn, TBBSCore(Core).User.ThisUser.DateType);
+            'T' : LastMCIValue := strI2S(GetTotalFiles(TBBSCore(Core).FileBase.FBase));
             'U' : LastMCIValue := strI2S(TBBSCore(Core).User.ThisUser.ULs);
           End;
     'H' : Case Code[2] of
@@ -675,7 +677,7 @@ Begin
             'E' : LastMCIValue := strI2S(TBBSCore(Core).User.ThisUser.Emails);
             'G' : LastMCIValue := TBBSCore(Core).Msgs.Group.Name;
             'L' : LastMCIValue := OutON(TBBSCore(Core).User.ThisUser.UseLBIndex);
-            'N' : LastMCIValue := Config.NetDesc[TBBSCore(Core).Msgs.MBase.NetAddr];
+            'N' : LastMCIValue := bbsCfg.NetDesc[TBBSCore(Core).Msgs.MBase.NetAddr];
             'P' : LastMCIValue := strI2S(TBBSCore(Core).User.ThisUser.Posts);
             'T' : LastMCIValue := strI2S(TBBSCore(Core).Msgs.GetTotalMessages(TBBSCore(Core).Msgs.MBase));
           End;
@@ -698,7 +700,7 @@ Begin
             'I' : BufAddChar('|');
             'N' : Repeat Until GetKey <> '';
             'O' : AllowPause := False;
-            'W' : LastMCIValue := strI2S(Config.PWChange);
+            'W' : LastMCIValue := strI2S(bbsCfg.PWChange);
           End;
     'Q' : Case Code[2] of
             'A' : LastMCIValue := TBBSCore(Core).User.ThisUser.Archive;
@@ -719,7 +721,7 @@ Begin
             'D' : LastMCIValue := TBBSCore(Core).User.Security.Desc;
             'K' : LastMCIValue := strI2S(TBBSCore(Core).User.Security.MaxDLK);
             'L' : LastMCIValue := strI2S(TBBSCore(Core).User.ThisUser.Security);
-            'N' : LastMCIValue := Config.SysopName;
+            'N' : LastMCIValue := bbsCfg.SysopName;
             'P' : Begin
                     A := Round(TBBSCore(Core).User.Security.PCRatio / 100 * 100);
                     LastMCIValue := strI2S(A);
@@ -731,7 +733,7 @@ Begin
             '0'..
             '9' : LastMCIValue := Attr2Ansi(Session.Theme.Colors[strS2I(Code[2])]);
             'B' : LastMCIValue := strI2S(TBBSCore(Core).User.ThisUser.TimeBank);
-            'C' : LastMCIValue := strI2S(Config.SystemCalls);
+            'C' : LastMCIValue := strI2S(bbsCfg.SystemCalls);
             'E' : If Graphics = 1 Then LastMCIValue := 'Ansi' Else LastMCIValue := 'Ascii'; //++lang
             'I' : LastMCIValue := TimeDos2Str(CurDateDos, 1);
             'L' : LastMCIValue := strI2S(TBBSCore(Core).TimeLeft);
@@ -1228,7 +1230,7 @@ Begin
   End Else Begin
     If Not CheckFileInPath(Session.Theme.TextPath) Then
       If Session.Theme.Flags AND thmFallBack <> 0 Then Begin
-        If Not CheckFileInPath(Config.TextPath) Then Exit;
+        If Not CheckFileInPath(bbsCfg.TextPath) Then Exit;
       End Else
         Exit;
   End;
@@ -1548,7 +1550,7 @@ Begin
       InMacro := False;
 
   If TBBSCore(Core).CheckTimeOut Then
-    If (Config.Inactivity > 0) and (Session.User.ThisUser.Flags And UserNoTimeOut = 0) and (TimerSeconds - TBBSCore(Core).TimeOut >= Config.Inactivity) Then Begin
+    If (bbsCfg.Inactivity > 0) and (Session.User.ThisUser.Flags And UserNoTimeOut = 0) and (TimerSeconds - TBBSCore(Core).TimeOut >= bbsCfg.Inactivity) Then Begin
       TBBSCore(Core).SystemLog('Inactivity timeout');
       OutFullLn (TBBSCore(Core).GetPrompt(136));
       Halt(0);
@@ -1728,7 +1730,7 @@ Begin
 
       TBBSCore(Core).SystemLog ('Bad PW: ' + Temp);
     End;
-  Until Loop = Config.PWAttempts;
+  Until Loop = bbsCfg.PWAttempts;
 
   Result := False;
 End;
@@ -1953,7 +1955,7 @@ Begin
     UseInField := False;
 
   If Mode = 8 Then
-    Case Config.UserNameFormat of
+    Case bbsCfg.UserNameFormat of
       0 : Mode := 1;
       1 : Mode := 2;
       2 : Mode := 7;

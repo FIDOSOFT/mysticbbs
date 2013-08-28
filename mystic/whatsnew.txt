@@ -3542,4 +3542,9 @@
  ! Fixed an issue with useropts variable in MPL which could cause memory
    corruption.
 
+ ! Fixed two leaked file handles during QWK packet generation.
+
+ + New MCI code: FT returns the total number of files in the current file
+   area.
+
    <ALPHA 37 RELEASED>

@@ -9,7 +9,7 @@ Uses
   m_FileIO,
   m_Strings,
   m_DateTime,
-  BBS_Common,
+  bbs_DataBase,
   mUtil_Common;
 
 Const

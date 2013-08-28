@@ -13,7 +13,7 @@ Implementation
 
 Uses
   m_Strings,
-  bbs_Common;
+  bbs_DataBase;
 
 Function ProcessedByAreaFix (Var PKT: TPKTReader) : Boolean;
 Var

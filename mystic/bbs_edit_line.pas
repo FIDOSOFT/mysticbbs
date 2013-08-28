@@ -13,6 +13,7 @@ Uses
   m_Strings,
   m_FileIO,
   bbs_Common,
+  bbs_DataBase,
   bbs_Core,
   bbs_FileBase,
   bbs_User;

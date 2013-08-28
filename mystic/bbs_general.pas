@@ -12,6 +12,7 @@ Uses
     bbs_SysopChat,
   {$ENDIF}
   bbs_Common,
+  bbs_database,
   bbs_Edit_ANSI,
   bbs_Edit_Line;
 
@@ -94,7 +95,7 @@ Var
   Flags   : Char;
   TempSec : RecSecurity;
 Begin
-  Assign (Session.User.SecurityFile, Config.DataPath + 'security.dat');
+  Assign (Session.User.SecurityFile, bbsCfg.DataPath + 'security.dat');
   Reset  (Session.User.SecurityFile);
   Seek   (Session.User.SecurityFile, Sec - 1);
   Read   (Session.User.SecurityFile, TempSec);
@@ -132,9 +133,9 @@ Var
   Lines : Integer;
   Str   : String;
 Begin
-  If Config.MaxAutoSig = 0 Then Exit;
+  If bbsCfg.MaxAutoSig = 0 Then Exit;
 
-  Assign (DF, Config.DataPath + 'autosig.dat');
+  Assign (DF, bbsCfg.DataPath + 'autosig.dat');
 
   If Session.User.ThisUser.SigLength > 0 Then Begin
     Reset (DF, 1);
@@ -151,7 +152,7 @@ Begin
 
   Str := 'Signature Editor'; {++lang}
 
-  If Editor (Lines, 78, Config.MaxAutoSig, False, fn_tplMsgEdit, Str) Then Begin
+  If Editor (Lines, 78, bbsCfg.MaxAutoSig, False, fn_tplMsgEdit, Str) Then Begin
     {$I-} Reset (DF, 1); {$I+}
 
     If IoResult <> 0 Then ReWrite (DF, 1);
@@ -175,7 +176,7 @@ Var
   S  : String[79];
 Begin
   If Session.User.ThisUser.SigLength > 0 Then Begin
-    Assign (DF, Config.DataPath + 'autosig.dat');
+    Assign (DF, bbsCfg.DataPath + 'autosig.dat');
     Reset  (DF, 1);
     Seek   (DF, Session.User.ThisUser.SigOffset);
 
@@ -199,7 +200,7 @@ Var
   Count  : Integer;
   Str    : String;
 Begin
-  Assign     (TF, Config.DataPath + 'quotes.dat');
+  Assign     (TF, bbsCfg.DataPath + 'quotes.dat');
   SetTextBuf (TF, TxtBuf);
 
   {$I-} Reset (TF); {$I+}
@@ -281,7 +282,7 @@ Begin
   End Else
     BBSList.Telnet := 'None'; //++lang
 
-  Assign (BBSFile, Config.DataPath + Name + '.bbi');
+  Assign (BBSFile, bbsCfg.DataPath + Name + '.bbi');
   {$I-} Reset(BBSFile); {$I+}
   If IoResult <> 0 Then ReWrite(BBSFile);
 
@@ -344,7 +345,7 @@ Begin
 
   FileMode := 66;
 
-  Assign (BBSFile, Config.DataPath + Name + '.bbi');
+  Assign (BBSFile, bbsCfg.DataPath + Name + '.bbi');
   {$I-} Reset(BBSFile); {$I+}
   If IoResult <> 0 Then Begin
     Session.io.OutFullLn (Session.GetPrompt(291));
@@ -401,7 +402,7 @@ Begin
         Session.io.OutFullLn (Session.GetPrompt(265));
         Session.io.OutFull   (Session.GetPrompt(267));
         Case Session.io.OneKey('DQV'#13, True) of
-          'D' : If Session.User.Access(Config.AcsSysop) or (strUpper(BBSList.AddedBy) = strUpper(Session.User.ThisUser.Handle)) Then Begin
+          'D' : If Session.User.Access(bbsCfg.AcsSysop) or (strUpper(BBSList.AddedBy) = strUpper(Session.User.ThisUser.Handle)) Then Begin
                   If Session.io.GetYN(Session.GetPrompt(294), False) Then Begin
                     BBSList.Deleted := True;
                     Seek  (BBSFile, FilePos(BBSFile) - 1);
@@ -583,7 +584,7 @@ Begin
 
   FileMode := 66;
 
-  Assign (OneLineFile, Config.DataPath + 'oneliner.dat');
+  Assign (OneLineFile, bbsCfg.DataPath + 'oneliner.dat');
   {$I-} Reset (OneLineFile); {$I+}
 
   If IoResult <> 0 Then ReWrite (OneLineFile);
@@ -950,7 +951,7 @@ Var
   Temp : RecHistory;
   Days : Word;
 Begin
-  Assign (Session.HistoryFile, Config.DataPath + 'history.dat');
+  Assign (Session.HistoryFile, bbsCfg.DataPath + 'history.dat');
   {$I-} Reset(Session.HistoryFile); {$I+}
 
   If IoResult <> 0 Then
@@ -1502,7 +1503,7 @@ Var
   Temp  : String;
   Count : Integer;
 Begin
-  If Forced or ((TimerMinutes DIV 60 >= Config.ChatStart) and (TimerMinutes DIV 60 <= Config.ChatEnd)) Then Begin
+  If Forced or ((TimerMinutes DIV 60 >= bbsCfg.ChatStart) and (TimerMinutes DIV 60 <= bbsCfg.ChatEnd)) Then Begin
     Session.io.OutFull (Session.GetPrompt(23));
 
     Temp := Session.io.GetInput(50, 50, 11, '');
@@ -1539,9 +1540,9 @@ Begin
 
   Session.io.OutFull (Session.GetPrompt(28));
 
-  If Config.ChatFeedback Then
+  If bbsCfg.ChatFeedback Then
     If Session.io.GetYN(Session.GetPrompt(178), False) Then
-      Session.Msgs.PostMessage (True, '/TO:' + strReplace(Config.SysopName, ' ', '_') + ' /SUBJ:Chat_Feedback');
+      Session.Msgs.PostMessage (True, '/TO:' + strReplace(bbsCfg.SysopName, ' ', '_') + ' /SUBJ:Chat_Feedback');
 End;
 {$ENDIF}
 

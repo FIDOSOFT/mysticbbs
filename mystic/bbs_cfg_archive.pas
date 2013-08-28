@@ -12,6 +12,7 @@ Uses
   m_FileIO,
   m_Strings,
   bbs_Common,
+  bbs_dataBase,
   bbs_Ansi_MenuBox,
   bbs_Ansi_MenuForm,
   bbs_cfg_Common;
@@ -81,7 +82,7 @@ Var
   End;
 
 Begin
-  Assign (ArcFile, Config.DataPath + 'archive.dat');
+  Assign (ArcFile, bbsCfg.DataPath + 'archive.dat');
 
   If Not ioReset(ArcFile, SizeOf(RecArchive), fmRWDN) Then
     If Not ioReWrite(ArcFile, SizeOf(RecArchive), fmRWDN) Then

@@ -12,6 +12,7 @@ Interface
 Uses
   m_Strings,
   bbs_Common,
+  bbs_dataBase,
   bbs_MsgBase_ABS;
 
 Const

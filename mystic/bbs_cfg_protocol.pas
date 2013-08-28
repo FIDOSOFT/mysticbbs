@@ -12,6 +12,7 @@ Uses
   m_FileIO,
   m_Strings,
   bbs_Common,
+  bbs_dataBase,
   bbs_ansi_MenuBox,
   bbs_ansi_MenuForm,
   bbs_cfg_Common;
@@ -83,7 +84,7 @@ Var
   End;
 
 Begin
-  Assign (ProtFile, Config.DataPath + 'protocol.dat');
+  Assign (ProtFile, bbsCfg.DataPath + 'protocol.dat');
 
   If Not ioReset(ProtFile, SizeOf(RecProtocol), fmRWDN) Then
     If Not ioReWrite(ProtFile, SizeOf(RecProtocol), fmRWDN) Then

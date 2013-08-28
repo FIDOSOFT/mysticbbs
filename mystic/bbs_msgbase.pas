@@ -8,6 +8,7 @@ Uses
   m_FileIO,
   m_DateTime,
   bbs_Common,
+  bbs_dataBase,
   bbs_General,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
@@ -138,8 +139,8 @@ Begin
   If Orig.Zone = Dest.Zone Then Exit;
 
   For Count := 1 to 30 Do
-    If Config.NetAddress[Count].Zone = Dest.Zone Then Begin
-      Result := Config.NetAddress[Count];
+    If bbsCfg.NetAddress[Count].Zone = Dest.Zone Then Begin
+      Result := bbsCfg.NetAddress[Count];
 
       Exit;
     End;
@@ -186,7 +187,7 @@ Var
   HasList   : Boolean;
   Addr      : RecEchoMailAddr;
 Begin
-  HasList  := FileExist(Config.DataPath + 'nodelist.txt');
+  HasList  := FileExist(bbsCfg.DataPath + 'nodelist.txt');
   NodeList := TNodeListSearch.Create;
 
   If HasList Then
@@ -230,7 +231,7 @@ Begin
     Session.io.PausePtr   := 1;
     Session.io.AllowPause := True;
 
-    NodeList.ResetSearch (Config.DataPath + 'nodelist.txt', Result);
+    NodeList.ResetSearch (bbsCfg.DataPath + 'nodelist.txt', Result);
 
     While NodeList.FindNext(NodeData) Do Begin
       Case ListType of
@@ -272,7 +273,7 @@ Begin
         Break;
       End;
     End Else
-    If (Listed = 0) And Not FromMenu And Not Config.ForceNodelist Then Begin
+    If (Listed = 0) And Not FromMenu And Not bbsCfg.ForceNodelist Then Begin
       If strStr2Addr(Result, Addr) Then Begin
         Session.io.PromptInfo[1] := strAddr2Str(Addr);
         Session.io.PromptInfo[7] := MsgTo;
@@ -333,7 +334,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, Config.DataPath + 'mbases.dat');
+  Assign (F, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
@@ -348,7 +349,7 @@ Var
   F     : File;
   Count : LongInt;
 Begin
-  If Not Config.MCompress Then Begin
+  If Not bbsCfg.MCompress Then Begin
     Result := GetBaseByNum(Num, TempBase);
 
     Exit;
@@ -356,7 +357,7 @@ Begin
 
   Result := False;
 
-  Assign (F, Config.DataPath + 'mbases.dat');
+  Assign (F, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
@@ -379,7 +380,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, Config.DataPath + 'mbases.dat');
+  Assign (F, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
@@ -402,7 +403,7 @@ Var
 Begin
   Result := 0;
 
-  Assign (F, Config.DataPath + 'mbases.dat');
+  Assign (F, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
@@ -627,7 +628,7 @@ Var
   A  : SmallInt;
 Begin
   If (MBase.NetType > 0) and (MBase.NetType <> 3) Then Begin
-    Msg^.DoStringLn (#1 + 'MSGID: ' + strAddr2Str(Config.NetAddress[MBase.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
+    Msg^.DoStringLn (#1 + 'MSGID: ' + strAddr2Str(bbsCfg.NetAddress[MBase.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
 
     If ReplyID <> '' Then
       Msg^.DoStringLn (#1 + 'REPLY: ' + ReplyID);
@@ -638,7 +639,7 @@ Begin
 
   If (MBase.Flags AND MBAutoSigs <> 0) and Session.User.ThisUser.SigUse and (Session.User.ThisUser.SigLength > 0) Then Begin
 
-    Assign (DF, Config.DataPath + 'autosig.dat');
+    Assign (DF, bbsCfg.DataPath + 'autosig.dat');
     Reset  (DF, 1);
     Seek   (DF, Session.User.ThisUser.SigOffset);
 
@@ -678,19 +679,19 @@ Begin
     Else
       Msg^.SetMailType(mmtEchoMail);
 
-    Msg^.SetOrig(Config.NetAddress[TempBase.NetAddr]);
+    Msg^.SetOrig(bbsCfg.NetAddress[TempBase.NetAddr]);
 
     Case TempBase.NetType of
       1 : Begin
-            Assign (SemFile, Config.SemaPath + fn_SemFileEcho);
+            Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEcho);
             If Session.ExitLevel > 5 Then Session.ExitLevel := 7 Else Session.ExitLevel := 5;
           End;
       2 : Begin
-            Assign (SemFile, Config.SemaPath + fn_SemFileNews);
+            Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNews);
             If Session.ExitLevel > 5 Then Session.ExitLevel := 7 Else Session.ExitLevel := 5;
           End;
       3 : Begin
-            Assign (SemFile, Config.SemaPath + fn_SemFileNet);
+            Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNet);
             If Session.ExitLevel = 5 Then Session.ExitLevel := 7 Else Session.ExitLevel := 6;
           End;
     End;
@@ -745,9 +746,9 @@ Begin
   End;
 
   If Pos('NOLIST', strUpper(Data)) > 0 Then
-    Total := GetTotalBases(Config.MCompress)
+    Total := GetTotalBases(bbsCfg.MCompress)
   Else
-    Total := ListAreas(Config.MCompress);
+    Total := ListAreas(bbsCfg.MCompress);
 
   If Total = 0 Then Begin
     Session.io.OutFullLn (Session.GetPrompt(94));
@@ -761,7 +762,7 @@ Begin
     Case Session.io.OneKeyRange(#13 + '?Q', 1, Total) of
       #13,
       'Q': Exit;
-      '?': Total := ListAreas(Config.MCompress);
+      '?': Total := ListAreas(bbsCfg.MCompress);
     Else
       Break;
     End;
@@ -815,10 +816,10 @@ Var
 
         Session.io.OutFull (Session.GetPrompt(93));
 
-        If (Total MOD Config.MColumns = 0) And (Total > 0) Then Session.io.OutRawLn('');
+        If (Total MOD bbsCfg.MColumns = 0) And (Total > 0) Then Session.io.OutRawLn('');
       End;
 
-      If EOF(MBaseFile) and (Total MOD Config.MColumns <> 0) Then Session.io.OutRawLn('');
+      If EOF(MBaseFile) and (Total MOD bbsCfg.MColumns <> 0) Then Session.io.OutRawLn('');
 
       If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
         Case Session.io.MorePrompt of
@@ -1090,7 +1091,7 @@ Begin
       Areas := 0;
       Session.User.ThisUser.LastMGroup := FilePos(GroupFile);
 
-      If Config.MShowBases Then Begin
+      If bbsCfg.MShowBases Then Begin
         Reset (MBaseFile);
         Read  (MBaseFile, tMBase); { Skip EMAIL base }
 
@@ -1166,7 +1167,7 @@ Var
 Begin
   Result := 1;
 
-  Assign (TempFile, Config.DataPath + 'mbases.dat');
+  Assign (TempFile, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(TempFile, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
@@ -1193,10 +1194,10 @@ Begin
 
       Session.io.OutFull (Session.GetPrompt(101));
 
-      If (Listed MOD Config.MColumns = 0) and (Listed > 0) Then Session.io.OutRawLn('');
+      If (Listed MOD bbsCfg.MColumns = 0) and (Listed > 0) Then Session.io.OutRawLn('');
     End;
 
-    If Eof(TempFile) and (Listed MOD Config.MColumns <> 0) Then Session.io.OutRawLn('');
+    If Eof(TempFile) and (Listed MOD bbsCfg.MColumns <> 0) Then Session.io.OutRawLn('');
 
     If (Session.io.PausePtr = Session.User.ThisUser.ScreenSize) and (Session.io.AllowPause) Then
       Case Session.io.MorePrompt of
@@ -1232,7 +1233,7 @@ Var
 Begin
   ReplyBase := MBase;
 
-  If Not Email And Session.User.Access(Config.AcsExtReply) Then Begin
+  If Not Email And Session.User.Access(bbsCfg.AcsExtReply) Then Begin
     Session.io.PromptInfo[1] := MBase.Name;
     Session.io.PromptInfo[2] := MsgBase^.GetFrom;
     Session.io.PromptInfo[3] := MsgBase^.GetSubj;
@@ -1250,7 +1251,7 @@ Begin
 
               Session.User.IgnoreGroup := True;
 
-              Total := ListAreas(Config.MCompress);
+              Total := ListAreas(bbsCfg.MCompress);
 
               Repeat
                 Session.io.OutFull(Session.GetPrompt(511));
@@ -1262,7 +1263,7 @@ Begin
 
                          Exit;
                        End;
-                  '?': Total := ListAreas(Config.MCompress);
+                  '?': Total := ListAreas(bbsCfg.MCompress);
                 Else
                   Break;
                 End;
@@ -1406,10 +1407,10 @@ Begin
       2 : MsgNew^.SetTo('All');  //Lang++
       3 : Begin
             MsgNew^.SetDest     (Addr);
-            MsgNew^.SetOrig     (GetMatchedAddress(Config.NetAddress[ReplyBase.NetAddr], Addr));
-            MsgNew^.SetCrash    (Config.netCrash);
-            MsgNew^.SetHold     (Config.netHold);
-            MsgNew^.SetKillSent (Config.netKillSent);
+            MsgNew^.SetOrig     (GetMatchedAddress(bbsCfg.NetAddress[ReplyBase.NetAddr], Addr));
+            MsgNew^.SetCrash    (bbsCfg.netCrash);
+            MsgNew^.SetHold     (bbsCfg.netHold);
+            MsgNew^.SetKillSent (bbsCfg.netKillSent);
             MsgNew^.SetTo       (ToWho);
           End;
     Else
@@ -1642,7 +1643,7 @@ Var
     Session.User.IgnoreGroup := True;
 
     Repeat
-      Total := ListAreas(Config.MCompress);
+      Total := ListAreas(bbsCfg.MCompress);
 
       If IsCopy Then
         Session.io.OutFull (Session.GetPrompt(492))
@@ -2654,7 +2655,7 @@ Var
             'C' : Session.io.AllowPause := False;
           End;
 
-          If Config.MShowHeader Then Display_Header;
+          If bbsCfg.MShowHeader Then Display_Header;
         End;
       End;
 
@@ -3093,7 +3094,7 @@ Begin
 
       If Not Session.User.SearchUser(MsgTo, MBase.Flags and MBRealNames <> 0) Then MsgTo := '';
     End Else
-      If strUpper(MsgTo) = 'SYSOP' Then MsgTo := Config.SysopName;
+      If strUpper(MsgTo) = 'SYSOP' Then MsgTo := bbsCfg.SysopName;
 
     If Session.User.FindUser(MsgTo, False) Then Begin
       Session.io.PromptInfo[1] := MsgTo;
@@ -3160,10 +3161,10 @@ Begin
 
     If MBase.NetType = 3 Then Begin
       MsgBase^.SetDest     (DestAddr);
-      MsgBase^.SetCrash    (Config.netCrash);
-      MsgBase^.SetHold     (Config.netHold);
-      MsgBase^.SetKillSent (Config.netKillSent);
-      MsgBase^.SetOrig     (GetMatchedAddress(Config.NetAddress[MBase.NetAddr], DestAddr));
+      MsgBase^.SetCrash    (bbsCfg.netCrash);
+      MsgBase^.SetHold     (bbsCfg.netHold);
+      MsgBase^.SetKillSent (bbsCfg.netKillSent);
+      MsgBase^.SetOrig     (GetMatchedAddress(bbsCfg.NetAddress[MBase.NetAddr], DestAddr));
     End;
 
     AppendMessageText (MsgBase, Lines, '');
@@ -3842,19 +3843,19 @@ Begin
   If mArea.NetType > 0 Then Begin
     If mArea.NetType = 3 Then Begin
       Msg^.SetMailType (mmtNetMail);
-      Msg^.SetCrash    (Config.netCrash);
-      Msg^.SetHold     (Config.netHold);
-      Msg^.SetKillSent (Config.netKillSent);
+      Msg^.SetCrash    (bbsCfg.netCrash);
+      Msg^.SetHold     (bbsCfg.netHold);
+      Msg^.SetKillSent (bbsCfg.netKillSent);
       Msg^.SetDest     (mAddr);
     End Else
       Msg^.SetMailType (mmtEchoMail);
 
-    Msg^.SetOrig(Config.NetAddress[mArea.NetAddr]);
+    Msg^.SetOrig(bbsCfg.NetAddress[mArea.NetAddr]);
 
     Case mArea.NetType of
-      1 : Assign (SemFile, Config.SemaPath + fn_SemFileEcho);
-      2 : Assign (SemFile, Config.SemaPath + fn_SemFileNews);
-      3 : Assign (SemFile, Config.SemaPath + fn_SemFileNet);
+      1 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEcho);
+      2 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNews);
+      3 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNet);
     End;
 
     ReWrite (SemFile);
@@ -3917,15 +3918,15 @@ Begin
   If (Str = '') Then Str := '0:0/0';
   strStr2Addr (Str, mAddr);
 
-  If FileExist(Config.DataPath + mName) Then
-    mName := Config.DataPath + mName
+  If FileExist(bbsCfg.DataPath + mName) Then
+    mName := bbsCfg.DataPath + mName
   Else
   If Not FileExist(mName) Then Begin
     Session.SystemLog('AutoPost: ' + mName + ' not found');
     Exit;
   End;
 
-  Assign  (MBaseFile, Config.DataPath + 'mbases.dat');
+  Assign  (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
   ioReset (MBaseFile, SizeOf(RecMessageBase), fmReadWrite + fmDenyNone);
 
   If Not ioSeek (MBaseFile, mArea) Then Begin
@@ -4004,7 +4005,7 @@ Begin
   If Loc > 0 Then Begin
     FN := strStripB(Copy(mArea.Origin, Loc + 8, 255), ' ');
 
-    If Pos(PathChar, FN) = 0 Then FN := Config.DataPath + FN;
+    If Pos(PathChar, FN) = 0 Then FN := bbsCfg.DataPath + FN;
 
     FileMode := 66;
 
@@ -4121,6 +4122,7 @@ Begin
     End;
   End;
 
+  Close (MBaseFile);
   Close (tFile);
 End;
 
@@ -4133,11 +4135,11 @@ Begin
   Assign  (tFile, Session.TempPath + 'control.dat');
   ReWrite (tFile);
 
-  Write (tFile, Config.BBSName + CRLF);
+  Write (tFile, bbsCfg.BBSName + CRLF);
   Write (tFile, CRLF);
   Write (tFile, CRLF);
-  Write (tFile, Config.SysopName + CRLF);
-  Write (tFile, '0,' + Config.qwkBBSID + CRLF);
+  Write (tFile, bbsCfg.SysopName + CRLF);
+  Write (tFile, '0,' + bbsCfg.qwkBBSID + CRLF);
   Write (tFile, DateDos2Str(CurDateDos, 1), ',', TimeDos2Str(CurDateDos, 0) + CRLF);
   Write (tFile, strUpper(Session.User.ThisUser.Handle) + CRLF);
   Write (tFile, CRLF);
@@ -4160,9 +4162,11 @@ Begin
     End;
   End;
 
-  Write (tFile, JustFile(Config.qwkWelcome) + CRLF);
-  Write (tFile, JustFile(Config.qwkNews) + CRLF);
-  Write (tFile, JustFile(Config.qwkGoodbye) + CRLF);
+  Close (MBaseFile);
+
+  Write (tFile, JustFile(bbsCfg.qwkWelcome) + CRLF);
+  Write (tFile, JustFile(bbsCfg.qwkNews) + CRLF);
+  Write (tFile, JustFile(bbsCfg.qwkGoodbye) + CRLF);
 
   Close (tFile);
 End;
@@ -4238,8 +4242,8 @@ Begin
   MsgBase^.SeekFirst (LastRead);
 
   While MsgBase^.SeekFound Do Begin
-    If ((Config.QwkMaxBase > 0) and (MsgAdded = Config.QwkMaxBase)) or
-    ((Config.QwkMaxPacket > 0) and (TotalMsgs = Config.QwkMaxPacket)) Then Break;
+    If ((bbsCfg.QwkMaxBase > 0) and (MsgAdded = bbsCfg.QwkMaxBase)) or
+    ((bbsCfg.QwkMaxPacket > 0) and (TotalMsgs = bbsCfg.QwkMaxPacket)) Then Break;
 
     MsgBase^.MsgStartUp;
 
@@ -4424,22 +4428,22 @@ Begin
 
     Session.io.OutFullLn (Session.GetPrompt(233));
 
-    Temp := Config.qwkBBSID + '.qwk';
+    Temp := bbsCfg.qwkBBSID + '.qwk';
 
     Session.io.OutFullLn (Session.GetPrompt(234));
 
     Session.io.PromptInfo[1] := Temp;
 
-    If FileExist(Config.QwkWelcome) Then FileCopy(Config.qwkWelcome, Session.TempPath + JustFile(Config.qwkWelcome));
-    If FileExist(Config.QwkNews)    Then FileCopy(Config.qwkNews,    Session.TempPath + JustFile(Config.qwkNews));
-    If FileExist(Config.QwkGoodbye) Then FileCopy(Config.qwkGoodbye, Session.TempPath + JustFile(Config.qwkGoodbye));
+    If FileExist(bbsCfg.QwkWelcome) Then FileCopy(bbsCfg.qwkWelcome, Session.TempPath + JustFile(bbsCfg.qwkWelcome));
+    If FileExist(bbsCfg.QwkNews)    Then FileCopy(bbsCfg.qwkNews,    Session.TempPath + JustFile(bbsCfg.qwkNews));
+    If FileExist(bbsCfg.QwkGoodbye) Then FileCopy(bbsCfg.qwkGoodbye, Session.TempPath + JustFile(bbsCfg.qwkGoodbye));
 
 //    Session.SystemLog('DEBUG: Archiving QWK packet');
 
     If Session.LocalMode Then Begin
-      FileErase (Config.QWKPath + Temp);
+      FileErase (bbsCfg.QWKPath + Temp);
 
-      Session.FileBase.ExecuteArchive (Config.QWKPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
+      Session.FileBase.ExecuteArchive (bbsCfg.QWKPath + Temp, Session.User.ThisUser.Archive, Session.TempPath + '*', 1);
 
       Session.io.OutFullLn (Session.GetPrompt(235));
     End Else Begin
@@ -4524,24 +4528,24 @@ Var
 
 Begin
   If Session.LocalMode Then
-    Session.FileBase.ExecuteArchive (Config.QWKPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
+    Session.FileBase.ExecuteArchive (bbsCfg.QWKPath + bbsCfg.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
   Else Begin
     If Session.FileBase.SelectProtocol(True, False) = 'Q' Then Exit;
 
-    Session.FileBase.ExecuteProtocol(1, Session.TempPath + Config.qwkBBSID + '.rep');
+    Session.FileBase.ExecuteProtocol(1, Session.TempPath + bbsCfg.qwkBBSID + '.rep');
 
-    If Not Session.FileBase.DszSearch(Config.qwkBBSID + '.rep') Then Begin
-      Session.io.PromptInfo[1] := Config.qwkBBSID + '.rep';
+    If Not Session.FileBase.DszSearch(bbsCfg.qwkBBSID + '.rep') Then Begin
+      Session.io.PromptInfo[1] := bbsCfg.qwkBBSID + '.rep';
 
       Session.io.OutFullLn (Session.GetPrompt(84));
 
       Exit;
     End;
 
-    Session.FileBase.ExecuteArchive (Session.TempPath + Config.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
+    Session.FileBase.ExecuteArchive (Session.TempPath + bbsCfg.qwkBBSID + '.rep', Session.User.ThisUser.Archive, '*', 2)
   End;
 
-  Assign (DataFile, FileFind(Session.TempPath + Config.qwkBBSID + '.msg'));
+  Assign (DataFile, FileFind(Session.TempPath + bbsCfg.qwkBBSID + '.msg'));
 
   If Not ioReset(DataFile, 1, fmRWDN) Then Begin
     Session.io.OutFull (Session.GetPrompt(238));
@@ -4552,7 +4556,7 @@ Begin
   BlockRead (DataFile, QwkBlock[1], 128);
   QwkBlock[0] := #128;
 
-  If Pos(strUpper(Config.qwkBBSID), strUpper(QwkBlock)) = 0 Then Begin
+  If Pos(strUpper(bbsCfg.qwkBBSID), strUpper(QwkBlock)) = 0 Then Begin
     Session.io.OutFullLn (Session.GetPrompt(239));
     Close (DataFile);
     DirClean(Session.TempPath, '');
@@ -4611,6 +4615,7 @@ Begin
                 // reply package, based on the alias/realname setting of the
                 // base itself.  This prevents people from spoofing "From"
                 // fields.
+                // If QWK networking will need to allow this of course
               Else
               If (LineCount < 4) and (Copy(Line, 1, 3) = 'To:') Then Begin
                 MsgBase^.SetTo(strStripB(Copy(Line, 4, Length(Line)), ' '));
@@ -4698,6 +4703,6 @@ Type
 
     Constructor Create (UD: RecUser; Ext: Boolean);
     Function    CreatePacket : Boolean;
-    Function    ProcessReplies : Boolean;
+    Function    ProcessReply (bbsid, temppath, usernum, var user, forcefrom ): Boolean;
     Destructor  Destroy; Override;
   End;

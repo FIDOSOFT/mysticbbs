@@ -16,6 +16,7 @@ Uses
   bbs_Ansi_MenuBox,
   bbs_Ansi_MenuForm,
   bbs_Common,
+  bbs_DataBase,
   bbs_cfg_Common;
 
 Type
@@ -46,12 +47,12 @@ Begin
   Sort.Sort (1, Sort.Total, qAscending);
 
   Close  (FBaseFile);
-  ReName (FBaseFile, Config.DataPath + 'fbases.sortbak');
+  ReName (FBaseFile, bbsCfg.DataPath + 'fbases.sortbak');
 
-  Assign (TempFile, Config.DataPath + 'fbases.sortbak');
+  Assign (TempFile, bbsCfg.DataPath + 'fbases.sortbak');
   Reset  (TempFile);
 
-  Assign  (FBaseFile, Config.DataPath + 'fbases.dat');
+  Assign  (FBaseFile, bbsCfg.DataPath + 'fbases.dat');
   ReWrite (FBaseFile);
 
   While FilePos(TempFile) < SortFirst - 1 Do Begin
@@ -181,7 +182,7 @@ Var
 
     With FBase Do Begin
       FileName := 'new';
-      Path     := Config.SystemPath + 'files' + PathChar + 'new' + PathChar;
+      Path     := bbsCfg.SystemPath + 'files' + PathChar + 'new' + PathChar;
       Name     := 'New File Base';
       FtpName  := Name;
       DefScan  := 1;
@@ -196,7 +197,7 @@ Var
   End;
 
 Begin
-  Assign (FBaseFile, Config.DataPath + 'fbases.dat');
+  Assign (FBaseFile, bbsCfg.DataPath + 'fbases.dat');
 
   If Not ioReset(FBaseFile, SizeOf(FBase), fmRWDN) Then
     Exit;
@@ -238,9 +239,9 @@ Begin
                         KillRecord (FBaseFile, List.Picked, SizeOf(FBase));
 
                         If ShowMsgBox(1, 'Delete data files?') Then Begin
-                          FileErase (Config.DataPath + FBase.FileName + '.dir');
-                          FileErase (Config.DataPath + FBase.FileName + '.dat');
-                          FileErase (Config.DataPath + FBase.FileName + '.scn');
+                          FileErase (bbsCfg.DataPath + FBase.FileName + '.dir');
+                          FileErase (bbsCfg.DataPath + FBase.FileName + '.dat');
+                          FileErase (bbsCfg.DataPath + FBase.FileName + '.scn');
                         End;
 
                         MakeList;
