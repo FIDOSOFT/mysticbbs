@@ -11,11 +11,11 @@ Implementation
 Uses
   m_Strings,
   m_FileIO,
-  bbs_Common,
-  bbs_dataBase,
-  bbs_Ansi_MenuBox,
-  bbs_Ansi_MenuForm,
-  bbs_Cfg_Common;
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Ansi_MenuBox,
+  BBS_Ansi_MenuForm,
+  BBS_Cfg_Common;
 
 Procedure EditLevel (Var Sec: RecSecurity);
 Var

@@ -9,11 +9,12 @@ Implementation
 Uses
   m_FileIO,
   m_Strings,
-  bbs_Ansi_MenuBox,
-  bbs_Ansi_MenuForm,
-  bbs_cfg_Common,
-  bbs_dataBase,
-  bbs_Common;
+  BBS_Ansi_MenuBox,
+  BBS_Ansi_MenuForm,
+  BBS_Cfg_Common,
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Common;
 
 Procedure EditGroup (Var Group: RecGroup);
 Var

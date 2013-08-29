@@ -8,7 +8,7 @@ Uses
   m_Output,
   m_IniReader,
   mutil_Status,
-  bbs_DataBase,
+  bbs_Records,
   bbs_MsgBase_Abs,
   bbs_MsgBase_Squish,
   bbs_MsgBase_JAM;

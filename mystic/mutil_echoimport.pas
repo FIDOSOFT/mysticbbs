@@ -13,7 +13,7 @@ Uses
   m_FileIO,
   m_Strings,
   AView,
-  bbs_DataBase,
+  BBS_Records,
   BBS_MsgBase_ABS,
   BBS_MsgBase_JAM,
   BBS_MsgBase_Squish,

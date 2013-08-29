@@ -40,10 +40,9 @@ Implementation
 
 Uses
   m_Strings,
-  bbs_Ansi_MenuBox,
-  bbs_Core,
-  bbs_Common,
-  bbs_dataBase,
+  BBS_Records,
+  BBS_Ansi_MenuBox,
+  BBS_Core,
   MPL_Execute;
 
 Constructor TAnsiMenuHelp.Create;

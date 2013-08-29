@@ -6,8 +6,7 @@ Interface
 
 Uses
   m_Strings,
-  BBS_Common,
-  bbs_dataBase;
+  BBS_Records;
 
 Type
   RecAnsiBufferChar = Record

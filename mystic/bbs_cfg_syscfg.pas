@@ -26,10 +26,10 @@ Implementation
 
 Uses
   m_Strings,
-  bbs_Common,
-  bbs_dataBase,
-  bbs_ansi_MenuBox,
-  bbs_ansi_MenuForm;
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Ansi_MenuBox,
+  BBS_Ansi_MenuForm;
 
 Procedure Configuration_SysPaths;
 Var

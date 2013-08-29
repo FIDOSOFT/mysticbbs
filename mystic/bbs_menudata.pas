@@ -6,7 +6,7 @@ Interface
 
 Uses
   m_Strings,
-  bbs_dataBase;
+  BBS_Records;
 
 Type
   TMenuData = Class

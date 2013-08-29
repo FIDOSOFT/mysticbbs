@@ -14,7 +14,7 @@ Uses
   m_DateTime,
   mUtil_Common,
   mUtil_Status,
-  bbs_DataBase;
+  BBS_Records;
 
 Procedure uImportFilesBBS;
 Var

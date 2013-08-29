@@ -11,11 +11,12 @@ Implementation
 Uses
   m_FileIO,
   m_Strings,
-  bbs_Common,
-  bbs_dataBase,
-  bbs_ansi_MenuBox,
-  bbs_ansi_MenuForm,
-  bbs_cfg_Common;
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Common,
+  BBS_Ansi_MenuBox,
+  BBS_Ansi_MenuForm,
+  BBS_Cfg_Common;
 
 Procedure EditProtocol (Var Prot: RecProtocol);
 Var

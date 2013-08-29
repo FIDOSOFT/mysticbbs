@@ -6,7 +6,8 @@ Interface
 
 Uses
   BBS_Common,
-  bbs_DataBase;
+  BBS_Records,
+  BBS_DataBase;
 
 Type
   RecNodeSearch = Record

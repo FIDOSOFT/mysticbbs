@@ -12,11 +12,12 @@ Implementation
 Uses
   m_Strings,
   m_FileIO,
-  bbs_Common,
-  bbs_DataBase,
-  bbs_Core,
-  bbs_FileBase,
-  bbs_User;
+  BBS_Common,
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Core,
+  BBS_FileBase,
+  BBS_User;
 
 Var
   CurLine : Integer;

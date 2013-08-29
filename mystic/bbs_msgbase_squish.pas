@@ -5,9 +5,8 @@ Unit BBS_MsgBase_Squish;
 Interface
 
 Uses
-  BBS_MsgBase_Abs,
-  BBS_Common,
-  bbs_dataBase,
+  BBS_Records,
+  BBS_MsgBase_ABS,
   DOS;
 
 Const

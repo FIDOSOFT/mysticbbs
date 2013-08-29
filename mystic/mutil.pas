@@ -33,6 +33,7 @@ Uses
   m_Strings,
   m_FileIO,
   m_IniReader,
+  BBS_Records,
   mUtil_Common,
   mUtil_Status,
   mUtil_ImportNA,

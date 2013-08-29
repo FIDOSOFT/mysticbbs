@@ -19,6 +19,7 @@ Uses
   bbs_Ansi_MenuForm,
   BBS_Core,
   BBS_Common,
+  BBS_Records,
   BBS_MenuData,
   bbs_dataBase,
   bbs_cfg_Theme,

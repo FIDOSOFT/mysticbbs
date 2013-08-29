@@ -6,8 +6,7 @@ Interface
 
 Uses
   BBS_Core,
-  BBS_Common,
-  bbs_dataBase;
+  BBS_Records;
 
 Function  GetNodeByIndex       (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
 Procedure AddExportByBase      (Var MBase: RecMessageBase; Idx: LongInt);
@@ -27,7 +26,9 @@ Uses
   bbs_Ansi_MenuBox,
   bbs_Ansi_MenuForm,
   bbs_cfg_Common,
-  bbs_Cfg_MsgBase;
+  bbs_Cfg_MsgBase,
+  BBS_Common,
+  BBS_DataBase;
 
 Function IsExportNode (Var MBase: RecMessageBase; Idx: LongInt) : Boolean;
 Var
@@ -239,7 +240,7 @@ Begin
                       NewIdx := Configuration_MessageBaseEditor(False);
 
                       If NewIdx <> -1 Then
-                        If Session.Msgs.GetBaseByIndex(NewIdx, MBase) Then Begin
+                        If GetMBaseByIndex(NewIdx, MBase) Then Begin
                           If MBase.EchoTag = '' Then
                             ShowMsgBox(0, 'Missing ECHOTAG for ' + strStripPipe(MBase.Name))
                           Else
@@ -248,7 +249,7 @@ Begin
                     End;
               'D' : If List.ListMax > 0 Then
                       If ShowMsgBox(1, 'Delete this entry?') Then
-                        If Session.Msgs.GetBaseByIndex (strS2I(strWordGet(1, List.List[List.Picked]^.Name, ' ')), MBase) Then Begin
+                        If GetMBaseByIndex (strS2I(strWordGet(1, List.List[List.Picked]^.Name, ' ')), MBase) Then Begin
 
                         RemoveExportFromBase(MBase, Node.Index);
                       End;

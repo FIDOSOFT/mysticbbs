@@ -17,10 +17,10 @@ Uses
   mUtil_Common,
   mUtil_Status,
   mUtil_EchoCore,
-  bbs_DataBase,
-  bbs_MsgBase_ABS,
-  bbs_MsgBase_JAM,
-  bbs_MsgBase_Squish;
+  BBS_Records,
+  BBS_MsgBase_ABS,
+  BBS_MsgBase_JAM,
+  BBS_MsgBase_Squish;
 
 Procedure AddToFLOQueue (FloName, PacketFN: String);
 Var

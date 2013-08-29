@@ -18,10 +18,11 @@ Uses
   m_Strings,
   m_DateTime,
   m_FileIO,
-  bbs_Common,
-  bbs_dataBase,
-  bbs_Core,
-  bbs_User;
+  BBS_Records,
+  BBS_Common,
+  BBS_DataBase,
+  BBS_Core,
+  BBS_User;
 
 Const
   Ending : String[2] = #13#10;

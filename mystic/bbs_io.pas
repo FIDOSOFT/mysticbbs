@@ -18,8 +18,7 @@ Uses
   m_FileIO,
   m_Strings,
   m_Term_Ansi,
-  bbs_Common,
-  bbs_dataBase;
+  BBS_Records;
 
 Const
   TBBSIOBufferSize = 4 * 1024 - 1;
@@ -119,7 +118,9 @@ Implementation
 
 Uses
   DOS,
-  bbs_Core,
+  BBS_Core,
+  BBS_DataBase,
+  BBS_Common,
   bbs_General,
   bbs_NodeInfo;
 
@@ -602,7 +603,7 @@ Begin
             'G' : LastMCIValue := strI2S(DaysAgo(TBBSCore(Core).User.ThisUser.Birthday, 1) DIV 365);
             'O' : AllowAbort := False;
             'S' : LastMCIValue := OutON(TBBSCore(Core).User.ThisUser.SigUse);
-            'V' : LastMCIValue := OutYN(Chat.Available);
+            'V' : LastMCIValue := OutYN(Session.Chat.Available);
           End;
     'B' : Case Code[2] of
             'D' : If TBBSCore(Core).LocalMode Then
@@ -656,7 +657,7 @@ Begin
                     FmtString := True;
                     FmtType   := 12;
                   End;
-            'L' : LastMCIValue := OutON(Chat.Invisible);
+            'L' : LastMCIValue := OutON(Session.Chat.Invisible);
             'S' : Begin
                     FmtString := True;
                     FmtType   := 14;

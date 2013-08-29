@@ -6,9 +6,8 @@ Interface
 
 Uses
   m_Types,
-  bbs_Ansi_MenuInput,
-  bbs_dataBase,
-  bbs_Common;
+  BBS_Records,
+  BBS_Ansi_MenuInput;
 
 Const
   FormMaxItems = 60;
@@ -137,8 +136,9 @@ Implementation
 Uses
   m_FileIO,
   m_Strings,
-  bbs_Core,
-  bbs_Ansi_MenuBox;
+  BBS_Common,
+  BBS_Core,
+  BBS_Ansi_MenuBox;
 
 Constructor TAnsiMenuForm.Create;
 Begin

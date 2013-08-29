@@ -8,14 +8,15 @@ Uses
   m_FileIO,
   m_Strings,
   m_DateTime,
-  bbs_Common,
-  bbs_dataBase,
-  bbs_General,
-  bbs_MsgBase,
-  bbs_FileBase,
-  bbs_Menus,
-  bbs_NodeInfo,
-  mpl_Execute;
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Common,
+  BBS_General,
+  BBS_MsgBase,
+  BBS_FileBase,
+  BBS_Menus,
+  BBS_NodeInfo,
+  MPL_Execute;
 
 Type
   TBBSUser = Class
@@ -74,7 +75,7 @@ Type
 Implementation
 
 Uses
-  bbs_Core;
+  BBS_Core;
 
 Constructor TBBSUser.Create (Var Owner: Pointer);
 Begin
@@ -166,8 +167,8 @@ Var
       'M' : Res := strS2I(Data) < strS2I(Copy(TimeDos2Str(CurDateDos, 0), 4, 2));
       'N' : Res := strS2I(Data) = Session.NodeNum;
       'O' : Case Data[1] of
-              'A' : Res := Chat.Available;
-              'I' : Res := Chat.Invisible;
+              'A' : Res := Session.Chat.Available;
+              'I' : Res := Session.Chat.Invisible;
               'K' : Res := AcsOkFlag;
               'M' : Begin
                       Res := Access(Session.Msgs.MBase.SysopACS);
@@ -1026,9 +1027,11 @@ Begin
   Write (UserFile, ThisUser);
   Close (UserFile);
 
-  Reset (ConfigFile);
-  Write (ConfigFile, bbsCfg);
-  Close (ConfigFile);
+  PutBaseConfiguration(bbsCfg);
+
+//  Reset (ConfigFile);
+//  Write (ConfigFile, bbsCfg);
+//  Close (ConfigFile);
 
   Session.SystemLog ('Created Account: ' + ThisUser.Handle);
 
@@ -1056,14 +1059,14 @@ Begin
 
   {$IFDEF LOGGING} Session.SystemLog('Logon3'); {$ENDIF}
 
-  Chat.Available := True;
+  Session.Chat.Available := True;
 
   If Access(bbsCfg.AcsInvisLogin) Then
-    Chat.Invisible := Session.io.GetYN(Session.GetPrompt(308), False);
+    Session.Chat.Invisible := Session.io.GetYN(Session.GetPrompt(308), False);
 
 { update last caller information }
 
-  If Not Session.LocalMode And Not Chat.Invisible And (ThisUser.Flags AND UserNoLastCall = 0) Then Begin
+  If Not Session.LocalMode And Not Session.Chat.Invisible And (ThisUser.Flags AND UserNoLastCall = 0) Then Begin
     Reset (LastOnFile);
 
     If FileSize(LastOnFile) >= 10 Then
@@ -1262,7 +1265,7 @@ Begin
     End;
 
   Session.io.OutFullLn ('|CL' + mysSoftwareID + ' v' + mysVersion + ' for ' + OSID + ' Node |ND');
-  Session.io.OutFullLn (CopyID);
+  Session.io.OutFullLn (mysCopyNotice);
 
   If bbsCfg.DefTermMode = 0 Then
     GetGraphics
@@ -1426,11 +1429,11 @@ Begin
             Session.LoadThemeData(Data);
     15  : GetEditor(True);
     16  : If Access(bbsCfg.AcsInvisLogin) Then Begin
-            Chat.Invisible := Not Chat.Invisible;
-            Set_Node_Action (Chat.Action);
+            Session.Chat.Invisible := Not Session.Chat.Invisible;
+            Set_Node_Action (Session.Chat.Action);
           End;
     17  : GetFileList(True);
-    18  : Chat.Available := Not Chat.Available;
+    18  : Session.Chat.Available := Not Session.Chat.Available;
     19  : GetHotKeys(True);
     20  : GetMsgList(True);
     21  : ThisUser.UseLBIndex := Not ThisUser.UseLBIndex;

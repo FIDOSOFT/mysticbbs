@@ -18,8 +18,9 @@ Uses
   bbs_Ansi_MenuForm,
   bbs_Cfg_Common,
   bbs_Cfg_EchoMail,
-  bbs_Common,
-  bbs_dataBase;
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Common;
 
 Type
   RecMessageBaseFile = File of RecMessageBase;

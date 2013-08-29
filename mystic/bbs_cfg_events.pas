@@ -12,11 +12,12 @@ Uses
   m_Strings,
   m_DateTime,
   m_FileIO,
-  bbs_Common,
-  bbs_dataBase,
-  bbs_ansi_MenuBox,
-  bbs_ansi_MenuForm,
-  bbs_cfg_Common;
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Common,
+  BBS_Ansi_MenuBox,
+  BBS_Ansi_MenuForm,
+  BBS_Cfg_Common;
 
 Procedure EditEvent (Var Event: RecEvent);
 Var

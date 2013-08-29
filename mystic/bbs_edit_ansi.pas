@@ -6,7 +6,7 @@ Interface
 
 Uses
   m_FileIO,
-  bbs_MsgBase_ANSI;
+  BBS_MsgBase_Ansi;
 
 Const
   fseMaxCutText = 60;
@@ -89,10 +89,9 @@ Implementation
 
 Uses
   m_Strings,
-  bbs_Core,
-  bbs_DataBase,
-  bbs_Common,
-  bbs_Ansi_MenuBox;
+  BBS_Records,
+  BBS_Core,
+  BBS_Ansi_MenuBox;
 
 Constructor TEditorANSI.Create (Var O: Pointer; TemplateFile: String);
 Begin

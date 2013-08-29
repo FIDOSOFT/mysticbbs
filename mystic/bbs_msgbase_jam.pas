@@ -11,9 +11,9 @@ Interface
 
 Uses
   m_Strings,
-  bbs_Common,
-  bbs_dataBase,
-  bbs_MsgBase_ABS;
+  BBS_Records,
+  BBS_Common,
+  BBS_MsgBase_ABS;
 
 Const
   JamIdxBufSize = 200;

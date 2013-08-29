@@ -7,8 +7,8 @@ Interface
 Uses
   m_FileIO,
   m_DateTime,
-  bbs_Common,
-  bbs_dataBase,
+  BBS_Records,
+  BBS_Common,
   bbs_General,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
@@ -35,12 +35,12 @@ Type
     Destructor  Destroy; Override;
 
     Function    IsQuotedText        (Str: String) : Boolean;
-    Function    OpenCreateBase      (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
+//    Function    OpenCreateBase      (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
     Procedure   AppendMessageText   (Var Msg: PMsgBaseABS; Lines: Integer; ReplyID: String);
     Procedure   AssignMessageData   (Var Msg: PMsgBaseABS; Var TempBase: RecMessageBase);
     Function    GetBaseByNum        (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Function    GetBaseCompressed   (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
-    Function    GetBaseByIndex      (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+//    Function    GetBaseByIndex      (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Function    GetMessageStats     (List, ShowPrompt, ShowYou: Boolean; Var ListPtr: LongInt; Var TempBase: RecMessageBase; NoFrom, NoRead: Boolean; Var Total, New, Yours: LongInt) : Boolean;
     Procedure   GetMailStats        (Var Total, UnRead: LongInt);
     Function    GetMatchedAddress   (Orig, Dest: RecEchoMailAddr) : RecEchoMailAddr;
@@ -80,6 +80,9 @@ Implementation
 
 Uses
   m_Strings,
+//  BBS_Records,
+//  BBS_Common,
+  BBS_DataBase,
   bbs_Core,
   bbs_User,
   bbs_NodeInfo,
@@ -303,6 +306,7 @@ Begin
   Result := (Temp > 0) and (Temp < 5);
 End;
 
+(*
 Function TMsgBase.OpenCreateBase (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
 Begin
   Result := False;
@@ -327,6 +331,7 @@ Begin
 
   Result := True;
 End;
+*)
 
 Function TMsgBase.GetBaseByNum (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
 Var
@@ -374,6 +379,7 @@ Begin
   Result := Count = Num;
 End;
 
+(*
 Function TMsgBase.GetBaseByIndex (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
 Var
   F : File;
@@ -395,6 +401,7 @@ Begin
 
   Close (F);
 End;
+*)
 
 Function TMsgBase.GetTotalBases (Compressed: Boolean) : LongInt;
 Var
@@ -429,7 +436,7 @@ Begin
 
   If TempBase.Name = 'None' Then Exit;
 
-  If OpenCreateBase(TempMsg, TempBase) Then Begin
+  If MBaseOpenCreate(TempMsg, TempBase, Session.TempPath) Then Begin
     Result := TempMsg^.NumberOfMsgs;
 
     TempMsg^.CloseMsgBase;
@@ -449,7 +456,7 @@ Begin
 
   If TempBase.Name = 'None' Then Exit;
 
-  If OpenCreateBase(TempMsg, TempBase) Then Begin
+  If MBaseOpenCreate(TempMsg, TempBase, Session.TempPath) Then Begin
     Total := TempMsg^.NumberOfMsgs;
 
     TempMsg^.SeekFirst(TempMsg^.GetLastRead(Session.User.UserNum) + 1);
@@ -550,7 +557,7 @@ Begin
   Read  (MBaseFile, TempBase);
   Close (MBaseFile);
 
-  If OpenCreateBase (MsgBase, TempBase) Then Begin
+  If MBaseOpenCreate (MsgBase, TempBase, Session.TempPath) Then Begin
     MsgBase^.SeekFirst (1);
 
     While MsgBase^.SeekFound Do Begin
@@ -1404,7 +1411,7 @@ Begin
   If Editor(Lines, ColumnValue[Session.Theme.ColumnSize] - 2, mysMaxMsgLines, False, fn_tplMsgEdit, Subj) Then Begin
     Session.io.OutFull (Session.GetPrompt(107));
 
-    If Not OpenCreateBase(MsgNew, ReplyBase) Then Exit;
+    If Not MBaseOpenCreate(MsgNew, ReplyBase, Session.TempPath) Then Exit;
 
     AssignMessageData(MsgNew, ReplyBase);
 
@@ -1666,7 +1673,7 @@ Var
 
                Session.io.OutFullLn (Session.GetPrompt(318));
 
-               If Not OpenCreateBase(MsgNew, TempBase) Then Break;
+               If Not MBaseOpenCreate(MsgNew, TempBase, Session.TempPath) Then Break;
 
                MsgNew^.StartNewMsg;
 
@@ -3151,7 +3158,7 @@ Begin
     { notifications out to the sysop for various things (configurable)   }
     { also could be used in mass email rewrite and qwk .REP rewrite      }
 
-    If Not OpenCreateBase(MsgBase, MBase) Then Begin
+    If Not MBaseOpenCreate(MsgBase, MBase, Session.TempPath) Then Begin
       MBase                    := Old;
       Session.User.IgnoreGroup := SaveGroup;
 
@@ -3238,7 +3245,7 @@ Begin
       Exit;
   End;
 
-  If OpenCreateBase (MsgBase, MBase) Then Begin
+  If MBaseOpenCreate (MsgBase, MBase, Session.TempPath) Then Begin
     MsgBase^.SeekFirst (1);
 
     While MsgBase^.SeekFound Do Begin
@@ -3288,7 +3295,8 @@ End;
 
 Procedure TMsgBase.SetMessagePointers (ForceGlobal: Boolean);
 Var
-  NewDate : LongInt;
+  NewDate  : LongInt;
+  TempBase : RecMessageBase;
 
   Procedure UpdateBase;
   Var
@@ -3296,12 +3304,12 @@ Var
   Begin
     Found := False;
 
-    Case MBase.BaseType of
+    Case TempBase.BaseType of
       0 : MsgBase := New(PMsgBaseJAM, Init);
       1 : MsgBase := New(PMsgBaseSquish, Init);
     End;
 
-    MsgBase^.SetMsgPath (MBase.Path + MBase.FileName);
+    MsgBase^.SetMsgPath (TempBase.Path + TempBase.FileName);
 
     If MsgBase^.OpenMsgBase Then Begin
       MsgBase^.SeekFirst(1);
@@ -3344,14 +3352,18 @@ Begin
 
   If ForceGlobal Then Begin
     ioReset (MBaseFile, SizeOf(RecMessageBase), fmRWDN);
-    ioRead  (MBaseFile, MBase);
+    ioRead  (MBaseFile, TempBase);
 
     While Not Eof(MBaseFile) Do Begin
-      ioRead (MBaseFile, MBase);
+      ioRead (MBaseFile, TempBase);
+
       UpdateBase;
     End;
-  End Else
+  End Else Begin
+    TempBase := MBase;
+
     UpdateBase;
+  End;
 End;
 
 Procedure TMsgBase.MessageNewScan (Data: String);
@@ -3844,7 +3856,7 @@ Begin
 // 3) add autosig?  if we cannot use the assignmsgdata things
   Result := False;
 
-  If Not OpenCreateBase(Msg, mArea) Then Exit;
+  If Not MBaseOpenCreate(Msg, mArea, Session.TempPath) Then Exit;
 
   Msg^.StartNewMsg;
   Msg^.SetLocal (True);
@@ -4238,7 +4250,7 @@ Var
 Begin
   MsgAdded := 0;
 
-  If Not OpenCreateBase(MsgBase, MBase) Then Exit;
+  If Not MBaseOpenCreate(MsgBase, MBase, Session.TempPath) Then Exit;
 
   Session.io.OutFull (Session.GetPrompt(231));
 
@@ -4389,7 +4401,7 @@ Begin
 
   FileMode := 66;
   Old      := MBase;
-  Temp     := strPadR('Produced By ' + mysSoftwareID + ' v' + mysVersion + '. ' + CopyID, 128, ' ');
+  Temp     := strPadR('Produced By ' + mysSoftwareID + ' v' + mysVersion + '. ' + mysCopyNotice, 128, ' ');
 
   Assign     (DataFile, Session.TempPath + 'messages.dat');
   ReWrite    (DataFile, 1);
@@ -4484,13 +4496,14 @@ Begin
         Dispose(MsgBase, Done);
       End;
       Close (QwkLRFile);
+      Close (MBaseFile);
     End;
   End Else
     Session.io.OutFullLn (Session.GetPrompt(228));
 
   Session.User.IgnoreGroup := False;
 
-  Close (MBaseFile);
+// Close (MBaseFile);
 
   MBase := Old;
 
@@ -4521,7 +4534,7 @@ Var
   Begin
     OldBase := MBase;
 
-    If GetBaseByIndex(Idx, MBase) Then Begin
+    If GetMBaseByIndex(Idx, MBase) Then Begin
       GetMessageScan;
 
       MScan.QwkScan := Mode;
@@ -4580,9 +4593,9 @@ Begin
 
     QwkBlock[0] := #7;
 
-    If GetBaseByIndex(strS2I(QwkBlock), TempBase) Then Begin
+    If GetMBaseByIndex(strS2I(QwkBlock), TempBase) Then Begin
 
-      If OpenCreateBase(MsgBase, TempBase) Then Begin
+      If MBaseOpenCreate(MsgBase, TempBase, Session.TempPath) Then Begin
 
         AssignMessageData(MsgBase, TempBase);
 

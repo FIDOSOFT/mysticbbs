@@ -3588,4 +3588,7 @@
    wants to update their current base, and will instead force the update for
    all message bases.
 
+ ! Mystic was changing the user's message base to the last base processed
+   when globally resetting the new message scan date.
+
    <ALPHA 37 RELEASED>

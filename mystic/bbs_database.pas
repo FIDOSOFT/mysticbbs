@@ -1,20 +1,14 @@
-Unit bbs_dataBase;
-
-// This unit us a work in progress designed to move lower level functions
-// away from session-tied objects and into a unit usable for external
-// utilities.  Keeping them procedural instead of object-based also has some
-// additional smartlinking benefits in the long run.
-
-// The drawback of a non-abstract object is that we cannot easily define
-// alternate data sources such as a INI or SQL backend.  Because of that,
-// this MAY change in the future -- particularly if we can smartlink at the
-// method level of classes in future FP releases.
+Unit BBS_DataBase;
 
 {$I M_OPS.PAS}
 
 Interface
 
-{$I RECORDS.PAS}
+Uses
+  BBS_Records,
+  BBS_MsgBase_ABS,
+  BBS_MsgBase_JAM,
+  BBS_MsgBase_Squish;
 
 Var
   bbsCfg       : RecConfig;
@@ -33,6 +27,7 @@ Function  PutBaseConfiguration  (Var TempCfg: RecConfig) : Boolean;
 
 // MESSAGE BASE
 
+Function  MBaseOpenCreate       (Var Msg: PMsgBaseABS; Var Area: RecMessageBase; TP: String) : Boolean;
 Function  GetMBaseByIndex       (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
 Procedure GetMessageScan        (UN: Cardinal; TempBase: RecMessageBase; Var TempScan: MScanRec);
 Procedure PutMessageScan        (UN: Cardinal; TempBase: RecMessageBase; TempScan: MScanRec);
@@ -41,11 +36,16 @@ Procedure PutMessageScan        (UN: Cardinal; TempBase: RecMessageBase; TempSca
 
 Function  GetTotalFiles         (Var TempBase: RecFileBase) : LongInt;
 
+// USER
+
+Function IsThisUser             (U: RecUser; Str: String) : Boolean;
+
 Implementation
 
 Uses
   DOS,
-  m_FileIO;
+  m_FileIO,
+  m_Strings;
 
 Function GetBaseConfiguration (UseEnv: Boolean; Var TempCfg: RecConfig) : Byte;
 Var
@@ -168,6 +168,33 @@ Begin
   Close   (ScanFile);
 End;
 
+Function MBaseOpenCreate (Var Msg: PMsgBaseABS; Var Area: RecMessageBase; TP: String) : Boolean;
+Begin
+  Result := False;
+
+  Case Area.BaseType of
+    0 : Msg := New(PMsgBaseJAM, Init);
+    1 : Msg := New(PMsgBaseSquish, Init);
+  End;
+
+  Msg^.SetMsgPath  (Area.Path + Area.FileName);
+  Msg^.SetTempFile (TP + 'msgbuf.');
+
+  If Not Msg^.OpenMsgBase Then
+    If Not Msg^.CreateMsgBase (Area.MaxMsgs, Area.MaxAge) Then Begin
+      Dispose (Msg, Done);
+
+      Exit;
+    End Else
+    If Not Msg^.OpenMsgBase Then Begin
+      Dispose (Msg, Done);
+
+      Exit;
+    End;
+
+  Result := True;
+End;
+
 Function GetTotalFiles (Var TempBase: RecFileBase) : LongInt;
 Begin
   Result := 0;
@@ -178,6 +205,12 @@ Begin
 
   If Result > 0 Then
     Result := Result DIV SizeOf(RecFileList);
+End;
+
+Function IsThisUser (U: RecUser; Str: String) : Boolean;
+Begin
+  Str    := strUpper(Str);
+  Result := (strUpper(U.RealName) = Str) or (strUpper(U.Handle) = Str);
 End;
 
 Initialization

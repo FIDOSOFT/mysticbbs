@@ -542,6 +542,8 @@ Begin
 
   Console.SetWindowTitle(WinTitle);
 
+  // process command lines here and exit
+
   If Not ServerStartup Then Begin
     Console.ClearScreen;
     Console.WriteLine('ERROR: No servers are configured as active.');

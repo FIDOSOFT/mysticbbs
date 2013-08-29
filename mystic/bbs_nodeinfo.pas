@@ -5,8 +5,7 @@ Unit bbs_NodeInfo;
 Interface
 
 Uses
-  bbs_Common,
-  bbs_dataBase;
+  BBS_Records;
 
 Function  GetChatRecord     (Node: Byte; Var Chat: ChatRec) : Boolean;
 Function  IsUserOnline      (UserName: String) : Word;
@@ -22,9 +21,11 @@ Uses
   m_DateTime,
   m_Strings,
   m_FileIO,
-  bbs_Core,
-  bbs_User,
-  bbs_UserChat;
+  BBS_DataBase,
+  BBS_Common,
+  BBS_Core,
+  BBS_User,
+  BBS_UserChat;
 
 Function GetChatRecord (Node: Byte; Var Chat: ChatRec) : Boolean;
 Begin
@@ -62,25 +63,26 @@ Begin
   ReWrite (ChatFile);
 
   If Action <> '' Then Begin
-    Chat.Active    := True;
-    Chat.Name      := Session.User.ThisUser.Handle;
-    Chat.Location  := Session.User.ThisUser.City;
-    Chat.Action    := Action;
-    Chat.Gender    := Session.User.ThisUser.Gender;
-    Chat.Age       := DaysAgo(Session.User.ThisUser.Birthday, 1) DIV 365;
+    Session.Chat.Active    := True;
+    Session.Chat.Name      := Session.User.ThisUser.Handle;
+    Session.Chat.Location  := Session.User.ThisUser.City;
+    Session.Chat.Action    := Action;
+    Session.Chat.Gender    := Session.User.ThisUser.Gender;
+    Session.Chat.Age       := DaysAgo(Session.User.ThisUser.Birthday, 1) DIV 365;
+
     If Session.LocalMode Then
-      Chat.Baud := 'LOCAL' {++lang}
+      Session.Chat.Baud := 'LOCAL' {++lang}
     Else
-      Chat.Baud := 'TELNET'; {++lang}
+      Session.Chat.Baud := 'TELNET'; {++lang}
   End Else Begin
-    Chat.Active    := False;
-    Chat.Invisible := False;
-    Chat.Available := False;
-    Chat.Age       := 0;
-    Chat.Gender    := '?';
+    Session.Chat.Active    := False;
+    Session.Chat.Invisible := False;
+    Session.Chat.Available := False;
+    Session.Chat.Age       := 0;
+    Session.Chat.Gender    := '?';
   End;
 
-  Write  (ChatFile, Chat);
+  Write  (ChatFile, Session.Chat);
   Close  (ChatFile);
 
   {$IFDEF WINDOWS}

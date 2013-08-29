@@ -18,7 +18,7 @@ Uses
   m_Input,
   m_DateTime,
   m_FileIO,
-  bbs_dataBase;
+  BBS_Records;
 
 // This unit is very old (like 1994) and its functions need to be phased out
 // This is the stuff that hasn't been worked into a class somewhere or
@@ -26,7 +26,6 @@ Uses
 
 Const
   WinConsoleTitle = mysSoftwareID + ' Node ';
-  CopyID          = 'Copyright (C) ' + mysCopyYear + ' By James Coyle';
   DateTypeStr : Array[1..4] of String[8] = ('MM/DD/YY', 'DD/MM/YY', 'YY/DD/MM', 'Ask     ');
 
 Var
@@ -36,7 +35,6 @@ Var
   ConfigFile  : File of RecConfig;
   ChatFile    : File of ChatRec;
   RoomFile    : File of RoomRec;
-  Chat        : ChatRec;
   Room        : RoomRec;
   LastOnFile  : File of RecLastOn;
   LastOn      : RecLastOn;
@@ -60,6 +58,7 @@ Implementation
 Uses
   DOS,
   bbs_Core,
+  BBS_DataBase,
   {$IFNDEF UNIX}
     bbs_SysOpChat,
   {$ENDIF}

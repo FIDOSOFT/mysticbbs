@@ -13,8 +13,7 @@ Uses
   m_Strings,
   m_Pipe,
   m_DateTime,
-  bbs_dataBase,
-//  BBS_Common,
+  BBS_Records,
   BBS_IO,
   BBS_MsgBase,
   BBS_User,
@@ -40,6 +39,7 @@ Type
     ThemeFile      : File of RecTheme;
     VoteFile       : File of VoteRec;
     Vote           : VoteRec;
+    Chat           : ChatRec;
     CommHandle     : LongInt;
     ShutDown       : Boolean;
     TempPath       : String;
@@ -102,6 +102,9 @@ Var
   Session : TBBSCore;
 
 Implementation
+
+Uses
+  BBS_DataBase;
 
 Constructor TBBSCore.Create;
 Begin

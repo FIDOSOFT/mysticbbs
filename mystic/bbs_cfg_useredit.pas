@@ -3,8 +3,7 @@ Unit bbs_Cfg_UserEdit;
 Interface
 
 Uses
-  bbs_Common,
-  bbs_dataBase;
+  BBS_Records;
 
 Procedure Configuration_EditUser       (Var U: RecUser);
 Procedure Configuration_UserEditor;
@@ -22,6 +21,8 @@ Uses
   bbs_io,
   bbs_Core,
   bbs_General,
+  BBS_Common,
+  BBS_DataBase,
   bbs_Cfg_SecLevel;
 
 Procedure Configuration_EditUser (Var U: RecUser);

@@ -691,6 +691,9 @@ Var
   Res      : LongInt;
 Begin
   If LoggedIn Then Begin
+    // if name = bbsid.qwk or if user is network and name is userid.qwk then
+    // send file here
+    // else do the normal stuff
     TempPos := FindDirectory(TempBase);
 
     If TempPos = -1 Then Begin

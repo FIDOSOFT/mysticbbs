@@ -13,11 +13,12 @@ Uses
   m_Strings,
   m_FileIO,
   m_QuickSort,
-  bbs_Ansi_MenuBox,
-  bbs_Ansi_MenuForm,
-  bbs_Common,
-  bbs_DataBase,
-  bbs_cfg_Common;
+  BBS_Ansi_MenuBox,
+  BBS_Ansi_MenuForm,
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Common,
+  BBS_Cfg_Common;
 
 Type
   RecFileBaseFile = File of RecFileBase;

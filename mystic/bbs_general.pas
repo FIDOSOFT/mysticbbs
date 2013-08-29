@@ -11,8 +11,8 @@ Uses
     Windows,
     bbs_SysopChat,
   {$ENDIF}
-  bbs_Common,
-  bbs_database,
+  BBS_Records,
+  BBS_Common,
   bbs_Edit_ANSI,
   bbs_Edit_Line;
 
@@ -51,6 +51,7 @@ Uses
   m_FileIO,
   m_QuickSort,
   bbs_Core,
+  BBS_DataBase,
   bbs_MsgBase_Ansi,
   bbs_NodeInfo;
 

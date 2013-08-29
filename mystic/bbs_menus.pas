@@ -5,8 +5,9 @@ Unit BBS_Menus;
 Interface
 
 Uses
+  BBS_Records,
   BBS_Common,
-  bbs_dataBase,
+  BBS_DataBase,
   BBS_MenuData,
   MPL_Execute;
 

@@ -11,10 +11,10 @@ Implementation
 Uses
   m_FileIO,
   m_Strings,
+  BBS_Records,
+  BBS_Common,
   mUtil_Common,
-  mUtil_Status,
-  bbs_Common,
-  bbs_DataBase;
+  mUtil_Status;
 
 Procedure uPostMessages;
 Const

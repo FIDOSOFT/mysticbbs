@@ -41,6 +41,7 @@ Uses
   m_Output,
   m_Input,
   m_Pipe,
+  BBS_Records,
   bbs_Common,
   bbs_DataBase,
   bbs_Core,

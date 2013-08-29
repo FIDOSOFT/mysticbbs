@@ -14,7 +14,7 @@ Uses
   m_Strings,
   mUtil_Common,
   mUtil_Status,
-  bbs_DataBase;
+  BBS_Records;
 
 Procedure uImportMessageBases;
 Var

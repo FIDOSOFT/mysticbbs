@@ -13,10 +13,10 @@ Uses
   m_Strings,
   m_FileIO,
   m_DateTime,
-  bbs_Core,
-  bbs_Common,
-  bbs_dataBase,
-  bbs_NodeInfo;
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Core,
+  BBS_NodeInfo;
 
 Procedure PageUserForChat;
 Var

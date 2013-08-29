@@ -12,13 +12,14 @@ Uses
   m_Types,
   m_FileIO,
   m_Strings,
-  bbs_Ansi_MenuBox,
-  bbs_Ansi_MenuForm,
-  bbs_Ansi_MenuInput,
-  bbs_Core,
-  bbs_Common,
-  bbs_dataBase,
-  bbs_Cfg_Common;
+  BBS_Ansi_MenuBox,
+  BBS_Ansi_MenuForm,
+  BBS_Ansi_MenuInput,
+  BBS_Core,
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Common,
+  BBS_Cfg_Common;
 
 (*
 Procedure CompileTheme (Var Theme: RecTheme);

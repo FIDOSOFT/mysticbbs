@@ -37,6 +37,11 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- externalize qwk and file list compiler class.  qwk for mystic/mis filelist
+  for mystic/mutil.  add compiler templates, file include, and new vs all
+  generation for all.
+- abstract ansi browser to be used for ansi archive viewer and sysop file
+  manager (as well as the ANSI gallery).
 - when mutil is tossing a packet and auto creates an area figure out if there
   can be a way to automatically create the uplink back to the originating
   node.
@@ -49,7 +54,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
   way which i think is the best approach actually.
 - ESC moves back in ANSI gallery only exits if dir = root?
 - Color, boxtype, and input configuration for configuration
-- Toggle base scan settings Select [A]ll, [D]eselect All
 - global file editor like msg base
 - redo voting booth externalize user storage and allow unlimited questions
   plus maybe categories.  or at least up it to like 50 questions or
@@ -64,7 +68,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Echomail export saves last scanned pointers
 - Echomail export support for netmail routing
 - FileFix / TIC
-- Add "Add Export To" to global msgbase editor.  Also Del Export?
 ! Use NetReply in RecMB also Reply to another base?
 - QWK put/get per individual users via FTP
 - EXCLUDE from all files list. important.
@@ -78,10 +81,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - MUTILs new DIR import of msg bases could have optional config to reference
   a series of .NA files to get the name/description of bases.
 - QWK via email
-- Either add Public/Private fusion type message base or allow reply via
-  email or netmail option.
-- mUTIL scans MSGS directory and auto-creates anything that has data files
-  not related to a BBS message base.. uses a template
 - Blind upload for single file upload (also message upload)
 - Email validation
 - Recode FCHECK into MUTIL, but also add the option to phsyically delete the
@@ -91,8 +90,8 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Outbound telnet feature
 - Add "PREVIEW" option to message editors
 - Finish Threaded message reader
+- Gallows Pole MPL
 - Add "high roller/smack talk" into BlackJack
-- Add better MIS logging per server (connect, refuse, blocked, etc)
 - BBS email autoforwarded to Internet email
 - Ability to send internet email to people from within the BBS.
 - ANSI post-processor for message uploads via FSE
@@ -131,7 +130,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - ANSI message upload post processor option: Auto/Disabled/Ask
 - Finish optional user prompts
 - MCI code for FS ansi viewer?
-- MCI code for # of files in current file area
 - Redo random ANSI system to use A-Z instead of 1-9 can have upgrade util
   rename them automatically.
 - LastOn revamp make sure its not global and new stuff is populated
@@ -279,8 +277,6 @@ ReplaceLine
      - Needs additional research
 ! POSSIBLE removal of local console in Windows and STDIO usage in Linux
      ^ Massive performance increase possible here as well as:
-! POSSIBLE FTN tosser.
-! POSSIBLE FTN mailer (transx, FTP, binkP)
 ! MIS event system (possible 1.10)
 ! Password reset via email (possible 1.10)
 ! Email verification system (for access upgrades) (possible 1.10)
@@ -290,4 +286,59 @@ ReplaceLine
 - Rewrite of MBBSWEB or integrated HTML server?  still need a good designer
   that actually will put a lot of time into it
 - Rewrite of ANSI template system (.ini files or mystic2 format?)
-! Revamp logging system and add additional logging to MIS
+
+=================================================
+
+CODE RESTRUCTURE naming (possibly remove mystic_ prefix):
+
+mystic
+mystic_records
+mystic_common (called db now)
+mystic_server_binkp
+mystic_server_telnet
+mystic_server_ftp
+mystic_server_pop3
+mystic_server
+mystic_client
+mystic_client_smtp
+mystic_server_events
+mystic_cmd_server
+mystic_cmd_fidopoll
+mystic_cmd_terminal
+mystic_class_binkp
+mystic_class_qwk
+mystic_class_menudata
+mystic_class_msgbase
+mystic_class_msgbase_jam
+mystic_class_msgbase_squish
+mystic_class_arcview
+mystic_class_arcview_zip
+mystic_class_arcview_rar
+mystic_class_nodelist
+mystic_class_logging (on-the-fly log rolling, trimming, etc)
+mystic_config_filearea
+mystic_ansi_intro
+mystic_ansi_monitor
+mystic_ansi_terminal
+mystic_bbs_core
+mystic_bbs_msgbase
+mystic_bbs_filebase
+mystic_bbs_general
+mystic_bbs_doors
+mystic_bbs_user
+mystic_bbs_nodechat
+mystic_bbs_userchat
+mystic_bbs_sysopchat
+mystic_bbs_ansibox
+mystic_bbs_ansimenu
+mystic_bbs_ansihelp
+mystic_bbs_ansiinput
+mystic_bbs_ansidir
+mystic_bbs_lineedit
+mystic_bbs_fulledit
+mystic_bbs_menus
+mystic_bbs_io
+mystic_bbs_mplexecute
+mystic_bbs_mpltypes
+mystic_bbs_mplcommon
+mystic_bbs_mplcompile

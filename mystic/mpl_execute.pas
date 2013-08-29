@@ -7,7 +7,8 @@ Interface
 Uses
   DOS,
   m_FileIO,
-  bbs_dataBase,
+  BBS_Records,
+  BBS_DataBase,
   BBS_Common;
 
 {$I MPL_TYPES.PAS}

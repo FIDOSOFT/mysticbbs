@@ -12,11 +12,12 @@ Uses
   m_Strings,
   m_DateTime,
   m_FileIO,
-  bbs_NodeInfo,
-  bbs_Common,
-  bbs_dataBase,
-  bbs_User,
-  bbs_Core;
+  BBS_Records,
+  BBS_DataBase,
+  BBS_Common,
+  BBS_NodeInfo,
+  BBS_User,
+  BBS_Core;
 
 Var
   ChatSize   : Integer;
@@ -59,12 +60,12 @@ Begin
   Read  (RoomFile, Room);
   Close (RoomFile);
 
-  Chat.Room := R;
+  Session.Chat.Room := R;
   CurRoom   := R;
 
   Assign (CF, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
   Reset  (CF);
-  Write  (CF, Chat);
+  Write  (CF, Session.Chat);
   Close  (CF);
 
   Send_Node_Message (5, strI2S(Session.NodeNum) + ';' + 'Now chatting in channel ' + strI2S(CurRoom), 0); //++lang
@@ -367,13 +368,13 @@ Begin
 
   Set_Node_Action (Session.GetPrompt(347));
 
-  Avail          := Chat.Available;
-  Chat.InChat    := True;
-  Chat.Available := False;
+  Avail                  := Session.Chat.Available;
+  Session.Chat.InChat    := True;
+  Session.Chat.Available := False;
 
   Assign (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
   Reset  (ChatFile);
-  Write  (ChatFile, Chat);
+  Write  (ChatFile, Session.Chat);
   Close  (ChatFile);
 
   FileErase(Session.TempPath + 'chat.tmp');
@@ -478,14 +479,14 @@ Begin
 
   Session.io.GetKeyCallBack := NIL;
 
-  Chat.InChat    := False;
-  Chat.Available := Avail;
+  Session.Chat.InChat    := False;
+  Session.Chat.Available := Avail;
 
   Session.AllowMessages := True;
 
   Assign (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
   Reset  (ChatFile);
-  Write  (ChatFile, Chat);
+  Write  (ChatFile, Session.Chat);
   Close  (ChatFile);
 
   FileErase(Session.TempPath + 'chat.tmp');

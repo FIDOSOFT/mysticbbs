@@ -13,7 +13,7 @@ Uses
   m_DateTime,
   mUtil_Common,
   mUtil_Status,
-  bbs_DataBase,
+  bbs_Records,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
   bbs_MsgBase_Squish;
