@@ -187,7 +187,8 @@ Begin
     While Not EOF(UserFile) Do Begin
       Read (UserFile, User);
 
-      If User.Flags And UserDeleted <> 0 Then Continue;
+      If (User.Flags And UserDeleted <> 0) or
+         (User.Flags And UserQWKNetwork <> 0) Then Continue;
 
       BarOne.Update(FilePos(UserFile), FileSize(UserFile));
 

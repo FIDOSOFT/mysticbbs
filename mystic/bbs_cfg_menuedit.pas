@@ -31,7 +31,7 @@ Type
   End;
 
 Const
-  Num_Cmds = 102;
+  Num_Cmds = 101;
   MenuCmds : Array[1..Num_Cmds] of CmdRec = (
     // AUTOSIG MENU COMMANDS
     (  Name: 'AE';   Desc: 'Autosig editor'               ),
@@ -112,7 +112,6 @@ Const
     // OFFLINE MAIL MENU COMMANDS
     (  Name: 'OS';   Desc: 'Set QWK scanned bases'        ),
     (  Name: 'OD';   Desc: 'Download QWK packet'          ),
-    (  Name: 'OE';   Desc: 'Download QWKE packet'         ),
     (  Name: 'OU';   Desc: 'Upload REP packet'            ),
 
     // DOWNLOAD QUEUE MENU COMMANDS

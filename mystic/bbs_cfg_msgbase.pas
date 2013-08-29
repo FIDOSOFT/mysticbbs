@@ -114,7 +114,7 @@ Begin
 
   Box.Open (3, 4, 77, 22);
 
-  VerticalLine (17,  5, 20);
+  VerticalLine (17,  5, 21);
   VerticalLine (66,  5, 21);
 
   Form.AddStr  ('N', ' Name'        , 11,  5, 19,  5,  6, 30, 40, @MBase.Name, Topic + 'Message base description');
@@ -133,6 +133,7 @@ Begin
   Form.AddStr  ('S', ' Sponsor'     ,  8, 18, 19, 18,  9, 30, 30, @MBase.Sponsor, Topic + 'User name of base''s sponser');
   Form.AddStr  ('T', ' R Template'  ,  5, 19, 19, 19, 12, 20, 20, @MBase.RTemplate, Topic + 'Template for full screen reader');
   Form.AddStr  ('M', ' L Template'  ,  5, 20, 19, 20, 12, 20, 20, @MBase.ITemplate, Topic + 'Template for lightbar message list');
+  Form.AddBits ('0', ' QWK Network' ,  4, 21, 19, 21, 13, MBAllowQWKNet, @MBase.Flags, Topic + 'Is this base a QWK network base?');
 
   Form.AddAttr ('Q', ' Quote Color' , 53,  5, 68,  5, 13, @MBase.ColQuote, Topic + 'Color for quoted text');
   Form.AddAttr ('X', ' Text Color'  , 54,  6, 68,  6, 12, @MBase.ColText, Topic + 'Color for message text');

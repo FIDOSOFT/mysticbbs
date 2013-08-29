@@ -342,7 +342,8 @@ Type
     inetBINKPDupes  : Byte;
     inetBINKPTimeOut: Word;
     inetBINKPCram5  : Boolean;
-    Reserved        : Array[1..778] of Char;
+    QwkNetMenu      : String[20];
+    Reserved        : Array[1..757] of Char;
   End;
 
 Const
@@ -354,6 +355,7 @@ Const
   UserNoPWChange = $00000020;
   UserNoHistory  = $00000040;
   UserNoTimeout  = $00000080;
+  UserQWKNetwork = $00000100;
 
 Type
   RecUser = Record                                              // USERS.DAT
@@ -422,7 +424,8 @@ Type
     Credits      : LongInt;
     Protocol     : Char;
     CodePage     : Byte;                  // 0 = CP437, 1 = UTF8
-    Reserved     : Array[1..388] of Byte;
+    QwkExtended  : Boolean;
+    Reserved     : Array[1..387] of Byte;
   End;
 
   RecEvent = Record
@@ -493,6 +496,7 @@ Const
   MBNoAttach    = $00000008; // 4
   MBPrivate     = $00000010; // 5
   MBPrivReply   = $00000020; // 6
+  MBAllowQWKNet = $00000040; // 7
 
 Type
   RecMessageBase = Record                                       // MBASES.DAT

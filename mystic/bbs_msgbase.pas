@@ -64,7 +64,7 @@ Type
     Procedure   MessageNewScan      (Data: String);
     Procedure   MessageQuickScan    (Data: String);
     Procedure   GlobalMessageSearch (Mode: Char);
-    Procedure   SetMessagePointers;
+    Procedure   SetMessagePointers  (ForceGlobal: Boolean);
     Procedure   ViewSentEmail;
     Function    ResolveOrigin       (Var mArea: RecMessageBase) : String;
     // QWK and QWKE goodies
@@ -779,7 +779,8 @@ End;
 
 Procedure TMsgBase.ToggleNewScan (QWK: Boolean; Data: String);
 Var
-  Total: LongInt;
+  Total  : LongInt;
+  QwkNet : Boolean;
 
   Procedure List_Bases;
   Begin
@@ -800,6 +801,8 @@ Var
 
     While Not Eof(MBaseFile) Do Begin
       Read (MBaseFile, MBase);
+
+      If QwkNet And (MBase.Flags AND MBAllowQWKNet = 0) Then Continue;
 
       If Session.User.Access(MBase.ListACS) Then Begin
         Inc (Total);
@@ -922,6 +925,8 @@ Begin
   FileMode := 66;
 
   Session.User.IgnoreGroup := Pos('/ALLGROUP', strUpper(Data)) > 0;
+
+  QwkNet := Pos('/QWKNET', strUpper(Data)) > 0;
 
   List_Bases;
 
@@ -3281,7 +3286,7 @@ Begin
   MBase := TempBase;
 End;
 
-Procedure TMsgBase.SetMessagePointers;
+Procedure TMsgBase.SetMessagePointers (ForceGlobal: Boolean);
 Var
   NewDate : LongInt;
 
@@ -3322,7 +3327,6 @@ Var
   End;
 
 Var
-  Global : Boolean;
   InDate : String[8];
 Begin
   Session.io.OutFull (Session.GetPrompt(458));
@@ -3332,11 +3336,13 @@ Begin
   If Not DateValid(InDate) Then Exit;
 
   NewDate := DateStr2Dos(InDate);
-  Global  := Session.io.GetYN(Session.GetPrompt(459), False);
+
+  If Not ForceGlobal Then
+    ForceGlobal := Session.io.GetYN(Session.GetPrompt(459), False);
 
   Session.io.OutFullLn (Session.GetPrompt(460));
 
-  If Global Then Begin
+  If ForceGlobal Then Begin
     ioReset (MBaseFile, SizeOf(RecMessageBase), fmRWDN);
     ioRead  (MBaseFile, MBase);
 
@@ -3532,10 +3538,13 @@ Begin
             While Not Eof(Session.User.UserFile) Do Begin
               Read (Session.User.UserFile, Session.User.ThisUser);
 
-              If (Session.User.ThisUser.Flags AND UserDeleted = 0) and Session.User.Access(ACS) Then Begin
-                Session.io.PromptInfo[1] := Session.User.ThisUser.Handle;
+              If (Session.User.ThisUser.Flags AND UserDeleted = 0) and
+                 (Session.User.ThisUser.Flags AND UserQWKNetwork = 0) and
+                 Session.User.Access(ACS) Then Begin
 
-                Session.io.OutFullLn (Session.GetPrompt(392));
+                   Session.io.PromptInfo[1] := Session.User.ThisUser.Handle;
+
+                   Session.io.OutFullLn (Session.GetPrompt(392));
               End;
             End;
 

@@ -258,7 +258,7 @@ Begin
     'M' : Case Cmd[2] of
             'A' : Session.Msgs.ChangeArea(CmdData);
             'C' : Session.Msgs.CheckEMail(CmdData);
-            'D' : Session.Msgs.SetMessagePointers;
+            'D' : Session.Msgs.SetMessagePointers (Pos('/ALL', strUpper(CmdData)) > 0);
             'G' : Session.Msgs.MessageGroupChange (CmdData, True, True);
             'L' : Session.Msgs.NetMailLookup (True, '', '');
             'M' : Session.Msgs.SendMassEmail;
@@ -285,8 +285,7 @@ Begin
           End;
     'O' : Case Cmd[2] of
             'S' : Session.Msgs.ToggleNewScan(True, CmdData);
-            'D' : Session.Msgs.DownloadQWK(False, CmdData);
-            'E' : Session.Msgs.DownloadQWK(True, CmdData);
+            'D' : Session.Msgs.DownloadQWK(Session.User.ThisUser.QwkExtended, CmdData);
             'U' : Session.Msgs.UploadREP;
           End;
     'Q' : Case Cmd[2] of

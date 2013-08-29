@@ -246,7 +246,7 @@ Procedure TBBSCore.SystemLog (Str: String);
 Var
   tLOG : Text;
 Begin
-  Assign (tLOG, bbsCfg.LogsPath + 'sysop.' + strI2S(NodeNum));
+  Assign (tLOG, bbsCfg.LogsPath + 'node' + strI2S(NodeNum) + '.log');
   {$I-} Append(tLOG); {$I+}
   If IoResult <> 0 Then ReWrite (tLOG);
 

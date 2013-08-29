@@ -3554,4 +3554,38 @@
    directory, assuming "Server Logging" is turned on in Internet Server
    Options.
 
+ + In order to maintain consistancy and for easier file association, telnet
+   node logs have changed from "sysop.nodenumber" to "node<nodenumber>.log"
+   in the logs directory.
+
+ + Users can now be flaged as "QWK Network Account" in the User editor.
+   Account names should be the same as their QWK Network BBSID.  These users
+   will bypass a majority of the login procedures and can have their own
+   distinct start menu (found in General Settings).  A new default menu called
+   "qwknetwork.mnu" has been included as an example of how one should likely
+   be setup.
+
+ + Message bases can now be flagged as "Allow QWK Networking" which means that
+   the message base will be allowed to be selected for scanning by QWK network
+   scans.
+
+ + The OS menu command (Set QWK scan settings) now has the /QWKNET option
+   available in command data.  This limits the message bases listed to ONLY
+   show bases flagged for QWK networking.
+
+ + The OE menu command has been removed.  Instead, a setting now saves the
+   users preference of QWK or QWKE packets.  You will need to update your
+   QWK menu to remove this command and to add the toggle of the QWKE packet,
+   or you can optionally use the new qwk.mnu included as a guide/replacement.
+
+ + New Menu command GE (edit user preferences) optional data: 33.  This
+   toggles the user's preference for QWKE style packets on or off.
+
+ + New MCI code QE returns Yes/No based on the users QWK Extended setting.
+
+ + The MD menu command (set message lastread pointers) now has the optional
+   data option of /ALL.  If this is used, Mystic will NOT has if the user
+   wants to update their current base, and will instead force the update for
+   all message bases.
+
    <ALPHA 37 RELEASED>

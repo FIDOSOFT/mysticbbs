@@ -215,7 +215,6 @@ Begin
             Form.AddNone ('4', ' 4 SMTP Server Options',     26,  9, 26,  9, 27, '');
             Form.AddNone ('5', ' 5 NNTP Server Options',     26, 10, 26, 10, 27, '');
             Form.AddNone ('6', ' 6 BINKP Server Options',    26, 11, 26, 11, 27, '');
-            Form.AddNone ('7', ' 7 FTN-FTP Server Options',  26, 12, 26, 12, 27, '');
 
             Res        := Form.Execute;
             MenuPos[2] := Form.ItemPos;
@@ -236,7 +235,6 @@ Begin
                 '4' : Configuration_SMTPServer;
                 '5' : Configuration_NNTPServer;
                 '6' : Configuration_BINKPServer;
-//                '7' : Configuration_FTNFTPServer;
                 'X' : Break;
               Else
                 MenuPtr := 0;

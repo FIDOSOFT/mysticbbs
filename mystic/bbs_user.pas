@@ -310,7 +310,10 @@ Begin
   While Not Eof(UserFile) Do Begin
     Read (UserFile, TempUser);
 
-    If TempUser.Flags AND UserDeleted <> 0 Then Continue;
+    If (TempUser.Flags AND UserDeleted <> 0) Then Continue;
+
+//    If (TempUser.Flags AND UserDeleted <> 0) or
+//       (TempUser.Flags AND UserQWKNetwork <> 0) Then Continue;
 
     If Pos(Str, strUpper(TempUser.Handle)) > 0 Then Begin
       If First Then Begin
@@ -356,6 +359,8 @@ Begin
     Read (UserFile, TempUser);
 
     If (((RecNum > 0) And (TempUser.PermIdx = RecNum)) or (strUpper(TempUser.RealName) = Str) or (strUpper(TempUser.Handle) = Str)) and (TempUser.Flags And UserDeleted = 0) Then Begin
+      //If ExcludeQWK and (TempUser.Flags AND UserQWKNetwork <> 0) Then Continue;
+
       If Adjust Then UserNum := FilePos(UserFile);
 
       Result := True;
@@ -1047,6 +1052,8 @@ Var
   Count : Byte;
   Ch    : Char;
 Begin
+  If ThisUser.Flags and UserQWKNetwork <> 0 Then Exit;
+
   {$IFDEF LOGGING} Session.SystemLog('Logon3'); {$ENDIF}
 
   Chat.Available := True;
@@ -1207,6 +1214,7 @@ Begin
       If Session.User.ThisUser.Security = 0 Then Begin
         Session.io.OutFullLn(Session.GetPrompt(477));
         Session.User.ThisUser.Flags := Session.User.ThisUser.Flags AND UserDeleted;
+
         Exit;
       End Else
         Session.io.OutFullLn(Session.GetPrompt(476));
@@ -1437,6 +1445,7 @@ Begin
     30  : ThisUser.QwkFiles := Not ThisUser.QwkFiles;
     31  : Session.FileBase.SelectArchive;
     32  : ThisUser.Protocol := Session.FileBase.SelectProtocol(False, True);
+    33  : ThisUser.QwkExtended := Not ThisUser.QwkExtended;
   End;
 End;
 

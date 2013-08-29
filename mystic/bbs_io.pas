@@ -704,6 +704,7 @@ Begin
           End;
     'Q' : Case Code[2] of
             'A' : LastMCIValue := TBBSCore(Core).User.ThisUser.Archive;
+            'E' : LastMCIValue := OutYN (TBBSCore(Core).User.ThisUser.QwkExtended);
             'L' : LastMCIValue := OutYN (TBBSCore(Core).User.ThisUser.QwkFiles);
             'O' : ShowRandomQuote;
           End;

@@ -152,6 +152,7 @@ Begin
             Form.AddBol  ('I', ' Mail Index'  , 7, 12, 23, 12, 14,  3,  @U.UseLBMIdx, Topic + 'Start reading email at message index');
             Form.AddTog  ('N', ' Node Chat'   , 7, 13, 23, 13, 14,  8,  0,  1, 'Standard Full', @U.UseFullChat, Topic + 'User''s node chat type');
             Form.AddTog  ('C', ' Code Page'   , 7, 14, 23, 14, 14,  5,  0,  1, 'CP437 UTF-8', @U.CodePage, Topic + 'User''s character translation');
+            Form.AddBol  ('Q', ' QWKE Packet' , 7, 15, 23, 15, 14,  3,  @U.QwkExtended, Topic + 'Use QWKE (instead of QWK)');
           End;
       4 : Begin
             Form.Clear;
@@ -190,6 +191,7 @@ Begin
             Form.AddBits ('P', ' No PW Change', 7, 10, 23, 10, 14, UserNoPWChange, @U.Flags, Topic + 'Exclude from forced password change');
             Form.AddBits ('H', ' No History'  , 7, 11, 23, 11, 14, UserNoHistory,  @U.Flags, Topic + 'Exclude from BBS history stats');
             Form.AddBits ('T', ' No Timeout'  , 7, 12, 23, 12, 14, UserNoTimeout,  @U.Flags, Topic + 'Exclude from inactivity timeout');
+            Form.AddBits ('Q', ' QWK Network' , 7, 13, 23, 13, 14, UserQWKNetwork, @U.Flags, Topic + 'User is a QWK network account');
           End;
     End;
 

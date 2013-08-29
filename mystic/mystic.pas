@@ -492,6 +492,9 @@ Begin
   If Session.TimeOffset > 0 Then
     Session.TimeSaved := Session.User.ThisUser.TimeLeft;
 
+  If (Session.User.ThisUser.Flags AND UserQWKNetwork <> 0) and (bbsCfg.QwkNetMenu <> '') Then
+    Session.Menu.MenuName := bbsCfg.QwkNetMenu
+  Else
   If Session.User.ThisUser.StartMenu <> '' Then
     Session.Menu.MenuName := Session.User.ThisUser.StartMenu
   Else

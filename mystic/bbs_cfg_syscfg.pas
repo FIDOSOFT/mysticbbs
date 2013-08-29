@@ -83,7 +83,7 @@ Begin
 
   Box.Open (5, 5, 75, 18);
 
-  VerticalLine (24, 7, 16);
+  VerticalLine (24, 7, 17);
   VerticalLine (67, 7, 12);
 
   Form.AddStr  ('B', ' BBS Name',         14,  7, 26,  7, 10, 25, 30, @bbsCfg.BBSName, Topic);
@@ -93,9 +93,10 @@ Begin
   Form.AddStr  ('O', ' Sysop ACS',        13, 11, 26, 11, 11, 25, 30, @bbsCfg.ACSSysop, Topic);
   Form.AddStr  ('F', ' Feedback To',      11, 12, 26, 12, 13, 25, 30, @bbsCfg.FeedbackTo, Topic);
   Form.AddStr  ('A', ' Start Menu',       12, 13, 26, 13, 12, 20, 20, @bbsCfg.DefStartMenu, Topic);
-  Form.AddStr  ('H', ' Theme',            17, 14, 26, 14,  7, 20, 20, @bbsCfg.DefThemeFile, Topic);
-  Form.AddBol  ('K', ' Ask Theme',        13, 15, 26, 15, 11,  3, @bbsCfg.ThemeOnStart, Topic + 'Ask theme each connection');
-  Form.AddTog  ('E', ' Terminal',         14, 16, 26, 16, 10, 10, 0, 3, 'Ask Detect Detect/Ask ANSI', @bbsCfg.DefTermMode, Topic);
+  Form.AddStr  ('Q', ' QWK Net Menu',     10, 14, 26, 14, 14, 20, 20, @bbsCfg.QwkNetMenu, Topic + 'QWK menu for QWK network users');
+  Form.AddStr  ('H', ' Theme',            17, 15, 26, 15,  7, 20, 20, @bbsCfg.DefThemeFile, Topic);
+  Form.AddBol  ('K', ' Ask Theme',        13, 16, 26, 16, 11,  3, @bbsCfg.ThemeOnStart, Topic + 'Ask theme each connection');
+  Form.AddTog  ('E', ' Terminal',         14, 17, 26, 17, 10, 10, 0, 3, 'Ask Detect Detect/Ask ANSI', @bbsCfg.DefTermMode, Topic);
 
   Form.AddBol  ('L', ' Chat Logging',     53,  7, 69,  7, 14,  3, @bbsCfg.ChatLogging, Topic);
   Form.AddByte ('R', ' Hours Start',      54,  8, 69,  8, 13,  2, 0, 24, @bbsCfg.ChatStart, Topic);

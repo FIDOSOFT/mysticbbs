@@ -483,6 +483,8 @@ Var
       List.Add(strPadR(strAddr2Str(bbsCfg.NetAddress[A]), 23, ' ') + ' ' + strPadR(bbsCfg.NetDomain[A], 8, ' ') + '  ' + strPadR(strYN(bbsCfg.NetPrimary[A]), 3, ' ') + '  ' + bbsCfg.NetDesc[A], 0);
   End;
 
+Var
+  Count : Byte;
 Begin
   Result := 0;
 
@@ -511,6 +513,12 @@ Begin
       #27 : Break;
     End;
   Until False;
+
+  For Count := 1 to 30 Do Begin
+    If bbsCfg.NetPrimary[Count] Then Break;
+
+    If Count = 30 Then ShowMsgBox(0, 'WARNING: No address is set to primary');
+  End;
 
   List.Close;
   Box.Close;

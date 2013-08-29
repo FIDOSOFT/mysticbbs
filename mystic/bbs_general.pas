@@ -458,7 +458,8 @@ Begin
   While Not Eof(Session.User.UserFile) Do Begin
     Read (Session.User.UserFile, TempUser);
 
-    If TempUser.Flags AND UserDeleted <> 0 Then Continue;
+    If (TempUser.Flags AND UserDeleted <> 0) and
+       (TempUser.Flags AND UserQWKNetwork <> 0) Then Continue;
 
     Session.io.PromptInfo[1]  := TempUser.Handle;
     Session.io.PromptInfo[2]  := TempUser.City;
