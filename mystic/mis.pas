@@ -365,6 +365,7 @@ Begin
 
     TelnetServer.Server.FTelnetServer := True;
     TelnetServer.ClientMaxIPs         := bbsConfig.InetTNDupes;
+    TelnetServer.LogFile              := 'telnet';
 
     Result := True;
   End;
@@ -374,6 +375,7 @@ Begin
 
     SMTPServer.Server.FTelnetServer := False;
     SMTPServer.ClientMaxIPs         := bbsConfig.INetSMTPDupes;
+    SMTPServer.LogFile              := 'smtp';
 
     Result := True;
   End;
@@ -383,6 +385,7 @@ Begin
 
     POP3Server.Server.FTelnetServer := False;
     POP3Server.ClientMaxIPs         := bbsConfig.inetPOP3Dupes;
+    POP3Server.LogFile              := 'pop3';
 
     Result := True;
   End;
@@ -392,6 +395,7 @@ Begin
 
     FTPServer.Server.FTelnetServer := False;
     FTPServer.ClientMaxIPs         := bbsConfig.inetFTPDupes;
+    FTPServer.LogFile              := 'ftp';
 
     Result := True;
   End;
@@ -401,6 +405,7 @@ Begin
 
     NNTPServer.Server.FTelnetServer := False;
     NNTPServer.ClientMaxIPs         := bbsConfig.inetNNTPDupes;
+    NNTPServer.LogFile              := 'nntp';
 
     Result := True;
   End;
@@ -410,6 +415,7 @@ Begin
 
     BINKPServer.Server.FTelnetServer := False;
     BINKPServer.ClientMaxIPs         := bbsConfig.inetBINKPDupes;
+    BINKPServer.LogFile              := 'binkp';
 
     Result := True;
   End;

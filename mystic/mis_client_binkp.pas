@@ -839,6 +839,7 @@ Var
   BinkP   : TBinkP;
   Count   : Integer;
   Address : String;
+  Before  : LongInt;
 Begin
   Queue := TProtocolQueue.Create;
   BinkP := TBinkP.Create (Server, Client, Queue, False, bbsConfig.inetBINKPTimeOut);
@@ -850,8 +851,13 @@ Begin
     For Count := 1 to strWordCount(BinkP.AddressList, ' ') Do Begin
       Address := strWordGet(Count, BinkP.AddressList, ' ');
 
-      If BinkP.AuthenticateNode(Address) Then
+      If BinkP.AuthenticateNode(Address) Then Begin
+        Before := Queue.QSize;
+
         QueueByNode(Queue, False, BinkP.EchoNode);
+
+        Server.Status ('Queued ' + strI2S(Queue.QSize - Before) + ' files for ' + strAddr2Str(BinkP.EchoNode.Address));
+      End;
     End;
 
     BinkP.FileList := Queue;

@@ -47,6 +47,15 @@ Const
     OSType   = 2;
   {$ENDIF}
 
+  // OSTYPE 3 = RESERVED FOR "ALL" OS TYPES IN CONFIGURATION
+
+  {$IFDEF OS2}
+    PathChar = '\';
+    LineTerm = #13#10;
+    OSID     = 'OS/2';
+    OSType   = 4;
+  {$ENDIF}
+
   mysMaxAcsSize      = 30;                                      // Max ACS string size
   mysMaxPathSize     = 80;
   mysMaxMsgLines     = 1000;                                    // Max message base lines
@@ -285,7 +294,7 @@ Type
  // INTERNET SERVER SETTINGS
     inetDomain      : String[25];
     inetIPBlocking  : Boolean;
-    inetIPLogging   : Boolean;
+    inetLogging     : Boolean;
     inetSMTPUse     : Boolean;
     inetSMTPPort    : Word;
     inetSMTPMax     : Word;

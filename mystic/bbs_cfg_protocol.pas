@@ -34,7 +34,7 @@ Begin
   VerticalLine (22, 7, 13);
 
   Form.AddBol  ('A', ' Active '      , 14,  7, 24,  7,  8, 3, @Prot.Active, '');
-  Form.AddTog  ('O', ' OS '          , 18,  8, 24,  8,  4, 7, 0, 3, 'Windows Linux OSX All', @Prot.OSType, '');
+  Form.AddTog  ('O', ' OS '          , 18,  8, 24,  8,  4, 7, 0, 4, 'Windows Linux OSX All OS/2', @Prot.OSType, '');
   Form.AddBol  ('B', ' Batch '       , 15,  9, 24,  9,  7, 3, @Prot.Batch, '');
   Form.AddChar ('K', ' Hot Key '     , 13, 10, 24, 10,  9, 1, 254, @Prot.Key, '');
   Form.AddStr  ('D', ' Description ' ,  9, 11, 24, 11, 13, 40, 40, @Prot.Desc, '');

@@ -24,6 +24,7 @@ Type
     NodeInfo      : TNodeData;
     Server        : TIOSocket;
     ServerStatus  : TStringList;
+    LogFile       : String[20];
     StatusUpdated : Boolean;
     ClientList    : TList;
     NewClientProc : TServerCreateProc;
@@ -83,6 +84,7 @@ Begin
   TextPath      := Cfg.DataPath;
   NodeInfo      := ND;
   Config        := Cfg;
+  LogFile       := '';
 
   For Count := 1 to ClientMax Do
     ClientList.Add(NIL);
@@ -164,6 +166,7 @@ End;
 Procedure TServerManager.Status (Str: String);
 Var
   Res : String;
+  T   : Text;
 Begin
   If ServerStatus = NIL Then Exit;
 
@@ -184,6 +187,18 @@ Begin
       ServerStatus.Add(strRep(' ', 14) + Copy(Res, 75, 255));
     End Else
       ServerStatus.Add(Res);
+
+    If Config.inetLogging And (LogFile <> '') Then Begin
+      FileMode := 66;
+      Assign (T, Config.LogsPath + 'server_' + LogFile + '.log');
+      {$I-} Append (T); {$I+}
+      If (IoResult <> 0) and (IoResult <> 5) Then
+        {$I-} ReWrite(T); {$I+}
+      If IoResult = 0 Then Begin
+        WriteLn (T, Res);
+        Close (T);
+      End;
+    End;
   Except
     { ignore exceptions here -- happens when socketstatus is NIL}
     { need to review criticals now that they are in FP's RTL}

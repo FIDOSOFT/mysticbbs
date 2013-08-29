@@ -3547,4 +3547,11 @@
  + New MCI code: FT returns the total number of files in the current file
    area.
 
+ + MIS BINKP server is now active.  Configuration is in the system
+   configuration with the rest of the servers.
+
+ + All MIS servers now maintain their own independant log files in the LOGS
+   directory, assuming "Server Logging" is turned on in Internet Server
+   Options.
+
    <ALPHA 37 RELEASED>
