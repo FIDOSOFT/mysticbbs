@@ -3591,4 +3591,17 @@
  ! Mystic was changing the user's message base to the last base processed
    when globally resetting the new message scan date.
 
+ ! Fixed a bug that could cause a lockup in the FS editor when using the TAB
+   key.
+
+ + The FTP server now accurately reports the file date during file listings.
+
+ + The FTP server now accurately reports directories (filebases) based on the
+   actual time the file base was created in Mystic.
+
+ + When editing the FTP directory name for a file base, / and \ characters
+   are now automatically converted to _ so it does not conflict with FTP.  If
+   you have existing FTP names set for your file bases, you must open them in
+   the file base editor for their names to be automatically changed.
+
    <ALPHA 37 RELEASED>

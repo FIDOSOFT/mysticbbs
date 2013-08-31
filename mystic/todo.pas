@@ -37,9 +37,11 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- fix END in lightbar file lists so it doesn't suck.
 - externalize qwk and file list compiler class.  qwk for mystic/mis filelist
   for mystic/mutil.  add compiler templates, file include, and new vs all
   generation for all.
+- make embedded ANSI in file_id display correctly.
 - abstract ansi browser to be used for ansi archive viewer and sysop file
   manager (as well as the ANSI gallery).
 - when mutil is tossing a packet and auto creates an area figure out if there
@@ -342,3 +344,13 @@ mystic_bbs_mplexecute
 mystic_bbs_mpltypes
 mystic_bbs_mplcommon
 mystic_bbs_mplcompile
+
+=============================
+
+DRAW MODE /D
+
+ansieditor_draw
+ansieditor
+ansieditor_help
+ansieditor_color
+ansieditor_glyph
