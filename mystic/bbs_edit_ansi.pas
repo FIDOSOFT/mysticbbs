@@ -11,6 +11,20 @@ Uses
 Const
   fseMaxCutText = 60;
 
+  GlyphTypeMax = 10;
+	GlyphTypeStr : Array[1..10] of String[10] = (
+    ('ÂÚ¿ÀÙÄ³Ã´Á'),
+    ('ËÉ»È¼ÍºÌ¹Ê'),
+    ('ÑÕ¸Ô¾Í³ÆµÏ'),
+    ('ÒÖ·Ó½ÄºÇ¶Ð'),
+    ('ïÅÎØ×èé›œ™'),
+    ('ú°±²ÛßÜÝÞþ'),
+    ('ð'),
+    (''),
+    ('¬®¯òó©ªýö«'),
+    ('üãñôõêäøû')
+	);
+
 Type
   TEditorANSI = Class
     Owner        : Pointer;
@@ -31,6 +45,7 @@ Type
     InsertMode   : Boolean;
     DrawMode     : Boolean;
     GlyphMode    : Boolean;
+    GlyphPtr     : Byte;
     WrapMode     : Boolean;
     ClearEOL     : Boolean;
     LastLine     : LongInt;
@@ -44,6 +59,8 @@ Type
     Done         : Boolean;
     Subject      : String;
     Template     : String;
+    DrawTemplate : String;
+    SavedInsert  : Boolean;
     MaxMsgLines  : Word;
     MaxMsgCols   : Byte;
 
@@ -81,7 +98,8 @@ Type
     Function    Edit : Boolean;
     Procedure   Quote;
     Procedure   QuoteWindow;
-    Procedure   Commands;
+    Procedure   EditorCommands;
+    Procedure   DrawCommands;
     Procedure   MessageUpload;
   End;
 
@@ -114,6 +132,7 @@ Begin
   InsertMode  := True;
   DrawMode    := False;
   GlyphMode   := False;
+  GlyphPtr    := 6;
   WrapMode    := True;
   ClearEOL    := RowSize >= 79;
   LastLine    := 1;
@@ -387,7 +406,7 @@ Begin
   Session.io.AnsiColor  (Session.io.ScreenInfo[3].A);
   Session.io.AnsiGotoXY (Session.io.ScreenInfo[3].X, Session.io.ScreenInfo[3].Y);
 
-  If InsertMode Then Session.io.BufAddStr('INS') else Session.io.BufAddStr('OVR'); { ++lang++ }
+  If InsertMode Then Session.io.BufAddStr('INS') Else Session.io.BufAddStr('OVR'); { ++lang++ }
 End;
 
 Procedure TEditorANSI.ReDrawTemplate (Reset: Boolean);
@@ -398,9 +417,23 @@ Begin
 
   TBBSCore(Owner).io.AllowArrow := True;
 
-  Session.io.PromptInfo[2] := Subject;
+  If DrawMode Then Begin
+    // temp until we show file
+    Session.io.ScreenInfo[1].Y := 3;
+    Session.io.ScreenInfo[2].Y := 24;
 
-  Session.io.OutFile (Template, True, 0);
+    Session.io.AnsiColor(7);
+    Session.io.AnsiClear;
+
+    WriteXY (1, 1, 7, 'Draw Mode ESC/Menu - Insert: ' + Session.io.OutON(InsertMode) + ' GlyphMode: ' + Session.io.OutON(GlyphMode) + ' Set: ');
+    WriteXY (53, 1, CurAttr, GlyphTypeStr[GlyphPtr]);
+    WriteXY (1, 2, 8, strRep('-', 79));
+  End Else Begin
+    Session.io.PromptInfo[2] := Subject;
+    Session.io.OutFile (Template, True, 0);
+
+    ToggleInsert (False);
+  End;
 
   WinX1  := 1;
   WinX2  := MaxMsgCols; //79
@@ -431,8 +464,6 @@ Begin
   End;
 
   DrawPage (1, WinSize, False);
-
-  ToggleInsert (False);
 End;
 
 Procedure TEditorANSI.LocateCursor;
@@ -445,17 +476,6 @@ Begin
 
   While TopLine + CurY - 1 > LastLine Do
     Dec (CurY);
-
-(*
-  If Not DrawMode Then Begin
-    If (CurX > 1) and (CurX = CurLength + 1) Then
-      CurAttr := ANSI.Data[CurLine][CurX - 1].Attr
-    Else
-      CurAttr := ANSI.Data[CurLine][CurX].Attr;
-
-    If CurAttr = 0 Then CurAttr := 7;
-  End;
-*)
 
 //  With TBBSCore(Owner).io Do Begin
 //    AnsiGotoXY (1, 1);
@@ -688,16 +708,20 @@ Procedure TEditorANSI.DoChar (Ch: Char);
 Var
   CharAttr : Byte;
 Begin
-  If (Session.io.ScreenInfo[6].A <> 0) and (Pos(Ch, '0123456789') > 0) Then
-    CharAttr := Session.io.ScreenInfo[6].A
-  Else
-  If (Session.io.ScreenInfo[5].A <> 0) and (Pos(Ch, '.,!@#$%^&*()_+-=~`''"?;:<>\/[]{}|') > 0) Then
-    CharAttr := Session.io.ScreenInfo[5].A
-  Else
-  If (Session.io.ScreenInfo[4].A <> 0) and (Ch = UpCase(Ch)) Then
-    CharAttr := Session.io.ScreenInfo[4].A
-  Else
-    CharAttr := CurAttr;
+  CharAttr := CurAttr;
+
+  If DrawMode Then Begin
+    If (Ch in ['0'..'9']) And GlyphMode Then
+      Ch := GlyphTypeStr[GlyphPtr][strS2I(Ch) + 1]
+  End Else
+    If (Session.io.ScreenInfo[6].A <> 0) and (Pos(Ch, '0123456789') > 0) Then
+      CharAttr := Session.io.ScreenInfo[6].A
+    Else
+    If (Session.io.ScreenInfo[5].A <> 0) and (Pos(Ch, '.,!@#$%^&*()_+-=~`''"?;:<>\/[]{}|') > 0) Then
+      CharAttr := Session.io.ScreenInfo[5].A
+    Else
+    If (Session.io.ScreenInfo[4].A <> 0) and (Ch = UpCase(Ch)) Then
+      CharAttr := Session.io.ScreenInfo[4].A;
 
   If InsertMode Then Begin
     Move (ANSI.Data[CurLine][CurX], ANSI.Data[CurLine][CurX + 1], SizeOf(RecAnsiBufferChar) * (CurLength - CurX + 1));
@@ -813,8 +837,13 @@ Begin
       If Not LineDown(True) Then
         DrawPage (CurY - 1, WinSize, True);
     End;
-  End Else
-    LineDown(True);
+  End Else Begin
+    If CurLine = LastLine Then
+      InsertLine (CurLine + 1);
+
+    If Not LineDown(True) Then
+      DrawPage (CurY - 1, WinSize, True);
+  End;
 End;
 
 Procedure TEditorANSI.Quote;
@@ -1142,7 +1171,7 @@ Begin
   End;
 End;
 
-Procedure TEditorANSI.Commands;
+Procedure TEditorANSI.EditorCommands;
 Var
   Ch  : Char;
   Str : String;
@@ -1153,7 +1182,11 @@ Begin
   Repeat
     Session.io.OutFull (Session.GetPrompt(354));
 
+    {$IFDEF TESTEDITOR}
+    Ch := Session.io.OneKey ('?ACDHQRSTU', True);
+    {$ELSE}
     Ch := Session.io.OneKey ('?ACHQRSTU', True);
+    {$ENDIF}
 
     Case Ch of
       '?' : Session.io.OutFullLn (Session.GetPrompt(355));
@@ -1162,9 +1195,17 @@ Begin
               Exit;
             End Else Begin
               Done := Session.io.GetYN(Session.GetPrompt(356), False);
+
               Exit;
             End;
       'C' : Exit;
+      'D' : Begin
+              DrawMode    := True;
+              SavedInsert := InsertMode;
+              InsertMode  := False;
+
+              Exit;
+            End;
       'H' : Begin
               Session.io.OutFile ('fshelp', True, 0);
               Exit;
@@ -1194,6 +1235,32 @@ Begin
             End;
     End;
   Until Done;
+End;
+
+Procedure TEditorANSI.DrawCommands;
+Var
+  Ch : Char;
+Begin
+  Repeat
+    Session.io.OutFull ('|CR|09Draw Commands (?/Help): ');
+
+    Ch := Session.io.OneKey ('?GQ', True);
+
+    Case Ch of
+      '?' : Session.io.OutFullLn ('|CR(Q)uit Draw Mode   (G)lyph Mode');
+      'G' : Begin
+              GlyphMode := Not GlyphMode;
+
+              Exit;
+            End;
+      'Q' : Begin
+              DrawMode   := False;
+              InsertMode := SavedInsert;
+
+              Exit;
+            End;
+    End;
+  Until False;
 End;
 
 Procedure TEditorANSI.MessageUpload;
@@ -1334,21 +1401,11 @@ Begin
       End;
     End Else
       Case Ch of
-(*
-        ^A   : Begin
-                 If Forced Then
-                   Session.io.OutFull (Session.GetPrompt(307))
-                 Else
-                   Done := Session.io.GetYN(Session.GetPrompt(356), False);
-
-                 If Not Done Then ReDrawTemplate(False);
-               End;
-*)
         ^B   : ReformParagraph;
         ^F   : CurX := 1;
         ^G   : CurX := CurLength + 1;
         ^H   : DoBackSpace;
-        ^I   : Begin
+        ^I   : If CurLength < RowSize Then Begin
                  If (CurX < RowSize) and (CurX MOD 5 = 0) Then
                    DoChar(' ');
 
@@ -1379,7 +1436,7 @@ Begin
                  Session.io.OutFile('fshelp', True, 0);
                  ReDrawTemplate(False);
                End;
-        ^Q   : Begin
+        ^Q   : If Not DrawMode Then Begin
                  If Session.User.ThisUser.UseLBQuote Then
                    QuoteWindow
                  Else
@@ -1410,24 +1467,23 @@ Begin
                End;
         ^Z,
         ^[   : Begin
-                 Commands;
+                 If DrawMode Then
+                   DrawCommands
+                 Else
+                   EditorCommands;
 
                  If (Not Save) and (Not Done) Then ReDrawTemplate(False);
-
-                 Session.io.AllowArrow := True;
                End;
         #32..
-        #254 : If (CurLength >= RowSize) and (GetWrapPos(ANSI.Data[CurLine], RowSize, RowSize) = 0) Then Begin
+        #254 : If (CurLength >= RowSize) and (GetWrapPos(ANSI.Data[CurLine], RowSize, RowSize) = 0) And InsertMode Then Begin
                  // dont do anything
                End Else
-               If (CurX = 1) and (Ch = '/') Then Begin
-                 Commands;
+                 If (CurX = 1) and (Ch = '/') and (Not DrawMode) Then Begin
+                   EditorCommands;
 
-                 If (Not Save) and (Not Done) Then ReDrawTemplate(False);
-
-                 Session.io.AllowArrow := True;
-               End Else
-                 DoChar(Ch);
+                   If (Not Save) and (Not Done) Then ReDrawTemplate(False);
+                 End Else
+                   DoChar(Ch);
       End;
   Until Done;
 
