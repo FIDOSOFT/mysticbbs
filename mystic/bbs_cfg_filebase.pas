@@ -121,6 +121,9 @@ Begin
     End;
   Until False;
 
+  FBase.FTPName := strReplace(FBase.FTPName, '/', '_');
+  FBase.FTPName := strReplace(FBase.FTPName, '\', '_');
+
   Box.Close;
 
   Form.Free;
