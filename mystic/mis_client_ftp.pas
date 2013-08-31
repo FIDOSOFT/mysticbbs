@@ -2,7 +2,7 @@ Unit MIS_Client_FTP;
 
 {$I M_OPS.PAS}
 
-{.$DEFINE FTPDEBUG}
+{$DEFINE FTPDEBUG}
 
 // does not send file/directory datestamps
 // does not support uploading (need to make bbs functions generic for this
@@ -11,7 +11,8 @@ Unit MIS_Client_FTP;
 Interface
 
 Uses
-  SysUtils,
+  DOS,
+  SysUtils,  //for wordrec only?
   m_io_Base,
   m_io_Sockets,
   m_Strings,
@@ -23,7 +24,6 @@ Uses
 
 Function CreateFTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
-// user login type: FTPFTN, or regular
 Type
   TFTPServer = Class(TServerClient)
     Server     : TServerManager;
@@ -56,6 +56,9 @@ Type
     Function    CheckFileLimits (TempFBase: RecFileBase; FDir: RecFileList) : Byte;
     Function    ValidDirectory  (TempBase: RecFileBase) : Boolean;
     Function    FindDirectory   (Var TempBase: RecFileBase) : LongInt;
+    Function    GetQWKName      : String;
+    Function    GetFTPDate      (DD: LongInt) : String;
+    Procedure   SendFile        (Str: String);
 
     Procedure   cmdUSER;
     Procedure   cmdPASS;
@@ -379,6 +382,69 @@ Begin
   End;
 End;
 
+Function TFTPServer.GetFTPDate (DD: LongInt) : String;
+Var
+  Today  : DateTime;
+  TempDT : DateTime;
+Begin
+  Today := CurDateDT;
+
+  If DD = 0 Then DD := CurDateDos;
+
+  UnPackTime (DD, TempDT);
+
+  Result := FormatDate(TempDT, 'NNN DD ');
+
+  If TempDT.Year = Today.Year Then
+    Result := Result + FormatDate(TempDT, 'HH:II')
+  Else
+    Result := Result + FormatDate(TempDT, ' YYYY');
+End;
+
+Function TFTPServer.GetQWKName : String;
+Begin
+  Result := '';
+
+  If LoggedIn Then Begin  // and allow qwk via ftp
+    If (User.Flags AND UserQwkNetwork <> 0) Then
+      Result := strLower(User.Handle) + '.qwk'
+    Else
+      Result := strLower(BbsConfig.QwkBBSID) + '.qwk';
+  End;
+End;
+
+Procedure TFTPServer.SendFile (Str: String);
+Var
+  F   : File;
+  Buf : Array[1..FileXferSize] of Byte;
+  Tmp : LongInt;
+  Res : LongInt;
+Begin
+  Assign  (F, Str);
+  ioReset (F, 1, fmRWDN);
+
+  InTransfer := True;
+
+  OpenDataSession;
+
+  While Not Eof(F) Do Begin
+    BlockRead (F, Buf, SizeOf(Buf), Res);
+
+    Repeat
+      Tmp := DataSocket.WriteBuf(Buf, Res);
+      Dec (Res, Tmp);
+    Until Res <= 0;
+  End;
+
+  Close (F);
+
+  Client.WriteLine (re_XferOK);
+
+  CloseDataSession;
+
+  InTransfer := False;
+End;
+
 Procedure TFTPServer.cmdUSER;
 Begin
   ResetSession;
@@ -597,6 +663,9 @@ Begin
 
       {$IFDEF FTPDEBUG} LOG('Back from data session'); {$ENDIF}
 
+      // if qwlbyFTP.acs then
+      DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + GetQWKName);
+
       FBaseFile := TFileBuffer.Create(FileBufSize);
 
       If FBaseFile.OpenStream (bbsConfig.DataPath + 'fbases.dat', SizeOf(RecFileBase), fmOpen, fmRWDN) Then Begin
@@ -604,7 +673,7 @@ Begin
           FBaseFile.ReadRecord (TempBase);
 
           If ValidDirectory(TempBase) and WildMatch(FileMask, TempBase.FtpName, False) Then
-              DataSocket.WriteLine('drwxr-xr-x   1 ftp      ftp             0 Jul 11 23:35 ' + TempBase.FtpName)
+            DataSocket.WriteLine('drwxr-xr-x   1 ftp      ftp             0 ' + GetFTPDate(TempBase.Created) + ' ' + TempBase.FtpName)
         End;
       End;
 
@@ -635,11 +704,13 @@ Begin
         If (Dir.Flags And FDirFailed  <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeFailed)) Then Continue;
 
         If WildMatch(FileMask, Dir.FileName, False) Then
-          DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL(strI2S(Dir.Size), 13, ' ') + ' Jul 11 23:35 ' + Dir.FileName)
+          DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL(strI2S(Dir.Size), 13, ' ') + ' ' + GetFTPDate(Dir.DateTime) + ' ' + Dir.FileName)
       End;
     End;
 
     DirFile.Free;
+
+    DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + GetQWKName);
 
     CloseDataSession;
   End Else
@@ -685,10 +756,6 @@ Var
   DirFile  : TFileBuffer;
   Dir      : RecFileList;
   Found    : LongInt;
-  F        : File;
-  Buf      : Array[1..FileXferSize] of Byte;
-  Tmp      : LongInt;
-  Res      : LongInt;
 Begin
   If LoggedIn Then Begin
     // if name = bbsid.qwk or if user is network and name is userid.qwk then
@@ -723,31 +790,8 @@ Begin
 
       Case CheckFileLimits(TempBase, Dir) of
         0 : Begin
-              Assign  (F, TempBase.Path + Dir.FileName);
-              ioReset (F, 1, fmRWDN);
-
-              InTransfer := True;
-
-              OpenDataSession;
-
-              While Not Eof(F) Do Begin
-                BlockRead (F, Buf, SizeOf(Buf), Res);
-
-                Repeat
-                  Tmp := DataSocket.WriteBuf(Buf, Res);
-                  Dec (Res, Tmp);
-                Until Res = 0;
-              End;
-
-              Close (F);
-
-              Client.WriteLine (re_XferOK);
-
-              CloseDataSession;
-
-              InTransfer := False;
-
-              UpdateUserStats(TempBase, Dir, Found);
+              SendFile        (TempBase.Path + Dir.FileName);
+              UpdateUserStats (TempBase, Dir, Found);
             End;
         1 : Client.WriteLine(re_NoAccess);
         2 : Client.WriteLine(re_DLLimit);
@@ -872,11 +916,11 @@ Begin
 
     If Cmd = 'CDUP' Then cmdCDUP Else
     If Cmd = 'CWD'  Then cmdCWD  Else
-//    If Cmd = 'DELE' Then Client.WriteLine(re_NoAccess) Else
+    If Cmd = 'DELE' Then Client.WriteLine(re_NoAccess) Else
     If Cmd = 'EPRT' Then cmdEPRT Else
     If Cmd = 'EPSV' Then cmdEPSV Else
     If Cmd = 'LIST' Then cmdLIST Else
-//    If Cmd = 'MKD'  Then Client.WriteLine(re_NoAccess) Else
+    If Cmd = 'MKD'  Then Client.WriteLine(re_NoAccess) Else
     If Cmd = 'MODE' Then cmdMODE Else
     If Cmd = 'NLST' Then cmdNLST Else
     If Cmd = 'NOOP' Then Client.WriteLine(re_CommandOK) Else
@@ -886,7 +930,7 @@ Begin
     If Cmd = 'PWD'  Then cmdPWD  Else
     If Cmd = 'REIN' Then cmdREIN Else
     If Cmd = 'RETR' Then cmdRETR Else
-//    If Cmd = 'RMD'  Then Client.WriteLine(re_NoAccess) Else
+    If Cmd = 'RMD'  Then Client.WriteLine(re_NoAccess) Else
     If Cmd = 'SIZE' Then cmdSIZE Else
     If Cmd = 'STOR' Then cmdSTOR Else
     If Cmd = 'STRU' Then cmdSTRU Else
