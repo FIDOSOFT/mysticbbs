@@ -46,19 +46,22 @@ Uses
   bbs_DataBase,
   bbs_Core,
   bbs_NodeInfo,
+  {$IFDEF TESTEDITOR}
+    BBS_Edit_Ansi,
+  {$ENDIF}
   bbs_Cfg_Main;
 
-(*
+{$IFDEF TESTEDITOR}
 Procedure TestEditor;
 Var
   T : TEditorANSI;
 Begin
-  T := TEditorANSI.Create(Pointer(Session));
+  T := TEditorANSI.Create(Pointer(Session), 'ansiedit');
 
   T.Edit;
   T.Free;
 End;
-*)
+{$ENDIF}
 
 Procedure InitClasses;
 Begin
@@ -209,11 +212,11 @@ Begin
 //    SIGHUP  : Halt;
 //    SIGTERM : Halt;
     SIGHUP  : Begin
-                FileErase (Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+                FileErase (bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
                 Halt;
               End;
     SIGTERM : Begin
-                FileErase (Config.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+                FileErase (bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
                 Halt;
               End;
     SIGUSR1 : Session.CheckTimeOut := False;
@@ -485,8 +488,10 @@ Begin
 
   Set_Node_Action (Session.GetPrompt(345));
 
-//  TestEditor;
-//  Halt(0);
+  {$IFDEF TESTEDITOR}
+    TestEditor;
+    Halt(0);
+  {$ENDIF}
 
   Session.User.UserLogon1 (Script);
 
