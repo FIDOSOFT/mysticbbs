@@ -33,6 +33,8 @@
 {$DEFINE RELEASE}
 {.$DEFINE LOGGING}
 
+{.$DEFINE TESTEDITOR}
+
 { ------------------------------------------------------------------------- }
 
 {$WARNINGS ON}
