@@ -20,7 +20,8 @@ Uses
   bbs_MsgBase_Squish,
   MIS_Server,
   MIS_NodeData,
-  MIS_Common;
+  MIS_Common,
+  BBS_Records;
 
 Function CreateSMTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 

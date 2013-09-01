@@ -3604,4 +3604,7 @@
    you have existing FTP names set for your file bases, you must open them in
    the file base editor for their names to be automatically changed.
 
+ + Users can now download QWK packets using the FTP server.  A QWK packet
+   filename will be shown in all FTP listings.
+
    <ALPHA 37 RELEASED>

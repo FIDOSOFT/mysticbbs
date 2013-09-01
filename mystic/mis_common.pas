@@ -6,15 +6,14 @@ Interface
 
 Uses
   m_Output,
-  m_Term_Ansi;
-
-{$I RECORDS.PAS}
+  m_Term_Ansi,
+  BBS_Records;
 
 Var
-  bbsConfig : RecConfig;
   TempPath  : String;
   Console   : TOutput;
   Term      : TTermAnsi;
+  bbsConfig : RecConfig;
 
 Function SearchForUser    (UN: String; Var Rec: RecUser; Var RecPos: LongInt) : Boolean;
 Function CheckAccess      (User: RecUser; IgnoreGroup: Boolean; Str: String) : Boolean;

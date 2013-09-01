@@ -14,7 +14,8 @@ Uses
   m_Protocol_Queue,
   MIS_Server,
   MIS_NodeData,
-  MIS_Common;
+  MIS_Common,
+  BBS_Records;
 
 Const
   M_NUL  = 0;

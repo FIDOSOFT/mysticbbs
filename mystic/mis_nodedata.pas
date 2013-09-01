@@ -37,7 +37,8 @@ Implementation
 
 Uses
   m_FileIO,
-  m_Strings;
+  m_Strings,
+  BBS_Records;
 
 Procedure TNodeData.SynchronizeNodeData;
 Var

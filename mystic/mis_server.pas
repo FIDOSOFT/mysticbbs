@@ -9,7 +9,8 @@ Uses
   m_io_Base,
   m_io_Sockets,
   MIS_Common,
-  MIS_NodeData;
+  MIS_NodeData,
+  BBS_Records;
 
 Const
   MaxStatusText = 20;

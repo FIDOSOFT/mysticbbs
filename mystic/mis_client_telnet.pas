@@ -39,7 +39,8 @@ Uses
   m_Strings,
   MIS_Common,
   MIS_NodeData,
-  MIS_Server;
+  MIS_Server,
+  BBS_Records;
 
 {$IFDEF USEFORK}
   function forkpty(__amaster:Plongint; __name:Pchar; __termp:Pointer; __winp:Pointer):longint;cdecl;external 'c' name 'forkpty';

@@ -49,7 +49,8 @@ Uses
   MIS_Client_POP3,
   MIS_Client_FTP,
   MIS_Client_NNTP,
-  MIS_Client_BINKP;
+  MIS_Client_BINKP,
+  BBS_Records;
 
 Const
   FocusTelnet = 0;

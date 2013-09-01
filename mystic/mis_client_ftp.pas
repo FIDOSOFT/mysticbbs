@@ -2,7 +2,7 @@ Unit MIS_Client_FTP;
 
 {$I M_OPS.PAS}
 
-{$DEFINE FTPDEBUG}
+{.$DEFINE FTPDEBUG}
 
 // does not send file/directory datestamps
 // does not support uploading (need to make bbs functions generic for this
@@ -20,7 +20,9 @@ Uses
   m_DateTime,
   MIS_Server,
   MIS_NodeData,
-  MIS_Common;
+  MIS_Common,
+  BBS_Records,
+  BBS_DataBase;
 
 Function CreateFTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
@@ -60,6 +62,8 @@ Type
     Function    GetFTPDate      (DD: LongInt) : String;
     Procedure   SendFile        (Str: String);
 
+    Function    QWKCreatePacket : Boolean;
+
     Procedure   cmdUSER;
     Procedure   cmdPASS;
     Procedure   cmdREIN;
@@ -82,6 +86,9 @@ Type
   End;
 
 Implementation
+
+Uses
+  BBS_MsgBase_QWK;
 
 Const
   FileBufSize    =  4 * 1024;
@@ -407,9 +414,9 @@ Begin
 
   If LoggedIn Then Begin  // and allow qwk via ftp
     If (User.Flags AND UserQwkNetwork <> 0) Then
-      Result := strLower(User.Handle) + '.qwk'
+      Result := strLower(User.Handle)
     Else
-      Result := strLower(BbsConfig.QwkBBSID) + '.qwk';
+      Result := strLower(BbsConfig.QwkBBSID);
   End;
 End;
 
@@ -443,6 +450,35 @@ Begin
   CloseDataSession;
 
   InTransfer := False;
+End;
+
+Function QWKHasAccess (Owner: Pointer; ACS: String) : Boolean;
+Begin
+  Result := CheckAccess(TQWKEngine(Owner).UserRecord, True, ACS);
+End;
+
+Function TFTPServer.QWKCreatePacket : Boolean;
+Var
+  QWK : TQwkEngine;
+Begin
+  // need to change temppath to a unique directory created for this
+  // ftp instance.  before that we need to push a unique ID to this
+  // session.
+
+  QWK := TQwkEngine.Create(TempPath, GetQWKName, UserPos, User);
+
+  QWK.HasAccess   := @QWKHasAccess;
+  QWK.IsNetworked := User.Flags AND UserQWKNetwork <> 0;
+  QWK.IsExtended  := User.QwkExtended;
+
+  QWK.CreatePacket;
+  QWK.UpdateLastReadPointers;
+  QWK.Free;
+
+  Server.Status ('Created packet in ' + TempPath);
+
+  ExecuteArchive (TempPath, TempPath + GetQWKName + '.qwk', User.Archive, TempPath + '*', 1);
+  SendFile       (TempPath + GetQWKName + '.qwk');
 End;
 
 Procedure TFTPServer.cmdUSER;
@@ -664,7 +700,7 @@ Begin
       {$IFDEF FTPDEBUG} LOG('Back from data session'); {$ENDIF}
 
       // if qwlbyFTP.acs then
-      DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + GetQWKName);
+      DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + GetQWKName + '.qwk');
 
       FBaseFile := TFileBuffer.Create(FileBufSize);
 
@@ -710,7 +746,7 @@ Begin
 
     DirFile.Free;
 
-    DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + GetQWKName);
+    DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + GetQWKName + '.qwk');
 
     CloseDataSession;
   End Else
@@ -758,13 +794,18 @@ Var
   Found    : LongInt;
 Begin
   If LoggedIn Then Begin
-    // if name = bbsid.qwk or if user is network and name is userid.qwk then
-    // send file here
-    // else do the normal stuff
+
+    If strUpper(Data) = strUpper(GetQWKName + '.qwk') Then Begin
+      QWKCreatePacket;
+
+      Exit;
+    End;
+
     TempPos := FindDirectory(TempBase);
 
     If TempPos = -1 Then Begin
       Client.WriteLine(re_BadFile);
+
       Exit;
     End;
 
@@ -785,6 +826,7 @@ Begin
 
       If Found = -1 Then Begin
         Client.WriteLine(re_BadFile);
+
         Exit;
       End;
 
@@ -940,6 +982,7 @@ Begin
     If Cmd = 'XPWD' Then cmdPWD  Else
     If Cmd = 'QUIT' Then Begin
       GotQuit := True;
+
       Break;
     End Else
       Client.WriteLine(re_NoCommand);

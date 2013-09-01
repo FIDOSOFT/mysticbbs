@@ -24,6 +24,7 @@ Const
 
 Function  GetBaseConfiguration  (UseEnv: Boolean; Var TempCfg: RecConfig) : Byte;
 Function  PutBaseConfiguration  (Var TempCfg: RecConfig) : Boolean;
+Function  ShellDOS              (ExecPath: String; Command: String) : LongInt;
 
 // MESSAGE BASE
 
@@ -34,6 +35,7 @@ Procedure PutMessageScan        (UN: Cardinal; TempBase: RecMessageBase; TempSca
 
 // FILE BASE
 
+Procedure ExecuteArchive        (TempP: String; FName: String; Temp: String; Mask: String; Mode: Byte);
 Function  GetTotalFiles         (Var TempBase: RecFileBase) : LongInt;
 
 // USER
@@ -88,6 +90,29 @@ Begin
     bbsCfg := TempCfg;
     Result := True;
   End;
+End;
+
+Function ShellDOS (ExecPath: String; Command: String) : LongInt;
+Var
+  CurDIR : String;
+Begin
+  GetDIR (0, CurDIR);
+
+  If ExecPath <> '' Then DirChange(ExecPath);
+
+  {$IFDEF UNIX}
+    Result := Shell(Command);
+  {$ENDIF}
+
+  {$IFDEF WINDOWS}
+    If Command <> '' Then Command := '/C' + Command;
+
+    Exec (GetEnv('COMSPEC'), Command);
+
+    Result := DosExitCode;
+  {$ENDIF}
+
+  DirChange(CurDIR);
 End;
 
 Function GetMBaseByIndex (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
@@ -211,6 +236,64 @@ Function IsThisUser (U: RecUser; Str: String) : Boolean;
 Begin
   Str    := strUpper(Str);
   Result := (strUpper(U.RealName) = Str) or (strUpper(U.Handle) = Str);
+End;
+
+Procedure ExecuteArchive (TempP: String; FName: String; Temp: String; Mask: String; Mode: Byte);
+Var
+  ArcFile : File;
+  Arc     : RecArchive;
+  Count   : LongInt;
+  Str     : String;
+Begin
+  If Temp <> '' Then
+    Temp := strUpper(Temp)
+  Else
+    Temp := strUpper(JustFileExt(FName));
+
+  Assign (ArcFile, bbsCfg.DataPath + 'archive.dat');
+
+  If Not ioReset (ArcFile, SizeOf(RecArchive), fmRWDN) Then Exit;
+
+  Repeat
+    If Eof(ArcFile) Then Begin
+      Close (ArcFile);
+
+      Exit;
+    End;
+
+    ioRead (ArcFile, Arc);
+
+    If (Not Arc.Active) or ((Arc.OSType <> OSType) and (Arc.OSType <> 3)) Then Continue;
+
+    If strUpper(Arc.Ext) = Temp Then Break;
+  Until False;
+
+  Close (ArcFile);
+
+  Case Mode of
+    1 : Str := Arc.Pack;
+    2 : Str := Arc.Unpack;
+  End;
+
+  If Str = '' Then Exit;
+
+  Temp  := '';
+  Count := 1;
+
+  While Count <= Length(Str) Do Begin
+    If Str[Count] = '%' Then Begin
+      Inc (Count);
+
+      If Str[Count] = '1' Then Temp := Temp + FName Else
+      If Str[Count] = '2' Then Temp := Temp + Mask Else
+      If Str[Count] = '3' Then Temp := Temp + TempP;
+    End Else
+      Temp := Temp + Str[Count];
+
+    Inc (Count);
+  End;
+
+  ShellDOS ('', Temp);
 End;
 
 Initialization

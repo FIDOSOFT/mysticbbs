@@ -15,7 +15,8 @@ Uses
   m_DateTime,
   MIS_Server,
   MIS_NodeData,
-  MIS_Common;
+  MIS_Common,
+  BBS_Records;
 
 Function CreateNNTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 

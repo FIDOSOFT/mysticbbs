@@ -7,7 +7,10 @@ Interface
 Uses
   m_FileIO,
   BBS_Records,
-  BBS_DataBase;
+  BBS_DataBase,
+  BBS_MsgBase_ABS,
+  BBS_MsgBase_JAM,
+  BBS_MsgBase_Squish;
 
 Const
   QWK_EOL = #13#10;
@@ -42,7 +45,7 @@ Type
     Pos  : LongInt;
   End;
 
-  TQWKEngine_HasAccess = Function  (AcsStr: String) : Boolean;
+  TQWKEngine_HasAccess = Function  (Sender: Pointer; AcsStr: String) : Boolean;
   TQWKEngine_Status    = Procedure (Sender: Pointer; State: Byte);
 
   TQWKEngine = Class
@@ -61,7 +64,11 @@ Type
     RepBaseAdd    : LongInt;
     RepBaseDel    : LongInt;
     DataFile      : TFileBuffer;
+    MBaseFile     : File;
     MBase         : RecMessageBase;
+    QwkLR         : QwkLRRec;
+    QwkLRFile     : File of QwkLRRec;
+    MsgBase       : PMsgBaseABS;
 
     Constructor Create            (QwkPath, QwkID: String; UN: Cardinal; UR: RecUser);
     Procedure   LONG2MSB          (Index: LongInt; Var MS: BSingle);
@@ -69,6 +76,7 @@ Type
     Procedure   WriteTOREADEREXT;
     Procedure   WriteCONTROLDAT;
     Function    WriteMSGDAT : LongInt;
+    Procedure   UpdateLastReadPointers;
     Procedure   CreatePacket;
     Function    ProcessReply : Boolean;
   End;
@@ -77,10 +85,7 @@ Implementation
 
 Uses
   m_Strings,
-  m_DateTime,
-  BBS_MsgBase_ABS,
-  BBS_MsgBase_JAM,
-  BBS_MsgBase_Squish;
+  m_DateTime;
 
 Constructor TQWKEngine.Create (QwkPath, QwkID: String; UN: Cardinal; UR: RecUser);
 Begin
@@ -98,6 +103,8 @@ Begin
   RepFailed     := 0;
   RepBaseAdd    := 0;
   RepBaseDel    := 0;
+
+  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
 End;
 
 Procedure TQWKEngine.LONG2MSB (Index : LongInt; Var MS : BSingle);
@@ -142,7 +149,6 @@ End;
 Procedure TQWKEngine.WriteTOREADEREXT;
 Var
   TempFile : Text;
-  BaseFile : File;
   Flags    : String;
   Base     : RecMessageBase;
 Begin
@@ -152,14 +158,12 @@ Begin
   ReWrite (TempFile);
   Write   (TempFile, 'ALIAS ' + UserRecord.Handle + QWK_EOL);
 
-  Assign (BaseFile, bbsCfg.DataPath + 'mbases.dat');
+  If ioReset (MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then Begin
 
-  If ioReset (BaseFile, SizeOf(RecMessageBase), fmRWDN) Then Begin
+    While Not Eof(MBaseFile) Do Begin
+      ioRead (MBaseFile, Base);
 
-    While Not Eof(BaseFile) Do Begin
-      ioRead (BaseFile, Base);
-
-      If HasAccess(Base.ReadACS) Then Begin
+      If HasAccess(Self, Base.ReadACS) Then Begin
         Flags := ' ';
 
         If Base.Flags AND MBPrivate = 0 Then
@@ -170,7 +174,7 @@ Begin
         If Base.Flags AND MBRealNames = 0 Then
           Flags := Flags + 'H';
 
-        If Not HasAccess(Base.PostACS) Then
+        If Not HasAccess(Self, Base.PostACS) Then
           Flags := Flags + 'BRZ';
 
         Case Base.NetType of
@@ -187,7 +191,7 @@ Begin
       End;
     End;
 
-    Close (BaseFile);
+    Close (MBaseFile);
   End;
 
   Close (TempFile);
@@ -216,14 +220,12 @@ Begin
   Write (TempFile, TotalMessages, QWK_EOL);
   Write (TempFile, TotalBases - 1, QWK_EOL);
 
-  Assign (BaseFile, bbsCfg.DataPath + 'mbases.dat');
-
   If ioReset (BaseFile, SizeOf(RecMessageBase), fmRWDN) Then Begin
 
     While Not Eof(BaseFile) Do Begin
       ioRead (BaseFile, Base);
 
-      If HasAccess(Base.ReadACS) Then Begin
+      If HasAccess(Self, Base.ReadACS) Then Begin
         Write (TempFile, Base.Index, QWK_EOL);
 
         If IsExtended Then
@@ -254,7 +256,6 @@ Var
   LastRead : LongInt;
   QwkIndex : LongInt;
   TooBig   : Boolean;
-  MsgBase  : PMsgBaseABS;
 
   Procedure DoString (Str: String);
   Var
@@ -399,13 +400,34 @@ Begin
   Result := LastRead;
 End;
 
+Procedure TQWKEngine.UpdateLastReadPointers;
+Begin
+  Reset   (QwkLRFile);
+  ioReset (MBaseFile, SizeOf(RecMessageBase), fmRWDN);
+
+  While Not Eof(QwkLRFile) Do Begin
+    Read (QwkLRFile, QwkLR);
+
+    If ioSeek (MBaseFile, QwkLR.Base - 1) Then Begin
+      ioRead (MBaseFile, MBase);
+
+      If MBaseOpenCreate (MsgBase, MBase, WorkPath) Then Begin
+        MsgBase^.SetLastRead (UserNumber, QwkLR.Pos);
+        MsgBase^.CloseMsgBase;
+      End;
+
+      Dispose(MsgBase, Done);
+    End;
+  End;
+
+  Close (QwkLRFile);
+  Close (MBaseFile);
+End;
+
 Procedure TQWKEngine.CreatePacket;
 Var
-  Temp      : String;
-  QwkLR     : QwkLRRec;
-  QwkLRFile : File of QwkLRRec;
-  MBaseFile : File;
-  MScan     : MScanRec;
+  Temp  : String;
+  MScan : MScanRec;
 Begin
   DataFile := TFileBuffer.Create(4 * 1024);
 
@@ -418,8 +440,6 @@ Begin
   Assign  (QwkLRFile, WorkPath + 'qlr.dat');
   ReWrite (QwkLRFile);
 
-  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
-
   If ioReset (MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then Begin
 
     If IsNetworked Then
@@ -431,7 +451,7 @@ Begin
       If IsNetworked And (MBase.Flags AND MBAllowQWKNet = 0) Then
         Continue;
 
-      If HasAccess(MBase.ReadACS) Then Begin
+      If HasAccess(Self, MBase.ReadACS) Then Begin
 
          GetMessageScan (UserNumber, MBase, MScan);
 

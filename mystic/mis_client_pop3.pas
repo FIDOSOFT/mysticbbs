@@ -22,7 +22,8 @@ Uses
   MIS_Common,
   BBS_MsgBase_ABS,
   BBS_MsgBase_JAM,
-  BBS_MsgBase_Squish;
+  BBS_MsgBase_Squish,
+  BBS_Records;
 
 Function CreatePOP3 (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
