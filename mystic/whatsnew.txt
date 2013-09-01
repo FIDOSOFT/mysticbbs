@@ -3605,6 +3605,12 @@
    the file base editor for their names to be automatically changed.
 
  + Users can now download QWK packets using the FTP server.  A QWK packet
-   filename will be shown in all FTP listings.
+   filename will be shown in all FTP listings.  If the user is flagged as a
+   FTP network account, their handle will be used as the BBSID for the QWK
+   packet (handle.qwk).
+
+ + Users can now upload QWK reply packets using the FTP server.  If the user
+   is flagged as a FTP network account, their reply packet will need to be
+   "handle.rep".
 
    <ALPHA 37 RELEASED>

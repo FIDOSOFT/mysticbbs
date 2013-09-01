@@ -4,10 +4,6 @@ Unit MIS_Client_FTP;
 
 {.$DEFINE FTPDEBUG}
 
-// does not send file/directory datestamps
-// does not support uploading (need to make bbs functions generic for this
-//    and for mbbsutil -fupload command)
-
 Interface
 
 Uses
@@ -54,15 +50,17 @@ Type
     Function    OpenDataSession : Boolean;
     Procedure   CloseDataSession;
     Procedure   ResetSession;
-    Procedure   UpdateUserStats (TFBase: RecFileBase; FDir: RecFileList; DirPos: LongInt);
+    Procedure   UpdateUserStats (TFBase: RecFileBase; FDir: RecFileList; DirPos: LongInt; IsUpload: Boolean);
     Function    CheckFileLimits (TempFBase: RecFileBase; FDir: RecFileList) : Byte;
     Function    ValidDirectory  (TempBase: RecFileBase) : Boolean;
     Function    FindDirectory   (Var TempBase: RecFileBase) : LongInt;
     Function    GetQWKName      : String;
     Function    GetFTPDate      (DD: LongInt) : String;
     Procedure   SendFile        (Str: String);
+    Function    RecvFile        (Str: String; IsAppend: Boolean) : Boolean;
 
     Function    QWKCreatePacket : Boolean;
+    Procedure   QWKProcessREP;
 
     Procedure   cmdUSER;
     Procedure   cmdPASS;
@@ -75,7 +73,7 @@ Type
     Procedure   cmdLIST;
     Procedure   cmdPWD;
     Procedure   cmdRETR;
-    Procedure   cmdSTOR;
+    Procedure   cmdSTOR (IsAppend: Boolean);
     Procedure   cmdSTRU;
     Procedure   cmdMODE;
     Procedure   cmdSYST;
@@ -161,17 +159,16 @@ Begin
   InTransfer := False;
 End;
 
-Procedure TFTPServer.UpdateUserStats (TFBase: RecFileBase; FDir: RecFileList; DirPos: LongInt);
+Procedure TFTPServer.UpdateUserStats (TFBase: RecFileBase; FDir: RecFileList; DirPos: LongInt; IsUpload: Boolean);
 Var
-  HistFile: File of RecHistory;
-  History : RecHistory;
-  FDirFile: File of RecFileList;
-  UserFile: File of RecUser;
+  HistFile : File of RecHistory;
+  History  : RecHistory;
+  FDirFile : File of RecFileList;
+  UserFile : File of RecUser;
 Begin
-  Inc (FDir.Downloads);
-
+  // change to getuserbypos
   Assign  (UserFile, bbsConfig.DataPath + 'users.dat');
-  ioReset (UserFile, SizeOf(RecUser), fmReadWrite + fmDenyWrite);
+  ioReset (UserFile, SizeOf(RecUser), fmRWDW);
   ioSeek  (UserFile, UserPos - 1);
   ioRead  (UserFile, User);
 
@@ -179,28 +176,33 @@ Begin
     User.CallsToday := 0;
     User.DLsToday   := 0;
     User.DLkToday   := 0;
-    User.TimeLeft   := SecLevel.Time
+    User.TimeLeft   := SecLevel.Time;
+    User.LastOn     := CurDateDos;
   End;
 
-  // need to check if it were an upload and do things accordingly
+  If IsUpload Then Begin
+    Inc (User.ULs);
+    Inc (User.ULk, FDir.Size DIV 1024);
+  End Else Begin
+    Inc (FDir.Downloads);
+    Inc (User.DLs);
+    Inc (User.DLsToday);
+    Inc (User.DLk, FDir.Size DIV 1024);
+    Inc (User.DLkToday, FDir.Size DIV 1024);
 
-  Inc (User.DLs);
-  Inc (User.DLsToday);
-  Inc (User.DLk, FDir.Size DIV 1024);
-  Inc (User.DLkToday, FDir.Size DIV 1024);
+    Assign  (FDirFile, bbsConfig.DataPath + TFBase.FileName + '.dir');
+    ioReset (FDirFile, SizeOf(RecFileList), fmRWDW);
+    ioSeek  (FDirFile, DirPos - 1);
+    ioWrite (FDirFile, FDir);
+    Close   (FDirFile);
+  End;
 
   ioSeek  (UserFile, UserPos - 1);
   ioWrite (UserFile, User);
   Close   (UserFile);
 
-  Assign  (FDirFile, bbsConfig.DataPath + TFBase.FileName + '.dir');
-  ioReset (FDirFile, SizeOf(RecFileList), fmReadWrite + fmDenyWrite);
-  ioSeek  (FDirFile, DirPos - 1);
-  ioWrite (FDirFile, FDir);
-  Close   (FDirFile);
-
   Assign  (HistFile, bbsConfig.DataPath + 'history.dat');
-  ioReset (HistFile, SizeOf(RecHistory), fmReadWrite + fmDenyWrite);
+  ioReset (HistFile, SizeOf(RecHistory), fmRWDW);
 
   If IoResult <> 0 Then ReWrite(HistFile);
 
@@ -217,11 +219,17 @@ Begin
 
   If Eof(HistFile) Then Begin
     FillChar(History, SizeOf(History), 0);
+
     History.Date := CurDateDos;
   End;
 
-  Inc (History.Downloads,  1);
-  Inc (History.DownloadKB, FDir.Size DIV 1024);
+  If IsUpload Then Begin
+    Inc (History.Uploads);
+    Inc (History.UploadKB, FDir.Size DIV 1024);
+  End Else Begin
+    Inc (History.Downloads);
+    Inc (History.DownloadKB, FDir.Size DIV 1024);
+  End;
 
   ioWrite (HistFile, History);
   Close   (HistFile);
@@ -282,6 +290,7 @@ Begin
 
   If DataSocket <> NIL Then Begin
     Client.WriteLine(re_DataOpen);
+
     Result := True;
     Exit;
   End;
@@ -301,6 +310,7 @@ Begin
     If Not Assigned(DataSocket) Then Begin
       WaitSock.Free;
       Client.WriteLine(re_NoData);
+
       Exit;
     End;
 
@@ -312,6 +322,7 @@ Begin
       Client.WriteLine(re_NoData);
       DataSocket.Free;
       DataSocket := NIL;
+
       Exit;
     End;
   End;
@@ -420,6 +431,57 @@ Begin
   End;
 End;
 
+Function TFTPServer.RecvFile (Str: String; IsAppend: Boolean) : Boolean;
+Var
+  F   : File;
+  Buf : Array[1..FileXferSize] of Byte;
+  Res : LongInt;
+Begin
+  Result := False;
+
+  If FileExist(Str) And Not IsAppend Then Begin
+    Client.WriteLine(re_BadFile);
+
+    Exit;
+  End;
+
+  If Not OpenDataSession Then Exit;
+
+  Server.Status ('Receiving: ' + Str);
+
+  InTransfer := True;
+  Result     := True;
+
+  Assign (F, Str);
+
+  If FileExist(Str) And IsAppend Then Begin
+    Reset (F, 1);
+    Seek  (F, FileSize(F));
+  End Else Begin
+    ReWrite (F, 1);
+
+    IsAppend := False;
+  End;
+
+  Repeat
+    Res := DataSocket.ReadBuf(Buf[1], SizeOf(Buf));
+
+    If Res > 0 Then
+      BlockWrite (F, Buf[1], Res)
+    Else
+      Break;
+  Until False;
+
+  Close (F);
+
+  If Result Then
+    Client.WriteLine (re_XferOK);
+
+  CloseDataSession;
+
+  InTransfer := False;
+End;
+
 Procedure TFTPServer.SendFile (Str: String);
 Var
   F   : File;
@@ -434,11 +496,14 @@ Begin
 
   OpenDataSession;
 
+  Server.Status('Sending: ' + Str);
+
   While Not Eof(F) Do Begin
     BlockRead (F, Buf, SizeOf(Buf), Res);
 
     Repeat
       Tmp := DataSocket.WriteBuf(Buf, Res);
+
       Dec (Res, Tmp);
     Until Res <= 0;
   End;
@@ -475,10 +540,33 @@ Begin
   QWK.UpdateLastReadPointers;
   QWK.Free;
 
-  Server.Status ('Created packet in ' + TempPath);
-
   ExecuteArchive (TempPath, TempPath + GetQWKName + '.qwk', User.Archive, TempPath + '*', 1);
   SendFile       (TempPath + GetQWKName + '.qwk');
+
+  DirClean (TempPath, '');
+End;
+
+Procedure TFTPServer.QWKProcessREP;
+Var
+  QWK : TQwkEngine;
+Begin
+  // need to change temppath to a unique directory created for this
+  // ftp instance.  before that we need to push a unique ID to this
+  // session.
+
+  RecvFile       (TempPath + GetQWKName + '.rep', False);
+  ExecuteArchive (TempPath, TempPath + GetQWKName + '.rep', User.Archive, '*', 2);
+
+  QWK := TQwkEngine.Create(TempPath, GetQWKName, UserPos, User);
+
+  QWK.HasAccess   := @QWKHasAccess;
+  QWK.IsNetworked := User.Flags AND UserQWKNetwork <> 0;
+  QWK.IsExtended  := User.QwkExtended;
+
+  QWK.ProcessReply;
+  QWK.Free;
+
+  // update user stats posts and bbs history if not networked
 End;
 
 Procedure TFTPServer.cmdUSER;
@@ -737,7 +825,7 @@ Begin
         If (Dir.Flags And FDirDeleted <> 0) Then Continue;
         If (Dir.Flags and FDirOffline <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeOffline)) Then Continue;
         If (Dir.Flags And FDirInvalid <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeUnvalid)) Then Continue;
-        If (Dir.Flags And FDirFailed  <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeFailed)) Then Continue;
+        If (Dir.Flags And FDirFailed  <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeFailed))  Then Continue;
 
         If WildMatch(FileMask, Dir.FileName, False) Then
           DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL(strI2S(Dir.Size), 13, ' ') + ' ' + GetFTPDate(Dir.DateTime) + ' ' + Dir.FileName)
@@ -753,13 +841,19 @@ Begin
     Client.WriteLine(re_BadCommand);
 End;
 
-Procedure TFTPServer.cmdSTOR;
+Procedure TFTPServer.cmdSTOR (IsAppend: Boolean);
 Var
   TempPos  : LongInt;
   TempBase : RecFileBase;
 Begin
   If Not LoggedIn Then Begin
     Client.WriteLine(re_BadCommand);
+
+    Exit;
+  End;
+
+  If strUpper(Data) = strUpper(GetQWKName + '.rep') Then Begin
+    QWKProcessREP;
 
     Exit;
   End;
@@ -772,17 +866,27 @@ Begin
     Exit;
   End;
 
-  Client.WriteLine(re_BadFile);
+  server.status('calling recvfile');
 
-  //reasons why i haven't finished this (todo):
+  RecvFile ('d:\code\mystic1\temp0\infile.tmp', IsAppend);
 
-  // ratios
-  // diskspace
+//  Client.WriteLine(re_BadFile);
+
+  // dreadful things required to do for upload process:
+
+  // find upload base
+  // check diskspace
+  // check slowmedia
+  // check access
+  // check filename length
+  // duplicate file checking
+  // get file
+  // update user statistics
+  // update history statistics
   // archive testing
   // file_id.diz importing
-  // forcing uploads to upload base (if non-zero)
-  // duplicate file checking
-  // upload statistic tracking
+
+  // other things: add no desc and ftp test batch to configuration?
 End;
 
 Procedure TFTPServer.cmdRETR;
@@ -818,6 +922,7 @@ Begin
 
         If WildMatch(FileMask, Dir.FileName, False) Then Begin
           Found := DirFile.FilePosRecord;
+
           Break;
         End;
       End;
@@ -833,7 +938,7 @@ Begin
       Case CheckFileLimits(TempBase, Dir) of
         0 : Begin
               SendFile        (TempBase.Path + Dir.FileName);
-              UpdateUserStats (TempBase, Dir, Found);
+              UpdateUserStats (TempBase, Dir, Found, False);
             End;
         1 : Client.WriteLine(re_NoAccess);
         2 : Client.WriteLine(re_DLLimit);
@@ -956,6 +1061,7 @@ Begin
       Server.Status ('Cmd: ' + Cmd + ' Data: ' + Data);
     {$ENDIF}
 
+    //If Cmd = 'APPE' Then cmdSTOR(True) Else
     If Cmd = 'CDUP' Then cmdCDUP Else
     If Cmd = 'CWD'  Then cmdCWD  Else
     If Cmd = 'DELE' Then Client.WriteLine(re_NoAccess) Else
@@ -974,7 +1080,8 @@ Begin
     If Cmd = 'RETR' Then cmdRETR Else
     If Cmd = 'RMD'  Then Client.WriteLine(re_NoAccess) Else
     If Cmd = 'SIZE' Then cmdSIZE Else
-    If Cmd = 'STOR' Then cmdSTOR Else
+    If Cmd = 'STOR' Then cmdSTOR(False) Else
+    // implement STOU which in turn calls cmdSTOR after getting filename
     If Cmd = 'STRU' Then cmdSTRU Else
     If Cmd = 'SYST' Then cmdSYST Else
     If Cmd = 'TYPE' Then cmdTYPE Else

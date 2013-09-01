@@ -25,13 +25,16 @@ Const
 Function  GetBaseConfiguration  (UseEnv: Boolean; Var TempCfg: RecConfig) : Byte;
 Function  PutBaseConfiguration  (Var TempCfg: RecConfig) : Boolean;
 Function  ShellDOS              (ExecPath: String; Command: String) : LongInt;
+Function  Addr2Str              (Addr : RecEchoMailAddr) : String;
 
 // MESSAGE BASE
 
 Function  MBaseOpenCreate       (Var Msg: PMsgBaseABS; Var Area: RecMessageBase; TP: String) : Boolean;
+Function  GetOriginLine         (Var mArea: RecMessageBase) : String;
 Function  GetMBaseByIndex       (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
 Procedure GetMessageScan        (UN: Cardinal; TempBase: RecMessageBase; Var TempScan: MScanRec);
 Procedure PutMessageScan        (UN: Cardinal; TempBase: RecMessageBase; TempScan: MScanRec);
+Procedure MBaseAssignData       (Var User: RecUser; Var Msg: PMsgBaseABS; Var TempBase: RecMessageBase);
 
 // FILE BASE
 
@@ -47,7 +50,86 @@ Implementation
 Uses
   DOS,
   m_FileIO,
+  m_DateTime,
   m_Strings;
+
+Function Addr2Str (Addr : RecEchoMailAddr) : String;
+Var
+  Temp : String[20];
+Begin
+  Temp := strI2S(Addr.Zone) + ':' + strI2S(Addr.Net) + '/' +
+          strI2S(Addr.Node);
+
+  If Addr.Point <> 0 Then Temp := Temp + '.' + strI2S(Addr.Point);
+
+  Result := Temp;
+End;
+
+Function GetOriginLine (Var mArea: RecMessageBase) : String;
+Var
+  Loc   : Byte;
+  FN    : String;
+  TF    : Text;
+  Buf   : Array[1..2048] of Char;
+  Str   : String;
+  Count : LongInt;
+  Pick  : LongInt;
+Begin
+  Result := '';
+  Loc    := Pos('@RANDOM=', strUpper(mArea.Origin));
+
+  If Loc > 0 Then Begin
+    FN := strStripB(Copy(mArea.Origin, Loc + 8, 255), ' ');
+
+    If Pos(PathChar, FN) = 0 Then FN := bbsCfg.DataPath + FN;
+
+    FileMode := 66;
+
+    Assign     (TF, FN);
+    SetTextBuf (TF, Buf, SizeOf(Buf));
+
+    {$I-} Reset (TF); {$I+}
+
+    If IoResult <> 0 Then Exit;
+
+    Count := 0;
+
+    While Not Eof(TF) Do Begin
+      ReadLn (TF, Str);
+
+      If strStripB(Str, ' ') = '' Then Continue;
+
+      Inc (Count);
+    End;
+
+    If Count = 0 Then Begin
+      Close (TF);
+      Exit;
+    End;
+
+    Pick := Random(Count) + 1;
+
+    Reset (TF);
+
+    Count := 0;
+
+    While Not Eof(TF) Do Begin
+      ReadLn (TF, Str);
+
+      If strStripB(Str, ' ') = '' Then Continue;
+
+      Inc (Count);
+
+      If Count = Pick Then Begin
+        Result := Str;
+        Break;
+      End;
+    End;
+
+    Close (TF);
+  End Else
+    Result := mArea.Origin;
+End;
 
 Function GetBaseConfiguration (UseEnv: Boolean; Var TempCfg: RecConfig) : Byte;
 Var
@@ -218,6 +300,43 @@ Begin
     End;
 
   Result := True;
+End;
+
+Procedure MBaseAssignData (Var User: RecUser; Var Msg: PMsgBaseABS; Var TempBase: RecMessageBase);
+Var
+  SemFile : Text;
+Begin
+  Msg^.StartNewMsg;
+
+  If TempBase.Flags And MBRealNames <> 0 Then
+    Msg^.SetFrom(User.RealName)
+  Else
+    Msg^.SetFrom(User.Handle);
+
+  Msg^.SetLocal (True);
+
+  If TempBase.NetType > 0 Then Begin
+    If TempBase.NetType = 3 Then
+      Msg^.SetMailType(mmtNetMail)
+    Else
+      Msg^.SetMailType(mmtEchoMail);
+
+    Msg^.SetOrig(bbsCfg.NetAddress[TempBase.NetAddr]);
+
+    Case TempBase.NetType of
+      1 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEcho);
+      2 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNews);
+      3 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNet);
+    End;
+
+    ReWrite (SemFile);
+    Close   (SemFile);
+  End Else
+    Msg^.SetMailType(mmtNormal);
+
+  Msg^.SetPriv (TempBase.Flags and MBPrivate <> 0);
+  Msg^.SetDate (DateDos2Str(CurDateDos, 1));
+  Msg^.SetTime (TimeDos2Str(CurDateDos, 0));
 End;
 
 Function GetTotalFiles (Var TempBase: RecFileBase) : LongInt;

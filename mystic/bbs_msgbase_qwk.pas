@@ -13,7 +13,8 @@ Uses
   BBS_MsgBase_Squish;
 
 Const
-  QWK_EOL = #13#10;
+  QWK_EOL     = #13#10;
+  QWK_CONTROL = 'MYSTICQWK';
 
 Type
   BSingle = Array [0..3] of Byte;
@@ -140,7 +141,7 @@ Begin
   Write   (TempFile, 'DOOR = ' + mysSoftwareID + QWK_EOL);
   Write   (TempFile, 'VERSION = ' + mysVersion + QWK_EOL);
   Write   (TempFile, 'SYSTEM = ' + mysSoftwareID + ' ' + mysVersion + QWK_EOL);
-  Write   (TempFile, 'CONTROLNAME = MYSTICQWK' + QWK_EOL);
+  Write   (TempFile, 'CONTROLNAME = ' + QWK_CONTROL + QWK_EOL);
   Write   (TempFile, 'CONTROLTYPE = ADD' + QWK_EOL);
   Write   (TempFile, 'CONTROLTYPE = DROP' + QWK_EOL);
   Close   (TempFile);
@@ -286,7 +287,7 @@ Begin
   While MsgBase^.SeekFound Do Begin
 
     If Not IsNetworked Then
-      If ((bbsCfg.QwkMaxBase > 0) and (MsgAdded = bbsCfg.QwkMaxBase)) or
+      If ((bbsCfg.QwkMaxBase > 0)   and (MsgAdded = bbsCfg.QwkMaxBase)) or
          ((bbsCfg.QwkMaxPacket > 0) and (TotalMessages = bbsCfg.QwkMaxPacket)) Then Break;
 
     MsgBase^.MsgStartUp;
@@ -453,13 +454,13 @@ Begin
 
       If HasAccess(Self, MBase.ReadACS) Then Begin
 
-         GetMessageScan (UserNumber, MBase, MScan);
+        GetMessageScan (UserNumber, MBase, MScan);
 
-         If MScan.QwkScan > 0 Then Begin
-           Inc (TotalBases);
+        If MScan.QwkScan > 0 Then Begin
+          Inc (TotalBases);
 
-           QwkLR.Base := FilePos(MBaseFile);
-           QwkLR.Pos  := WriteMSGDAT;
+          QwkLR.Base := FilePos(MBaseFile);
+          QwkLR.Pos  := WriteMSGDAT;
 
           Write (QwkLRFile, QwkLR);
         End;
@@ -481,8 +482,190 @@ Begin
 End;
 
 Function TQWKEngine.ProcessReply : Boolean;
+
+  Procedure QwkControl (Idx: LongInt; Mode: Byte);
+  Var
+    TempBase : RecMessageBase;
+    TempScan : MScanRec;
+  Begin
+    If GetMBaseByIndex(Idx, TempBase) Then Begin
+      GetMessageScan (UserNumber, TempBase, TempScan);
+
+      TempScan.QwkScan := Mode;
+
+      If Mode = 0 Then Inc (RepBaseDel);
+      If Mode = 1 Then Inc (RepBaseAdd);
+
+      PutMessageScan (UserNumber, TempBase, TempScan);
+    End;
+  End;
+
+Var
+  QwkBlock   : String[128];
+  QwkHeader  : QwkDATHdr;
+  Chunks     : SmallInt;
+  Line       : String;
+  LineCount  : SmallInt;
+  IsControl  : Boolean;
+  GotControl : Boolean;
+  ExtFile    : Text;
+  Count1     : SmallInt;
+  Count2     : SmallInt;
 Begin
   Result := False;
+
+  DataFile := TFileBuffer.Create(4 * 1024);
+
+  If Not DataFile.OpenStream (FileFind(WorkPath + PacketID + '.msg'), 1, fmOpen, fmRWDN) Then Begin
+    DataFile.Free;
+
+    DirClean (WorkPath, '');
+
+    Exit;
+  End;
+
+  DataFile.ReadBlock(QwkBlock[1], 128);
+  QwkBlock[0] := #128;
+
+  If Pos(strUpper(PacketID), strUpper(QwkBlock)) = 0 Then Begin
+    DataFile.Free;
+
+    DirClean(WorkPath, '');
+
+    Exit;
+  End;
+
+  While Not DataFile.EOF Do Begin
+    DataFile.ReadBlock(QwkHeader, SizeOf(QwkHeader));
+
+    Move (QwkHeader.MsgNum, QwkBlock[1], 7);
+
+    QwkBlock[0] := #7;
+
+    If GetMBaseByIndex(strS2I(QwkBlock), MBase) Then Begin
+
+      If MBaseOpenCreate(MsgBase, MBase, WorkPath) Then Begin
+
+        MBaseAssignData(UserRecord, MsgBase, MBase);
+
+        QwkBlock[0] := #25;
+        Move (QwkHeader.UpTo, QwkBlock[1], 25);
+        MsgBase^.SetTo(strStripR(QwkBlock, ' '));
+
+        Move (QwkHeader.Subject, QwkBlock[1], 25);
+        MsgBase^.SetSubj(strStripR(QwkBlock, ' '));
+
+        Move (QwkHeader.ReferNum, QwkBlock[1], 6);
+        QwkBlock[0] := #6;
+
+        MsgBase^.SetRefer(strS2I(strStripR(QwkBlock, ' ')));
+
+        Move (QwkHeader.NumChunk, QwkBlock[1], 6);
+
+        Chunks     := strS2I(QwkBlock) - 1;
+        Line       := '';
+        LineCount  := 0;
+        IsControl  := MsgBase^.GetTo = QWK_CONTROL;
+        GotControl := False;
+
+        // disable control in network packets (for now?)
+
+        If IsNetworked Then
+          IsControl := False;
+
+        If IsControl And ((MsgBase^.GetSubj = 'ADD') or (MsgBase^.GetSubj = 'DROP')) Then
+          QwkControl (MBase.Index, Ord(MsgBase^.GetSubj = 'ADD'));
+
+        For Count1 := 1 to Chunks Do Begin
+          DataFile.ReadBlock (QwkBlock[1], 128);
+
+          QwkBlock[0] := #128;
+          QwkBlock    := strStripR(QwkBlock, ' ');
+
+          For Count2 := 1 to Length(QwkBlock) Do Begin
+            If QwkBlock[Count2] = #227 Then Begin
+              Inc (LineCount);
+
+              If (LineCount < 4) and (Copy(Line, 1, 5) = 'From:') Then Begin
+                GotControl := True;
+
+                // ignore from name unless its networked
+
+                If IsNetworked Then
+                  MsgBase^.SetTo(strStripB(Copy(Line, 6, Length(Line)), ' '));
+              End Else
+              If (LineCount < 4) and (Copy(Line, 1, 3) = 'To:') Then Begin
+                MsgBase^.SetTo(strStripB(Copy(Line, 4, Length(Line)), ' '));
+                GotControl := True;
+              End Else
+              If (LineCount < 4) and (Copy(Line, 1, 8) = 'Subject:') Then Begin
+                MsgBase^.SetSubj(strStripB(Copy(Line, 9, Length(Line)), ' '));
+                GotControl := True;
+              End Else
+                If GotControl And (Line = '') Then
+                  GotControl := False
+                Else
+                  MsgBase^.DoStringLn(Line);
+
+              Line := '';
+            End Else
+              Line := Line + QwkBlock[Count2];
+          End;
+        End;
+
+        If Line <> '' Then
+          MsgBase^.DoStringLn(Line);
+
+        If MBase.NetType > 0 Then Begin
+          If IsNetworked Then Begin
+            MsgBase^.DoStringLn (#13 + '--- ' + mysSoftwareID + '/QWK v' + mysVersion + ' (' + OSID + ')');
+            MsgBase^.DoStringLn (' * Origin: ' + GetOriginLine(MBase));
+          End Else Begin
+            MsgBase^.DoStringLn (#13 + '--- ' + mysSoftwareID + '/QWK v' + mysVersion + ' (' + OSID + ')');
+            MsgBase^.DoStringLn (' * Origin: ' + GetOriginLine(MBase) + ' (' + Addr2Str(MsgBase^.GetOrigAddr) + ')');
+          End;
+        End;
+
+        If Not IsControl Then Begin
+          If HasAccess(Self, MBase.PostACS) Then Begin
+            MsgBase^.WriteMsg;
+            Inc (RepOK);   // must increase user and history posts by repOK
+          End Else
+            Inc (RepFailed);
+        End;
+
+        MsgBase^.CloseMsgBase;
+
+        Dispose (MsgBase, Done);
+      End Else
+        Inc (RepFailed);
+    End Else
+      Inc (RepFailed);
+  End;
+
+  DataFile.Free;
+
+  Assign (ExtFile, FileFind(WorkPath + 'todoor.ext'));
+  {$I-} Reset (ExtFile); {$I+}
+
+  If IoResult = 0 Then Begin
+    While Not Eof(ExtFile) Do Begin
+      ReadLn (ExtFile, Line);
+
+      If strWordGet(1, Line, ' ') = 'AREA' Then Begin
+        QwkBlock := strWordGet(3, Line, ' ');
+
+        If Pos('a', QwkBlock) > 0 Then QwkControl(strS2I(strWordGet(2, Line, ' ')), 1);
+        If Pos('D', QwkBlock) > 0 Then QwkControl(strS2I(strWordGet(2, Line, ' ')), 0);
+      End;
+    End;
+
+    Close (ExtFile);
+  End;
+
+  DirClean (WorkPath, '');
+
+  Result := True;
 End;
 
 End.
