@@ -3613,4 +3613,16 @@
    is flagged as a FTP network account, their reply packet will need to be
    "handle.rep".
 
+ + The file base configuration editor now allows bulk file base deletion
+   if a list of bases are tagged when delete is requested.
+
+ + Mystic's FTP server now supports uploading directly to Mystic's file bases
+   using FTP.  It will also attempt to use the archive configuration to import
+   FILE_ID.DIZ files.
+
+ + MIS server status updates now use a MMM DD format date instead of MM/DD
+   which was confusing/annoying for people outside of North America.
+
+ + The FTP server now allows resumed uploads via the APPE function.
+
    <ALPHA 37 RELEASED>

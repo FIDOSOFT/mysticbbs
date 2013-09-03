@@ -200,6 +200,9 @@ Var
     Write (FBaseFile, FBase);
   End;
 
+Var
+  KillData : Boolean;
+  Count    : LongInt;
 Begin
   Assign (FBaseFile, bbsCfg.DataPath + 'fbases.dat');
 
@@ -235,7 +238,28 @@ Begin
                       InsertRecord;
                       MakeList;
                     End;
-              'D' : If (List.Picked < List.ListMax) Then
+              'D' : If List.Marked > 0 Then Begin
+                      If ShowMsgBox(1, 'Delete ' + strI2S(List.Marked) + ' bases?') Then Begin
+                        KillData := ShowMsgBox(1, 'Delete data files for ' + strI2S(List.Marked) + ' bases?');
+
+                        For Count := List.ListMax DownTo 1 Do
+                          If List.List[Count].Tagged = 1 Then Begin
+                            Seek (FBaseFile, Count - 1);
+                            Read (FBaseFile, FBase);
+
+                            KillRecord (FBaseFile, Count, SizeOf(FBase));
+
+                            If KillData Then Begin
+                              FileErase (bbsCfg.DataPath + FBase.FileName + '.dir');
+                              FileErase (bbsCfg.DataPath + FBase.FileName + '.dat');
+                              FileErase (bbsCfg.DataPath + FBase.FileName + '.scn');
+                            End;
+                          End;
+
+                        MakeList;
+                      End;
+                    End Else
+                    If (List.Picked < List.ListMax) Then
                       If ShowMsgBox(1, 'Delete this entry?') Then Begin
                         Seek (FBaseFile, List.Picked - 1);
                         Read (FBaseFile, FBase);

@@ -447,7 +447,7 @@ Begin
 
   If Not OpenDataSession Then Exit;
 
-  Server.Status ('Receiving: ' + Str);
+  Server.Status (ProcessID, 'Receiving: ' + Str);
 
   InTransfer := True;
   Result     := True;
@@ -455,10 +455,10 @@ Begin
   Assign (F, Str);
 
   If FileExist(Str) And IsAppend Then Begin
-    Reset (F, 1);
-    Seek  (F, FileSize(F));
+    ioReset (F, 1, fmRWDW);
+    Seek    (F, FileSize(F));
   End Else Begin
-    ReWrite (F, 1);
+    ioReWrite (F, 1, fmRWDW);
 
     IsAppend := False;
   End;
@@ -473,6 +473,8 @@ Begin
   Until False;
 
   Close (F);
+
+  Server.Status(ProcessID, 'Receive complete');
 
   If Result Then
     Client.WriteLine (re_XferOK);
@@ -496,7 +498,7 @@ Begin
 
   OpenDataSession;
 
-  Server.Status('Sending: ' + Str);
+  Server.Status(ProcessID, 'Sending: ' + Str);
 
   While Not Eof(F) Do Begin
     BlockRead (F, Buf, SizeOf(Buf), Res);
@@ -509,6 +511,8 @@ Begin
   End;
 
   Close (F);
+
+  Server.Status(ProcessID, 'Send complete');
 
   Client.WriteLine (re_XferOK);
 
@@ -575,6 +579,7 @@ Begin
 
   If SearchForUser(Data, User, UserPos) Then Begin
     Client.WriteLine(re_UserOkay);
+
     UserName := Data;
   End Else
     Client.WriteLine(re_UserUnknown);
@@ -594,7 +599,7 @@ Begin
 
     GetSecurityLevel(User.Security, SecLevel);
 
-    Server.Status (User.Handle + ' logged in');
+    Server.Status (ProcessID, User.Handle + ' logged in');
   End Else
     Client.WriteLine(re_BadPW);
 End;
@@ -644,7 +649,7 @@ Begin
     {$IFDEF FTPDEBUG}
       LOG('PASV on host ' + Client.HostIP + ' port ' + strI2S(DataPort));
 
-      Server.Status(re_PassiveOK + '(' + strReplace(Client.HostIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo) + ').');
+      Server.Status(ProcessID, re_PassiveOK + '(' + strReplace(Client.HostIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo) + ').');
     {$ENDIF}
 
     Client.WriteLine(re_PassiveOK + '(' + strReplace(Client.HostIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo) + ').');
@@ -845,6 +850,15 @@ Procedure TFTPServer.cmdSTOR (IsAppend: Boolean);
 Var
   TempPos  : LongInt;
   TempBase : RecFileBase;
+  BaseFile : File;
+  CurDIR   : String;
+  DizFile  : Text;
+  Desc     : FileDescBuffer;
+  DescSize : Byte;
+  Dir      : RecFileList;
+  DirPos   : LongInt = -1;
+  DesFile  : File;
+  Count    : Byte;
 Begin
   If Not LoggedIn Then Begin
     Client.WriteLine(re_BadCommand);
@@ -861,30 +875,126 @@ Begin
   TempPos := FindDirectory(TempBase);
 
   If (TempPos = -1) Or Not ValidDirectory(TempBase) Then Begin
+    Client.WriteLine(re_NoAccess + ': Directory not found');
+
+    Exit;
+  End;
+
+  If bbsCfg.UploadBase > 0 Then Begin
+    Assign  (BaseFile, bbsCfg.DataPath + 'fbases.dat');
+    ioReset (BaseFile, SizeOf(RecMessageBase), fmRWDN);
+
+    If ioSeek (BaseFile, bbsCfg.UploadBase - 1) Then
+      ioRead (BaseFile, TempBase);
+
+    Close (BaseFile);
+  End;
+
+  If (Not CheckAccess (User, True, TempBase.ULACS)) or
+     (TempBase.Flags AND FBSlowMedia <> 0) or
+     (Length(FileMask) > 70) Then Begin
+
+       Client.WriteLine(re_NoAccess);
+
+       Exit;
+  End;
+
+  If bbsCfg.FreeUL > 0 Then Begin
+    GetDIR (0, CurDIR);
+
+    {$I-} ChDIR (TempBase.Path); {$I+}
+
+    If (IoResult <> 0) or (DiskFree(0) DIV 1024 < bbsCfg.FreeUL) Then Begin
+      ChDIR (CurDIR);
+
+      Client.WriteLine(re_NoAccess + ': No disk space');
+
+      Exit;
+    End;
+
+    ChDIR (CurDIR);
+  End;
+
+  If Not IsAppend And IsDuplicateFile (TempBase, FileMask, bbsCfg.FDupeScan = 2) Then Begin
     Client.WriteLine(re_BadFile);
 
     Exit;
   End;
 
-  server.status('calling recvfile');
+  RecvFile (TempBase.Path + JustFile(Data), IsAppend);
 
-  RecvFile ('d:\code\mystic1\temp0\infile.tmp', IsAppend);
+  ImportFileDIZ(Desc, DescSize, TempPath, TempBase.Path + JustFile(Data));
 
-//  Client.WriteLine(re_BadFile);
+  If DescSize = 0 Then Begin
+    DescSize := 1;
+    Desc[1]  := 'No Description';
+  End;
+
+  Assign (BaseFile, BbsCfg.DataPath + TempBase.FileName + '.dir');
+
+  If Not ioReset (BaseFile, SizeOf(RecFileList), fmRWDW) Then
+    ioReWrite (BaseFile, SizeOf(RecFileList), fmRWDW);
+
+  If IsAppend Then Begin
+    While Not Eof(BaseFile) Do Begin
+      ioRead (BaseFile, Dir);
+
+      If JustFile(Data) = Dir.FileName Then Begin
+        DirPos := FilePos(BaseFile);
+
+        Break;
+      End;
+    End;
+  End;
+
+  If DirPos = -1 Then Begin
+    FillChar (Dir, SizeOf(Dir), 0);
+
+    Dir.FileName  := JustFile(Data);
+    Dir.DateTime  := CurDateDOS;
+    Dir.Uploader  := User.Handle;
+  End;
+
+  Dir.DescLines := DescSize;
+  Dir.Size      := FileByteSize(TempBase.Path + JustFile(Data));
+
+  Assign (DesFile, BbsCfg.DataPath + TempBase.FileName + '.des');
+
+  If Not ioReset (DesFile, 1, fmRWDW) Then
+    ioReWrite (DesFile, 1, fmRWDW);
+
+  Dir.DescPtr := FileSize(DesFile);
+
+  Seek (DesFile, Dir.DescPtr);
+
+  For Count := 1 to DescSize Do
+    BlockWrite (DesFile, Desc[Count][0], Length(Desc[Count]) + 1);
+
+  Close (DesFile);
+
+  If DirPos = -1 Then
+    Seek (BaseFile, FileSize(BaseFile))
+  Else
+    Seek (BaseFile, DirPos - 1);
+
+  ioWrite (BaseFile, Dir);
+  Close   (BaseFile);
 
   // dreadful things required to do for upload process:
 
-  // find upload base
-  // check diskspace
-  // check slowmedia
-  // check access
-  // check filename length
-  // duplicate file checking
-  // get file
+  // find upload base -- done
+  // check diskspace -- done
+  // check slowmedia -- done
+  // check access -- done
+  // check filename length -- done
+  // duplicate file checking -- done
+  // get file -- done
   // update user statistics
   // update history statistics
   // archive testing
-  // file_id.diz importing
+  // file_id.diz importing -- done?
+  // save file to db (or update if append)
+  // test all of it.
 
   // other things: add no desc and ftp test batch to configuration?
 End;
@@ -1058,10 +1168,11 @@ Begin
 
     {$IFDEF FTPDEBUG}
       LOG('Cmd: ' + Cmd + ' Data: ' + Data);
-      Server.Status ('Cmd: ' + Cmd + ' Data: ' + Data);
     {$ENDIF}
 
-    //If Cmd = 'APPE' Then cmdSTOR(True) Else
+//    Server.Status (ProcessID, 'Cmd: ' + Cmd + ' Data: ' + Data);
+
+    If Cmd = 'APPE' Then cmdSTOR(True) Else
     If Cmd = 'CDUP' Then cmdCDUP Else
     If Cmd = 'CWD'  Then cmdCWD  Else
     If Cmd = 'DELE' Then Client.WriteLine(re_NoAccess) Else
@@ -1098,7 +1209,7 @@ Begin
   If GotQuit Then Begin
     Client.WriteLine(re_Goodbye);
 
-    Server.Status (User.Handle + ' logged out');
+    Server.Status (ProcessID, User.Handle + ' logged out');
   End;
 End;
 

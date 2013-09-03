@@ -286,7 +286,7 @@ Begin
   Form.AddStr  ('D', ' Domain',          23, 11, 33, 11,  8, 25, 25, @bbsCfg.inetDomain, Topic + 'Internet domain name');
   Form.AddStr  ('I', ' Interface',       20, 12, 33, 12, 11, 23, 23, @bbsCfg.inetInterface, Topic + 'Network interface IP address');
   Form.AddBol  ('B', ' IP Blocking',     18, 13, 33, 13, 13, 3, @bbsCfg.inetIPBlocking, Topic + 'Enable IP blocking');
-  Form.AddBol  ('L', ' Logging',         22, 14, 33, 14, 12, 3, @bbsCfg.inetLogging, Topic + 'Enable server logging');
+  Form.AddBol  ('L', ' Logging',         22, 14, 33, 14,  9, 3, @bbsCfg.inetLogging, Topic + 'Enable server logging');
 
   Form.Execute;
 

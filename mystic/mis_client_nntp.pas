@@ -88,7 +88,7 @@ End;
 
 Procedure TNNTPServer.ClientWriteLine (Str: String);
 Begin
-  Server.Status('S:' + Str);
+  Server.Status(ProcessID, 'S:' + Str);
   Client.WriteLine(Str);
 End;
 
@@ -151,7 +151,7 @@ Begin
     ClientWriteLine(re_UnknownOption);
 
   If LoggedIn Then
-    Server.Status('Logged in as ' + UserName);
+    Server.Status(ProcessID, 'Logged in as ' + UserName);
 End;
 
 Procedure TNNTPServer.cmd_GROUP;
@@ -535,7 +535,7 @@ Begin
         If HackCount >= HackThreshold Then Begin
           EndSession := True;   // someone is being a douchebag
 
-          Server.Status('Flood attempt from ' + Client.PeerIP + '. Goodbye');
+          Server.Status(ProcessID, 'Flood attempt from ' + Client.PeerIP + '. Goodbye');
 
           MsgText.Free;
 
@@ -848,7 +848,7 @@ Begin
 
     If Client.ReadLine(Str) = -1 Then Exit;
 
-    Server.Status('C:' + Str);
+    Server.Status(ProcessID, 'C:' + Str);
 
     Cmd := strUpper(strWordGet(1, Str, ' '));
 

@@ -159,7 +159,7 @@ Begin
               End;
           End;
       1 : Begin
-            BoxOpen      (4, 4, 33, 17);
+            BoxOpen      (4, 4, 33, 18);
             CoolBoxOpen  (3, 'Configuration');
 
             Form.AddNone ('S', ' S System Paths',             5,  5, 5,  5, 28, '');
@@ -172,8 +172,9 @@ Begin
             Form.AddNone ('M', ' M Message Base Settings',    5, 12, 5, 12, 28, '');
             Form.AddNone ('E', ' E EchoMail Addresses',       5, 13, 5, 13, 28, '');
             Form.AddNone ('N', ' N EchoMail Nodes',           5, 14, 5, 14, 28, '');
-            Form.AddNone ('O', ' O Offline Mail Settings',    5, 15, 5, 15, 28, '');
-            Form.AddNone ('C', ' C Console Settings',         5, 16, 5, 16, 28, '');
+            Form.AddNone ('Q', ' Q QWK Networking',           5, 15, 5, 15, 28, '');
+            Form.AddNone ('O', ' O Local QWK Settings',       5, 16, 5, 16, 28, '');
+            Form.AddNone ('C', ' C Console Settings',         5, 17, 5, 17, 28, '');
 
             Res        := Form.Execute;
             MenuPos[1] := Form.ItemPos;
@@ -205,7 +206,7 @@ Begin
               End;
           End;
       2 : Begin
-            BoxOpen      (25, 4, 53, 13);
+            BoxOpen      (25, 4, 53, 12);
             CoolBoxOpen  (24, 'Servers');
 
             Form.AddNone ('I', ' I Internet Server Options', 26,  5, 26,  5, 27, '');

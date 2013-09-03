@@ -823,7 +823,7 @@ End;
 
 Procedure Status (Owner: Pointer; Str: String);
 Begin
-  TServerManager(Owner).Status(Str);
+  TServerManager(Owner).Status(-1, Str);
 End;
 
 Constructor TBINKPServer.Create (Owner: TServerManager; CliSock: TIOSocket);
@@ -857,7 +857,7 @@ Begin
 
         QueueByNode(Queue, False, BinkP.EchoNode);
 
-        Server.Status ('Queued ' + strI2S(Queue.QSize - Before) + ' files for ' + strAddr2Str(BinkP.EchoNode.Address));
+        Server.Status (ProcessID, 'Queued ' + strI2S(Queue.QSize - Before) + ' files for ' + strAddr2Str(BinkP.EchoNode.Address));
       End;
     End;
 

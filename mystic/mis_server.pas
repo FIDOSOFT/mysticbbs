@@ -42,15 +42,16 @@ Type
     Constructor Create       (Cfg: RecConfig; PortNum: Word; CliMax: Word; ND: TNodeData; CreateProc: TServerCreateProc);
     Destructor  Destroy;     Override;
     Procedure   Execute;     Override;
-    Procedure   Status       (Str: String);
+    Procedure   Status       (ProcID: LongInt; Str: String);
     Function    CheckIP      (IP, Mask: String) : Boolean;
     Function    IsBlockedIP  (Var Client: TIOSocket) : Boolean;
     Function    DuplicateIPs (Var Client: TIOSocket) : Byte;
   End;
 
   TServerClient = Class(TThread)
-    Client  : TIOSocket;
-    Manager : TServerManager;
+    Client    : TIOSocket;
+    Manager   : TServerManager;
+    ProcessID : LongInt;
 
     Constructor Create (Owner: TServerManager; CliSock: TIOSocket);
     Destructor  Destroy; Override;
@@ -164,7 +165,7 @@ Begin
     End;
 End;
 
-Procedure TServerManager.Status (Str: String);
+Procedure TServerManager.Status (ProcID: LongInt; Str: String);
 Var
   Res : String;
   T   : Text;
@@ -177,7 +178,7 @@ Begin
     If ServerStatus.Count > MaxStatusText Then
       ServerStatus.Delete(0);
 
-    Res := '(' + Copy(DateDos2Str(CurDateDos, 1), 1, 5) + ' ' + TimeDos2Str(CurDateDos, 0) + ') ' + Str;
+    Res := FormatDate (CurDateDT, 'NNN DD HH:II') + ' ' + strI2S(ProcID + 1) + ' ' + Str;
 
     If Length(Res) > 74 Then Begin
       ServerStatus.Add(Copy(Res, 1, 74));
@@ -185,7 +186,7 @@ Begin
       If ServerStatus.Count > MaxStatusText Then
         ServerStatus.Delete(0);
 
-      ServerStatus.Add(strRep(' ', 14) + Copy(Res, 75, 255));
+      ServerStatus.Add(strRep(' ', 15) + Copy(Res, 75, 255));
     End Else
       ServerStatus.Add(Res);
 
@@ -222,9 +223,9 @@ Begin
   If Terminated Then Exit;
 
   If ClientMax = 0 Then
-  	Status('WARNING: At least one server is configured 0 max clients');
+  	Status(-1, 'WARNING: At least one server is configured 0 max clients');
 
-  Status('Opening server socket on port ' + strI2S(Port));
+  Status(-1, 'Opening server socket on port ' + strI2S(Port));
 
   Repeat
     NewClient := Server.WaitConnection(0);
@@ -234,7 +235,7 @@ Begin
     If (ClientMax > 0) And (ClientActive >= ClientMax) Then Begin
       Inc (ClientRefused);
 
-      Status ('BUSY: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
+      Status (-1, 'BUSY: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
 
       If Not NewClient.WriteFile('', TextPath + 'busy.txt') Then
         NewClient.WriteLine('BUSY');
@@ -246,7 +247,7 @@ Begin
     If IsBlockedIP(NewClient) Then Begin
       Inc (ClientBlocked);
 
-      Status('BLOCK: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
+      Status(-1, 'BLOCK: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
 
       If Not NewClient.WriteFile('', TextPath + 'blocked.txt') Then
         NewClient.WriteLine('BLOCKED');
@@ -258,7 +259,7 @@ Begin
     If (ClientMaxIPs > 0) and (DuplicateIPs(NewClient) >= ClientMaxIPs) Then Begin
       Inc (ClientRefused);
 
-      Status('MULTI: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
+      Status(-1, 'MULTI: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
 
       If Not NewClient.WriteFile('', TextPath + 'dupeip.txt') Then
         NewClient.WriteLine('Only ' + strI2S(ClientMaxIPs) + ' connection(s) per user');
@@ -270,13 +271,13 @@ Begin
       Inc (ClientTotal);
       Inc (ClientActive);
 
-      Status ('Connect: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
+      Status (-1, 'Connect: ' + NewClient.PeerIP + ' (' + NewClient.PeerName + ')');
 
       NewClientProc(Self, Config, NodeInfo, NewClient);
     End;
   Until Terminated;
 
-  Status ('Shutting down server...');
+  Status (-1, 'Shutting down server...');
 End;
 
 Destructor TServerManager.Destroy;
@@ -321,6 +322,7 @@ Begin
   For Count := 0 to Manager.ClientMax - 1 Do
     If Manager.ClientList[Count] = NIL Then Begin
       Manager.ClientList[Count] := Self;
+      ProcessID := Count;
       Break;
     End;
 

@@ -7,8 +7,14 @@ design elements/issues.
 
 BUGS AND POSSIBLE ISSUES
 ========================
-
-! Auto create of message bases is including periods in the filename?
+- need to add QWK network ID to all message bases (remove QWK net flag?)
+- need to add QWK networking editor (type: hub, or node)
+- need to add QWK network link back to networks defined in editor for each
+  message base.  Also need to add both to global editor?
+- need to also have the ability to link a specific user account to a QWK
+  network from the editor.
+- need function to exchange qwk with uplink (passive, login, pw, host, port)
+  packet type (qwke/qwk)
 
 ! Gender character is asking for ASCII number.  Make new functions for areas
   where we don't want that.
@@ -37,6 +43,8 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- make tiosocket buffer size dynamic.  increase data sockets in ftp to 32kb
+- all display files to search for .hlp before ANS?
 - fix END in lightbar file lists so it doesn't suck.
 - externalize qwk and file list compiler class.  qwk for mystic/mis filelist
   for mystic/mutil.  add compiler templates, file include, and new vs all
@@ -44,16 +52,20 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - make embedded ANSI in file_id display correctly.
 - abstract ansi browser to be used for ansi archive viewer and sysop file
   manager (as well as the ANSI gallery).
+- msg readers uses msgbase_ansi like mystic 2
 - when mutil is tossing a packet and auto creates an area figure out if there
   can be a way to automatically create the uplink back to the originating
   node.
+- expand max filename size for 70 to 255 chars?
+- make file list use buffered IO class for reading .dir files (8k)
 - global user editor for user flags, def protocol, etc etc
 - ability to configure auto signatures (2 of them) one for handle and one
-  for real names
+  for real name bases
 - ability to download ANSIs while actually viewing them in the gallery
 - optional Menu scroller during input?
 - Menu type: Lightbar/Form  OR  just change standard lightbar to work that
-  way which i think is the best approach actually.
+  way which i think is the best approach actually but will it break existing
+  lightbars (shouldnt?)
 - ESC moves back in ANSI gallery only exits if dir = root?
 - Color, boxtype, and input configuration for configuration
 - global file editor like msg base
@@ -62,8 +74,8 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
   something and also add in the "created" date to the voting question itself
 - Fix up new FS editor to use passed template and editor contraints.
      - Test with file description editor.
-- ACS to allow "selecable reply base"
 - Strip pipe colors/ANSI from message option?
+- allow ANSI option for msg bases?
 - AREAS.BBS import?
 - PGUP/DOWN moves bases in message base editor?
 - AreaFix

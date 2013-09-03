@@ -313,6 +313,7 @@ Function TBBSCore.TimeLeft : Integer;
 Begin
   If Not TimerOn Then Begin
     TimeLeft := 0;
+
     Exit;
   End;
 

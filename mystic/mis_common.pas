@@ -11,7 +11,7 @@ Uses
 
 Var
   TempPath  : String;
-  Console   : TOutput;
+//  Console   : TOutput;
   Term      : TTermAnsi;
   bbsConfig : RecConfig;
 

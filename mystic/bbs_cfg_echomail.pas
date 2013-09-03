@@ -157,7 +157,7 @@ Begin
   Form.AddStr  ('D', ' Description'  ,  6,  7, 21,  7, 13, 23, 35, @Node.Description, Topic + 'Node description');
   Form.AddBol  ('A', ' Active'       , 11,  8, 21,  8,  8,  3, @Node.Active, Topic + 'Is node active?');
   Form.AddStr  ('R', ' Archive Type' ,  5,  9, 21,  9, 14,  4, 4, @Node.ArcType, Topic + 'Archive type for packets');
-  Form.AddTog  ('E', ' Network Type' ,  5, 10, 21, 10, 14,  7, 0, 1, 'FidoNet QWK', @Node.NetType, Topic);
+//  Form.AddTog  ('E', ' Network Type' ,  5, 10, 21, 10, 14,  7, 0, 1, 'FidoNet QWK', @Node.NetType, Topic);
   Form.AddTog  ('L', ' Session Type' ,  5, 11, 21, 11, 14,  5, 0, 1, 'BinkP FTP', @Node.ProtType, Topic);
   Form.AddTog  ('Y', ' Export Type'  ,  6, 12, 21, 12, 13,  6, 0, 3, 'Normal Crash Direct Hold', @Node.MailType, Topic);
   Form.AddStr  ('W', ' *Fix Password',  4, 13, 21, 13, 15, 20, 20, @Node.AreaFixPass, Topic + 'Password required for Area/FileFix');

@@ -50,7 +50,8 @@ Uses
   MIS_Client_FTP,
   MIS_Client_NNTP,
   MIS_Client_BINKP,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 Const
   FocusTelnet = 0;

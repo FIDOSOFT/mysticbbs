@@ -1,10 +1,17 @@
 Unit BBS_DataBase;
 
+// for all functions... need to go through code and remove old stuff and
+// replace with this new stuff one at a time.  including moving everything
+// to bbscfg.
+
 {$I M_OPS.PAS}
 
 Interface
 
 Uses
+  m_Types,
+  m_Output,
+  m_Input,
   BBS_Records,
   BBS_MsgBase_ABS,
   BBS_MsgBase_JAM,
@@ -14,17 +21,22 @@ Var
   bbsCfg       : RecConfig;
   bbsCfgPath   : String;
   bbsCfgStatus : Byte;
+  Console      : TOutput = NIL;
+  Keyboard     : TInput  = NIL;
 
 Const
   CfgOK       = 0;
   CfgNotFound = 1;
   CfgMisMatch = 2;
 
+Type
+  FileDescBuffer = Array[1..99] of String[50];
+
 // GENERAL
 
 Function  GetBaseConfiguration  (UseEnv: Boolean; Var TempCfg: RecConfig) : Byte;
 Function  PutBaseConfiguration  (Var TempCfg: RecConfig) : Boolean;
-Function  ShellDOS              (ExecPath: String; Command: String) : LongInt;
+Function  ExecuteProgram        (ExecPath: String; Command: String) : LongInt;
 Function  Addr2Str              (Addr : RecEchoMailAddr) : String;
 
 // MESSAGE BASE
@@ -40,6 +52,8 @@ Procedure MBaseAssignData       (Var User: RecUser; Var Msg: PMsgBaseABS; Var Te
 
 Procedure ExecuteArchive        (TempP: String; FName: String; Temp: String; Mask: String; Mode: Byte);
 Function  GetTotalFiles         (Var TempBase: RecFileBase) : LongInt;
+Function  IsDuplicateFile       (Base: RecFileBase; FileName: String; Global: Boolean) : Boolean;
+Function  ImportFileDIZ         (Var Desc: FileDescBuffer; Var DescLines: Byte; TempP, FN: String) : Boolean;
 
 // USER
 
@@ -174,10 +188,14 @@ Begin
   End;
 End;
 
-Function ShellDOS (ExecPath: String; Command: String) : LongInt;
+Function ExecuteProgram (ExecPath: String; Command: String) : LongInt;
 Var
   CurDIR : String;
+  Image  : TConsoleImageRec;
 Begin
+  If Console <> NIL Then
+    Console.GetScreenImage(1, 1, 80, 25, Image);
+
   GetDIR (0, CurDIR);
 
   If ExecPath <> '' Then DirChange(ExecPath);
@@ -195,6 +213,9 @@ Begin
   {$ENDIF}
 
   DirChange(CurDIR);
+
+  If Console <> NIL Then
+    Console.PutScreenImage(Image);
 End;
 
 Function GetMBaseByIndex (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
@@ -412,7 +433,109 @@ Begin
     Inc (Count);
   End;
 
-  ShellDOS ('', Temp);
+  ExecuteProgram ('', Temp);
+End;
+
+Function IsDuplicateFile (Base: RecFileBase; FileName: String; Global: Boolean) : Boolean;
+
+  Procedure CheckOneArea;
+  Var
+    TempFile : TFileBuffer;
+    Temp     : RecFileList;
+  Begin
+    TempFile := TFileBuffer.Create(8 * 1024);
+
+    If Not TempFile.OpenStream (bbsCfg.DataPath + Base.FileName + '.dir', SizeOf(RecFileList), fmOpen, fmRWDN) Then Begin
+      TempFile.Free;
+
+      Exit;
+    End;
+
+    While Not TempFile.EOF Do Begin
+      TempFile.ReadRecord(Temp);
+
+      {$IFDEF FS_SENSITIVE}
+      If (Temp.FileName = FileName) And (Temp.Flags And FDirDeleted = 0) Then Begin
+      {$ELSE}
+      If (strUpper(Temp.FileName) = strUpper(FileName)) And (Temp.Flags And FDirDeleted = 0) Then Begin
+      {$ENDIF}
+        Result := True;
+
+        Break;
+      End;
+    End;
+
+    TempFile.Free;
+  End;
+
+Var
+  BaseFile : File;
+Begin
+  Result := False;
+
+  If Global Then Begin
+    Assign (BaseFile, bbsCfg.DataPath + 'fbases.dat');
+
+    If ioReset (BaseFile, SizeOf(RecFileBase), fmRWDN) Then Begin
+      While Not EOF(BaseFile) And Not Result Do Begin
+        ioRead (BaseFile, Base);
+
+        CheckOneArea;
+      End;
+
+      Close (BaseFile);
+    End;
+  End Else
+    CheckOneArea;
+End;
+
+Function ImportFileDIZ (Var Desc: FileDescBuffer; Var DescLines: Byte; TempP, FN: String) : Boolean;
+
+  Procedure RemoveLine (Num: Byte);
+  Var
+    Count : Byte;
+  Begin
+    For Count := Num To DescLines - 1 Do
+      Desc[Count] := Desc[Count + 1];
+
+    Desc[DescLines] := '';
+
+    Dec (DescLines);
+  End;
+
+Var
+  DizFile : Text;
+Begin
+  Result    := False;
+  DescLines := 0;
+
+  ExecuteArchive (TempP, FN, '', 'file_id.diz', 2);
+
+  Assign (DizFile, FileFind(TempP + 'file_id.diz'));
+
+  {$I-} Reset (DizFile); {$I+}
+
+  If IoResult = 0 Then Begin
+    While Not Eof(DizFile) Do Begin
+      Inc    (DescLines);
+      ReadLn (DizFile, Desc[DescLines]);
+
+      Desc[DescLines] := strStripLow(Desc[DescLines]);
+
+      If DescLines = bbsCfg.MaxFileDesc Then Break;
+    End;
+
+    Close (DizFile);
+    Erase (DizFile);
+
+    While (Desc[1] = '') and (DescLines > 0) Do
+      RemoveLine(1);
+
+    While (Desc[DescLines] = '') And (DescLines > 0) Do
+      Dec (DescLines);
+
+    Result := True;
+  End;
 End;
 
 Initialization

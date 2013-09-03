@@ -106,7 +106,7 @@ Type
     ArcType     : String[4];
     MailType    : Byte;
     binkHost    : String[60];
-    NetType     : Byte;
+    UNUSED1     : Byte;
     ProtType    : Byte;
     binkTimeout : Word;
     binkBlock   : Word;

@@ -74,6 +74,7 @@ Var
         1 : OS := 'Linux  ';
         2 : OS := 'OSX';
         3 : OS := 'All';
+        4 : OS := 'OS/2';
       End;
 
       //'Active   OSID   Batch   Key   Description');

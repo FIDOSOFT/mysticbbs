@@ -87,17 +87,17 @@ Begin
   InDomain := Copy(Data, Pos('@', Data) + 1, Pos('>', Data) - Pos('@', Data) - 1);
 
   If IsFrom Then
-    Server.Status('User: ' + InName + ' Domain: ' + InDomain);
+    Server.Status(ProcessID, 'User: ' + InName + ' Domain: ' + InDomain);
 
   If InDomain <> bbsConfig.iNetDomain Then Begin
-    Server.Status('Refused by domain: ' + InName + '@' + InDomain);
+    Server.Status(ProcessID, 'Refused by domain: ' + InName + '@' + InDomain);
     Exit;
   End;
 
   Result := SearchForUser(InName, User, UserPos);
 
   If Not Result Then
-    Server.Status('Refused by name: ' + InName + '@' + InDomain);
+    Server.Status(ProcessID, 'Refused by name: ' + InName + '@' + InDomain);
 End;
 
 Procedure TSMTPServer.ResetSession;
@@ -195,7 +195,7 @@ Begin
         If HackCount >= SMTPHackThresh Then Begin
           EndSession := True;   // someone is being a douchebag
 
-          Server.Status('Flood attempt from ' + FromName + ' (' + Client.PeerIP + '); Goodbye');
+          Server.Status(ProcessID, 'Flood attempt from ' + FromName + ' (' + Client.PeerIP + '); Goodbye');
 
           MsgText.Free;
 
@@ -258,7 +258,7 @@ Begin
   End;
 
   For MsgLoop := 0 To ToList.Count - 1 Do Begin
-    Server.Status('Sending mail from ' + FromName + ' to ' + ToList.Strings[MsgLoop]);
+    Server.Status(ProcessID, 'Sending mail from ' + FromName + ' to ' + ToList.Strings[MsgLoop]);
 
     MsgBase^.StartNewMsg;
 

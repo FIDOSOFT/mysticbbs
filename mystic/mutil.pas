@@ -100,6 +100,9 @@ Begin
   If FileExist(ParamStr(1)) Then
     FN := ParamStr(1)
   Else
+  If FileExist(ParamStr(1) + '.ini') Then
+    FN := ParamStr(1) + '.ini'
+  Else
   If FileExist('mutil.ini') Then
     FN := 'mutil.ini'
   Else Begin
