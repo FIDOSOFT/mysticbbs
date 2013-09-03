@@ -177,7 +177,7 @@ Begin
   Result := fpSend(FSocketHandle, @Buf, Len, FPSENDOPT);
 
   While (Result = -1) and (SocketError = ESOCKEWOULDBLOCK) Do Begin
-    WaitMS(10);
+    WaitMS(25);
 
     Result := fpSend(FSocketHandle, @Buf, Len, FPSENDOPT);
   End;
@@ -312,7 +312,7 @@ Begin
   Result := fpSend(FSocketHandle, @Temp, TempPos, FPSENDOPT);
 
   While (Result = -1) and (SocketError = ESOCKEWOULDBLOCK) Do Begin
-    WaitMS(10);
+    WaitMS(25);
 
     Result := fpSend(FSocketHandle, @Temp, TempPos, FPSENDOPT);
   End;
@@ -479,6 +479,12 @@ Begin
   If FInBufPos = FInBufEnd Then Begin
     FInBufEnd := fpRecv(FSocketHandle, @FInBuf, TIOBufferSize, FPRECVOPT);
     FInBufPos := 0;
+
+    While (FInBufEnd = -1) and (SocketError = ESOCKEWOULDBLOCK) Do Begin
+      WaitMS(25);
+
+      FInBufEnd := fpRecv(FSocketHandle, @FInBuf, TIOBufferSize, FPRECVOPT);
+    End;
 
     If FInBufEnd <= 0 Then Begin
       FInBufEnd := 0;
