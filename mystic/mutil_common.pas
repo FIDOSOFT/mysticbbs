@@ -7,11 +7,11 @@ Interface
 Uses
   m_Output,
   m_IniReader,
-  mutil_Status,
-  bbs_Records,
-  bbs_MsgBase_Abs,
-  bbs_MsgBase_Squish,
-  bbs_MsgBase_JAM;
+  mUtil_Status,
+  BBS_Records,
+  BBS_MsgBase_ABS,
+  BBS_MsgBase_Squish,
+  BBS_MsgBase_JAM;
 
 Var
   Console      : TOutput;

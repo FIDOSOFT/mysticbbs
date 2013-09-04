@@ -20,7 +20,8 @@ Uses
   bbs_Cfg_EchoMail,
   BBS_Records,
   BBS_DataBase,
-  BBS_Common;
+  BBS_Common,
+  BBS_Cfg_QwkNet;
 
 Type
   RecMessageBaseFile = File of RecMessageBase;
@@ -102,20 +103,21 @@ Var
   Links    : LongInt;
   OrigFN   : String;
   OrigPath : String;
+  QwkNet   : RecQwkNetwork;
 Begin
   Topic := '|03(|09Message Base Edit|03) |01-|09> |15';
   Box   := TAnsiMenuBox.Create;
   Form  := TAnsiMenuForm.Create;
 
   OrigFN   := MBase.FileName;
-  OrigPath := Mbase.Path;
+  OrigPath := MBase.Path;
 
   Box.Shadow := False;
   Box.Header := ' Index ' + strI2S(MBase.Index) + ' ';
 
-  Box.Open (3, 4, 77, 22);
+  Box.Open (3, 4, 77, 23);
 
-  VerticalLine (17,  5, 21);
+  VerticalLine (17,  5, 22);
   VerticalLine (66,  5, 21);
 
   Form.AddStr  ('N', ' Name'        , 11,  5, 19,  5,  6, 30, 40, @MBase.Name, Topic + 'Message base description');
@@ -134,7 +136,8 @@ Begin
   Form.AddStr  ('S', ' Sponsor'     ,  8, 18, 19, 18,  9, 30, 30, @MBase.Sponsor, Topic + 'User name of base''s sponser');
   Form.AddStr  ('T', ' R Template'  ,  5, 19, 19, 19, 12, 20, 20, @MBase.RTemplate, Topic + 'Template for full screen reader');
   Form.AddStr  ('M', ' L Template'  ,  5, 20, 19, 20, 12, 20, 20, @MBase.ITemplate, Topic + 'Template for lightbar message list');
-  Form.AddBits ('0', ' QWK Network' ,  4, 21, 19, 21, 13, MBAllowQWKNet, @MBase.Flags, Topic + 'Is this base a QWK network base?');
+  Form.AddNone ('0', ' QWK Network' ,  4, 21, 19, 21, 13, Topic + 'QWK network associated to this base');
+  Form.AddLong ('!', ' QWK Base ID' ,  4, 22, 19, 22, 13, 6, 0, 999999, @MBase.QwkConfID, Topic + 'QWK network base ID');
 
   Form.AddAttr ('Q', ' Quote Color' , 53,  5, 68,  5, 13, @MBase.ColQuote, Topic + 'Color for quoted text');
   Form.AddAttr ('X', ' Text Color'  , 54,  6, 68,  6, 12, @MBase.ColText, Topic + 'Color for message text');
@@ -166,7 +169,19 @@ Begin
 
     WriteXY (19, 16, 113, strI2S(Links) + ' node(s)');
 
+    If MBase.QwkNetID <> 0 Then
+      If GetQwkNetByIndex(MBase.QwkNetID, QwkNet) Then
+        MBase.QwkNetID := QwkNet.Index
+      Else
+        MBase.QwkNetID := 0;
+
+    If MBase.QwkNetID = 0 Then
+      QwkNet.Description := 'None';
+
+    WriteXY (19, 21, 113, strPadR(QwkNet.Description, 30, ' '));
+
     Case Form.Execute of
+      '0' : MBase.QwkNetID := Configuration_QwkNetworks(False);
       'D' : MBase.NetAddr := Configuration_EchoMailAddress(False);
       '7' : Configuration_NodeExport (MBase);
       #27 : {If (MBase.NetType > 0) And (MBase.EchoTag = '') And (MBase.NetType <> 3) Then
@@ -385,6 +400,9 @@ Var
 
       If MBase.NetType = 0 Then
         Addr := 'Local'
+      Else
+      If MBase.QwkNetID <> 0 Then
+        Addr := 'QwkNet'
       Else
         Addr := strAddr2Str(bbsCfg.NetAddress[MBase.NetAddr]);
 

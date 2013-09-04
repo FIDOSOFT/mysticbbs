@@ -548,6 +548,11 @@ Begin
 
         MBaseAssignData(UserRecord, MsgBase, MBase);
 
+        If IsNetworked Then
+          MsgBase^.SetLocal(False);
+          // need to think this stuff through for both HUB and node
+          // situations
+
         QwkBlock[0] := #25;
         Move (QwkHeader.UpTo, QwkBlock[1], 25);
         MsgBase^.SetTo(strStripR(QwkBlock, ' '));

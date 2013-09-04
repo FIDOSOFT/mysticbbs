@@ -43,6 +43,14 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 
+- remove console class code from mutil since its in bbs_database
+     ^ same with keyboard
+- think through the Local flag for all QWK networking situations
+  as well as semaphore file creation
+- add QWKNet base type or no?  leaning towards no because it might limit
+  hybrid FIDO/QWK networks which maybe we can do currently?  need to think
+  about the SENT flag and how we could determine which type it was circulated
+  to.
 - make tiosocket buffer size dynamic.  increase data sockets in ftp to 32kb
 - all display files to search for .hlp before ANS?
 - fix END in lightbar file lists so it doesn't suck.
@@ -154,7 +162,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Email verification
 - QWK Networking support internally WHO CAN HELP THIS HAPPEN?
 - MPL trunc/round?
-- Salted SHA-1 or SHA-256 password encryption
+- Salted MD5, SHA-1 or SHA-256 password encryption?
 - User editor: Reset password/Force change... cannot view PWs
 
 RANDOM DRUNKEN BRAINDUMP AKA DESIGN DETAILS
@@ -315,6 +323,7 @@ mystic_server_pop3
 mystic_server
 mystic_client
 mystic_client_smtp
+mystic_client_ftp
 mystic_server_events
 mystic_cmd_server
 mystic_cmd_fidopoll

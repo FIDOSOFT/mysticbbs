@@ -256,7 +256,7 @@ Begin
   If Str = '-' Then
     WriteLn (tLOG, strRep('-', 40))
   Else
-    WriteLn (tLOG, DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, 0) + ' ' + Str);
+    WriteLn (tLOG, FormatDate (CurDateDT, 'NNN DD YYYY HH:II') + ' ' + Str);
 
   Close (tLOG);
 End;

@@ -47,6 +47,7 @@ Function  GetMBaseByIndex       (Num: LongInt; Var TempBase: RecMessageBase) : B
 Procedure GetMessageScan        (UN: Cardinal; TempBase: RecMessageBase; Var TempScan: MScanRec);
 Procedure PutMessageScan        (UN: Cardinal; TempBase: RecMessageBase; TempScan: MScanRec);
 Procedure MBaseAssignData       (Var User: RecUser; Var Msg: PMsgBaseABS; Var TempBase: RecMessageBase);
+Function  GetQWKNetByIndex      (Num: LongInt; Var TempNet: RecQwkNetwork) : Boolean;
 
 // FILE BASE
 
@@ -232,6 +233,29 @@ Begin
     ioRead (F, TempBase);
 
     If TempBase.Index = Num Then Begin
+      Result := True;
+
+      Break;
+    End;
+  End;
+
+  Close (F);
+End;
+
+Function GetQWKNetByIndex (Num: LongInt; Var TempNet: RecQwkNetwork) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, bbsCfg.DataPath + 'qwknet.dat');
+
+  If Not ioReset(F, SizeOf(RecQwkNetwork), fmRWDN) Then Exit;
+
+  While Not Eof(F) Do Begin
+    ioRead (F, TempNet);
+
+    If TempNet.Index = Num Then Begin
       Result := True;
 
       Break;

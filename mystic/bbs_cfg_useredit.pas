@@ -23,7 +23,8 @@ Uses
   bbs_General,
   BBS_Common,
   BBS_DataBase,
-  bbs_Cfg_SecLevel;
+  BBS_Cfg_SecLevel,
+  BBS_Cfg_QwkNet;
 
 Procedure Configuration_EditUser (Var U: RecUser);
 Var
@@ -70,6 +71,7 @@ Var
   LastCall  : String[8];
   Temp      : Integer;
   SavedUser : RecUser;
+  QwkNet    : RecQwkNetwork;
 Begin
   Topic     := '|03(|09User Editor|03) |01-|09> |15';
   SavedUser := U;
@@ -192,7 +194,8 @@ Begin
             Form.AddBits ('P', ' No PW Change', 7, 10, 23, 10, 14, UserNoPWChange, @U.Flags, Topic + 'Exclude from forced password change');
             Form.AddBits ('H', ' No History'  , 7, 11, 23, 11, 14, UserNoHistory,  @U.Flags, Topic + 'Exclude from BBS history stats');
             Form.AddBits ('T', ' No Timeout'  , 7, 12, 23, 12, 14, UserNoTimeout,  @U.Flags, Topic + 'Exclude from inactivity timeout');
-            Form.AddBits ('Q', ' QWK Network' , 7, 13, 23, 13, 14, UserQWKNetwork, @U.Flags, Topic + 'User is a QWK network account');
+            Form.AddBits ('Q', ' Qwk Account' , 7, 13, 23, 13, 14, UserQWKNetwork, @U.Flags, Topic + 'User is a QWK network account');
+            Form.AddNone ('N', ' Qwk Network' , 7, 14, 23, 14, 14, Topic + 'Member of which QWK network');
           End;
     End;
 
@@ -201,7 +204,17 @@ Begin
     If Form.WasFirstExit Then Form.ItemPos := Form.Items;
     If Form.WasLastExit  Then Form.ItemPos := 1;
 
+    If PagePos = 6 Then Begin
+      QwkNet.Description := 'None';
+
+      If (U.QwkNetwork <> 0) And (Not GetQwkNetByIndex(U.QwkNetwork, QwkNet)) Then
+        QwkNet.Description := 'None';
+
+      WriteXY (23, 14, 113, strPadR(QwkNet.Description, 30, ' '));
+    End;
+
     Case Form.Execute of
+      'N' : U.QwkNetwork := Configuration_QwkNetworks(False);
       #21 : Begin
               Temp := Configuration_SecurityEditor(False);
 

@@ -1370,7 +1370,7 @@ Begin
 //    ThisUser := TempUser;
   End;
 
-  Session.SystemLog ('User: ' + ThisUser.Handle + ' logged in');
+  Session.SystemLog (ThisUser.Handle + ' logged in');
 
   If bbsCfg.ThemeOnStart Then
     ThisUser.Theme := Session.Theme.FileName

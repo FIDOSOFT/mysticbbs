@@ -67,7 +67,7 @@ Var
 
     If Result = 0 Then Inc(Result);
 
-    Reset (QwkFile);
+    Seek (QwkFile, 0);
 
     While Not Eof(QwkFile) Do Begin
       Read (QwkFile, TempNet);
@@ -75,8 +75,8 @@ Var
       If Result = TempNet.Index Then Begin
         If Result >= 2000000 Then Result := 1;
 
-        Inc   (Result);
-        Reset (QwkFile);
+        Inc  (Result);
+        Seek (QwkFile, 0);
       End;
     End;
 
@@ -89,7 +89,10 @@ Var
   Begin
     List.Clear;
 
-    Reset (QwkFile);
+    If Not Edit Then
+      List.Add('0    None', 2);
+
+    Seek (QwkFile, 0);
 
     While Not Eof(QwkFile) Do Begin
       Read (QwkFile, QwkNet);
@@ -115,12 +118,12 @@ Var
   End;
 
 Begin
-  Result := -1;
+  Result := 0;
 
   Assign (QwkFile, bbsCfg.DataPath + 'qwknet.dat');
 
-  If Not ioReset(QwkFile, SizeOf(QwkNet), fmRWDN) Then
-    If Not ioReWrite(QwkFile, SizeOf(QwkNet), fmRWDN) Then
+  If Not ioReset(QwkFile, SizeOf(RecQwkNetwork), fmRWDN) Then
+    If Not ioReWrite(QwkFile, SizeOf(RecQwkNetwork), fmRWDN) Then
       Exit;
 
   Box  := TAnsiMenuBox.Create;
@@ -156,8 +159,8 @@ Begin
                     End;
               'D' : If (List.Picked < List.ListMax) Then
                       If ShowMsgBox(1, 'Delete this entry?') Then Begin
-                        Seek (QwkFile, List.Picked - 1);
-                        Read (QwkFile, QwkNet);
+//                        Seek (QwkFile, List.Picked - 1);
+//                        Read (QwkFile, QwkNet);
 
                         KillRecord (QwkFile, List.Picked, SizeOf(RecQwkNetwork));
 
@@ -167,18 +170,32 @@ Begin
                       End;
             End;
       #13 : If List.Picked < List.ListMax Then Begin
-              Seek (QwkFile, List.Picked - 1);
-              Read (QwkFile, QwkNet);
-
-              If Not Edit Then Begin
-                Result := QwkNet.Index;
+              If Not Edit And (List.Picked = 1) Then Begin
+                Result := 0;
 
                 Break;
+              End Else Begin
+                If Edit Then
+                  Seek (QwkFile, List.Picked - 1)
+                Else
+                  Seek (QwkFile, List.Picked - 2);
+
+                Read (QwkFile, QwkNet);
+
+                If Not Edit Then Begin
+                  Result := QwkNet.Index;
+
+                  Break;
+                End;
               End;
 
               EditNetwork (QwkNet);
 
-              Seek  (QwkFile, List.Picked - 1);
+              If Edit Then
+                Seek (QwkFile, List.Picked - 1)
+              Else
+                Seek (QwkFile, List.Picked - 2);
+
               Write (QwkFile, QwkNet);
             End;
       #27 : Break;

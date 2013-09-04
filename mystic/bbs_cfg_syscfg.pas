@@ -81,7 +81,7 @@ Begin
 
   Box.Header := ' General Settings ';
 
-  Box.Open (5, 5, 75, 18);
+  Box.Open (5, 5, 75, 19);
 
   VerticalLine (24, 7, 17);
   VerticalLine (67, 7, 12);

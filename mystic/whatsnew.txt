@@ -3620,9 +3620,22 @@
    using FTP.  It will also attempt to use the archive configuration to import
    FILE_ID.DIZ files.
 
- + MIS server status updates now use a MMM DD format date instead of MM/DD
-   which was confusing/annoying for people outside of North America.
+ + MIS server status updates and logging now use a MMM DD format date instead
+   of MM/DD which was confusing/annoying for people outside of North America.
+
+ + Mystic's node logging now uses MMM DD format date instead of MM/DD/YY.
 
  + The FTP server now allows resumed uploads via the APPE function.
+
+ + System configuration now has a QWK Networks configuration editor, where
+   one or more QWK networks can be defined.
+
+ + Message base editor now allows each message base to be linked to a
+   configured QWK network.  In addition, each message base also now has a QWK
+   network conference ID number.
+
+ + Users can now be linked to a configured QWK network using the User editor.
+   This defines the QWK network message bases that they have access to if
+   they are flagged as a QWK network account.
 
    <ALPHA 37 RELEASED>

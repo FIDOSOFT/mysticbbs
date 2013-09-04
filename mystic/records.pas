@@ -439,7 +439,8 @@ Type
     Protocol     : Char;
     CodePage     : Byte;                  // 0 = CP437, 1 = UTF8
     QwkExtended  : Boolean;
-    Reserved     : Array[1..387] of Byte;
+    QwkNetwork   : LongInt;
+    Reserved     : Array[1..383] of Byte;
   End;
 
   RecEvent = Record
@@ -547,8 +548,9 @@ Type
     Flags     : LongInt;                                        // MB flag bits see above
     Created   : LongInt;
     EchoTag   : String[40];                                     // EchoMail Tag
-    NetReply  : LongInt;
-    Res       : Array[1..31] of Byte;                           // RESERVED
+    QwkNetID  : LongInt;
+    QwkConfID : LongInt;
+    Res       : Array[1..27] of Byte;                           // RESERVED
   End;
 
   FScanRec = Record                    { <Data Path> *.SCN               }
