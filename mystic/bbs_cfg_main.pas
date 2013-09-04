@@ -29,7 +29,8 @@ Uses
   bbs_cfg_UserEdit,
   bbs_cfg_EchoMail,
   bbs_cfg_MenuEdit,
-  bbs_cfg_Events;
+  bbs_cfg_Events,
+  bbs_Cfg_QwkNet;
 
 Procedure Configuration_ExecuteEditor (Mode: Char);
 Var
@@ -196,6 +197,7 @@ Begin
                 '3' : Configuration_OptionalFields;
                 'F' : Configuration_FileSettings;
                 'M' : Configuration_MessageSettings;
+                'Q' : Configuration_QwkNetworks(True);
                 'O' : Configuration_QWKSettings;
                 '1' : Configuration_NewUser1Settings;
                 '2' : Configuration_NewUser2Settings;

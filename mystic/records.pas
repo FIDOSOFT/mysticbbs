@@ -131,6 +131,19 @@ Type
     Res         : Array[1..341] of Byte;
   End;
 
+  RecQwkNetwork = Record
+    Index       : LongInt;
+    Description : String[30];
+    MemberType  : Byte;                                         // 0=HUB,1=Node
+    PacketID    : String[20];
+    UseQWKE     : Boolean;
+    UsePassive  : Boolean;
+    HostName    : String[60];
+    Login       : String[20];
+    Password    : String[20];
+    Res         : Array[1..80] of Byte;
+  End;
+
   RecSauceInfo = Packed Record
     Title  : String[35];
     Author : String[20];
