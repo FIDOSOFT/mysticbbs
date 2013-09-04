@@ -13,7 +13,8 @@ Uses
   m_DateTime,
   mUtil_Common,
   mUtil_Status,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 Procedure uMassUpload;
 Var
@@ -68,7 +69,7 @@ Begin
 
   // get the show on the road
 
-  Assign (BaseFile, bbsConfig.DataPath + 'fbases.dat');
+  Assign (BaseFile, bbsCfg.DataPath + 'fbases.dat');
   {$I-} Reset (BaseFile); {$I+}
 
   If IoResult = 0 Then Begin
@@ -91,9 +92,9 @@ Begin
 
         // should technically rename the file like Mystic does if > 70 chars
 
-        Assign (ListFile, bbsConfig.DataPath + Base.FileName + '.dir');
+        Assign (ListFile, bbsCfg.DataPath + Base.FileName + '.dir');
 
-        If FileExist(bbsConfig.DataPath + Base.FileName + '.dir') Then
+        If FileExist(bbsCfg.DataPath + Base.FileName + '.dir') Then
           ioReset (ListFile, SizeOf(RecFileList), fmRWDN)
         Else
           ReWrite (ListFile);
@@ -135,7 +136,7 @@ Begin
 
           If INI.ReadString(Header_UPLOAD, 'import_fileid', '1') = '1' Then Begin
 
-            ExecuteArchive (Base.Path + List.FileName, '', 'file_id.diz', 2);
+            ExecuteArchive (TempPath, Base.Path + List.FileName, '', 'file_id.diz', 2);
 
             DizName := FileFind(TempPath + 'file_id.diz');
 
@@ -153,7 +154,7 @@ Begin
 
                 If Length(Desc[List.DescLines]) > mysMaxFileDescLen Then Desc[List.DescLines][0] := Chr(mysMaxFileDescLen);
 
-                If List.DescLines = bbsConfig.MaxFileDesc Then Break;
+                If List.DescLines = bbsCfg.MaxFileDesc Then Break;
               End;
 
               Close (DizFile);
@@ -174,9 +175,9 @@ Begin
             Desc[1]        := INI.ReadString(Header_UPLOAD, 'no_description', 'No Description');
           End;
 
-          Assign (DescFile, bbsConfig.DataPath + Base.FileName + '.des');
+          Assign (DescFile, bbsCfg.DataPath + Base.FileName + '.des');
 
-          If FileExist(bbsConfig.DataPath + Base.FileName + '.des') Then
+          If FileExist(bbsCfg.DataPath + Base.FileName + '.des') Then
             Reset (DescFile, 1)
           Else
             ReWrite (DescFile, 1);

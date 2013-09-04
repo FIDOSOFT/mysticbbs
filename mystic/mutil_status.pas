@@ -26,7 +26,8 @@ Implementation
 
 Uses
   m_Strings,
-  mutil_Common;
+  BBS_DataBase,
+  mUtil_Common;
 
 Procedure ProcessName (Str: String; Start: Boolean);
 Begin

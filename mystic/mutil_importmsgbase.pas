@@ -14,7 +14,8 @@ Uses
   m_Strings,
   mUtil_Common,
   mUtil_Status,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 Procedure uImportMessageBases;
 Var
@@ -28,7 +29,7 @@ Begin
   ProcessName   ('Import Message Bases', True);
   ProcessResult (rWORKING, False);
 
-  FindFirst (bbsConfig.MsgsPath + '*', AnyFile, Info);
+  FindFirst (bbsCfg.MsgsPath + '*', AnyFile, Info);
 
   While DosError = 0 Do Begin
     BaseName := JustFileName(Info.Name);
@@ -46,14 +47,14 @@ Begin
       MBase.NewsName  := strReplace(BaseName, ' ', '.');
       MBase.EchoTag   := BaseName;
       MBase.FileName  := BaseName;
-      MBase.Path      := bbsConfig.MsgsPath;
+      MBase.Path      := bbsCfg.MsgsPath;
       MBase.NetType   := INI.ReadInteger(Header_IMPORTMB, 'net_type', 0);
-      MBase.ColQuote  := bbsConfig.ColorQuote;
-      MBase.ColText   := bbsConfig.ColorText;
-      MBase.ColTear   := bbsConfig.ColorTear;
-      MBase.ColOrigin := bbsConfig.ColorOrigin;
-      MBase.ColKludge := bbsConfig.ColorKludge;
-      MBase.Origin    := bbsConfig.Origin;
+      MBase.ColQuote  := bbsCfg.ColorQuote;
+      MBase.ColText   := bbsCfg.ColorText;
+      MBase.ColTear   := bbsCfg.ColorTear;
+      MBase.ColOrigin := bbsCfg.ColorOrigin;
+      MBase.ColKludge := bbsCfg.ColorKludge;
+      MBase.Origin    := bbsCfg.Origin;
       MBase.BaseType  := Ord(BaseExt = 'SQD');
       MBase.ListACS   := INI.ReadString(Header_IMPORTMB, 'acs_list', '');
       MBase.ReadACS   := INI.ReadString(Header_IMPORTMB, 'acs_read', '');
@@ -70,7 +71,7 @@ Begin
       MBase.NetAddr   := 1;
 
       For Count := 1 to 30 Do
-        If strAddr2Str(bbsConfig.NetAddress[Count]) = INI.ReadString(Header_IMPORTNA, 'netaddress', '') Then Begin
+        If strAddr2Str(bbsCfg.NetAddress[Count]) = INI.ReadString(Header_IMPORTNA, 'netaddress', '') Then Begin
           MBase.NetAddr := Count;
 
           Break;

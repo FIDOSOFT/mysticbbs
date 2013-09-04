@@ -10,6 +10,7 @@ Uses
   m_Strings,
   m_DateTime,
   BBS_Records,
+  BBS_DataBase,
   mUtil_Common;
 
 Const
@@ -132,7 +133,7 @@ Begin
 
   GetMem (DupeData, MaxDupes * SizeOf(RecMsgDupe));
 
-  Assign (F, bbsConfig.DataPath + 'echodupes.dat');
+  Assign (F, bbsCfg.DataPath + 'echodupes.dat');
   {$I-} Reset (F, 1); {$I+}
 
   If IoResult <> 0 Then ReWrite (F, 1);
@@ -179,7 +180,7 @@ Destructor TPKTDupe.Destroy;
 Var
   F : File;
 Begin
-  Assign     (F, bbsConfig.DataPath + 'echodupes.dat');
+  Assign     (F, bbsCfg.DataPath + 'echodupes.dat');
   ReWrite    (F, 1);
   BlockWrite (F, DupeData^, TotalDupes * SizeOf(RecMsgDupe));
   Close      (F);

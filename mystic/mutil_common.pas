@@ -9,18 +9,17 @@ Uses
   m_IniReader,
   mUtil_Status,
   BBS_Records,
+  BBS_DataBase,
   BBS_MsgBase_ABS,
   BBS_MsgBase_Squish,
   BBS_MsgBase_JAM;
 
 Var
-  Console      : TOutput;
   INI          : TINIReader;
   BarOne       : TStatusBar;
   BarAll       : TStatusBar;
   ProcessTotal : Byte = 0;
   ProcessPos   : Byte = 0;
-  bbsConfig    : RecConfig;
   TempPath     : String;
   StartPath    : String;
   LogFile      : String;
@@ -50,8 +49,6 @@ Function  IsDupeMBase        (FN: String) : Boolean;
 Function  IsDupeFBase        (FN: String) : Boolean;
 Procedure AddMessageBase     (Var MBase: RecMessageBase);
 Procedure AddFileBase        (Var FBase: RecFileBase);
-Function  ShellDOS           (ExecPath: String; Command: String) : LongInt;
-Procedure ExecuteArchive     (FName: String; Temp: String; Mask: String; Mode: Byte);
 Function  GetMBaseByIndex    (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
 Function  GetMBaseByTag      (Tag: String; Var TempBase: RecMessageBase) : Boolean;
 Function  GetMBaseByNetZone  (Zone: Word; Var TempBase: RecMessageBase) : Boolean;
@@ -108,7 +105,7 @@ End;
 
 Function GetUserBaseSize : Cardinal;
 Begin
-  Result := FileByteSize(bbsConfig.DataPath + 'users.dat');
+  Result := FileByteSize(bbsCfg.DataPath + 'users.dat');
 
   If Result > 0 Then Result := Result DIV SizeOf(RecUser);
 End;
@@ -120,7 +117,7 @@ Var
 Begin
   Result := False;
 
-  Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
+  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
   {$I-} Reset (MBaseFile); {$I+}
 
   If IoResult <> 0 Then Exit;
@@ -144,7 +141,7 @@ Var
 Begin
   Result := False;
 
-  Assign (FBaseFile, bbsConfig.DataPath + 'fbases.dat');
+  Assign (FBaseFile, bbsCfg.DataPath + 'fbases.dat');
   {$I-} Reset (FBaseFile); {$I+}
 
   If IoResult <> 0 Then Exit;
@@ -166,7 +163,7 @@ Var
   MBaseFile : File of RecMessageBase;
   MBase     : RecMessageBase;
 Begin
-  Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
+  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
   Reset  (MBaseFile);
 
   Result := FileSize(MBaseFile);
@@ -188,7 +185,7 @@ Var
   FBaseFile : File of RecFileBase;
   FBase     : RecFileBase;
 Begin
-  Assign (FBaseFile, bbsConfig.DataPath + 'fbases.dat');
+  Assign (FBaseFile, bbsCfg.DataPath + 'fbases.dat');
   Reset  (FBaseFile);
 
   Result := FileSize(FBaseFile);
@@ -209,7 +206,7 @@ Procedure AddMessageBase (Var MBase: RecMessageBase);
 Var
   MBaseFile : File of RecMessageBase;
 Begin
-  Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
+  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
   Reset  (MBaseFile);
   Seek   (MBaseFile, FileSize(MBaseFile));
   Write  (MBaseFile, MBase);
@@ -220,97 +217,11 @@ Procedure AddFileBase (Var FBase: RecFileBase);
 Var
   FBaseFile : File of RecFileBase;
 Begin
-  Assign (FBaseFile, bbsConfig.DataPath + 'fbases.dat');
+  Assign (FBaseFile, bbsCfg.DataPath + 'fbases.dat');
   Reset  (FBaseFile);
   Seek   (FBaseFile, FileSize(FBaseFile));
   Write  (FBaseFile, FBase);
   Close  (FBaseFile);
-End;
-
-Function ShellDOS (ExecPath: String; Command: String) : LongInt;
-Var
-  Image : TConsoleImageRec;
-Begin
-  Console.GetScreenImage(1, 1, 80, 25, Image);
-
-  If ExecPath <> '' Then DirChange(ExecPath);
-
-  {$IFDEF UNIX}
-    Result := Shell(Command);
-  {$ENDIF}
-
-  {$IFDEF WINDOWS}
-    If Command <> '' Then Command := '/C' + Command;
-
-    Exec (GetEnv('COMSPEC'), Command);
-
-    Result := DosExitCode;
-  {$ENDIF}
-
-  DirChange(StartPath);
-
-  Console.PutScreenImage(Image);
-End;
-
-Procedure ExecuteArchive (FName: String; Temp: String; Mask: String; Mode: Byte);
-Var
-  ArcFile : File of RecArchive;
-  Arc     : RecArchive;
-  Count   : LongInt;
-  Str     : String;
-Begin
-  If Temp <> '' Then
-    Temp := strUpper(Temp)
-  Else
-    Temp := strUpper(JustFileExt(FName));
-
-  Assign (ArcFile, bbsConfig.DataPath + 'archive.dat');
-  {$I-} Reset (ArcFile); {$I+}
-
-  If IoResult <> 0 Then Exit;
-
-  Repeat
-    If Eof(ArcFile) Then Begin
-      Close (ArcFile);
-
-      Exit;
-    End;
-
-    Read (ArcFile, Arc);
-
-    If (Not Arc.Active) or ((Arc.OSType <> OSType) and (Arc.OSType <> 3)) Then Continue;
-
-    If strUpper(Arc.Ext) = Temp Then Break;
-  Until False;
-
-  Close (ArcFile);
-
-  Case Mode of
-    1 : Str := Arc.Pack;
-    2 : Str := Arc.Unpack;
-  End;
-
-  If Str = '' Then Exit;
-
-  Temp  := '';
-  Count := 1;
-
-  While Count <= Length(Str) Do Begin
-    If Str[Count] = '%' Then Begin
-      Inc (Count);
-
-      If Str[Count] = '1' Then Temp := Temp + FName Else
-      If Str[Count] = '2' Then Temp := Temp + Mask Else
-      If Str[Count] = '3' Then Temp := Temp + TempPath;
-    End Else
-      Temp := Temp + Str[Count];
-
-    Inc (Count);
-  End;
-
-  Log (3, '!', 'Arc Result (' + strI2S(ShellDOS('', Temp)) + ') ' + Temp);
-
-//  ShellDOS ('', Temp);
 End;
 
 Function GetMBaseByIndex (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
@@ -319,7 +230,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, bbsConfig.DataPath + 'mbases.dat');
+  Assign (F, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
@@ -341,7 +252,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, bbsConfig.DataPath + 'mbases.dat');
+  Assign (F, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
@@ -366,7 +277,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, bbsConfig.DataPath + 'mbases.dat');
+  Assign (F, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
@@ -377,7 +288,7 @@ Begin
       One    := TempBase;
       GotOne := True;
 
-      If Zone = bbsConfig.NetAddress[TempBase.NetAddr].Zone Then Begin
+      If Zone = bbsCfg.NetAddress[TempBase.NetAddr].Zone Then Begin
         Result := True;
 
         Break;
@@ -434,19 +345,19 @@ Begin
   If mArea.NetType > 0 Then Begin
     If mArea.NetType = 2 Then Begin
       Msg^.SetMailType (mmtNetMail);
-      Msg^.SetCrash    (bbsConfig.netCrash);
-      Msg^.SetHold     (bbsConfig.netHold);
-      Msg^.SetKillSent (bbsConfig.netKillSent);
+      Msg^.SetCrash    (bbsCfg.netCrash);
+      Msg^.SetHold     (bbsCfg.netHold);
+      Msg^.SetKillSent (bbsCfg.netKillSent);
       Msg^.SetDest     (mAddr);
     End Else
       Msg^.SetMailType (mmtEchoMail);
 
-    Msg^.SetOrig(bbsConfig.NetAddress[mArea.NetAddr]);
+    Msg^.SetOrig(bbsCfg.NetAddress[mArea.NetAddr]);
 
     Case mArea.NetType of
-      1 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileEcho);
-      2 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileNews);
-      3 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileNet);
+      1 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEcho);
+      2 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNews);
+      3 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNet);
     End;
 
     ReWrite (SemFile);
@@ -466,7 +377,7 @@ Begin
 
   If mArea.NetType > 0 Then Begin
     Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ')');
-    Msg^.DoStringLn (' * Origin: ' + mArea.Origin + ' (' + strAddr2Str(bbsConfig.NetAddress[mArea.NetAddr]) + ')');
+    Msg^.DoStringLn (' * Origin: ' + mArea.Origin + ' (' + strAddr2Str(bbsCfg.NetAddress[mArea.NetAddr]) + ')');
   End;
 
   Msg^.WriteMsg;
@@ -515,9 +426,9 @@ Var
   Count : Byte;
 Begin
   For Count := 1 to 30 Do
-    If (strUpper(EchoNode.Domain) = strUpper(bbsConfig.NetDomain[Count])) and
-       (EchoNode.Address.Zone = bbsConfig.NetAddress[Count].Zone) and
-       (bbsConfig.NetPrimary[Count]) Then Begin
+    If (strUpper(EchoNode.Domain) = strUpper(bbsCfg.NetDomain[Count])) and
+       (EchoNode.Address.Zone = bbsCfg.NetAddress[Count].Zone) and
+       (bbsCfg.NetPrimary[Count]) Then Begin
          Result := True;
 
          Exit;
@@ -529,9 +440,9 @@ End;
 Function GetFTNOutPath (EchoNode: RecEchoMailNode) : String;
 Begin;
   If IsFTNPrimary(EchoNode) Then
-    Result := bbsConfig.OutboundPath
+    Result := bbsCfg.OutboundPath
   Else
-    Result := DirLast(bbsConfig.OutboundPath) + strLower(EchoNode.Domain + '.' + strPadL(strI2H(EchoNode.Address.Zone, 3), 3, '0')) + PathChar;
+    Result := DirLast(bbsCfg.OutboundPath) + strLower(EchoNode.Domain + '.' + strPadL(strI2H(EchoNode.Address.Zone, 3), 3, '0')) + PathChar;
 
   If EchoNode.Address.Point <> 0 Then
     Result := Result + strI2H((EchoNode.Address.Net SHL 16) OR EchoNode.Address.Node, 8) + '.pnt' + PathChar;
@@ -543,7 +454,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, bbsConfig.DataPath + 'echonode.dat');
+  Assign (F, bbsCfg.DataPath + 'echonode.dat');
 
   If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
 
@@ -658,7 +569,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, bbsConfig.DataPath + 'echonode.dat');
+  Assign (F, bbsCfg.DataPath + 'echonode.dat');
 
   If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
 
@@ -682,9 +593,9 @@ Begin
   // this?  research it someday
 
   For Count := 1 to 30 Do Begin
-    Result := (bbsConfig.NetAddress[Count].Zone = Zone) And
-              (bbsConfig.NetAddress[Count].Net  = Net)  And
-              (bbsConfig.NetAddress[Count].Node = Node);
+    Result := (bbsCfg.NetAddress[Count].Zone = Zone) And
+              (bbsCfg.NetAddress[Count].Net  = Net)  And
+              (bbsCfg.NetAddress[Count].Node = Node);
 
     If Result Then Break;
   End;

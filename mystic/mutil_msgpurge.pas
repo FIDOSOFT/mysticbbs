@@ -14,6 +14,7 @@ Uses
   mUtil_Common,
   mUtil_Status,
   bbs_Records,
+  BBS_DataBase,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
   bbs_MsgBase_Squish;
@@ -29,7 +30,7 @@ Begin
   ProcessName   ('Purging Message Bases', True);
   ProcessResult (rWORKING, False);
 
-  Assign (BaseFile, bbsConfig.DataPath + 'mbases.dat');
+  Assign (BaseFile, bbsCfg.DataPath + 'mbases.dat');
   {$I-} Reset (BaseFile); {$I+}
 
   If IoResult = 0 Then Begin

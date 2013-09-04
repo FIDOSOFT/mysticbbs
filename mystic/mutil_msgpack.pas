@@ -13,6 +13,7 @@ Uses
   m_FileIO,
   mUtil_Common,
   mUtil_Status,
+  BBS_DataBase,
   bbs_MsgBase_ABS,
   bbs_MsgBase_JAM,
   bbs_MsgBase_Squish;
@@ -248,7 +249,7 @@ Begin
   ProcessName   ('Packing Message Bases', True);
   ProcessResult (rWORKING, False);
 
-  Assign (BaseFile, bbsConfig.DataPath + 'mbases.dat');
+  Assign (BaseFile, bbsCfg.DataPath + 'mbases.dat');
 
   If ioReset (BaseFile, SizeOf(Base), fmRWDN) Then Begin
     While Not Eof(BaseFile) Do Begin

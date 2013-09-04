@@ -10,7 +10,6 @@ Implementation
 
 Uses
   DOS,
-  MKCRAP,
   m_Strings,
   m_FileIO,
   m_DateTime,
@@ -18,6 +17,7 @@ Uses
   mUtil_Status,
   mUtil_EchoCore,
   BBS_Records,
+  BBS_DataBase,
   BBS_MsgBase_ABS,
   BBS_MsgBase_JAM,
   BBS_MsgBase_Squish;
@@ -104,7 +104,7 @@ Begin
 
       BundleName[Length(BundleName)] := '0';
 
-      ExecuteArchive (BundleName, EchoNode.ArcType, TempPath + PKTName, 1);
+      ExecuteArchive (TempPath, BundleName, EchoNode.ArcType, TempPath + PKTName, 1);
       FileErase      (TempPath + PKTName);
       AddToFLOQueue  (FLOName, BundleName);
     End;
@@ -291,14 +291,14 @@ Begin
 
   DirClean (TempPath, '');
 
-  If Not DirExists(bbsConfig.OutboundPath) Then Begin
+  If Not DirExists(bbsCfg.OutboundPath) Then Begin
     ProcessStatus ('Outbound directory does not exist', True);
     ProcessResult (rFATAL, True);
 
     Exit;
   End;
 
-  Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
+  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
 
   If ioReset(MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then Begin
     While Not Eof(MBaseFile) Do Begin

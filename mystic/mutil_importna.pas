@@ -12,7 +12,8 @@ Uses
   m_Strings,
   mUtil_Common,
   mUtil_Status,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 Procedure uImportNA;
 Var
@@ -62,14 +63,14 @@ Begin
       MBase.NewsName  := strReplace(BaseName, ' ', '.');
       MBase.EchoTag   := TagName;
       MBase.FileName  := TagName;
-      MBase.Path      := bbsConfig.MsgsPath;
+      MBase.Path      := bbsCfg.MsgsPath;
       MBase.NetType   := 1;
-      MBase.ColQuote  := bbsConfig.ColorQuote;
-      MBase.ColText   := bbsConfig.ColorText;
-      MBase.ColTear   := bbsConfig.ColorTear;
-      MBase.ColOrigin := bbsConfig.ColorOrigin;
-      MBase.ColKludge := bbsConfig.ColorKludge;
-      MBase.Origin    := bbsConfig.Origin;
+      MBase.ColQuote  := bbsCfg.ColorQuote;
+      MBase.ColText   := bbsCfg.ColorText;
+      MBase.ColTear   := bbsCfg.ColorTear;
+      MBase.ColOrigin := bbsCfg.ColorOrigin;
+      MBase.ColKludge := bbsCfg.ColorKludge;
+      MBase.Origin    := bbsCfg.Origin;
       MBase.BaseType  := strS2I(INI.ReadString(Header_IMPORTNA, 'base_format', '0'));
       MBase.ListACS   := INI.ReadString(Header_IMPORTNA, 'acs_list', '');
       MBase.ReadACS   := INI.ReadString(Header_IMPORTNA, 'acs_read', '');
@@ -86,7 +87,7 @@ Begin
       MBase.NetAddr   := 1;
 
       For Count := 1 to 30 Do
-        If strAddr2Str(bbsConfig.NetAddress[Count]) = INI.ReadString(Header_IMPORTNA, 'netaddress', '') Then Begin
+        If strAddr2Str(bbsCfg.NetAddress[Count]) = INI.ReadString(Header_IMPORTNA, 'netaddress', '') Then Begin
           MBase.NetAddr := Count;
           Break;
         End;

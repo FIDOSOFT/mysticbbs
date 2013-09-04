@@ -14,7 +14,8 @@ Uses
   m_FileIO,
   mUtil_Common,
   mUtil_Status,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 Const
   TotalFiles : Cardinal = 0;
@@ -49,7 +50,7 @@ Begin
     Exit;
   End;
 
-  Assign (BaseFile, bbsConfig.DataPath + 'fbases.dat');
+  Assign (BaseFile, bbsCfg.DataPath + 'fbases.dat');
 
   If Not ioReset (BaseFile, SizeOf(RecFileBase), fmRWDN) Then Begin
     ProcessStatus ('Cannot open fbases.dat', True);
@@ -68,8 +69,8 @@ Begin
 
     // If Excludedbase then continue;
 
-    Assign (ListFile, bbsConfig.DataPath + Base.FileName + '.dir');
-    Assign (DescFile, bbsConfig.DataPath + Base.FileName + '.des');
+    Assign (ListFile, bbsCfg.DataPath + Base.FileName + '.dir');
+    Assign (DescFile, bbsCfg.DataPath + Base.FileName + '.des');
 
     If Not ioReset (ListFile, SizeOf(RecFileList), fmRWDN) Then Continue;
 

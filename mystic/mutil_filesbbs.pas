@@ -14,7 +14,8 @@ Uses
   m_DateTime,
   mUtil_Common,
   mUtil_Status,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 Procedure uImportFilesBBS;
 Var
@@ -43,9 +44,9 @@ Var
   Var
     Count : Byte;
   Begin
-    Assign (DescFile, bbsConfig.DataPath + Base.FileName + '.des');
+    Assign (DescFile, bbsCfg.DataPath + Base.FileName + '.des');
 
-    If FileExist(bbsConfig.DataPath + Base.FileName + '.des') Then
+    If FileExist(bbsCfg.DataPath + Base.FileName + '.des') Then
       Reset (DescFile, 1)
     Else
       ReWrite (DescFile, 1);
@@ -70,7 +71,7 @@ Var
 
     If FSize = -1 Then Exit;
 
-    Assign (ListFile, bbsConfig.DataPath + Base.FileName + '.dir');
+    Assign (ListFile, bbsCfg.DataPath + Base.FileName + '.dir');
     {$I-} Reset(ListFile); {$I+}
 
     If IoResult <> 0 Then ReWrite(ListFile);
@@ -127,7 +128,7 @@ Begin
 
   If DescChar = '' Then DescChar := ' ';
 
-  Assign (BaseFile, bbsConfig.DataPath + 'fbases.dat');
+  Assign (BaseFile, bbsCfg.DataPath + 'fbases.dat');
   {$I-} Reset (BaseFile); {$I+}
 
   If IoResult = 0 Then Begin
@@ -157,7 +158,7 @@ Begin
           DescLines := 1;
           Desc[1]   := strStripB(Copy(OneLine, strWordPos(2, OneLine, ' '), 255), ' ');
         End Else Begin
-          If DescLines < bbsConfig.MaxFileDesc Then Begin
+          If DescLines < bbsCfg.MaxFileDesc Then Begin
             Inc (DescLines);
             Desc[DescLines] := strStripB(Copy(OneLine, DescPos, 255), ' ');
           End;

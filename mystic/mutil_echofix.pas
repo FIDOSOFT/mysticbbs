@@ -33,7 +33,7 @@ Var
 Begin
   Result := False;
 
-  Assign (F, bbsConfig.DataPath + 'echonode.dat');
+  Assign (F, bbsCfg.DataPath + 'echonode.dat');
 
   If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
 

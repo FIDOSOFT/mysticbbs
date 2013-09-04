@@ -14,6 +14,7 @@ Uses
   m_Strings,
   AView,
   BBS_Records,
+  BBS_DataBase,
   BBS_MsgBase_ABS,
   BBS_MsgBase_JAM,
   BBS_MsgBase_Squish,
@@ -168,8 +169,8 @@ Var
 
               If Not CreateBases Then Continue;
 
-              If FileExist(bbsConfig.MsgsPath + PKT.MsgArea + '.sqd') or
-                 FileExist(bbsConfig.MsgsPath + PKT.MsgArea + '.jhr') Then Continue;
+              If FileExist(bbsCfg.MsgsPath + PKT.MsgArea + '.sqd') or
+                 FileExist(bbsCfg.MsgsPath + PKT.MsgArea + '.jhr') Then Continue;
 
               FillChar (MBase, SizeOf(MBase), #0);
 
@@ -179,14 +180,14 @@ Var
               MBase.NewsName  := PKT.MsgArea;
               MBase.FileName  := PKT.MsgArea;
               MBase.EchoTag   := PKT.MsgArea;
-              MBase.Path      := bbsConfig.MsgsPath;
+              MBase.Path      := bbsCfg.MsgsPath;
               MBase.NetType   := 1;
-              MBase.ColQuote  := bbsConfig.ColorQuote;
-              MBase.ColText   := bbsConfig.ColorText;
-              MBase.ColTear   := bbsConfig.ColorTear;
-              MBase.ColOrigin := bbsConfig.ColorOrigin;
-              MBase.ColKludge := bbsConfig.ColorKludge;
-              MBase.Origin    := bbsConfig.Origin;
+              MBase.ColQuote  := bbsCfg.ColorQuote;
+              MBase.ColText   := bbsCfg.ColorText;
+              MBase.ColTear   := bbsCfg.ColorTear;
+              MBase.ColOrigin := bbsCfg.ColorOrigin;
+              MBase.ColKludge := bbsCfg.ColorKludge;
+              MBase.Origin    := bbsCfg.Origin;
               MBase.BaseType  := INI.ReadInteger(Header_ECHOIMPORT, 'base_type', 0);
               MBase.ListACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_list', '');
               MBase.ReadACS   := INI.ReadString (Header_ECHOIMPORT, 'acs_read', '');
@@ -203,7 +204,7 @@ Var
               MBase.NetAddr   := 1;
 
               For Count := 1 to 30 Do
-                If bbsConfig.NetAddress[Count].Zone = PKT.PKTHeader.DestZone Then Begin
+                If bbsCfg.NetAddress[Count].Zone = PKT.PKTHeader.DestZone Then Begin
                   MBase.NetAddr := Count;
                   Break;
                 End;
@@ -273,14 +274,14 @@ Var
   Begin
     PKTMatched := False;
 
-    Assign (NodeFile, bbsConfig.DataPath + 'echonode.dat');
+    Assign (NodeFile, bbsCfg.DataPath + 'echonode.dat');
 
     If ioReset(NodeFile, Sizeof(RecEchoMailNode), fmRWDN) Then Begin
       While Not Eof(NodeFile) Do Begin
         Read (NodeFile, EchoNode);
 
         For Count := 1 to 30 Do Begin
-          If strUpper(JustFileName(PktBundle)) = strUpper(GetFTNArchiveName(EchoNode.Address, bbsConfig.NetAddress[Count])) Then Begin
+          If strUpper(JustFileName(PktBundle)) = strUpper(GetFTNArchiveName(EchoNode.Address, bbsCfg.NetAddress[Count])) Then Begin
             PKTMatched := True;
             ArcType    := EchoNode.ArcType;
 
@@ -293,7 +294,7 @@ Var
     End;
 
     If Not PKTMatched Then Begin
-      Case GetArchiveType(bbsConfig.InboundPath + PktBundle) of
+      Case GetArchiveType(bbsCfg.InboundPath + PktBundle) of
         'A' : ArcType := 'ARJ';
         'R' : ArcType := 'RAR';
         'Z' : ArcType := 'ZIP';
@@ -309,7 +310,7 @@ Var
 
     ProcessStatus ('Extracting ' + PktBundle, False);
 
-    ExecuteArchive (bbsConfig.InboundPath + PktBundle, ArcType, '*', 2);
+    ExecuteArchive (TempPath, bbsCfg.InboundPath + PktBundle, ArcType, '*', 2);
 
     FindFirst (TempPath + '*', AnyFile, DirInfo);
 
@@ -330,7 +331,7 @@ Var
     If Not PKTFound Then
       Log (2, '!', '   Unable to extract bundle; skipping')
     Else
-      FileErase (bbsConfig.InboundPath + PktBundle);
+      FileErase (bbsCfg.InboundPath + PktBundle);
   End;
 
 Var
@@ -347,7 +348,7 @@ Begin
 
   DirClean (TempPath, '');
 
-  If Not DirExists(bbsConfig.InboundPath) Then Begin
+  If Not DirExists(bbsCfg.InboundPath) Then Begin
     ProcessStatus ('Inbound directory does not exist', True);
     ProcessResult (rFATAL, True);
 
@@ -385,14 +386,14 @@ Begin
     If Not GetMBaseByIndex (DupeIndex, DupeMBase) Then
       DupeIndex := -1;
 
-  FindFirst (bbsConfig.InboundPath + '*', AnyFile, DirInfo);
+  FindFirst (bbsCfg.InboundPath + '*', AnyFile, DirInfo);
 
   While DosError = 0 Do Begin
     If DirInfo.Attr And Directory = 0 Then Begin
       FileExt := Copy(strUpper(JustFileExt(DirInfo.Name)), 1, 2);
 
       If FileExt = 'PK' Then
-        ImportPacketFile(bbsConfig.InboundPath + DirInfo.Name)
+        ImportPacketFile(bbsCfg.InboundPath + DirInfo.Name)
       Else
       If (FileExt = 'SU') or
          (FileExt = 'MO') or

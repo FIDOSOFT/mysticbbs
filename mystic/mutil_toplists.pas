@@ -14,7 +14,8 @@ Uses
   m_FileIO,
   mUtil_Common,
   mUtil_Status,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 Type
   TopListType = (TopCall, TopPost, TopDL, TopUL, TopPCR);
@@ -181,7 +182,7 @@ Begin
 
   Sort := TQuickSort.Create;
 
-  Assign (UserFile, bbsConfig.DataPath + 'users.dat');
+  Assign (UserFile, bbsCfg.DataPath + 'users.dat');
 
   If ioReset(UserFile, SizeOf(RecUser), fmRWDN) Then Begin
     While Not EOF(UserFile) Do Begin

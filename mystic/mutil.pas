@@ -129,10 +129,10 @@ Begin
     Halt(1);
   End;
 
-  Read  (CF, bbsConfig);
+  Read  (CF, bbsCfg);
   Close (CF);
 
-  If bbsConfig.DataChanged <> mysDataChanged Then Begin
+  If bbsCfg.DataChanged <> mysDataChanged Then Begin
     ProcessName   ('Load configuration', False);
     ProcessStatus ('Version mismatch', True);
     ProcessResult (rFATAL, False);
@@ -140,7 +140,7 @@ Begin
     Halt(1);
   End;
 
-  TempPath := bbsConfig.SystemPath + 'temputil' + PathChar;
+  TempPath := bbsCfg.SystemPath + 'temputil' + PathChar;
 
   GetDIR (0, StartPath);
 
@@ -155,7 +155,7 @@ Begin
   LogFile := INI.ReadString(Header_GENERAL, 'logfile', '');
 
   If (LogFile <> '') and (Pos(PathChar, LogFile) = 0) Then
-    LogFile := bbsConfig.LogsPath + LogFile;
+    LogFile := bbsCfg.LogsPath + LogFile;
 
   LogLevel := INI.ReadInteger(Header_GENERAL, 'loglevel', 1);
 
