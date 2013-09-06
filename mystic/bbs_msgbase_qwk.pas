@@ -278,6 +278,7 @@ Var
 
 Var
   TempStr : String;
+  SkipMsg : Boolean;
 Begin
   MsgAdded := 0;
 
@@ -315,24 +316,37 @@ Begin
       MsgBase^.ReWriteHdr;
     End;
 
-    Inc (MsgAdded);
-    Inc (TotalMessages);
-
     LastRead := MsgBase^.GetMsgNum;
     Chunks   := 0;
     BufStr   := '';
     TooBig   := False;
     QwkIndex := DataFile.FileSizeRaw DIV 128 + 1;
+    SkipMsg  := False;
 
     MsgBase^.MsgTxtStartUp;
 
-    While Not MsgBase^.EOM Do Begin
+    While Not MsgBase^.EOM And Not SkipMsg Do Begin
       TempStr := MsgBase^.GetString(79);
 
-      If TempStr[1] = #1 Then Continue;
+      If TempStr[1] = #1 Then Begin
+        // Do not export msgs to a node if the msg came from the node
+        If IsNetworked And Not IsRep And (Copy(TempStr, 2, 4) = 'QSRC') Then
+          SkipMsg := strUpper(strWordGet(2, TempStr, ' ')) = strUpper(PacketID);
+
+        Continue;
+      End;
 
       Inc (Chunks, Length(TempStr));
     End;
+
+    If SkipMsg Then Begin
+      MsgBase^.SeekNext;
+
+      Continue;
+    End;
+
+    Inc (MsgAdded);
+    Inc (TotalMessages);
 
     If Chunks MOD 128 = 0 Then
       Chunks := Chunks DIV 128 + 1
@@ -596,6 +610,8 @@ Begin
         If IsNetworked Then Begin
           MsgBase^.SetLocal(False);
 
+          If IsQwk Then MsgBase^.SetSent(True);
+
           QwkBlock[0] := #25;
           Move (QwkHeader.UpFrom, QwkBlock[1], 25);
           MsgBase^.SetFrom(strStripR(QwkBlock, ' '));
@@ -675,8 +691,13 @@ Begin
           End;
 
         If Not IsControl Then Begin
+          // ISQWK = a node importing from HUB
           If ((IsQwk) or (HasAccess(Self, MBase.PostACS))) and
              ((IsNetworked And (UserRecord.QwkNetwork = MBase.QwkNetID)) or (Not IsNetworked)) Then Begin
+
+               If IsNetworked And Not IsQWK Then
+                 MsgBase^.DoStringLn (#1'QSRC ' + PacketID);
+
                MsgBase^.WriteMsg;
 
                Inc (RepOK);   // must increase user and history posts by repOK

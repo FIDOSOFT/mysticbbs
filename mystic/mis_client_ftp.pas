@@ -569,7 +569,7 @@ Begin
   QWK := TQwkEngine.Create(TempPath, GetQWKName, UserPos, User);
 
   QWK.HasAccess   := @QWKHasAccess;
-  QWK.IsNetworked := User.Flags AND UserQWKNetwork <> 0;
+  QWK.IsNetworked := (User.Flags AND UserQWKNetwork <> 0);
   QWK.IsExtended  := User.QwkExtended;
 
   QWK.ImportPacket(False);
@@ -605,9 +605,6 @@ Begin
     GetSecurityLevel(User.Security, SecLevel);
 
     Server.Status (ProcessID, User.Handle + ' logged in');
-    server.status (processID, 'DEBUG Pos ' + strI2S(UserPos));
-    if user.flags and userqwknetwork <> 0 then
-    server.status (processID, 'DEBUG has networking');
   End Else
     Client.WriteLine(re_BadPW);
 End;

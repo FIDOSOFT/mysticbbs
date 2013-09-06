@@ -22,6 +22,7 @@ Uses
   BBS_MsgBase_JAM,
   BBS_MsgBase_Squish;
 
+// Adds packet name into a FLO-type file if it does not exist already
 Procedure AddToFLOQueue (FloName, PacketFN: String);
 Var
   T   : Text;
@@ -95,7 +96,7 @@ Begin
         0 : FLOName := FLOName + '.flo';
         1 : FLOName := FLOName + '.clo';
         2 : FLOName := FLOName + '.dlo';
-        3 : FlOName := FLOName + '.hlo';
+        3 : FLOName := FLOName + '.hlo';
       End;
 
       // TODO

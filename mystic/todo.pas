@@ -42,6 +42,8 @@ BUGS AND POSSIBLE ISSUES
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
+- when editing an already posted message with reference linkage, export the
+  quote data from the original message...
 - in file listing jump to files by typing the file number
 - remove console class code from mutil since its in bbs_database
      ^ same with keyboard

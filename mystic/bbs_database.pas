@@ -265,8 +265,6 @@ Begin
     End;
   End;
 
-writeln ('base result:',result);
-
   Close (F);
 End;
 

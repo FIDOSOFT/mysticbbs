@@ -3028,7 +3028,13 @@
          I know all of this is confusing and stupid, but I didn't create the
          standard I'm only dealing with it! :)
 
-      8. At your own risk: Delete FastEcho, GEcho, CrashMail, etc. :)
+      8. At your own risk: Delete FastEcho, GEcho, CrashMail, etc.  :)
+
+         NOTE that the first time you run the export function of MUTIL it may
+         toss all messages in your bases, depending on what tosser you used
+         before Mystic's tosser.  You can just delete all the packets in your
+         outbound directory after running it the first time.  This problem will
+         go away once tossing is finished.
 
  ! Fixed a bug that could cause the user editor to crash directly after a
    new install if you didn't create your SysOp account first.

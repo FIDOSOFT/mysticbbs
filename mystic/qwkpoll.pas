@@ -75,6 +75,7 @@ Var
   F      : File;
   QwkNet : RecQwkNetwork;
   Count  : Byte = 0;
+  Mode   : Byte;
 Begin
   WriteLn;
   WriteLn ('QWKPOLL Version ' + mysVersion);
@@ -95,6 +96,14 @@ Begin
   WriteLn;
 
   Str := strUpper(strStripB(ParamStr(1), ' '));
+
+  If strUpper(ParamStr(2)) = 'EXPORT' Then
+    Mode := 1
+  Else
+  If strUpper(ParamStr(2)) = 'IMPORT' Then
+    Mode := 2
+  Else
+    Mode := 0;
 
   If (Str = 'ALL') Then Begin
     Assign (F, bbsCfg.DataPath + 'qwknet.dat');
@@ -117,10 +126,19 @@ Begin
   End Else Begin
     WriteLn ('Invalid command line.');
     WriteLn;
-    WriteLn ('Syntax: QWKPOLL [ALL] or [Qwk Network Index]');
+    WriteLn ('Syntax: QWKPOLL [ALL]');
+    WriteLn ('                [Qwk Network Index]');
+    WriteLn ('                [EXPORT] [QwkNet Index] [PATH TO CREATE REP]');
+    WriteLn ('                [IMPORT] [QwkNet Index] [PATH OF QWK PACKET]');
     WriteLn;
-    WriteLn ('Ex: QWKPOLL ALL - Exchange with ALL configured QWK hubs via FTP');
-    WriteLn ('    QWKPOLL 1   - Exchange with only Qwk Network #1');
+    WriteLn ('Ex: QWKPOLL ALL                  - Exchange with ALL QWK hubs via FTP');
+    WriteLn ('    QWKPOLL 1                    - Exchange with only Qwk Network #1');
+    WriteLn ('    QWKPOLL 1 EXPORT /bbs/qwknet - Create REP packet in /bbs/qwknet');
+    WriteLn ('    QWKPOLL 1 IMPORT /bbs/qwknet - Import QWK packet from /bbs/qwknet');
+    WriteLn;
+    WriteLn ('NOTE: QWKPOLL automatically deals with QWK and REP packets during polling');
+    WriteLn ('      The export and import functions are not needed, and only provided');
+    WriteLn ('      for systems that may want to use an alternative transport method');
     WriteLn;
   End;
 
