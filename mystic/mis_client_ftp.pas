@@ -56,7 +56,7 @@ Type
     Function    FindDirectory   (Var TempBase: RecFileBase) : LongInt;
     Function    GetQWKName      : String;
     Function    GetFTPDate      (DD: LongInt) : String;
-    Procedure   SendFile        (Str: String);
+    Function    SendFile        (Str: String) : Boolean;
     Function    RecvFile        (Str: String; IsAppend: Boolean) : Boolean;
 
     Function    QWKCreatePacket : Boolean;
@@ -484,7 +484,7 @@ Begin
   InTransfer := False;
 End;
 
-Procedure TFTPServer.SendFile (Str: String);
+Function TFTPServer.SendFile (Str: String) : Boolean;
 Var
   F   : File;
   Buf : Array[1..FileXferSize] of Byte;
@@ -512,8 +512,11 @@ Begin
 
   Close (F);
 
-  Server.Status(ProcessID, 'Send complete');
+  Result := Res = 0;
 
+  // need to send failed here if failed what do we send?
+
+  Server.Status(ProcessID, 'Send complete');
   Client.WriteLine (re_XferOK);
 
   CloseDataSession;
@@ -537,15 +540,17 @@ Begin
   QWK := TQwkEngine.Create(TempPath, GetQWKName, UserPos, User);
 
   QWK.HasAccess   := @QWKHasAccess;
-  QWK.IsNetworked := User.Flags AND UserQWKNetwork <> 0;
+  QWK.IsNetworked := (User.Flags AND UserQWKNetwork <> 0);
   QWK.IsExtended  := User.QwkExtended;
 
-  QWK.CreatePacket;
-  QWK.UpdateLastReadPointers;
-  QWK.Free;
+  QWK.ExportPacket(False);
 
   ExecuteArchive (TempPath, TempPath + GetQWKName + '.qwk', User.Archive, TempPath + '*', 1);
-  SendFile       (TempPath + GetQWKName + '.qwk');
+
+  If SendFile (TempPath + GetQWKName + '.qwk') Then
+    QWK.UpdateLastReadPointers;
+
+  QWK.Free;
 
   DirClean (TempPath, '');
 End;
@@ -567,7 +572,7 @@ Begin
   QWK.IsNetworked := User.Flags AND UserQWKNetwork <> 0;
   QWK.IsExtended  := User.QwkExtended;
 
-  QWK.ProcessReply;
+  QWK.ImportPacket(False);
   QWK.Free;
 
   // update user stats posts and bbs history if not networked
@@ -600,6 +605,9 @@ Begin
     GetSecurityLevel(User.Security, SecLevel);
 
     Server.Status (ProcessID, User.Handle + ' logged in');
+    server.status (processID, 'DEBUG Pos ' + strI2S(UserPos));
+    if user.flags and userqwknetwork <> 0 then
+    server.status (processID, 'DEBUG has networking');
   End Else
     Client.WriteLine(re_BadPW);
 End;

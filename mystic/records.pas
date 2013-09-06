@@ -141,7 +141,8 @@ Type
     HostName    : String[60];
     Login       : String[20];
     Password    : String[20];
-    Res         : Array[1..80] of Byte;
+    ArcType     : String[4];
+    Res         : Array[1..75] of Byte;
   End;
 
   RecSauceInfo = Packed Record
@@ -511,7 +512,6 @@ Const
   MBNoAttach    = $00000008; // 4
   MBPrivate     = $00000010; // 5
   MBPrivReply   = $00000020; // 6
-  MBAllowQWKNet = $00000040; // 7
 
 Type
   RecMessageBase = Record                                       // MBASES.DAT
@@ -549,8 +549,8 @@ Type
     Created   : LongInt;
     EchoTag   : String[40];                                     // EchoMail Tag
     QwkNetID  : LongInt;
-    QwkConfID : LongInt;
-    Res       : Array[1..27] of Byte;                           // RESERVED
+    QwkConfID : Word;
+    Res       : Array[1..29] of Byte;                           // RESERVED
   End;
 
   FScanRec = Record                    { <Data Path> *.SCN               }

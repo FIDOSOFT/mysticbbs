@@ -3638,4 +3638,7 @@
    This defines the QWK network message bases that they have access to if
    they are flagged as a QWK network account.
 
+ + Mystic's QWK system no longer forces all upper case user names and
+   subjects.
+
    <ALPHA 37 RELEASED>

@@ -137,7 +137,7 @@ Begin
   Form.AddStr  ('T', ' R Template'  ,  5, 19, 19, 19, 12, 20, 20, @MBase.RTemplate, Topic + 'Template for full screen reader');
   Form.AddStr  ('M', ' L Template'  ,  5, 20, 19, 20, 12, 20, 20, @MBase.ITemplate, Topic + 'Template for lightbar message list');
   Form.AddNone ('0', ' QWK Network' ,  4, 21, 19, 21, 13, Topic + 'QWK network associated to this base');
-  Form.AddLong ('!', ' QWK Base ID' ,  4, 22, 19, 22, 13, 6, 0, 999999, @MBase.QwkConfID, Topic + 'QWK network base ID');
+  Form.AddWord ('!', ' QWK Base ID' ,  4, 22, 19, 22, 13, 5, 0, 65535, @MBase.QwkConfID, Topic + 'QWK network base ID');
 
   Form.AddAttr ('Q', ' Quote Color' , 53,  5, 68,  5, 13, @MBase.ColQuote, Topic + 'Color for quoted text');
   Form.AddAttr ('X', ' Text Color'  , 54,  6, 68,  6, 12, @MBase.ColText, Topic + 'Color for message text');

@@ -4,6 +4,8 @@ Unit BBS_DataBase;
 // replace with this new stuff one at a time.  including moving everything
 // to bbscfg.
 
+// add generatembase/fbase/userindex functions?
+
 {$I M_OPS.PAS}
 
 Interface
@@ -44,6 +46,7 @@ Function  Addr2Str              (Addr : RecEchoMailAddr) : String;
 Function  MBaseOpenCreate       (Var Msg: PMsgBaseABS; Var Area: RecMessageBase; TP: String) : Boolean;
 Function  GetOriginLine         (Var mArea: RecMessageBase) : String;
 Function  GetMBaseByIndex       (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
+Function  GetMBaseByQwkID       (QwkNet, QwkConf: LongInt; Var TempBase: RecMessageBase) : Boolean;
 Procedure GetMessageScan        (UN: Cardinal; TempBase: RecMessageBase; Var TempScan: MScanRec);
 Procedure PutMessageScan        (UN: Cardinal; TempBase: RecMessageBase; TempScan: MScanRec);
 Procedure MBaseAssignData       (Var User: RecUser; Var Msg: PMsgBaseABS; Var TempBase: RecMessageBase);
@@ -238,6 +241,31 @@ Begin
       Break;
     End;
   End;
+
+  Close (F);
+End;
+
+Function GetMBaseByQwkID (QwkNet, QwkConf: LongInt; Var TempBase: RecMessageBase) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, bbsCfg.DataPath + 'mbases.dat');
+
+  If Not ioReset(F, SizeOf(RecMessageBase), fmRWDN) Then Exit;
+
+  While Not Eof(F) Do Begin
+    ioRead (F, TempBase);
+
+    If (TempBase.QwkNetID = QwkNet) and (TempBase.QwkConfID = QwkConf) Then Begin
+      Result := True;
+
+      Break;
+    End;
+  End;
+
+writeln ('base result:',result);
 
   Close (F);
 End;

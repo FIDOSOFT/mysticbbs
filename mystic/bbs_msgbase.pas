@@ -809,7 +809,7 @@ Var
     While Not Eof(MBaseFile) Do Begin
       Read (MBaseFile, MBase);
 
-      If QwkNet And (MBase.Flags AND MBAllowQWKNet = 0) Then Continue;
+      If QwkNet And (MBase.QwkNetID <> Session.User.ThisUser.QwkNetwork) Then Continue;
 
       If Session.User.Access(MBase.ListACS) Then Begin
         Inc (Total);
@@ -3304,14 +3304,7 @@ Var
   Begin
     Found := False;
 
-    Case TempBase.BaseType of
-      0 : MsgBase := New(PMsgBaseJAM, Init);
-      1 : MsgBase := New(PMsgBaseSquish, Init);
-    End;
-
-    MsgBase^.SetMsgPath (TempBase.Path + TempBase.FileName);
-
-    If MsgBase^.OpenMsgBase Then Begin
+    If MBaseOpenCreate (MsgBase, TempBase, Session.TempPath) Then Begin
       MsgBase^.SeekFirst(1);
 
       While MsgBase^.SeekFound Do Begin
@@ -3319,9 +3312,12 @@ Var
 
         If DateStr2Dos(MsgBase^.GetDate) >= NewDate Then Begin
           MsgBase^.SetLastRead(Session.User.UserNum, MsgBase^.GetMsgNum - 1);
+
           Found := True;
+
           Break;
         End;
+
         MsgBase^.SeekNext;
       End;
 
@@ -3359,6 +3355,8 @@ Begin
 
       UpdateBase;
     End;
+
+    Close (MBaseFile);
   End Else Begin
     TempBase := MBase;
 
@@ -4162,7 +4160,7 @@ Begin
   Write (tFile, bbsCfg.SysopName + CRLF);
   Write (tFile, '0,' + bbsCfg.qwkBBSID + CRLF);
   Write (tFile, DateDos2Str(CurDateDos, 1), ',', TimeDos2Str(CurDateDos, 0) + CRLF);
-  Write (tFile, strUpper(Session.User.ThisUser.Handle) + CRLF);
+  Write (tFile, Session.User.ThisUser.Handle + CRLF);
   Write (tFile, CRLF);
   Write (tFile, '0' + CRLF);
   Write (tFile, TotalMsgs, CRLF); {TOTAL MSG IN PACKET}
@@ -4303,9 +4301,9 @@ Begin
       strPadR(strI2S(MsgBase^.GetMsgNum), 7, ' ') +
       MsgBase^.GetDate +
       MsgBase^.GetTime +
-      strPadR(strUpper(MsgBase^.GetTo), 25, ' ') +
-      strPadR(strUpper(MsgBase^.GetFrom), 25, ' ') +
-      strPadR(strUpper(MsgBase^.GetSubj), 25, ' ') +
+      strPadR(MsgBase^.GetTo, 25, ' ') +
+      strPadR(MsgBase^.GetFrom, 25, ' ') +
+      strPadR(MsgBase^.GetSubj, 25, ' ') +
       strPadR('', 12, ' ') +
       strPadR(strI2S(MsgBase^.GetRefer), 8, ' ') +
       strPadR(strI2S(Chunks), 6, ' ') +

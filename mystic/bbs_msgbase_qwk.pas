@@ -57,7 +57,7 @@ Type
     WorkPath      : String;
     PacketID      : String;
     UserRecord    : RecUser;
-    UserNumber    : Cardinal;
+    UserNumber    : LongInt;
     TotalMessages : LongInt;
     TotalBases    : LongInt;
     RepOK         : LongInt;
@@ -71,15 +71,15 @@ Type
     QwkLRFile     : File of QwkLRRec;
     MsgBase       : PMsgBaseABS;
 
-    Constructor Create            (QwkPath, QwkID: String; UN: Cardinal; UR: RecUser);
+    Constructor Create            (QwkPath, QwkID: String; UN: LongInt; UR: RecUser);
     Procedure   LONG2MSB          (Index: LongInt; Var MS: BSingle);
     Procedure   WriteDOORID;
     Procedure   WriteTOREADEREXT;
     Procedure   WriteCONTROLDAT;
-    Function    WriteMSGDAT : LongInt;
+    Function    WriteMSGDAT (IsRep: Boolean) : LongInt;
     Procedure   UpdateLastReadPointers;
-    Procedure   CreatePacket;
-    Function    ProcessReply : Boolean;
+    Procedure   ExportPacket (IsRep: Boolean);
+    Function    ImportPacket (IsQwk: Boolean) : Boolean;
   End;
 
 Implementation
@@ -88,7 +88,7 @@ Uses
   m_Strings,
   m_DateTime;
 
-Constructor TQWKEngine.Create (QwkPath, QwkID: String; UN: Cardinal; UR: RecUser);
+Constructor TQWKEngine.Create (QwkPath, QwkID: String; UN: LongInt; UR: RecUser);
 Begin
   Inherited Create;
 
@@ -215,7 +215,7 @@ Begin
   Write (TempFile, bbsCfg.SysopName + QWK_EOL);
   Write (TempFile, '0,' + PacketID + QWK_EOL);
   Write (TempFile, DateDos2Str(CurDateDos, 1), ',', TimeDos2Str(CurDateDos, 0) + QWK_EOL);
-  Write (TempFile, strUpper(UserRecord.Handle) + QWK_EOL);
+  Write (TempFile, UserRecord.Handle + QWK_EOL);
   Write (TempFile, QWK_EOL);
   Write (TempFile, '0' + QWK_EOL);
   Write (TempFile, TotalMessages, QWK_EOL);
@@ -227,7 +227,10 @@ Begin
       ioRead (BaseFile, Base);
 
       If HasAccess(Self, Base.ReadACS) Then Begin
-        Write (TempFile, Base.Index, QWK_EOL);
+        If IsNetworked Then
+          Write (TempFile, Base.QwkConfID, QWK_EOL)
+        Else
+          Write (TempFile, Base.Index, QWK_EOL);
 
         If IsExtended Then
           Write (TempFile, strStripMCI(Base.Name) + QWK_EOL)
@@ -246,7 +249,7 @@ Begin
   Close (TempFile);
 End;
 
-Function TQWKEngine.WriteMSGDAT : LongInt;
+Function TQWKEngine.WriteMSGDAT (IsRep: Boolean) : LongInt;
 Var
   NdxFile  : File of QwkNdxHdr;
   NdxHdr   : QwkNdxHdr;
@@ -280,22 +283,36 @@ Begin
 
   If Not MBaseOpenCreate(MsgBase, MBase, WorkPath) Then Exit;
 
-  LastRead := MsgBase^.GetLastRead(UserNumber) + 1;
+  If IsRep Then
+    LastRead := 1
+  Else
+    LastRead := MsgBase^.GetLastRead(UserNumber) + 1;
 
   MsgBase^.SeekFirst (LastRead);
 
   While MsgBase^.SeekFound Do Begin
 
-    If Not IsNetworked Then
-      If ((bbsCfg.QwkMaxBase > 0)   and (MsgAdded = bbsCfg.QwkMaxBase)) or
-         ((bbsCfg.QwkMaxPacket > 0) and (TotalMessages = bbsCfg.QwkMaxPacket)) Then Break;
+    If ((bbsCfg.QwkMaxBase > 0)   and (MsgAdded = bbsCfg.QwkMaxBase)) or
+       ((bbsCfg.QwkMaxPacket > 0) and (TotalMessages = bbsCfg.QwkMaxPacket)) Then Break;
 
     MsgBase^.MsgStartUp;
 
-    If MsgBase^.IsPriv And Not IsThisUser(UserRecord, MsgBase^.GetTo) Then Begin
+    If IsRep And MsgBase^.IsSent Then Begin
       MsgBase^.SeekNext;
 
       Continue;
+    End;
+
+    If Not IsNetworked Then
+      If MsgBase^.IsPriv And Not IsThisUser(UserRecord, MsgBase^.GetTo) Then Begin
+        MsgBase^.SeekNext;
+
+        Continue;
+      End;
+
+    If IsRep Then Begin
+      MsgBase^.SetSent(True);
+      MsgBase^.ReWriteHdr;
     End;
 
     Inc (MsgAdded);
@@ -327,9 +344,9 @@ Begin
       strPadR(strI2S(MsgBase^.GetMsgNum), 7, ' ') +
       MsgBase^.GetDate +
       MsgBase^.GetTime +
-      strPadR(strUpper(MsgBase^.GetTo), 25, ' ') +
-      strPadR(strUpper(MsgBase^.GetFrom), 25, ' ') +
-      strPadR(strUpper(MsgBase^.GetSubj), 25, ' ') +
+      strPadR(MsgBase^.GetTo, 25, ' ') +
+      strPadR(MsgBase^.GetFrom, 25, ' ') +
+      strPadR(MsgBase^.GetSubj, 25, ' ') +
       strPadR('', 12, ' ') +
       strPadR(strI2S(MsgBase^.GetRefer), 8, ' ') +
       strPadR(strI2S(Chunks), 6, ' ') +
@@ -337,6 +354,11 @@ Begin
       '  ' +
       '  ' +
       ' ';
+
+    If IsNetworked Then
+      Move (Word(MBase.QwkConfID), Header[124], 2)
+    Else
+      Move (Word(MBase.Index), Header[124], 2);
 
     If Not IsNetworked Then Begin
       If MsgAdded = 1 Then Begin
@@ -425,16 +447,24 @@ Begin
   Close (MBaseFile);
 End;
 
-Procedure TQWKEngine.CreatePacket;
+Procedure TQWKEngine.ExportPacket (IsRep: Boolean);
 Var
   Temp  : String;
   MScan : MScanRec;
 Begin
+  If IsRep Then
+    Temp := PacketID + '.msg'
+  Else
+    Temp := 'messages.dat';
+
   DataFile := TFileBuffer.Create(4 * 1024);
 
-  DataFile.OpenStream (WorkPath + 'messages.dat', 1, fmCreate, fmRWDN);
+  DataFile.OpenStream (WorkPath + Temp, 1, fmCreate, fmRWDN);
 
-  Temp := strPadR('Produced By ' + mysSoftwareID + ' v' + mysVersion + '. ' + mysCopyNotice, 128, ' ');
+  If IsRep Then
+    Temp := strPadR(PacketID, 128, ' ')
+  Else
+    Temp := strPadR('Produced By ' + mysSoftwareID + ' v' + mysVersion + '. ' + mysCopyNotice, 128, ' ');
 
   DataFile.WriteBlock (Temp[1], 128);
 
@@ -449,18 +479,21 @@ Begin
     While Not Eof(MBaseFile) Do Begin
       ioRead (MBaseFile, MBase);
 
-      If IsNetworked And (MBase.Flags AND MBAllowQWKNet = 0) Then
+      If IsNetworked And ((MBase.QwkNetID <> UserRecord.QwkNetwork) or (UserRecord.QwkNetwork = 0)) Then
         Continue;
 
-      If HasAccess(Self, MBase.ReadACS) Then Begin
+      If IsRep Or (HasAccess(Self, MBase.ReadACS)) Then Begin
 
-        GetMessageScan (UserNumber, MBase, MScan);
+        If IsRep Then
+          MScan.QwkScan := 1
+        Else
+          GetMessageScan (UserNumber, MBase, MScan);
 
         If MScan.QwkScan > 0 Then Begin
           Inc (TotalBases);
 
           QwkLR.Base := FilePos(MBaseFile);
-          QwkLR.Pos  := WriteMSGDAT;
+          QwkLR.Pos  := WriteMSGDAT(IsRep);
 
           Write (QwkLRFile, QwkLR);
         End;
@@ -474,14 +507,12 @@ Begin
 
   DataFile.Free;
 
-  If Not IsNetworked Then Begin
-    WriteControlDAT;
-    WriteDOORID;
-    WriteTOREADEREXT;
-  End;
+  WriteControlDAT;
+  WriteDOORID;
+  WriteTOREADEREXT;
 End;
 
-Function TQWKEngine.ProcessReply : Boolean;
+Function TQWKEngine.ImportPacket (IsQwk: Boolean) : Boolean;
 
   Procedure QwkControl (Idx: LongInt; Mode: Byte);
   Var
@@ -511,12 +542,18 @@ Var
   ExtFile    : Text;
   Count1     : SmallInt;
   Count2     : SmallInt;
+  BaseFound  : Boolean;
 Begin
   Result := False;
 
+  If IsQwk Then
+    Line := 'messages.dat'
+  Else
+    Line := PacketID + '.msg';
+
   DataFile := TFileBuffer.Create(4 * 1024);
 
-  If Not DataFile.OpenStream (FileFind(WorkPath + PacketID + '.msg'), 1, fmOpen, fmRWDN) Then Begin
+  If Not DataFile.OpenStream (FileFind(WorkPath + Line), 1, fmOpen, fmRWDN) Then Begin
     DataFile.Free;
 
     DirClean (WorkPath, '');
@@ -525,33 +562,44 @@ Begin
   End;
 
   DataFile.ReadBlock(QwkBlock[1], 128);
+
   QwkBlock[0] := #128;
 
-  If Pos(strUpper(PacketID), strUpper(QwkBlock)) = 0 Then Begin
-    DataFile.Free;
+  If Not IsQwk Then
+    If Pos(strUpper(PacketID), strUpper(QwkBlock)) = 0 Then Begin
+      DataFile.Free;
 
-    DirClean(WorkPath, '');
+      DirClean(WorkPath, '');
 
-    Exit;
-  End;
+      Exit;
+    End;
 
   While Not DataFile.EOF Do Begin
     DataFile.ReadBlock(QwkHeader, SizeOf(QwkHeader));
 
-    Move (QwkHeader.MsgNum, QwkBlock[1], 7);
+    Move (QwkHeader.NumChunk, QwkBlock[1], 6);
+    QwkBlock[0] := #6;
 
-    QwkBlock[0] := #7;
+    Chunks := strS2I(QwkBlock) - 1;
 
-    If GetMBaseByIndex(strS2I(QwkBlock), MBase) Then Begin
+    If IsNetworked Then
+      BaseFound := GetMBaseByQwkID (UserRecord.QwkNetwork, QwkHeader.ConfNum, MBase)
+      // when polling userrecord.qwknetwork needs to be set to qwknetwork ID
+    Else
+      BaseFound := GetMBaseByIndex (QwkHeader.ConfNum, MBase);
 
+    If BaseFound Then Begin
       If MBaseOpenCreate(MsgBase, MBase, WorkPath) Then Begin
 
         MBaseAssignData(UserRecord, MsgBase, MBase);
 
-        If IsNetworked Then
+        If IsNetworked Then Begin
           MsgBase^.SetLocal(False);
-          // need to think this stuff through for both HUB and node
-          // situations
+
+          QwkBlock[0] := #25;
+          Move (QwkHeader.UpFrom, QwkBlock[1], 25);
+          MsgBase^.SetFrom(strStripR(QwkBlock, ' '));
+        End;
 
         QwkBlock[0] := #25;
         Move (QwkHeader.UpTo, QwkBlock[1], 25);
@@ -565,15 +613,13 @@ Begin
 
         MsgBase^.SetRefer(strS2I(strStripR(QwkBlock, ' ')));
 
-        Move (QwkHeader.NumChunk, QwkBlock[1], 6);
-
-        Chunks     := strS2I(QwkBlock) - 1;
         Line       := '';
         LineCount  := 0;
         IsControl  := MsgBase^.GetTo = QWK_CONTROL;
         GotControl := False;
 
         // disable control in network packets (for now?)
+        // prob need to skip controls not just ignore?
 
         If IsNetworked Then
           IsControl := False;
@@ -597,7 +643,7 @@ Begin
                 // ignore from name unless its networked
 
                 If IsNetworked Then
-                  MsgBase^.SetTo(strStripB(Copy(Line, 6, Length(Line)), ' '));
+                  MsgBase^.SetFrom(strStripB(Copy(Line, 6, Length(Line)), ' '));
               End Else
               If (LineCount < 4) and (Copy(Line, 1, 3) = 'To:') Then Begin
                 MsgBase^.SetTo(strStripB(Copy(Line, 4, Length(Line)), ' '));
@@ -621,20 +667,19 @@ Begin
         If Line <> '' Then
           MsgBase^.DoStringLn(Line);
 
-        If MBase.NetType > 0 Then Begin
-          If IsNetworked Then Begin
+        If Not IsNetworked Then
+          If MBase.NetType > 0 Then Begin
             MsgBase^.DoStringLn (#13 + '--- ' + mysSoftwareID + '/QWK v' + mysVersion + ' (' + OSID + ')');
-            MsgBase^.DoStringLn (' * Origin: ' + GetOriginLine(MBase));
-          End Else Begin
-            MsgBase^.DoStringLn (#13 + '--- ' + mysSoftwareID + '/QWK v' + mysVersion + ' (' + OSID + ')');
-            MsgBase^.DoStringLn (' * Origin: ' + GetOriginLine(MBase) + ' (' + Addr2Str(MsgBase^.GetOrigAddr) + ')');
+
+             MsgBase^.DoStringLn (' * Origin: ' + GetOriginLine(MBase) + ' (' + Addr2Str(MsgBase^.GetOrigAddr) + ')');
           End;
-        End;
 
         If Not IsControl Then Begin
-          If HasAccess(Self, MBase.PostACS) Then Begin
-            MsgBase^.WriteMsg;
-            Inc (RepOK);   // must increase user and history posts by repOK
+          If ((IsQwk) or (HasAccess(Self, MBase.PostACS))) and
+             ((IsNetworked And (UserRecord.QwkNetwork = MBase.QwkNetID)) or (Not IsNetworked)) Then Begin
+               MsgBase^.WriteMsg;
+
+               Inc (RepOK);   // must increase user and history posts by repOK
           End Else
             Inc (RepFailed);
         End;
@@ -642,10 +687,18 @@ Begin
         MsgBase^.CloseMsgBase;
 
         Dispose (MsgBase, Done);
-      End Else
+      End Else Begin
         Inc (RepFailed);
-    End Else
+
+        For Count1 := 1 to Chunks Do
+          DataFile.ReadBlock (QwkBlock[1], 128);
+      End;
+    End Else Begin
       Inc (RepFailed);
+
+      For Count1 := 1 to Chunks Do
+        DataFile.ReadBlock (QwkBlock[1], 128);
+    End;
   End;
 
   DataFile.Free;

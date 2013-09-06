@@ -30,8 +30,8 @@ Begin
 
   Box.Header := ' Index ' + strI2S(QwkNet.Index) + ' ';
 
-  Box.Open     (16, 5, 65, 16);
-  VerticalLine (32, 7, 14);
+  Box.Open     (16, 5, 65, 17);
+  VerticalLine (32, 7, 15);
 
   Form.AddStr  ('D', ' Network Name', 18,  7, 34,  7, 14, 30, 30, @QwkNet.Description, Topic + 'Network name');
   Form.AddTog  ('M', ' Member Type',  19,  8, 34,  8, 13, 4, 0, 1, 'HUB Node', @QwkNet.MemberType, Topic + 'Are you a HUB or a Node of this network?');
@@ -40,7 +40,8 @@ Begin
   Form.AddPass ('P', ' Password',     22, 11, 34, 11, 10, 20, 20, @QwkNet.Password, Topic + 'FTP password');
   Form.AddBol  ('U', ' Use Passive',  19, 12, 34, 12, 13, 3, @QwkNet.UsePassive, Topic + 'Use passive FTP with HUB');
   Form.AddStr  ('I', ' Packet ID',    21, 13, 34, 13, 11, 20, 20, @QwkNet.PacketID, Topic + 'QWK packet name to use with HUB');
-  Form.AddBol  ('E', ' Use QWKE',     22, 14, 34, 14, 10, 3, @QwkNet.UseQWKE, Topic + 'Create QWKE packets for HUB');
+  Form.AddCaps ('A', ' Archive Type', 18, 14, 34, 14, 14,  4,  4, @QwkNet.ArcType, Topic + 'Archive type used for packets');
+  Form.AddBol  ('E', ' Use QWKE',     22, 15, 34, 15, 10, 3, @QwkNet.UseQWKE, Topic + 'Create QWKE packets for HUB');
 
   Form.Execute;
 
@@ -111,6 +112,7 @@ Var
 
     With QwkNet Do Begin
       Description := 'New QWK Network';
+      ArcType     := 'ZIP';
       Index       := GetPermanentIndex(FileSize(QwkFile));
     End;
 
