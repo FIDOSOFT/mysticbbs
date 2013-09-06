@@ -27,7 +27,7 @@ Type
     Function  Authenticate    (Login, Password: String) : Boolean;
     Function  ChangeDirectory (Str: String) : Boolean;
     Function  SendFile        (Passive: Boolean; FileName: String) : Boolean;
-    Function  GetFile         (FilePath, FileName: String) : Boolean;
+    Function  GetFile         (Passive: Boolean; FileName: String) : Boolean;
     Procedure CloseConnection;
   End;
 
@@ -193,9 +193,43 @@ Begin
     CloseDataSession;
 End;
 
-Function TFTPClient.GetFile (FilePath, FileName: String) : Boolean;
+Function TFTPClient.GetFile (Passive: Boolean; FileName: String) : Boolean;
+Var
+  F      : File;
+  Res    : LongInt;
+  Buffer : Array[1..8*1024] of Char;
 Begin
   Result := False;
+
+  If FileExist(FileName) Then Exit;
+
+  SetPassive(Passive);
+
+  Client.WriteLine('RETR ' + JustFile(FileName));
+
+  OpenDataSession;
+
+  If GetResponse = 150 Then Begin
+    Assign (F, FileName);
+
+    If ioReWrite(F, 1, fmRWDW) Then Begin
+      Repeat
+        Res := DataSocket.ReadBuf (Buffer, SizeOf(Buffer));
+
+        If Res > 0 Then
+          BlockWrite (F, Buffer, Res)
+        Else
+          Break;
+      Until False;
+
+      Close (F);
+    End;
+
+    CloseDataSession;
+
+    Result := GetResponse = 226;
+  End Else
+    CloseDataSession;
 End;
 
 Function TFTPClient.ChangeDirectory (Str: String) : Boolean;
