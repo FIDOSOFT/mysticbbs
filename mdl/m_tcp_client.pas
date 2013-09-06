@@ -13,11 +13,12 @@ Type
   TTCPClient = Class
     Client       : TIOSocket;
     ResponseType : Integer;
+    ResponseStr  : String;
     ResponseData : TStringList;
 
-    Constructor Create;
+    Constructor Create; Virtual;
     Destructor  Destroy; Override;
-    Function    Connect (Address: String; Port: Word) : Boolean;
+    Function    Connect (Address: String; Port: Word) : Boolean; Virtual;
     Function    SendCommand (Str: String) : Integer;
     Function    GetResponse : Integer;
   End;
@@ -53,8 +54,9 @@ Begin
 
   If Client.FSocketHandle = -1 Then Exit;
 
+  Client.PurgeInputData(1);
+
   Client.WriteLine(Str);
-  //WriteLn(Str);
 
   Result := GetResponse;
 End;
@@ -62,29 +64,31 @@ End;
 Function TTCPClient.GetResponse : Integer;
 Var
   Str : String;
+  Res : LongInt;
 Begin
   Result := -1;
 
   If Client.FSocketHandle = -1 Then Exit;
 
-  If Client.ReadLine(Str) > 0 Then Begin
-    ResponseType := strS2I(Copy(Str, 1, 3));
-    Result       := ResponseType;
+  If Client.WaitForData(10000) > 0 Then
+    If Client.ReadLine(ResponseStr) > 0 Then Begin
+      ResponseType := strS2I(Copy(ResponseStr, 1, 3));
+      Result       := ResponseType;
 
-    //WriteLn(Str);
+      If ResponseStr[4] = '-' Then Begin
+        ResponseData.Clear;
 
-    If Str[4] = '-' Then Begin
-      ResponseData.Clear;
+        Repeat
+          Res := Client.ReadLine(Str);
 
-      Repeat
-        If Client.ReadLine(Str) <= 0 Then Break;
+          If Res < 0 Then
+            Break;
 
-        ResponseData.Add(Str);
-
-        //WriteLn(Str);
-      Until Copy(Str, 1, 4) = strI2S(ResponseType) + ' ';
+          If Res > 0 Then
+            ResponseData.Add(Str);
+        Until Copy(Str, 1, 4) = strI2S(ResponseType) + ' ';
+      End;
     End;
-  End;
 End;
 
 End.
