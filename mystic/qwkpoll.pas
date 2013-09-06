@@ -55,7 +55,7 @@ Begin
       // in QWK class if we do this.
 
       DirClean       (TempPath, '');
-      FTP.GetFile    (TempPath, QwkNet.PacketID + '.qwk');
+      FTP.GetFile    (QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.qwk');
       ExecuteArchive (TempPath, TempPath + QwkNet.PacketID + '.qwk', QwkNet.ArcType, '*', 2);
 
       QWK.ImportPacket(True);

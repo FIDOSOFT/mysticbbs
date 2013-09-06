@@ -3641,4 +3641,6 @@
  + Mystic's QWK system no longer forces all upper case user names and
    subjects.
 
+   ADD NEW QWK MCI CODE AND GE toggle
+
    <ALPHA 37 RELEASED>

@@ -42,7 +42,7 @@ BUGS AND POSSIBLE ISSUES
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
-
+- in file listing jump to files by typing the file number
 - remove console class code from mutil since its in bbs_database
      ^ same with keyboard
 - think through the Local flag for all QWK networking situations
