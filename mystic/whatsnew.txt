@@ -3721,4 +3721,11 @@
  ! MUTIL should now generate a MSGID when posting text files to an echomail
    base.
 
+ + MUTIL logs now use MMM DD YYYY date stamps, instead of MM/DD/YY.
+
+ + MUTIL now has a MergeNodeLists function which will scan for nodelist
+   files to find the most recent nodelists, then combine them and copy them
+   into the Mystic DATA folder so they can be used for node lookups.  It also
+   supports merging archived nodelists.  See MUTIL.INI for more information.
+
    <ALPHA 37 RELEASED>

@@ -46,7 +46,9 @@ Begin
   FTP := TFTPClient.Create;
 
   If FTP.OpenConnection(QwkNet.HostName) Then Begin
+  writeln('DEBUG connected');
     If FTP.Authenticate(QwkNet.Login, QwkNet.Password) Then Begin
+    writeln('DEBUG authenticated; sending REP');
       FTP.SendFile (QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.rep');
 
       // if was sent successfully THEN update by setting
@@ -55,12 +57,18 @@ Begin
       // in QWK class if we do this.
 
       DirClean       (TempPath, '');
+      writeln ('DEBUG downloading QWK packet');
       FTP.GetFile    (QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.qwk');
+      writeln ('DEBUG unpacking QWK');
       ExecuteArchive (TempPath, TempPath + QwkNet.PacketID + '.qwk', QwkNet.ArcType, '*', 2);
 
+      writeln ('DEBUG importing QWK');
       QWK.ImportPacket(True);
+      writeln ('DEBUG imported QWK TODO add stats here');
     End;
   End;
+
+  writeln ('DEBUG disposing memory');
 
   FTP.Free;
   QWK.Free;

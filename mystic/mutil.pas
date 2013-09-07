@@ -48,6 +48,7 @@ Uses
   mUtil_MsgPost,
   mUtil_EchoExport,
   mUtil_EchoImport,
+  mUtil_NodeList,
   bbs_DataBase;
 
 {$I MUTIL_ANSI.PAS}
@@ -182,6 +183,7 @@ Var
   DoMsgPack    : Boolean;
   DoMsgPost    : Boolean;
   DoImportMB   : Boolean;
+  DoNodeList   : Boolean;
 Begin
   ApplicationStartup;
 
@@ -201,6 +203,7 @@ Begin
   DoMsgPurge   := CheckProcess(Header_MSGPURGE);
   DoMsgPack    := CheckProcess(Header_MSGPACK);
   DoMsgPost    := CheckProcess(Header_MSGPOST);
+  DoNodeList   := CheckProcess(Header_NODELIST);
 
   // Exit with an error if nothing is configured
 
@@ -226,4 +229,5 @@ Begin
   If DoMsgPack    Then uPackMessageBases;
   If DoMsgPost    Then uPostMessages;
   If DoImportMB   Then uImportMessageBases;
+  If DoNodeList   Then uMergeNodeList;
 End.

@@ -39,6 +39,7 @@ Const
   Header_MSGPURGE   = 'PurgeMessageBases';
   Header_MSGPACK    = 'PackMessageBases';
   Header_MSGPOST    = 'PostTextFiles';
+  Header_NODELIST   = 'MergeNodeLists';
 
 Procedure Log                (Level: Byte; Code: Char; Str: String);
 Function  strAddr2Str        (Addr : RecEchoMailAddr) : String;
@@ -86,7 +87,7 @@ Begin
   If Str = '' Then
     WriteLn (T, '')
   Else
-    WriteLn (T, Code + ' ' + DateDos2Str(CurDateDos, 1) + ' ' + TimeDos2Str(CurDateDos, 2) + ' ' + Str);
+    WriteLn (T, Code + ' ' + FormatDate(CurDateDT, 'NNN DD YYYY HH:II') + ' ' + Str);
 
   Close (T);
 End;
