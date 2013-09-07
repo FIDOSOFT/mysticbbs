@@ -120,8 +120,10 @@ Begin
       While Not Eof(F) Do Begin
         ioRead (F, QwkNet);
 
-        If PollByQwkNet(QwkNet) Then
-          Inc (Count);
+        Case Mode of
+          0 : If PollByQwkNet(QwkNet) Then
+                Inc (Count);
+        End;
       End;
 
       Close (F);
@@ -129,13 +131,16 @@ Begin
   End Else
   If strS2I(Str) > 0 Then Begin
     If GetQwkNetByIndex(strS2I(Str), QwkNet) Then
-      If PollByQwkNet(QwkNet) Then
-        Inc (Count);
+      Case Mode of
+        0 : If PollByQwkNet(QwkNet) Then
+              Inc (Count);
+      End;
   End Else Begin
     WriteLn ('Invalid command line.');
     WriteLn;
     WriteLn ('Syntax: QWKPOLL [ALL]');
     WriteLn ('                [Qwk Network Index]');
+    WriteLn;
     WriteLn ('                [EXPORT] [QwkNet Index] [PATH TO CREATE REP]');
     WriteLn ('                [IMPORT] [QwkNet Index] [PATH OF QWK PACKET]');
     WriteLn;

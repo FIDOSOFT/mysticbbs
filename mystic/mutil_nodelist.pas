@@ -17,6 +17,53 @@ Uses
   mUtil_Common,
   mUtil_Status;
 
+Var
+  NodeListNoPrivate : Boolean;
+  NodeListNoDown    : Boolean;
+
+Procedure FileAppend (F1, F2: String);
+Var
+  BufIn,
+  BufOut : Array[1..8*1024] of Char;
+  TF1    : Text;
+  TF2    : Text;
+  Str    : String;
+Begin
+  Assign (TF1, F1);
+
+  {$I-} Reset(TF1); {$I+}
+
+  If IoResult <> 0 Then Exit;
+
+  SetTextBuf (TF1, BufIn);
+
+  Assign (TF2, F2);
+  {$I-} Append(TF2); {$I+}
+
+  If (IoResult = 2) Then
+    ReWrite (TF2);
+
+  SetTextBuf (TF2, BufOut);
+
+  While Not Eof(TF1) Do Begin
+    ReadLn  (TF1, Str);
+
+    If (Str[1] = ';') Then
+      Continue;
+
+    If NodeListNoDown And (Copy(Str, 1, 4) = 'Down') Then
+      Continue;
+
+    If NodeListNoPrivate And (Copy(Str, 1, 3) = 'Pvt') Then
+      Continue;
+
+    WriteLn (TF2, Str);
+  End;
+
+  Close (TF1);
+  Close (TF2);
+End;
+
 Procedure ExtractNodeLists (BaseFile: String);
 Var
   DirInfo  : SearchRec;
@@ -156,7 +203,7 @@ Begin
 
   If Not NotFound Then Begin
     ProcessStatus  ('Merging ' + ResPath + Res.Name, False);
-    FileAppend (ResPath + Res.Name, bbsCfg.DataPath + 'nodelist.txt');
+    FileAppend     (ResPath + Res.Name, bbsCfg.DataPath + 'nodelist.txt');
   End;
 
   DirClean(TempPath, '');
@@ -173,6 +220,9 @@ Begin
 
   FileErase  (bbsCfg.DataPath + 'nodelist.$$$');
   FileReName (bbsCfg.DataPath + 'nodelist.txt', bbsCfg.DataPath + 'nodelist.$$$');
+
+  NodeListNoDown    := Ini.ReadBoolean(Header_NODELIST, 'strip_down', False);
+  NodeListNoPrivate := Ini.ReadBoolean(Header_NODELIST, 'strip_private', False);
 
   Ini.SetSequential(True);
 
