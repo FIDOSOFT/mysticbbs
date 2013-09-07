@@ -54,6 +54,8 @@ Begin
 
   If Client.FSocketHandle = -1 Then Exit;
 
+WriteLn ('DEBUG SEND ' + Str);
+
   Client.PurgeInputData(1);
 
   Client.WriteLine(Str);
@@ -89,6 +91,8 @@ Begin
         Until Copy(Str, 1, 4) = strI2S(ResponseType) + ' ';
       End;
     End;
+
+  writeln('DEBUG RECV ' + ResponseStr);
 End;
 
 End.

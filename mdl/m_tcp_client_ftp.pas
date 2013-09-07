@@ -75,16 +75,12 @@ Begin
 
     WaitSock.WaitInit(NetInterface, DataPort);
 
-    DataSocket := NIL;
     DataSocket := WaitSock.WaitConnection(10000);
 
-    If Not Assigned(DataSocket) Then Begin
-      WaitSock.Free;
-
-      Exit;
-    End;
-
     WaitSock.Free;
+
+    If Not Assigned(DataSocket) Then
+      Exit;
   End;
 
   Result := True;
@@ -163,6 +159,8 @@ Begin
   Result := False;
 
   If Not FileExist(FileName) Then Exit;
+
+  WriteLn ('DEBUG SendFile Passive ', Passive, ' Filename ', FileName);
 
   SetPassive(Passive);
 
