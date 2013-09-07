@@ -43,7 +43,7 @@ Begin
   WriteLn ('      - Exported @' + QwkNet.PacketID + '.rep -> ', QWK.TotalMessages, ' msgs ');
   WriteLn ('      - Connecting via FTP to ' + QWkNet.HostName);
 
-  FTP := TFTPClient.Create;
+  FTP := TFTPClient.Create(bbsCfg.inetInterface);
 
   If FTP.OpenConnection(QwkNet.HostName) Then Begin
   writeln('DEBUG connected');

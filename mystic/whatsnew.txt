@@ -3728,4 +3728,8 @@
    into the Mystic DATA folder so they can be used for node lookups.  It also
    supports merging archived nodelists.  See MUTIL.INI for more information.
 
+ + Mystic's terminal library in Linux will now attempt to detect terminal
+   screen size before switching to 80x25, and will also attempt to restore
+   screen size upon exit.
+
    <ALPHA 37 RELEASED>
