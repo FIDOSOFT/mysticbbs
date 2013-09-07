@@ -152,7 +152,7 @@ Begin
   Password   := '';
   UserPos    := -1;
   DataIP     := '';
-  DataPort   := 20;
+  DataPort   := Random(bbsConfig.inetFTPPortMax - bbsConfig.inetFTPPortMin) + bbsConfig.inetFTPPortMin;
   DataSocket := NIL;
   IsPassive  := False;
   FBasePos   := -1;
