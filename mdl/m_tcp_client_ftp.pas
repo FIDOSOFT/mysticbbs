@@ -5,7 +5,7 @@ Unit m_Tcp_Client_FTP;
 Interface
 
 Uses
-  SysUtils,   // wordrec get rid of it
+  SysUtils,  // replace wordrec and remove
   m_io_Sockets,
   m_Tcp_Client;
 

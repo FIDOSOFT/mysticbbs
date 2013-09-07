@@ -17,9 +17,9 @@ Type
     ResponseData : TStringList;
     NetInterface : String;
 
-    Constructor Create (NetI: String); Virtual;
-    Destructor  Destroy; Override;
-    Function    Connect (Address: String; Port: Word) : Boolean; Virtual;
+    Constructor Create      (NetI: String); Virtual;
+    Destructor  Destroy;    Override;
+    Function    Connect     (Address: String; Port: Word) : Boolean; Virtual;
     Function    SendCommand (Str: String) : Integer;
     Function    GetResponse : Integer;
   End;
