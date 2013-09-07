@@ -15,6 +15,8 @@ Type
     DataIP     : String;
     DataSocket : TIOSocket;
     IsPassive  : Boolean;
+    MinPort    : Word;
+    MaxPort    : Word;
 
     Constructor Create            (NetI: String); Override;
     Function    OpenDataSession   : Boolean;
@@ -41,9 +43,11 @@ Constructor TFTPClient.Create (NetI: String);
 Begin
   Inherited Create(NetI);
 
-  IsPassive    := False;
-  DataIP       := '';
-  DataPort     := ftpDefaultDataPort;
+  IsPassive := False;
+  DataIP    := '';
+  MinPort   := 49152;
+  MaxPort   := 65535;
+  DataPort  := Random(MaxPort - MinPort) + MinPort;
 End;
 
 Function TFTPClient.OpenDataSession : Boolean;
@@ -154,7 +158,7 @@ Begin
     End;
   End Else Begin
     IsPassive := False;
-    DataPort  := ftpDefaultDataPort;
+    DataPort  := Random(MaxPort - MinPort) + MinPort;
     Result    := SendCommand('PORT ' + strReplace(Client.PeerIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo)) = 200;
   End;
 End;
