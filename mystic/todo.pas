@@ -42,6 +42,9 @@ BUGS AND POSSIBLE ISSUES
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
+- toutput on unix should detect XTERM settings for window size and restore
+  them on exit.
+- NODELIST copy function (process nodelist directory and copy+copy to data)
 - when editing an already posted message with reference linkage, export the
   quote data from the original message...
 - in file listing jump to files by typing the file number

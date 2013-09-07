@@ -66,6 +66,9 @@ Function IsThisUser             (U: RecUser; Str: String) : Boolean;
 Implementation
 
 Uses
+  {$IFDEF UNIX}
+    Unix,
+  {$ENDIF}
   DOS,
   m_FileIO,
   m_DateTime,

@@ -3647,6 +3647,78 @@
  + Mystic's QWK system no longer forces all upper case user names and
    subjects.
 
-   ADD NEW QWK MCI CODE AND GE toggle
+ + New MCI code QE returns the user's QWKE packet setting (Yes or No).
+
+ + New GE menu command option: 33.  Toggles users QWKE packet setting.  The
+   default install now includes updated qwk.mnu and qwknetwork.mnu
+
+ + A new temporary QWK mailer has been included called QWKPOLL.  This will
+   allow you to function as a node of a QWK network.  It will connect via FTP
+   to your network hub, send them a REP packet of new messages, download a
+   QWK packet of new messages, and toss them into the BBS message bases all
+   automatically.
+
+ + QWK and QWKE Networking (as a HUB and a NODE) has been implemented.  This
+   implementation also allows you to be a part of multiple QWK networks and
+   even HUB them in addition to being members of several - all with separate
+   access management.
+
+      SETTING UP AS A NODE OF A QWK NETWORK
+      =====================================
+      1. Create a new QWK network profile in the System Configuration ->
+         QWK Networks and set the member type to Node.  When you join a QWK
+         network you should get all of the details required to fill in the
+         rest of the settings.
+
+      2. For each message base in the QWK networking:
+            A. Create message base in the message base editor.
+            B. Set message base type to echomail
+            C. Set QWK Network to point to your newly created QWK network.
+            D. Set the QWK Conference ID for the base.  This is specific to
+               the network and should be provided to you along with the list
+               of bases when joining the network.
+
+      3. Thats it.  When you run QWKPOLL it will attempt to connect to your
+         QWK networking hub and exchange/import messages for you for each
+         base (via FTP).
+
+      SETTING UP YOUR OWN QWK NETWORK
+      ===============================
+
+      1. Create a new QWK network profile in the System Configuration, and
+         set the member type to HUB.
+      2. Create your message bases in the same way that you would as a node
+         (see above), except you need to make up a unique QWK conference number
+         for each message base.  This number should be unique across all QWK
+         networks and needs to be provided to your nodes.  Mystic itself does NOT
+         require that each base is unique across all networks, but it appears
+         that other software does require this.
+
+         These two steps are all that is needed to create your own network!
+
+      Now for each node that is a part of your network, you need to give them
+      a list of the conference IDs you created for each base you've created
+      for your network.
+
+      Next you need to login and create a new user, or instruct the Sysop of
+      your node to create an account using a unique BBS ID.  For example, my
+      BBS is Sector 7 so I would create a user named "sector7".  Once the
+      user is created, set the user's "Qwk Networking Acount" flag in the
+      user editor to TRUE and then associate them to the network you've
+      created (also in the user editor).
+
+      From now on when the user calls and logs in as their BBS ID (sector7 in
+      this example), they will be given a menu which allows them to select
+      which networked bases to subscribe to, in addition to resetting scan
+      pointers, etc.
+
+      Once that is done and the person has their client side setup, then can
+      connect to the MIS FTP server and login with the BBSID and password. From
+      this point they can download bbsid.qwk and upload bbsid.rep to the FTP
+      server to exchange mail.  If they are also using Mystic, QWKPOLL will do
+      all of that for them!
+
+ ! MUTIL should now generate a MSGID when posting text files to an echomail
+   base.
 
    <ALPHA 37 RELEASED>
