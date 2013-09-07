@@ -11,10 +11,10 @@ Uses
 
 Type
   TFTPClient = Class(TTCPClient)
-    DataPort     : Word;
-    DataIP       : String;
-    DataSocket   : TIOSocket;
-    IsPassive    : Boolean;
+    DataPort   : Word;
+    DataIP     : String;
+    DataSocket : TIOSocket;
+    IsPassive  : Boolean;
 
     Constructor Create            (NetI: String); Override;
     Function    OpenDataSession   : Boolean;
@@ -34,13 +34,16 @@ Uses
   m_FileIO,
   m_Strings;
 
+Const
+  ftpDefaultDataPort = 20;
+
 Constructor TFTPClient.Create (NetI: String);
 Begin
   Inherited Create(NetI);
 
   IsPassive    := False;
   DataIP       := '';
-  DataPort     := 10000;
+  DataPort     := ftpDefaultDataPort;
 End;
 
 Function TFTPClient.OpenDataSession : Boolean;
@@ -151,7 +154,7 @@ Begin
     End;
   End Else Begin
     IsPassive := False;
-    DataPort  := 10000;  // Calc and make configurable?
+    DataPort  := ftpDefaultDataPort;
     Result    := SendCommand('PORT ' + strReplace(Client.PeerIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo)) = 200;
   End;
 End;
@@ -159,8 +162,9 @@ End;
 Function TFTPClient.SendFile (Passive: Boolean; FileName: String) : Boolean;
 Var
   F      : File;
-  Buffer : Array[1..8*1024] of Char;
+  Buffer : Array[1..8 * 1024] of Char;
   Res    : LongInt;
+  OK     : Boolean;
 Begin
   Result := False;
 
@@ -174,9 +178,9 @@ Begin
 
   Client.WriteLine ('STOR ' + JustFile(FileName));
 
-  OpenDataSession;
+  OK := OpenDataSession;
 
-  If GetResponse = 150 Then Begin
+  If OK and (GetResponse = 150) Then Begin
     WriteLn ('DEBUG BEGIN SEND FILE');
 
     Assign (F, FileName);
@@ -197,8 +201,14 @@ Begin
     CloseDataSession;
 
     Result := GetResponse = 226;
-  End Else
+  End Else Begin
+    If IsPassive Then
+      WriteLn ('DEBUG unable to connect to FTP server for data session')
+    Else
+      WriteLn ('DEBUG unable to establish data session on port ', DataPort);
+
     CloseDataSession;
+  End;
 End;
 
 Function TFTPClient.GetFile (Passive: Boolean; FileName: String) : Boolean;
@@ -206,6 +216,7 @@ Var
   F      : File;
   Res    : LongInt;
   Buffer : Array[1..8*1024] of Char;
+  OK     : Boolean;
 Begin
   Result := False;
 
@@ -215,9 +226,9 @@ Begin
 
   Client.WriteLine('RETR ' + JustFile(FileName));
 
-  OpenDataSession;
+  OK := OpenDataSession;
 
-  If GetResponse = 150 Then Begin
+  If OK And (GetResponse = 150) Then Begin
     Assign (F, FileName);
 
     If ioReWrite(F, 1, fmRWDW) Then Begin
@@ -236,8 +247,11 @@ Begin
     CloseDataSession;
 
     Result := GetResponse = 226;
-  End Else
+  End Else Begin
+    WriteLn ('DEBUG unable to open data session, receive aborted');
+
     CloseDataSession;
+  End;
 End;
 
 Function TFTPClient.ChangeDirectory (Str: String) : Boolean;
