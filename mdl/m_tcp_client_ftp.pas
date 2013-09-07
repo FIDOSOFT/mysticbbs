@@ -15,20 +15,17 @@ Type
     DataIP       : String;
     DataSocket   : TIOSocket;
     IsPassive    : Boolean;
-    NetInterface : String;
 
-    Constructor Create; Override;
-
-    Function  OpenDataSession : Boolean;
-    Procedure CloseDataSession;
-    Function  SetPassive      (IsOn: Boolean) : Boolean;
-
-    Function  OpenConnection  (HostName: String) : Boolean;
-    Function  Authenticate    (Login, Password: String) : Boolean;
-    Function  ChangeDirectory (Str: String) : Boolean;
-    Function  SendFile        (Passive: Boolean; FileName: String) : Boolean;
-    Function  GetFile         (Passive: Boolean; FileName: String) : Boolean;
-    Procedure CloseConnection;
+    Constructor Create            (NetI: String); Override;
+    Function    OpenDataSession   : Boolean;
+    Procedure   CloseDataSession;
+    Function    SetPassive        (IsOn: Boolean) : Boolean;
+    Function    OpenConnection    (HostName: String) : Boolean;
+    Function    Authenticate      (Login, Password: String) : Boolean;
+    Function    ChangeDirectory   (Str: String) : Boolean;
+    Function    SendFile          (Passive: Boolean; FileName: String) : Boolean;
+    Function    GetFile           (Passive: Boolean; FileName: String) : Boolean;
+    Procedure   CloseConnection;
   End;
 
 Implementation
@@ -37,12 +34,11 @@ Uses
   m_FileIO,
   m_Strings;
 
-Constructor TFTPClient.Create;
+Constructor TFTPClient.Create (NetI: String);
 Begin
-  Inherited Create;
+  Inherited Create(NetI);
 
   IsPassive    := False;
-  NetInterface := '';
   DataIP       := '';
   DataPort     := 10000;
 End;
@@ -52,6 +48,8 @@ Var
   WaitSock : TIOSocket;
 Begin
   Result := False;
+
+  WriteLn ('DEBUG OPEN DATA 1');
 
   If DataSocket <> NIL Then Begin
     DataSocket.Free;
@@ -68,14 +66,22 @@ Begin
       Exit;
     End;
   End Else Begin
+    WriteLn ('DEBUG OPEN DATA 2');
+
     WaitSock := TIOSocket.Create;
 
     WaitSock.FTelnetServer := False;
     WaitSock.FTelnetClient := False;
 
+    WriteLn ('DEBUG OPEN DATA 3');
+
     WaitSock.WaitInit(NetInterface, DataPort);
 
+    WriteLn ('DEBUG OPEN DATA 4');
+
     DataSocket := WaitSock.WaitConnection(10000);
+
+    WriteLn ('DEBUG OPEN DATA 5');
 
     WaitSock.Free;
 
@@ -164,11 +170,15 @@ Begin
 
   SetPassive(Passive);
 
+  WriteLn ('DEBUG SETPASSIVE()');
+
   Client.WriteLine ('STOR ' + JustFile(FileName));
 
   OpenDataSession;
 
   If GetResponse = 150 Then Begin
+    WriteLn ('DEBUG BEGIN SEND FILE');
+
     Assign (F, FileName);
 
     If ioReset(F, 1, fmRWDN) Then Begin

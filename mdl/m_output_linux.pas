@@ -20,6 +20,8 @@ Type
     TermInfo   : TermIos;
     TermInRaw  : Boolean;
     TermOutRaw : Boolean;
+    TermXSize  : LongInt;
+    TermYSize  : LongInt;
     OutBuffer  : Array[1..ConBufSize] of Char;
     FTextAttr  : Byte;
     FWinTop    : Byte;
@@ -41,6 +43,7 @@ Type
     Procedure   SaveRawSettings (Var TIo: TermIos);
     Procedure   RestoreRawSettings (TIo: TermIos);
     Procedure   SetRawMode (SetOn: Boolean);
+    Procedure   GetOriginalTermSize;
     Procedure   WriteXY (X, Y, A: Byte; Text: String);
     Procedure   WriteXYPipe (X, Y, Attr, Pad: Integer; Text: String);
     Procedure   GetScreenImage (X1, Y1, X2, Y2: Byte; Var Image: TConsoleImageRec);
@@ -103,6 +106,8 @@ Begin
 
   SetRawMode(True);
 
+  GetOriginalTermSize;
+
   Active     := A;
   OutBufPos  := 0;
   FTextAttr  := 7;
@@ -123,13 +128,48 @@ Begin
 
 //  RestoreRawSettings(SavedTerm);
 
-  SetRawMode(False);
+  SetWindow  (1, 1, TermXSize, TermYSize, False);
+  SetRawMode (False);
 
   Inherited Destroy;
 End;
 
 Const
   AnsiTable : String[8] = '04261537';
+
+Procedure TOutputLinux.GetOriginalTermSize;
+Var
+  Str   : String;
+  Ch    : Char;
+  FDSIN : TFDSET;
+Begin
+  RawWriteStr (#27 + '[18t');
+
+  Str := '';
+
+  Repeat
+    fpFD_ZERO (FDSIN);
+    fpFD_SET  (0, FDSIN);
+
+    If fpSelect (1, @FDSIN, NIL, NIL, 250) > 0 Then Begin
+      fpRead (0, Ch, 1);
+
+      If Ch <> 't' Then
+        Str := Str + Ch;
+
+      If Length(Str) > 13 Then Break;
+    End Else
+      Break;
+  Until Ch = 't';
+
+  TermXSize := strS2I(strWordGet(2, Str, ';'));
+  TermYSize := strS2I(strWordGet(2, Str, ';'));
+
+  If (TermXSize <= 0) or (TermYSize <= 0) Then Begin
+    TermXSize := 80;
+    TermYSize := 25;
+  End;
+End;
 
 (*
 Function TOutputLinux.AttrToAnsi (Attr: Byte) : String;

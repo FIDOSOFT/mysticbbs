@@ -15,8 +15,9 @@ Type
     ResponseType : Integer;
     ResponseStr  : String;
     ResponseData : TStringList;
+    NetInterface : String;
 
-    Constructor Create; Virtual;
+    Constructor Create (NetI: String); Virtual;
     Destructor  Destroy; Override;
     Function    Connect (Address: String; Port: Word) : Boolean; Virtual;
     Function    SendCommand (Str: String) : Integer;
@@ -25,11 +26,12 @@ Type
 
 Implementation
 
-Constructor TTCPClient.Create;
+Constructor TTCPClient.Create (NetI: String);
 Begin
   Inherited Create;
 
   Client       := NIL;
+  NetInterface := NetI;
   ResponseData := TStringList.Create;
 End;
 
