@@ -35,6 +35,7 @@ Function  FileCopy        (Source, Target: String) : Boolean;
 Function  FileFind        (FN: String) : String;
 Function  FileByteSize    (FN: String) : Int64;
 Function  FileNewExt      (FN, NewExt: String) : String;
+Procedure FileAppend      (F1, F2: String);
 
 { GLOBAL FILEIO VARIABLES AND CONSTANTS }
 
@@ -559,6 +560,39 @@ Begin
     End;
 
   Result := FN + '.' + NewExt;
+End;
+
+Procedure FileAppend (F1, F2: String);
+Var
+  BufIn,
+  BufOut : Array[1..8*1024] of Char;
+  TF1    : Text;
+  TF2    : Text;
+  Str    : String;
+Begin
+  Assign (TF1, F1);
+
+  {$I-} Reset(TF1); {$I+}
+
+  If IoResult <> 0 Then Exit;
+
+  SetTextBuf (TF1, BufIn);
+
+  Assign (TF2, F2);
+  {$I-} Append(TF2); {$I+}
+
+  If (IoResult = 2) Then
+    ReWrite (TF2);
+
+  SetTextBuf (TF2, BufOut);
+
+  While Not Eof(TF1) Do Begin
+    ReadLn  (TF1, Str);
+    WriteLn (TF2, Str);
+  End;
+
+  Close (TF1);
+  Close (TF2);
 End;
 
 { FILE STREAMING FUNCTIONS }
