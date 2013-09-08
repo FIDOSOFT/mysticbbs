@@ -55,9 +55,11 @@ Begin
   FTP := TFTPClient.Create(bbsCfg.inetInterface);
 
   If FTP.OpenConnection(QwkNet.HostName) Then Begin
-  writeln('DEBUG connected');
+    WriteLn ('      - Connected');
+
     If FTP.Authenticate(QwkNet.Login, QwkNet.Password) Then Begin
-    writeln('DEBUG authenticated; sending REP');
+      WriteLn ('      - Logged in as ', QwkNet.Login);
+
       FTP.SendFile (QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.rep');
 
       // if was sent successfully THEN update by setting
@@ -66,14 +68,17 @@ Begin
       // in QWK class if we do this.
 
       DirClean       (TempPath, '');
-      writeln ('DEBUG downloading QWK packet');
       FTP.GetFile    (QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.qwk');
-      writeln ('DEBUG unpacking QWK');
+
+      WriteLn ('      - Unpacking QWK packet');
+
       ExecuteArchive (TempPath, TempPath + QwkNet.PacketID + '.qwk', QwkNet.ArcType, '*', 2);
 
-      writeln ('DEBUG importing QWK');
+      WriteLn ('      - Importing QWK packet');
+
       QWK.ImportPacket(True);
-      writeln ('DEBUG imported QWK TODO add stats here');
+
+      WriteLn ('      - Imported ', QWK.RepOK, ' messages (', QWK.RepFailed, ' failed)');
     End;
   End;
 
@@ -142,7 +147,6 @@ Var
   Str    : String;
   F      : File;
   QwkNet : RecQwkNetwork;
-  Count  : Byte = 0;
   Mode   : Byte;
 Begin
   WriteLn;
@@ -181,8 +185,7 @@ Begin
         ioRead (F, QwkNet);
 
         Case Mode of
-          0 : If PollByQwkNet(QwkNet) Then
-                Inc (Count);
+          0 : PollByQwkNet(QwkNet);
           1 : ExportPacket(QwkNet, DirSlash(ParamStr(3)));
           2 : ImportPacket(QwkNet, DirSlash(ParamStr(3)));
         End;
@@ -194,8 +197,7 @@ Begin
   If strS2I(Str) > 0 Then Begin
     If GetQwkNetByIndex(strS2I(Str), QwkNet) Then
       Case Mode of
-        0 : If PollByQwkNet(QwkNet) Then
-              Inc (Count);
+        0 : PollByQwkNet(QwkNet);
         1 : ExportPacket(QwkNet, DirSlash(ParamStr(3)));
         2 : ImportPacket(QwkNet, DirSlash(ParamStr(3)));
       End;
@@ -218,6 +220,4 @@ Begin
     WriteLn ('      for systems that may want to use an alternative transport method');
     WriteLn;
   End;
-
-  WriteLn ('Processed ', Count, ' QWK networks');
 End.
