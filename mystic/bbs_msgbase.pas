@@ -634,7 +634,7 @@ Var
   S  : String;
   A  : SmallInt;
 Begin
-  If (MBase.NetType > 0) and (MBase.NetType <> 3) Then Begin
+  If (MBase.NetType > 0) and (MBase.NetType <> 3) and (MBase.QwkNetID = 0) Then Begin
     Msg^.DoStringLn (#1 + 'MSGID: ' + strAddr2Str(bbsCfg.NetAddress[MBase.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
 
     If ReplyID <> '' Then
@@ -663,7 +663,13 @@ Begin
 
   If MBase.NetType > 0 Then Begin
     Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' v' + mysVersion + ' (' + OSID + ')');
-    Msg^.DoStringLn (' * Origin: ' + ResolveOrigin(MBase) + ' (' + strAddr2Str(Msg^.GetOrigAddr) + ')');
+
+    S := ' * Origin: ' + ResolveOrigin(MBase);
+
+    If MBase.QwkNetID = 0 Then
+      S := S + ' (' + strAddr2Str(Msg^.GetOrigAddr) + ')';
+
+    Msg^.DoStringLn (S);
   End;
 End;
 

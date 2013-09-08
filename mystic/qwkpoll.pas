@@ -3,6 +3,10 @@ Program QwkPoll;
 {$I M_OPS.PAS}
 
 Uses
+  {$IFDEF DEBUG}
+    HeapTrc,
+    LineInfo,
+  {$ENDIF}
   m_DateTime,
   m_Strings,
   m_FileIO,
@@ -28,6 +32,8 @@ Begin
 
   WriteLn ('- Exchanging Mail for ' + QwkNet.Description);
 
+  DirClean (TempPath, '');
+
   User.Handle     := QwkNet.PacketID;
   User.QwkNetwork := QwkNet.Index;
 
@@ -42,6 +48,9 @@ Begin
 
   WriteLn ('      - Exported @' + QwkNet.PacketID + '.rep -> ', QWK.TotalMessages, ' msgs ');
   WriteLn ('      - Connecting via FTP to ' + QWkNet.HostName);
+
+  If QWK.TotalMessages = 0 Then
+    DirClean (TempPath, '');
 
   FTP := TFTPClient.Create(bbsCfg.inetInterface);
 
@@ -76,6 +85,57 @@ Begin
   DirClean (TempPath, '');
 
   WriteLn;
+End;
+
+Procedure ImportPacket (QwkNet: RecQwkNetwork; Path: String);
+Var
+  QWK  : TQwkEngine;
+  User : RecUser;
+Begin
+  WriteLn ('- Importing ' + Path + QwkNet.PacketID + '.qwk');
+
+  ExecuteArchive (TempPath, Path + QwkNet.PacketID + '.qwk', QwkNet.ArcType, '*', 2);
+
+  User.Handle     := QwkNet.PacketID;
+  User.QwkNetwork := QwkNet.Index;
+
+  QWK := TQwkEngine.Create (TempPath, QwkNet.PacketID, 1, User);
+
+  QWK.IsNetworked := True;
+  QWK.IsExtended  := QwkNet.UseQWKE;
+
+  QWK.ImportPacket(True);
+
+  WriteLn ('   - Imported ', QWK.RepOK, ' messages (', QWK.RepFailed, ' failed)');
+
+  QWK.Free;
+End;
+
+Procedure ExportPacket (QwkNet: RecQwkNetwork; Path: String);
+Var
+  QWK  : TQwkEngine;
+  User : RecUser;
+Begin
+  WriteLn ('- Exporting ' + Path + QwkNet.PacketID + '.rep');
+
+  User.Handle     := QwkNet.PacketID;
+  User.QwkNetwork := QwkNet.Index;
+
+  QWK := TQwkEngine.Create (TempPath, QwkNet.PacketID, 1, User);
+
+  QWK.IsNetworked := True;
+  QWK.IsExtended  := QwkNet.UseQWKE;
+
+  QWK.ExportPacket(True);
+
+  If QWK.TotalMessages > 0 Then
+    ExecuteArchive (TempPath, Path + QwkNet.PacketID + '.rep', QwkNet.ArcType, TempPath + '*', 1);
+
+    DirClean (TempPath, '');
+
+  WriteLn ('   - Exported ', QWK.TotalMessages, ' messages');
+
+  QWK.Free;
 End;
 
 Var
@@ -123,6 +183,8 @@ Begin
         Case Mode of
           0 : If PollByQwkNet(QwkNet) Then
                 Inc (Count);
+          1 : ExportPacket(QwkNet, DirSlash(ParamStr(3)));
+          2 : ImportPacket(QwkNet, DirSlash(ParamStr(3)));
         End;
       End;
 
@@ -134,6 +196,8 @@ Begin
       Case Mode of
         0 : If PollByQwkNet(QwkNet) Then
               Inc (Count);
+        1 : ExportPacket(QwkNet, DirSlash(ParamStr(3)));
+        2 : ImportPacket(QwkNet, DirSlash(ParamStr(3)));
       End;
   End Else Begin
     WriteLn ('Invalid command line.');

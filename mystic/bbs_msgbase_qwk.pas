@@ -471,7 +471,7 @@ Begin
   Else
     Temp := 'messages.dat';
 
-  DataFile := TFileBuffer.Create(4 * 1024);
+  DataFile := TFileBuffer.Create(16 * 1024);
 
   DataFile.OpenStream (WorkPath + Temp, 1, fmCreate, fmRWDN);
 
@@ -565,7 +565,7 @@ Begin
   Else
     Line := PacketID + '.msg';
 
-  DataFile := TFileBuffer.Create(4 * 1024);
+  DataFile := TFileBuffer.Create(16 * 1024);
 
   If Not DataFile.OpenStream (FileFind(WorkPath + Line), 1, fmOpen, fmRWDN) Then Begin
     DataFile.Free;
@@ -588,6 +588,8 @@ Begin
       Exit;
     End;
 
+  MsgBase := NIL;
+
   While Not DataFile.EOF Do Begin
     DataFile.ReadBlock(QwkHeader, SizeOf(QwkHeader));
 
@@ -596,14 +598,36 @@ Begin
 
     Chunks := strS2I(QwkBlock) - 1;
 
-    If IsNetworked Then
-      BaseFound := GetMBaseByQwkID (UserRecord.QwkNetwork, QwkHeader.ConfNum, MBase)
-      // when polling userrecord.qwknetwork needs to be set to qwknetwork ID
-    Else
-      BaseFound := GetMBaseByIndex (QwkHeader.ConfNum, MBase);
+    If IsNetworked Then Begin
+      If (MBase.QwkNetID = UserRecord.QwkNetwork) And (MBase.QwkConfID = QwkHeader.ConfNum) Then
+        BaseFound := True
+      Else Begin
+        BaseFound := GetMBaseByQwkID (UserRecord.QwkNetwork, QwkHeader.ConfNum, MBase);
+
+        If BaseFound and (MsgBase <> NIL) Then Begin
+          MsgBase^.CloseMsgBase;
+          Dispose (MsgBase, Done);
+          MsgBase := NIL;
+        End;
+      End;
+    End Else Begin
+      If MBase.Index = QwkHeader.ConfNum Then
+        BaseFound := True
+      Else Begin
+        BaseFound := GetMBaseByIndex (QwkHeader.ConfNum, MBase);
+
+        If BaseFound and (MsgBase <> NIL) Then Begin
+          MsgBase^.CloseMsgBase;
+          Dispose (MsgBase, Done);
+          MsgBase := NIL;
+        End;
+      End;
+    End;
+
+    If MsgBase = NIL Then
+      BaseFound := MBaseOpenCreate(MsgBase, MBase, WorkPath);
 
     If BaseFound Then Begin
-      If MBaseOpenCreate(MsgBase, MBase, WorkPath) Then Begin
 
         MBaseAssignData(UserRecord, MsgBase, MBase);
 
@@ -624,10 +648,10 @@ Begin
         Move (QwkHeader.Subject, QwkBlock[1], 25);
         MsgBase^.SetSubj(strStripR(QwkBlock, ' '));
 
-        Move (QwkHeader.ReferNum, QwkBlock[1], 6);
-        QwkBlock[0] := #6;
+//        Move (QwkHeader.ReferNum, QwkBlock[1], 6);
+//        QwkBlock[0] := #6;
 
-        MsgBase^.SetRefer(strS2I(strStripR(QwkBlock, ' ')));
+//        MsgBase^.SetRefer(strS2I(strStripR(QwkBlock, ' ')));
 
         Line       := '';
         LineCount  := 0;
@@ -686,17 +710,19 @@ Begin
         If Not IsNetworked Then
           If MBase.NetType > 0 Then Begin
             MsgBase^.DoStringLn (#13 + '--- ' + mysSoftwareID + '/QWK v' + mysVersion + ' (' + OSID + ')');
-
-             MsgBase^.DoStringLn (' * Origin: ' + GetOriginLine(MBase) + ' (' + Addr2Str(MsgBase^.GetOrigAddr) + ')');
+            MsgBase^.DoStringLn (' * Origin: ' + GetOriginLine(MBase) + ' (' + Addr2Str(MsgBase^.GetOrigAddr) + ')');
           End;
 
         If Not IsControl Then Begin
           // ISQWK = a node importing from HUB
-          If ((IsQwk) or (HasAccess(Self, MBase.PostACS))) and
-             ((IsNetworked And (UserRecord.QwkNetwork = MBase.QwkNetID)) or (Not IsNetworked)) Then Begin
+          If (IsQwk) or (HasAccess(Self, MBase.PostACS)) Then Begin
+
+//          If ((IsQwk) or (HasAccess(Self, MBase.PostACS))) and
+//             ((IsNetworked And (UserRecord.QwkNetwork = MBase.QwkNetID)) or (Not IsNetworked)) Then Begin
 
                If IsNetworked And Not IsQWK Then
                  MsgBase^.DoStringLn (#1'QSRC ' + PacketID);
+                 // ^^ needs to change to UserRecord.Handle
 
                MsgBase^.WriteMsg;
 
@@ -704,16 +730,6 @@ Begin
           End Else
             Inc (RepFailed);
         End;
-
-        MsgBase^.CloseMsgBase;
-
-        Dispose (MsgBase, Done);
-      End Else Begin
-        Inc (RepFailed);
-
-        For Count1 := 1 to Chunks Do
-          DataFile.ReadBlock (QwkBlock[1], 128);
-      End;
     End Else Begin
       Inc (RepFailed);
 
@@ -723,6 +739,11 @@ Begin
   End;
 
   DataFile.Free;
+
+  If MsgBase <> NIL Then Begin
+    MsgBase^.CloseMsgBase;
+    Dispose (MsgBase, Done);
+  End;
 
   Assign (ExtFile, FileFind(WorkPath + 'todoor.ext'));
   {$I-} Reset (ExtFile); {$I+}
