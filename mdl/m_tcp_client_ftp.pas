@@ -5,11 +5,15 @@ Unit m_Tcp_Client_FTP;
 Interface
 
 Uses
-  SysUtils,  // replace wordrec and remove
   m_io_Sockets,
   m_Tcp_Client;
 
 Type
+  WordRec = Record
+    Lo : Byte;
+    Hi : Byte;
+  End;
+
   TFTPClient = Class(TTCPClient)
     DataPort   : Word;
     DataIP     : String;
@@ -56,8 +60,6 @@ Var
 Begin
   Result := False;
 
-  WriteLn ('DEBUG OPEN DATA 1');
-
   If DataSocket <> NIL Then Begin
     DataSocket.Free;
     DataSocket := NIL;
@@ -73,22 +75,14 @@ Begin
       Exit;
     End;
   End Else Begin
-    WriteLn ('DEBUG OPEN DATA 2');
-
     WaitSock := TIOSocket.Create;
 
     WaitSock.FTelnetServer := False;
     WaitSock.FTelnetClient := False;
 
-    WriteLn ('DEBUG OPEN DATA 3');
-
     WaitSock.WaitInit(NetInterface, DataPort);
 
-    WriteLn ('DEBUG OPEN DATA 4');
-
     DataSocket := WaitSock.WaitConnection(10000);
-
-    WriteLn ('DEBUG OPEN DATA 5');
 
     WaitSock.Free;
 
@@ -174,19 +168,13 @@ Begin
 
   If Not FileExist(FileName) Then Exit;
 
-  WriteLn ('DEBUG SendFile Passive ', Passive, ' Filename ', FileName);
-
   SetPassive(Passive);
-
-  WriteLn ('DEBUG SETPASSIVE()');
 
   Client.WriteLine ('STOR ' + JustFile(FileName));
 
   OK := OpenDataSession;
 
   If OK and (GetResponse = 150) Then Begin
-    WriteLn ('DEBUG BEGIN SEND FILE');
-
     Assign (F, FileName);
 
     If ioReset(F, 1, fmRWDN) Then Begin
@@ -252,7 +240,10 @@ Begin
 
     Result := GetResponse = 226;
   End Else Begin
-    WriteLn ('DEBUG unable to open data session, receive aborted');
+    If IsPassive Then
+      WriteLn ('DEBUG unable to connect to FTP server for data session')
+    Else
+      WriteLn ('DEBUG unable to establish data session on port ', DataPort);
 
     CloseDataSession;
   End;

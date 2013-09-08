@@ -4,8 +4,12 @@ Unit m_TCP_Client;
 
 Interface
 
+{.$DEFINE USESTRINGLIST}
+
 Uses
-  Classes,
+  {$IFDEF USESTRINGLIST}
+    Classes,
+  {$ENDIF}
   m_Strings,
   m_IO_Sockets;
 
@@ -14,7 +18,9 @@ Type
     Client       : TIOSocket;
     ResponseType : Integer;
     ResponseStr  : String;
-    ResponseData : TStringList;
+    {$IFDEF USESTRINGLIST}
+      ResponseData : TStringList;
+    {$ENDIF}
     NetInterface : String;
 
     Constructor Create      (NetI: String); Virtual;
@@ -32,13 +38,19 @@ Begin
 
   Client       := NIL;
   NetInterface := NetI;
-  ResponseData := TStringList.Create;
+
+  {$IFDEF USESTRINGLIST}
+    ResponseData := TStringList.Create;
+  {$ENDIF}
 End;
 
 Destructor TTCPClient.Destroy;
 Begin
   Client.Free;
-  ResponseData.Free;
+
+  {$IFDEF USESTRINGLIST}
+    ResponseData.Free;
+  {$ENDIF}
 
   Inherited Destroy;
 End;
@@ -80,7 +92,9 @@ Begin
       Result       := ResponseType;
 
       If ResponseStr[4] = '-' Then Begin
-        ResponseData.Clear;
+        {$IFDEF USESTRINGLIST}
+          ResponseData.Clear;
+        {$ENDIF}
 
         Repeat
           Res := Client.ReadLine(Str);
@@ -88,8 +102,10 @@ Begin
           If Res < 0 Then
             Break;
 
-          If Res > 0 Then
-            ResponseData.Add(Str);
+          {$IFDEF USESTRINGLIST}
+            If Res > 0 Then
+              ResponseData.Add(Str);
+          {$ENDIF}
         Until Copy(Str, 1, 4) = strI2S(ResponseType) + ' ';
       End;
     End;
