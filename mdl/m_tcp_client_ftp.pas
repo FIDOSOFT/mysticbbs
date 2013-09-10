@@ -5,6 +5,7 @@ Unit m_Tcp_Client_FTP;
 Interface
 
 Uses
+//  SysUtils, //wordrec
   m_io_Sockets,
   m_Tcp_Client;
 
@@ -194,10 +195,10 @@ Begin
 
     Result := GetResponse = 226;
   End Else Begin
-    If IsPassive Then
-      WriteLn ('DEBUG unable to connect to FTP server for data session')
-    Else
-      WriteLn ('DEBUG unable to establish data session on port ', DataPort);
+//    If IsPassive Then
+//      WriteLn ('DEBUG unable to connect to FTP server for data session')
+//    Else
+//      WriteLn ('DEBUG unable to establish data session on port ', DataPort);
 
     CloseDataSession;
   End;
@@ -240,10 +241,10 @@ Begin
 
     Result := GetResponse = 226;
   End Else Begin
-    If IsPassive Then
-      WriteLn ('DEBUG unable to connect to FTP server for data session')
-    Else
-      WriteLn ('DEBUG unable to establish data session on port ', DataPort);
+//    If IsPassive Then
+//      WriteLn ('DEBUG unable to connect to FTP server for data session')
+//    Else
+//      WriteLn ('DEBUG unable to establish data session on port ', DataPort);
 
     CloseDataSession;
   End;
