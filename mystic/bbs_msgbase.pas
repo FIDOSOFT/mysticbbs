@@ -4666,7 +4666,13 @@ Begin
 
         If TempBase.NetType > 0 Then Begin
           MsgBase^.DoStringLn (#13 + '--- ' + mysSoftwareID + '/QWK v' + mysVersion + ' (' + OSID + ')');
-          MsgBase^.DoStringLn (' * Origin: ' + ResolveOrigin(TempBase) + ' (' + strAddr2Str(MsgBase^.GetOrigAddr) + ')');
+
+          Line := ' * Origin: ' + ResolveOrigin(MBase);
+
+          If MBase.QwkNetID = 0 Then
+            Line := Line + ' (' + strAddr2Str(MsgBase^.GetOrigAddr) + ')';
+
+          MsgBase^.DoStringLn (Line);
         End;
 
         If Not IsControl Then Begin
@@ -4717,18 +4723,3 @@ Begin
 End;
 
 End.
-
-// need one of these for the file list compiler now too which MAYBE can be
-// used in MUTIL also.  lets template and build that out first.. then...
-// create and upload QWK/REP packets without relying on BBS specific stuff
-
-Type
-  TMsgBaseQWK = Class
-    User     : RecUser;
-    Extended : Boolean;
-
-    Constructor Create (UD: RecUser; Ext: Boolean);
-    Function    CreatePacket : Boolean;
-    Function    ProcessReply (bbsid, temppath, usernum, var user, forcefrom ): Boolean;
-    Destructor  Destroy; Override;
-  End;

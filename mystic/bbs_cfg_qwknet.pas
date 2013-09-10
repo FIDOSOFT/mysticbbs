@@ -37,7 +37,7 @@ Begin
   Form.AddTog  ('M', ' Member Type',  19,  8, 34,  8, 13, 4, 0, 1, 'HUB Node', @QwkNet.MemberType, Topic + 'Are you a HUB or a Node of this network?');
   Form.AddStr  ('H', ' FTP Host',     22,  9, 34,  9, 10, 30, 60, @QwkNet.HostName, Topic + 'Hostname:Port of HUB (if you are a node)');
   Form.AddStr  ('L', ' Login',        25, 10, 34, 10,  7, 20, 20, @QwkNet.Login, Topic + 'FTP login');
-  Form.AddPass ('P', ' Password',     22, 11, 34, 11, 10, 20, 20, @QwkNet.Password, Topic + 'FTP password');
+  Form.AddMask ('P', ' Password',     22, 11, 34, 11, 10, 20, 20, @QwkNet.Password, Topic + 'FTP password');
   Form.AddBol  ('U', ' Use Passive',  19, 12, 34, 12, 13, 3, @QwkNet.UsePassive, Topic + 'Use passive FTP with HUB');
   Form.AddStr  ('I', ' Packet ID',    21, 13, 34, 13, 11, 20, 20, @QwkNet.PacketID, Topic + 'QWK packet name to use with HUB');
   Form.AddCaps ('A', ' Archive Type', 18, 14, 34, 14, 14,  4,  4, @QwkNet.ArcType, Topic + 'Archive type used for packets');

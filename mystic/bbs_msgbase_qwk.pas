@@ -78,6 +78,7 @@ Type
     Procedure   WriteCONTROLDAT;
     Function    WriteMSGDAT (IsRep: Boolean) : LongInt;
     Procedure   UpdateLastReadPointers;
+    Procedure   ResetSentFlagByQLR;
     Procedure   ExportPacket (IsRep: Boolean);
     Function    ImportPacket (IsQwk: Boolean) : Boolean;
   End;
@@ -277,8 +278,9 @@ Var
   End;
 
 Var
-  TempStr : String;
-  SkipMsg : Boolean;
+  TempStr  : String;
+  SkipMsg  : Boolean;
+  FirstMsg : LongInt = 0;
 Begin
   MsgAdded := 0;
 
@@ -312,6 +314,9 @@ Begin
       End;
 
     If IsRep Then Begin
+      If FirstMsg = 0 Then
+        FirstMsg := MsgBase^.GetMsgNum;
+
       MsgBase^.SetSent(True);
       MsgBase^.ReWriteHdr;
     End;
@@ -331,7 +336,7 @@ Begin
       If TempStr[1] = #1 Then Begin
         // Do not export msgs to a node if the msg came from the node
         If IsNetworked And Not IsRep And (Copy(TempStr, 2, 4) = 'QSRC') Then
-          SkipMsg := strUpper(strWordGet(2, TempStr, ' ')) = strUpper(PacketID);
+          SkipMsg := strUpper(strWordGet(2, TempStr, ' ')) = strUpper(UserRecord.Handle);
 
         Continue;
       End;
@@ -353,9 +358,12 @@ Begin
     Else
       Chunks := Chunks DIV 128 + 2;
 
-    Header :=
-      ' ' +
-      strPadR(strI2S(MsgBase^.GetMsgNum), 7, ' ') +
+    If IsNetworked Then
+      Header := ' ' + strPadR(strI2S(MBase.QwkConfID), 7, ' ')
+    Else
+      Header := ' ' + strPadR(strI2S(MsgBase^.GetMsgNum), 7, ' ');
+
+    Header := Header +
       MsgBase^.GetDate +
       MsgBase^.GetTime +
       strPadR(MsgBase^.GetTo, 25, ' ') +
@@ -434,7 +442,46 @@ Begin
 
   Dispose (MsgBase, Done);
 
-  Result := LastRead;
+  If IsRep Then
+    Result := FirstMsg
+  Else
+    Result := LastRead;
+End;
+
+Procedure TQWKEngine.ResetSentFlagByQLR;
+Begin
+  Reset   (QwkLRFile);
+  ioReset (MBaseFile, SizeOf(RecMessageBase), fmRWDN);
+
+  While Not Eof(QwkLRFile) Do Begin
+    Read (QwkLRFile, QwkLR);
+
+    If (QwkLR.Pos > 0) and (ioSeek(MBaseFile, QwkLR.Base - 1)) Then Begin
+      ioRead (MBaseFile, MBase);
+
+      If MBaseOpenCreate (MsgBase, MBase, WorkPath) Then Begin
+        MsgBase^.SeekFirst (QwkLR.Pos);
+
+        While MsgBase^.SeekFound Do Begin
+          MsgBase^.MsgStartUp;
+
+          If MsgBase^.IsSent Then Begin
+            MsgBase^.SetSent(False);
+            MsgBase^.ReWriteHdr;
+          End;
+
+          MsgBase^.SeekNext;
+        End;
+
+        MsgBase^.CloseMsgBase;
+
+        Dispose(MsgBase, Done);
+      End;
+    End;
+  End;
+
+  Close (QwkLRFile);
+  Close (MBaseFile);
 End;
 
 Procedure TQWKEngine.UpdateLastReadPointers;
@@ -451,9 +498,9 @@ Begin
       If MBaseOpenCreate (MsgBase, MBase, WorkPath) Then Begin
         MsgBase^.SetLastRead (UserNumber, QwkLR.Pos);
         MsgBase^.CloseMsgBase;
-      End;
 
-      Dispose(MsgBase, Done);
+        Dispose(MsgBase, Done);
+      End;
     End;
   End;
 
@@ -714,19 +761,14 @@ Begin
           End;
 
         If Not IsControl Then Begin
-          // ISQWK = a node importing from HUB
           If (IsQwk) or (HasAccess(Self, MBase.PostACS)) Then Begin
 
-//          If ((IsQwk) or (HasAccess(Self, MBase.PostACS))) and
-//             ((IsNetworked And (UserRecord.QwkNetwork = MBase.QwkNetID)) or (Not IsNetworked)) Then Begin
+            If IsNetworked And Not IsQWK Then
+              MsgBase^.DoStringLn (#1'QSRC ' + UserRecord.Handle);
 
-               If IsNetworked And Not IsQWK Then
-                 MsgBase^.DoStringLn (#1'QSRC ' + PacketID);
-                 // ^^ needs to change to UserRecord.Handle
+            MsgBase^.WriteMsg;
 
-               MsgBase^.WriteMsg;
-
-               Inc (RepOK);   // must increase user and history posts by repOK
+            Inc (RepOK);   // must increase user and history posts by repOK
           End Else
             Inc (RepFailed);
         End;

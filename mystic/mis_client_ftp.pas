@@ -54,7 +54,6 @@ Type
     Function    CheckFileLimits (TempFBase: RecFileBase; FDir: RecFileList) : Byte;
     Function    ValidDirectory  (TempBase: RecFileBase) : Boolean;
     Function    FindDirectory   (Var TempBase: RecFileBase) : LongInt;
-    Function    GetQWKName      : String;
     Function    GetFTPDate      (DD: LongInt) : String;
     Function    SendFile        (Str: String) : Boolean;
     Function    RecvFile        (Str: String; IsAppend: Boolean) : Boolean;
@@ -419,18 +418,6 @@ Begin
     Result := Result + FormatDate(TempDT, ' YYYY');
 End;
 
-Function TFTPServer.GetQWKName : String;
-Begin
-  Result := '';
-
-  If LoggedIn Then Begin  // and allow qwk via ftp
-    If (User.Flags AND UserQwkNetwork <> 0) Then
-      Result := strLower(User.Handle)
-    Else
-      Result := strLower(BbsConfig.QwkBBSID);
-  End;
-End;
-
 Function TFTPServer.RecvFile (Str: String; IsAppend: Boolean) : Boolean;
 Var
   F   : File;
@@ -537,7 +524,7 @@ Begin
   // ftp instance.  before that we need to push a unique ID to this
   // session.
 
-  QWK := TQwkEngine.Create(TempPath, GetQWKName, UserPos, User);
+  QWK := TQwkEngine.Create(TempPath, bbsCfg.QwkBBSID, UserPos, User);
 
   QWK.HasAccess   := @QWKHasAccess;
   QWK.IsNetworked := (User.Flags AND UserQWKNetwork <> 0);
@@ -545,9 +532,10 @@ Begin
 
   QWK.ExportPacket(False);
 
-  ExecuteArchive (TempPath, TempPath + GetQWKName + '.qwk', User.Archive, TempPath + '*', 1);
+  Server.Status  (ProcessID, 'Exported ' + strI2S(QWK.TotalMessages) + ' msgs@' + bbsCfg.QwkBBSID + '.qwk');
+  ExecuteArchive (TempPath, TempPath + bbsCfg.QwkBBSID + '.qwk', User.Archive, TempPath + '*', 1);
 
-  If SendFile (TempPath + GetQWKName + '.qwk') Then
+  If SendFile (TempPath + bbsCfg.QwkBBSID + '.qwk') Then
     QWK.UpdateLastReadPointers;
 
   QWK.Free;
@@ -560,19 +548,21 @@ Var
   QWK : TQwkEngine;
 Begin
   // need to change temppath to a unique directory created for this
-  // ftp instance.  before that we need to push a unique ID to this
-  // session.
+  // ftp instance.  we can use the new session ID for this
 
-  RecvFile       (TempPath + GetQWKName + '.rep', False);
-  ExecuteArchive (TempPath, TempPath + GetQWKName + '.rep', User.Archive, '*', 2);
+  RecvFile       (TempPath + bbsCfg.QwkBBSID + '.rep', False);
+  ExecuteArchive (TempPath, TempPath + bbsCfg.QwkBBSID + '.rep', User.Archive, '*', 2);
 
-  QWK := TQwkEngine.Create(TempPath, GetQWKName, UserPos, User);
+  QWK := TQwkEngine.Create(TempPath, bbsCfg.QwkBBSID, UserPos, User);
 
   QWK.HasAccess   := @QWKHasAccess;
   QWK.IsNetworked := (User.Flags AND UserQWKNetwork <> 0);
   QWK.IsExtended  := User.QwkExtended;
 
   QWK.ImportPacket(False);
+
+  Server.Status(ProcessID, 'Imported ' + strI2S(QWK.RepOK) + ' msgs, ' + strI2S(QWK.RepFailed) + ' failed');
+
   QWK.Free;
 
   // update user stats posts and bbs history if not networked
@@ -660,6 +650,7 @@ Begin
     Client.WriteLine(re_PassiveOK + '(' + strReplace(Client.HostIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo) + ').');
 
     IsPassive := True;
+(*
     WaitSock  := TIOSocket.Create;
 
     WaitSock.FTelnetServer := False;
@@ -682,6 +673,7 @@ Begin
     End;
 
     WaitSock.Free;
+*)
   End Else
     Client.WriteLine(re_BadCommand);
 End;
@@ -798,7 +790,7 @@ Begin
       {$IFDEF FTPDEBUG} LOG('Back from data session'); {$ENDIF}
 
       // if qwlbyFTP.acs then
-      DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + GetQWKName + '.qwk');
+      DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + bbsCfg.QwkBBSID + '.qwk');
 
       FBaseFile := TFileBuffer.Create(FileBufSize);
 
@@ -844,7 +836,7 @@ Begin
 
     DirFile.Free;
 
-    DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + GetQWKName + '.qwk');
+    DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + bbsCfg.QwkBBSID + '.qwk');
 
     CloseDataSession;
   End Else
@@ -871,7 +863,7 @@ Begin
     Exit;
   End;
 
-  If strUpper(Data) = strUpper(GetQWKName + '.rep') Then Begin
+  If strUpper(Data) = strUpper(bbsCfg.QwkBBSID + '.rep') Then Begin
     QWKProcessREP;
 
     Exit;
@@ -1014,7 +1006,7 @@ Var
 Begin
   If LoggedIn Then Begin
 
-    If strUpper(Data) = strUpper(GetQWKName + '.qwk') Then Begin
+    If strUpper(Data) = strUpper(bbsCfg.QwkBBSID + '.qwk') Then Begin
       QWKCreatePacket;
 
       Exit;

@@ -3647,11 +3647,6 @@
  + Mystic's QWK system no longer forces all upper case user names and
    subjects.
 
- + New MCI code QE returns the user's QWKE packet setting (Yes or No).
-
- + New GE menu command option: 33.  Toggles users QWKE packet setting.  The
-   default install now includes updated qwk.mnu and qwknetwork.mnu
-
  + A new temporary QWK mailer has been included called QWKPOLL.  This will
    allow you to function as a node of a QWK network.  It will connect via FTP
    to your network hub, send them a REP packet of new messages, download a
@@ -3662,6 +3657,10 @@
    implementation also allows you to be a part of multiple QWK networks and
    even HUB them in addition to being members of several - all with separate
    access management.
+
+      NOTE: All setups require you to have defined your QWK packet ID in
+      the Local QWK settings.  This is the filename of the QWK packets
+      generated from your BBS or uploaded to your BBS.
 
       SETTING UP AS A NODE OF A QWK NETWORK
       =====================================
