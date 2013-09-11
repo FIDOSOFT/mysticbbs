@@ -297,7 +297,7 @@ Begin
   If RxBufSize > 255 Then
     SZ := 255
   Else
-    SZ := RxBufSize - 1;
+    SZ := RxBufSize;
 
   Move (RxBuffer[1], Result[1], SZ);
 
@@ -312,6 +312,8 @@ Begin
 
   Client.BufWriteStr(Char(Hi(DataSize)) + Char(Lo(DataSize)) + Char(CmdType) + CmdData + #0);
   Client.BufFlush;
+
+  StatusUpdate (Owner, 'S ' + BinkCmdStr[CmdType] + ' ' + CmdData);
 
 //  WriteLn ('    S ' + BinkCmdStr[CmdType] + ' ' + CmdData);
 //  waitms(1000);
@@ -369,6 +371,10 @@ Begin
       NeedHeader := False;
       HaveHeader := True;
     End;
+
+    If RxFrameType = Command Then
+      StatusUpdate (Owner, 'R ' + BinkCmdStr[RxCommand] + ' ' + GetDataStr);
+
 
 //    Case RxFrameType of
 //      Command : If (RxCommand = M_NUL) or (RxCommand = M_ERR) Then
@@ -517,7 +523,7 @@ Begin
                         End;
 
                         If AuthState <> AuthOK Then
-                          StatusUpdate(Owner, 'Auth failed');
+                          StatusUpdate(Owner, 'Authorization failed');
                       End;
       WaitPwdOK     : If HaveHeader Then Begin
                         If RxCommand <> M_OK Then
@@ -637,6 +643,15 @@ Begin
     Case TxState of
       TxGetEOF   : Begin
                      If HaveHeader Then
+                       If RxCommand = M_SKIP Then Begin
+                         {$I-} Close (OutFile); {$I+}
+
+                         If IoResult <> 0 Then;
+
+                         HaveHeader := False;
+                         NeedHeader := True;
+                         TxState    := TxNextFile;
+                       End Else
                        If RxCommand = M_GOT Then Begin
                          FileList.QData[FileList.QPos].Status := QueueSuccess;
 
@@ -666,6 +681,13 @@ Begin
                      TxState := TxDone;
                    End;
       TxSendData : Begin
+                     If HaveHeader And (RxCommand = M_SKIP) Then Begin
+                       Close (OutFile);
+
+                       TxState    := TxNextFile;
+                       HaveHeader := False;
+                       NeedHeader := True;
+                     End Else
                      If HaveHeader And (RxCommand = M_GET) Then Begin
                        Str := strWordGet(4, GetDataStr, ' ');
 

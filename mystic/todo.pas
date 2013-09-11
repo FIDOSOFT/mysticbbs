@@ -42,6 +42,8 @@ BUGS AND POSSIBLE ISSUES
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
+- ability when editing a posted message to be able to toggle the Private flag
+  if the base is Pub/Priv
 - toutput on unix should detect XTERM settings for window size and restore
   them on exit.
 - NODELIST copy function (process nodelist directory and copy+copy to data)

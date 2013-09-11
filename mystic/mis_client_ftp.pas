@@ -535,7 +535,9 @@ Begin
   Server.Status  (ProcessID, 'Exported ' + strI2S(QWK.TotalMessages) + ' msgs@' + bbsCfg.QwkBBSID + '.qwk');
   ExecuteArchive (TempPath, TempPath + bbsCfg.QwkBBSID + '.qwk', User.Archive, TempPath + '*', 1);
 
-  If SendFile (TempPath + bbsCfg.QwkBBSID + '.qwk') Then
+  Result := SendFile (TempPath + bbsCfg.QwkBBSID + '.qwk');
+
+  If Result Then
     QWK.UpdateLastReadPointers;
 
   QWK.Free;
@@ -630,8 +632,8 @@ Begin
 End;
 
 Procedure TFTPServer.cmdPASV;
-Var
-  WaitSock : TIOSocket;
+//Var
+//  WaitSock : TIOSocket;
 Begin
   If LoggedIn Then Begin
     If Not bbsConfig.inetFTPPassive Then Begin
