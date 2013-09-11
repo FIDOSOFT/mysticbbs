@@ -426,7 +426,7 @@ Begin
 
                         MD5Challenge := Digest2String(Str);
 
-                        SendFrame (M_NUL, 'OPT MD5-' + MD5Challenge);
+                        SendFrame (M_NUL, 'OPT CRAM-MD5-' + MD5Challenge);
 
                         AuthState := SendWelcome;
                       End;
