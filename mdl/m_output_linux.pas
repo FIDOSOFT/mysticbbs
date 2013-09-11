@@ -1,6 +1,6 @@
-{$I M_OPS.PAS}
-
 Unit m_Output_Linux;
+
+{$I M_OPS.PAS}
 
 Interface
 
@@ -129,6 +129,7 @@ Begin
 //  RestoreRawSettings(SavedTerm);
 
   SetWindow  (1, 1, TermXSize, TermYSize, False);
+  CursorXY   (FCursorX, FCursorY);
   SetRawMode (False);
 
   Inherited Destroy;
