@@ -417,6 +417,8 @@ Begin
 
   ProcessStatus ('Total |15' + strI2S(TotalEcho) + ' |07echo |15' + strI2S(TotalNet) + ' |07net |15' + strI2S(TotalDupes) + ' |07dupe', True);
   ProcessResult (rDONE, True);
+
+  FileErase (bbsCfg.SemaPath + fn_SemFileEchoIn);
  End;
 
 End.

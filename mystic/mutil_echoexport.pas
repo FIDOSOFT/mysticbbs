@@ -371,6 +371,8 @@ Begin
 
   ProcessStatus ('Total |15' + strI2S(TotalEcho) + ' |07echo |15' + strI2S(TotalNet) + ' |07net', True);
   ProcessResult (rDONE, True);
+
+  FileErase (bbsCfg.SemaPath + fn_SemFileEchoOut);
 End;
 
 End.

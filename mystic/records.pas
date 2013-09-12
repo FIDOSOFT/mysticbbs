@@ -23,7 +23,7 @@
 Const
   mysSoftwareID  = 'Mystic BBS';
   mysCopyYear    = '1997-2013';
-  mysVersion     = '1.10 A37';
+  mysVersion     = '1.10 A38';
   mysDataChanged = '1.10 A11';
   mysCopyNotice  = 'Copyright (C) ' + mysCopyYear + ' By James Coyle';
 
@@ -71,11 +71,13 @@ Const
   mysMaxMenuStack    = 8;
   mysMaxThemeText    = 514;
 
-  fn_SemFileEcho = 'echomail.now';
-  fn_SemFileNews = 'newsmail.now';
-  fn_SemFileNet  = 'netmail.now';
-  fn_tplMsgEdit  = 'ansiedit';
-  fn_tplTextEdit = 'ansitext';
+  fn_SemFileEchoOut = 'echomail.out';
+  fn_SemFileEchoIn  = 'echomail.in';
+  fn_SemFileNews    = 'newsmail.out';
+  fn_SemFileNet     = 'netmail.out';
+  fn_SemFileQwk     = 'qwkmail.out';
+  fn_tplMsgEdit     = 'ansiedit';
+  fn_tplTextEdit    = 'ansitext';
 
   ColumnValue : Array[0..1] of Byte = (80, 40);
 

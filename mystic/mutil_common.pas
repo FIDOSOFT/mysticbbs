@@ -356,7 +356,10 @@ Begin
     Msg^.SetOrig(bbsCfg.NetAddress[mArea.NetAddr]);
 
     Case mArea.NetType of
-      1 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEcho);
+      1 : If mArea.QwkConfID = 0 Then
+            Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEchoOut)
+          Else
+            Assign (SemFile, bbsCfg.SemaPath + fn_SemFileQwk);
       2 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNews);
       3 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNet);
     End;

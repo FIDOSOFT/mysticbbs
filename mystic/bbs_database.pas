@@ -398,7 +398,10 @@ Begin
     Msg^.SetOrig(bbsCfg.NetAddress[TempBase.NetAddr]);
 
     Case TempBase.NetType of
-      1 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEcho);
+      1 : If TempBase.QwkConfID = 0 Then
+            Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEchoOut)
+          Else
+            Assign (SemFile, bbsCfg.SemaPath + fn_SemFileQwk);
       2 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNews);
       3 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNet);
     End;

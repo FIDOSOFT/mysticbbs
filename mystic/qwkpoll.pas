@@ -229,7 +229,7 @@ Begin
   If QWK.TotalMessages > 0 Then
     ExecuteArchive (TempPath, Path + QwkNet.PacketID + '.rep', QwkNet.ArcType, TempPath + '*', 1);
 
-    DirClean (TempPath, '');
+  DirClean (TempPath, '');
 
   WriteLn ('   - Exported ', QWK.TotalMessages, ' messages');
 

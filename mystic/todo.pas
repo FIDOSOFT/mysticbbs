@@ -7,6 +7,7 @@ design elements/issues.
 
 BUGS AND POSSIBLE ISSUES
 ========================
+- shift+c key in OSX does not work without shiftlock (rudi)?
 - need to add QWK network ID to all message bases (remove QWK net flag?)
 - need to add QWK networking editor (type: hub, or node)
 - need to add QWK network link back to networks defined in editor for each
@@ -42,11 +43,9 @@ BUGS AND POSSIBLE ISSUES
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
+- auto create qwk network message bases?
 - ability when editing a posted message to be able to toggle the Private flag
   if the base is Pub/Priv
-- toutput on unix should detect XTERM settings for window size and restore
-  them on exit.
-- NODELIST copy function (process nodelist directory and copy+copy to data)
 - when editing an already posted message with reference linkage, export the
   quote data from the original message...
 - in file listing jump to files by typing the file number
@@ -57,7 +56,8 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - add QWKNet base type or no?  leaning towards no because it might limit
   hybrid FIDO/QWK networks which maybe we can do currently?  need to think
   about the SENT flag and how we could determine which type it was circulated
-  to.
+  to.  most likely would have to do external pointers for each tosser and
+  just set the SENT flag when its first encountered
 - make tiosocket buffer size dynamic.  increase data sockets in ftp to 32kb
 - all display files to search for .hlp before ANS?
 - fix END in lightbar file lists so it doesn't suck.
@@ -71,7 +71,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - when mutil is tossing a packet and auto creates an area figure out if there
   can be a way to automatically create the uplink back to the originating
   node.
-- expand max filename size for 70 to 255 chars?
+- expand max filename size for 70 to 255 chars? do below first...
 - make file list use buffered IO class for reading .dir files (8k)
 - global user editor for user flags, def protocol, etc etc
 - ability to configure auto signatures (2 of them) one for handle and one
@@ -91,16 +91,15 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
      - Test with file description editor.
 - Strip pipe colors/ANSI from message option?
 - allow ANSI option for msg bases?
+- revamp file directory listing editor to use new ansi classes
 - AREAS.BBS import?
 - PGUP/DOWN moves bases in message base editor?
 - AreaFix
 - Echomail export saves last scanned pointers
-- Echomail export support for netmail routing
 - FileFix / TIC
 ! Use NetReply in RecMB also Reply to another base?
-- QWK put/get per individual users via FTP
 - EXCLUDE from all files list. important.
-- Reply to echomail via netmail.
+- Reply to echomail via netmail (this is allowed already using ext reply acs).
 - Amiga .readme and .TIC processing (similar)
 -  ^^ or utility to find .readme in the smae dir and add to file_id.diz if
    it does not exist.
@@ -109,7 +108,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - MUTIL create FILES.BBS in the file base directory
 - MUTILs new DIR import of msg bases could have optional config to reference
   a series of .NA files to get the name/description of bases.
-- QWK via email
+- QWK via email?
 - Blind upload for single file upload (also message upload)
 - Email validation
 - Recode FCHECK into MUTIL, but also add the option to phsyically delete the
@@ -167,7 +166,6 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - BBS email forward to e-mail address
 - Email pasword resets
 - Email verification
-- QWK Networking support internally WHO CAN HELP THIS HAPPEN?
 - MPL trunc/round?
 - Salted MD5, SHA-1 or SHA-256 password encryption?
 - User editor: Reset password/Force change... cannot view PWs

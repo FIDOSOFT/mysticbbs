@@ -3732,3 +3732,29 @@
    screen size upon exit.
 
    <ALPHA 37 RELEASED>
+
+ + Mystic now creates "echomail.in" whenever it receives a new file from an
+   authenticated connection via the BINKP server.
+
+ + The semaphore files named echomail.now, newsmail.now, and netmail.now
+   have all been changed to .out, ie echomail.out, newsmail.out, netmail.out
+   You will need to update any scripts that key off of those files.
+
+ + Mystic now creates "qwkmail.out" whenever new messages have been posted
+   in a base assigned to a QWK network.
+
+ + MUTIL EchoImport function now deletes echomail.in semaphore file after
+   it is done tossing messages.
+
+ + MUTIL EchoExport function now deletes echomail.out semaphore file after it
+   is done exporting messages.
+
+ ! Fixed a problem with the BINKP server and CRAM MD5 authentication.
+
+ ! Fixed a problem with FIDOPOLL and BINKP where a file transfer would appear
+   to get stuck in certain situations when a file was skipped.
+
+ ! Fixed a compatibility issue with the BINKP server when used against a BINKD
+   client.
+
+   <ALPHA 38 RELEASED>

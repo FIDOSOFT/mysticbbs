@@ -696,7 +696,11 @@ Begin
 
     Case TempBase.NetType of
       1 : Begin
-            Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEcho);
+            If TempBase.QwkConfID = 0 Then
+              Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEchoOut)
+            Else
+              Assign (SemFile, bbsCfg.SemaPath + fn_SemFileQwk);
+
             If Session.ExitLevel > 5 Then Session.ExitLevel := 7 Else Session.ExitLevel := 5;
           End;
       2 : Begin
@@ -3878,7 +3882,10 @@ Begin
     Msg^.SetOrig(bbsCfg.NetAddress[mArea.NetAddr]);
 
     Case mArea.NetType of
-      1 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEcho);
+      1 : If mArea.QwkConfID = 0 Then
+            Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEchoOut)
+          Else
+            Assign (SemFile, bbsCfg.SemaPath + fn_SemFileQwk);
       2 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNews);
       3 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNet);
     End;

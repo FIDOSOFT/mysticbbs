@@ -634,7 +634,10 @@ Begin
     MsgBase^.SetMailType(mmtEchoMail);
 
     Case TempBase.NetType of
-      1 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileEcho);
+      1 : If TempBase.QwkConfID = 0 Then
+            Assign (SemFile, bbsConfig.SemaPath + fn_SemFileEchoOut)
+          Else
+            Assign (SemFile, bbsConfig.SemaPath + fn_SemFileQwk);
       2 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileNews);
     End;
 

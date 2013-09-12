@@ -114,6 +114,7 @@ Type
     Password     : String;
     PasswordMD5  : Boolean;
     FileList     : TProtocolQueue;
+    RcvdFiles    : LongInt;
 
     Constructor Create (O: Pointer; Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
     Destructor  Destroy; Override;
@@ -172,6 +173,7 @@ Begin
   Password     := '';
   HaveNode     := False;
   AuthState    := SendWelcome;
+  RcvdFiles    := 0;
 
   If Not IsClient and UseMD5 Then
     AuthState := SendChallenge;
@@ -635,6 +637,8 @@ Begin
                        Close     (InFile);
                        SendFrame (M_GOT, InFN + ' ' + strI2S(InSize) + ' ' + strI2S(InTime));
 
+                       Inc (RcvdFiles);
+
                        RxState := RxWaitFile;
                      End;
                    End;
@@ -863,6 +867,7 @@ Var
   Count   : Integer;
   Address : String;
   Before  : LongInt;
+  F       : File;
 Begin
   Queue := TProtocolQueue.Create;
   BinkP := TBinkP.Create (Server, Client, Queue, False, bbsConfig.inetBINKPTimeOut);
@@ -885,6 +890,12 @@ Begin
 
     BinkP.FileList := Queue;
     BinkP.DoTransfers;
+
+    If BinkP.RcvdFiles > 0 Then Begin
+      Assign  (F, bbsConfig.SemaPath + 'echomail.in');
+      ReWrite (F, 1);
+      Close   (F);
+    End;
   End;
 
   BinkP.Free;
