@@ -851,7 +851,6 @@ Var
   TempBase : RecFileBase;
   BaseFile : File;
   CurDIR   : String;
-  DizFile  : Text;
   Desc     : FileDescBuffer;
   DescSize : Byte;
   Dir      : RecFileList;

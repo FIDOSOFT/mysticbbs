@@ -253,13 +253,15 @@ Begin
   Session.TempPath := bbsCfg.SystemPath + 'temp' + strI2S(Session.NodeNum) + PathChar;
   Session.Pipe     := TPipe.Create(bbsCfg.DataPath, False, Session.NodeNum);
 
+(*
   {$I-}
   MkDir (bbsCfg.SystemPath + 'temp' + strI2S(Session.NodeNum));
   {$I+}
 
   If IoResult <> 0 Then;
-
-  DirClean (Session.TempPath, '');
+*)
+  DirCreate (Session.TempPath);
+  DirClean  (Session.TempPath, '');
 
   Assign (Session.User.UserFile, bbsCfg.DataPath + 'users.dat');
   {$I-} Reset (Session.User.UserFile); {$I+}
@@ -477,10 +479,12 @@ Begin
   Else
     Session.SetTimeLeft(bbsCfg.LoginTime);
 
+(*
   {$IFNDEF UNIX}
     Screen.TextAttr := 7;
     Screen.ClearScreen;
   {$ENDIF}
+*)
 
   {$IFNDEF UNIX}
     UpdateStatusLine(0, '');

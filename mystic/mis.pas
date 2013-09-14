@@ -19,9 +19,9 @@
 //
 // ====================================================================
 
-{$I M_OPS.PAS}
-
 Program MIS;
+
+{$I M_OPS.PAS}
 
 Uses
   {$IFDEF DEBUG}
@@ -204,6 +204,7 @@ Begin
   For Count := 22 DownTo 15 Do Begin
     If Offset > 0 Then Begin
       Dec(Offset);
+
       Console.WriteXY (4, Count, 7, strPadR(FocusPtr.ServerStatus.Strings[Offset], 74, ' '));
     End Else
       Console.WriteXY (4, Count, 7, strPadR(' ', 74, ' '));
