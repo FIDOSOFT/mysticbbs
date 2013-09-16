@@ -172,6 +172,7 @@ Begin
                 strPadL(strI2S(Count), 3, '0') + ' ' +
                 strPadR(TFTPServer(FocusPtr.ClientList[Count - 1]).User.Handle, 31, ' ') + ' ' +
                 strPadL(TFTPServer(FocusPtr.ClientList[Count - 1]).Client.PeerIP, 15, ' '));
+                // this is broken... see the typecast of tftpserver kludge
             End Else
             If Count <= FocusPtr.ClientMax Then
               Console.WriteXY (3, 3 + PosY, Attr, strPadL(strI2S(Count), 3, '0') + strPadR(' Waiting', 48, ' '))

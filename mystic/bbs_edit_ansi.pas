@@ -12,7 +12,7 @@ Const
   fseMaxCutText = 60;
 
   GlyphTypeMax = 10;
-	GlyphTypeStr : Array[1..10] of String[10] = (
+  GlyphTypeStr : Array[1..10] of String[10] = (
     ('ÂÚ¿ÀÙÄ³Ã´Á'),
     ('ËÉ»È¼ÍºÌ¹Ê'),
     ('ÑÕ¸Ô¾Í³ÆµÏ'),

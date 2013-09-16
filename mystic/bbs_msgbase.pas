@@ -156,7 +156,7 @@ Function TMsgBase.NetmailLookup (FromMenu: Boolean; MsgTo, DefAddr: String) : St
     Str : String;
   Begin
     Case ShowType of
-      0  : Str := strAddr2Str(NodeData.Address);
+      0  : Str := Addr2Str(NodeData.Address);
       1,
       2  : If NodeData.Keyword = 'ZONE' Then
              Str := 'ZONE' + strPadL(strI2S(NodeData.Address.Zone), 8, ' ')
@@ -271,18 +271,18 @@ Begin
       Session.io.PromptInfo[7] := MsgTo;
 
       If Session.io.GetYN(Session.GetPrompt(502), True) Then Begin
-        Result := strAddr2Str(NodeData.Address);
+        Result := Addr2Str(NodeData.Address);
 
         Break;
       End;
     End Else
     If (Listed = 0) And Not FromMenu And Not bbsCfg.ForceNodelist Then Begin
-      If strStr2Addr(Result, Addr) Then Begin
-        Session.io.PromptInfo[1] := strAddr2Str(Addr);
+      If Str2Addr(Result, Addr) Then Begin
+        Session.io.PromptInfo[1] := Addr2Str(Addr);
         Session.io.PromptInfo[7] := MsgTo;
 
         If Session.io.GetYN(Session.GetPrompt(502), True) Then Begin
-          Result := strAddr2Str(Addr);
+          Result := Addr2Str(Addr);
 
           Break;
         End;
@@ -496,7 +496,7 @@ Begin
         End;
 
         If ShowPrompt Then
-          Session.io.OutBS(Screen.CursorX, True);
+          Session.io.OutBS(Console.CursorX, True);
 
         Inc (ListPtr);
 
@@ -635,7 +635,7 @@ Var
   A  : SmallInt;
 Begin
   If (MBase.NetType > 0) and (MBase.NetType <> 3) and (MBase.QwkNetID = 0) Then Begin
-    Msg^.DoStringLn (#1 + 'MSGID: ' + strAddr2Str(bbsCfg.NetAddress[MBase.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
+    Msg^.DoStringLn (#1 + 'MSGID: ' + Addr2Str(bbsCfg.NetAddress[MBase.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
 
     If ReplyID <> '' Then
       Msg^.DoStringLn (#1 + 'REPLY: ' + ReplyID);
@@ -667,7 +667,7 @@ Begin
     S := ' * Origin: ' + ResolveOrigin(MBase);
 
     If MBase.QwkNetID = 0 Then
-      S := S + ' (' + strAddr2Str(Msg^.GetOrigAddr) + ')';
+      S := S + ' (' + Addr2Str(Msg^.GetOrigAddr) + ')';
 
     Msg^.DoStringLn (S);
   End;
@@ -1350,9 +1350,9 @@ Begin
   If ReplyBase.NetType = 3 Then Begin
     MsgBase^.GetOrig(Addr);
 
-    TempStr := NetmailLookup(False, ToWho, strAddr2Str(Addr));
+    TempStr := NetmailLookup(False, ToWho, Addr2Str(Addr));
 
-    If Not strStr2Addr (TempStr, Addr) Then Exit;
+    If Not Str2Addr (TempStr, Addr) Then Exit;
   End;
 
   Subj := MsgBase^.GetSubj;
@@ -1512,7 +1512,7 @@ Begin
     If MBase.NetType = 3 Then Begin
       MsgBase^.GetDest(DestAddr);
 
-      Session.io.PromptInfo[1] := Session.io.PromptInfo[1] + ' (' + strAddr2Str(DestAddr) + ')';
+      Session.io.PromptInfo[1] := Session.io.PromptInfo[1] + ' (' + Addr2Str(DestAddr) + ')';
     End;
 
     Session.io.OutFull (Session.GetPrompt(296));
@@ -1526,7 +1526,7 @@ Begin
 
                 Session.io.OutFull (Session.GetPrompt(298));
 
-                If strStr2Addr(Session.io.GetInput(20, 20, 12, strAddr2Str(DestAddr)), DestAddr) Then Begin
+                If Str2Addr(Session.io.GetInput(20, 20, 12, Addr2Str(DestAddr)), DestAddr) Then Begin
                   MsgBase^.SetTo(Temp1);
                   MsgBase^.SetDest(DestAddr)
                 End;
@@ -1869,7 +1869,7 @@ Var
     End;
 
     If (ScanMode = 3) And First Then
-      Session.io.OutBS (Screen.CursorX, True);
+      Session.io.OutBS (Console.CursorX, True);
 
     If Not WereMsgs Then WereMsgs := Res;
 
@@ -1887,14 +1887,14 @@ Var
     If MBase.NetType = 3 Then Begin
       MsgBase^.GetOrig(NetAddr);
 
-      Session.io.PromptInfo[1] := Session.io.PromptInfo[1] + ' (' + strAddr2Str(NetAddr) + ')';
+      Session.io.PromptInfo[1] := Session.io.PromptInfo[1] + ' (' + Addr2Str(NetAddr) + ')';
     End;
 
     Session.io.PromptInfo[2] := MsgBase^.GetTo;
 
     If MBase.NetType = 3 Then Begin
       MsgBase^.GetDest(NetAddr);
-      Session.io.PromptInfo[2] := Session.io.PromptInfo[2] + ' (' + strAddr2Str(NetAddr) + ')';
+      Session.io.PromptInfo[2] := Session.io.PromptInfo[2] + ' (' + Addr2Str(NetAddr) + ')';
     End;
 
     Session.io.PromptInfo[3]  := MsgBase^.GetSubj;
@@ -3087,7 +3087,7 @@ Begin
     If Pos('/ADDR:', strUpper(TempStr)) > 0 Then Begin
       MsgAddr := strReplace(Copy(TempStr, Pos('/ADDR:', strUpper(TempStr)) + 6, Length(TempStr)), '_', ' ');
 
-      If Not strStr2Addr(MsgAddr, DestAddr) Then MsgAddr := '';
+      If Not Str2Addr(MsgAddr, DestAddr) Then MsgAddr := '';
     End;
   End;
 
@@ -3105,7 +3105,7 @@ Begin
       If MsgAddr = '' Then Begin
         MsgAddr := NetmailLookup(False, MsgTo, '');
 
-        If Not strStr2Addr(MsgAddr, DestAddr) Then MsgTo := '';
+        If Not Str2Addr(MsgAddr, DestAddr) Then MsgTo := '';
       End;
   End Else
   If IsPrivate Then Begin
@@ -3422,7 +3422,7 @@ Begin
       GetMessageScan;
 
       If ((Mand) and (MBase.DefNScan = 2)) or ((Not Mand) and (MScan.NewScan > 0)) Then Begin
-        Session.io.OutBS   (Screen.CursorX, True);
+        Session.io.OutBS   (Console.CursorX, True);
         Session.io.OutFull (Session.GetPrompt(130));
         Session.io.BufFlush;
 
@@ -3769,7 +3769,7 @@ Var
     Session.io.PromptInfo[9] := strI2S(Global_YourMsgs);
 
     If ShowScanPrompt Then
-      Session.io.OutBS(Screen.CursorX, True);
+      Session.io.OutBS(Console.CursorX, True);
 
       If Not ShowMessage Then
     If (ShowIfNew And (NewMsgs > 0)) or (ShowIfYou And (YourMsgs > 0)) or (Not ShowIfNew And Not ShowIfYou) Then Begin
@@ -3907,7 +3907,7 @@ Begin
 
   If mArea.NetType > 0 Then Begin
     Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' v' + mysVersion + ' (' + OSID + ')');
-    Msg^.DoStringLn (' * Origin: ' + ResolveOrigin(mArea) + ' (' + strAddr2Str(Msg^.GetOrigAddr) + ')');
+    Msg^.DoStringLn (' * Origin: ' + ResolveOrigin(mArea) + ' (' + Addr2Str(Msg^.GetOrigAddr) + ')');
   End;
 
   Msg^.WriteMsg;
@@ -3948,7 +3948,7 @@ Begin
 
   Str := strWordGet(6, Data, ';');
   If (Str = '') Then Str := '0:0/0';
-  strStr2Addr (Str, mAddr);
+  Str2Addr (Str, mAddr);
 
   If FileExist(bbsCfg.DataPath + mName) Then
     mName := bbsCfg.DataPath + mName
@@ -4388,7 +4388,7 @@ Begin
   MsgBase^.CloseMsgBase;
   Dispose (MsgBase, Done);
 
-  Session.io.OutBS     (Screen.CursorX, True);
+  Session.io.OutBS     (Console.CursorX, True);
   Session.io.OutFullLn (Session.GetPrompt(232));
 
   Result := LastRead;
@@ -4677,7 +4677,7 @@ Begin
           Line := ' * Origin: ' + ResolveOrigin(MBase);
 
           If MBase.QwkNetID = 0 Then
-            Line := Line + ' (' + strAddr2Str(MsgBase^.GetOrigAddr) + ')';
+            Line := Line + ' (' + Addr2Str(MsgBase^.GetOrigAddr) + ')';
 
           MsgBase^.DoStringLn (Line);
         End;

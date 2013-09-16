@@ -158,7 +158,7 @@ Begin
   Form.AddBits ('9', ' Pvt Reply'   , 55, 21, 68, 21, 11, MBPrivReply, @MBase.Flags, Topic + 'Allow private posts in public?');
 
   Repeat
-    WriteXY (19, 15, 113, strPadR(strAddr2Str(bbsCfg.NetAddress[MBase.NetAddr]), 19, ' '));
+    WriteXY (19, 15, 113, strPadR(Addr2Str(bbsCfg.NetAddress[MBase.NetAddr]), 19, ' '));
 
     Links := FileByteSize(MBase.Path + MBase.FileName + '.lnk');
 
@@ -299,7 +299,7 @@ Var
     Form.LoExitChars := #21#27;
 
     Repeat
-      WriteXY (28, 12, 113, strPadR(strAddr2Str(bbsCfg.NetAddress[Global.NetAddr]), 19, ' '));
+      WriteXY (28, 12, 113, strPadR(Addr2Str(bbsCfg.NetAddress[Global.NetAddr]), 19, ' '));
 
       If AddStr <> '' Then
         WriteXY (28, 20, 113, strPadR(AddStr, 12, ' '));
@@ -312,13 +312,13 @@ Var
                 AddIdx := Configuration_EchoMailNodes(False);
 
                 If GetNodeByIndex(AddIdx, EN) Then
-                  AddStr := strAddr2Str(EN.Address);
+                  AddStr := Addr2Str(EN.Address);
               End;
         '8' : Begin
                 DelIdx := Configuration_EchoMailNodes(False);
 
                 If GetNodeByIndex(DelIdx, EN) Then
-                  DelStr := strAddr2Str(EN.Address);
+                  DelStr := Addr2Str(EN.Address);
               End;
         'D' : Global.NetAddr := Configuration_EchoMailAddress(False);
         #21 : Begin
@@ -404,7 +404,7 @@ Var
       If MBase.QwkNetID <> 0 Then
         Addr := 'QwkNet'
       Else
-        Addr := strAddr2Str(bbsCfg.NetAddress[MBase.NetAddr]);
+        Addr := Addr2Str(bbsCfg.NetAddress[MBase.NetAddr]);
 
       List.Add(strPadR(strI2S(FilePos(MBaseFile) - 1), 5, ' ') + '  ' + strPadR(strStripMCI(MBase.Name), 35, ' ') + ' ' + strPadL(Addr, 12, ' '), Tag);
     End;

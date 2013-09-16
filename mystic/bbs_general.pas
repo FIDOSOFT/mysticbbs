@@ -498,28 +498,28 @@ Procedure ShowLastCallers;
 Begin
   Session.io.OutFullLn (Session.GetPrompt(141));
 
-  Reset (LastOnFile);
+  Reset (Session.LastOnFile);
 
-  While Not Eof(LastOnFile) Do Begin
-    Read (LastOnFile, LastOn);
+  While Not Eof(Session.LastOnFile) Do Begin
+    Read (Session.LastOnFile, Session.LastOn);
 
-    Session.io.PromptInfo[1]  := LastOn.Handle;
-    Session.io.PromptInfo[2]  := strI2S(LastOn.Node);
-    Session.io.PromptInfo[3]  := LastOn.City;
-    Session.io.PromptInfo[4]  := DateDos2Str(LastOn.DateTime, Session.User.ThisUser.DateType);
-    Session.io.PromptInfo[5]  := TimeDos2Str(LastOn.DateTime, 1);
-    Session.io.PromptInfo[7]  := strI2S(LastOn.CallNum);
-    Session.io.PromptInfo[8]  := LastOn.Address;
-    Session.io.PromptInfo[9]  := LastOn.UserInfo;
-    Session.io.PromptInfo[10] := LastOn.EmailAddr;
-    Session.io.PromptInfo[11] := LastOn.OptionData[1];
-    Session.io.PromptInfo[12] := LastOn.OptionData[2];
-    Session.io.PromptInfo[13] := LastOn.OptionData[3];
+    Session.io.PromptInfo[1]  := Session.LastOn.Handle;
+    Session.io.PromptInfo[2]  := strI2S(Session.LastOn.Node);
+    Session.io.PromptInfo[3]  := Session.LastOn.City;
+    Session.io.PromptInfo[4]  := DateDos2Str(Session.LastOn.DateTime, Session.User.ThisUser.DateType);
+    Session.io.PromptInfo[5]  := TimeDos2Str(Session.LastOn.DateTime, 1);
+    Session.io.PromptInfo[7]  := strI2S(Session.LastOn.CallNum);
+    Session.io.PromptInfo[8]  := Session.LastOn.Address;
+    Session.io.PromptInfo[9]  := Session.LastOn.UserInfo;
+    Session.io.PromptInfo[10] := Session.LastOn.EmailAddr;
+    Session.io.PromptInfo[11] := Session.LastOn.OptionData[1];
+    Session.io.PromptInfo[12] := Session.LastOn.OptionData[2];
+    Session.io.PromptInfo[13] := Session.LastOn.OptionData[3];
 
     Session.io.OutFullLn (Session.GetPrompt(142));
   End;
 
-  Close (LastOnFile);
+  Close (Session.LastOnFile);
 
   Session.io.OutFull (Session.GetPrompt(143));
 End;
@@ -1524,9 +1524,9 @@ Begin
 
       MessageBeep(0);
 
-      If Input.KeyPressed Then
-        If Input.ReadKey = #0 Then Begin
-          Case Input.ReadKey of
+      If Keyboard.KeyPressed Then
+        If Keyboard.ReadKey = #0 Then Begin
+          Case Keyboard.ReadKey of
             #31 : OpenChat(True);
             #46 : OpenChat(False);
           End;
@@ -1538,7 +1538,7 @@ Begin
     End;
   End;
 
-  UpdateStatusLine (StatusPtr, '');
+  UpdateStatusLine (Session.StatusPtr, '');
 
   Session.io.OutFull (Session.GetPrompt(28));
 

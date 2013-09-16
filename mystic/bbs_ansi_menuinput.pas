@@ -34,7 +34,7 @@ Implementation
 
 Uses
   bbs_Core,
-  bbs_Common,
+  bbs_DataBase,
   bbs_IO;
 
 Constructor TAnsiMenuInput.Create;
@@ -179,7 +179,7 @@ Var
     WriteXY  (X, Y, Attr, T);
     WriteXY  (X + Length(T), Y, FillAttr, strRep(FillChar, Field - Length(T)));
 
-    Session.io.AnsiGotoXY (X + CurPos - 1, Screen.CursorY);
+    Session.io.AnsiGotoXY (X + CurPos - 1, Console.CursorY);
   End;
 
   Procedure ReDrawPart;
@@ -254,7 +254,7 @@ Begin
                  Inc (CurPos);
                  Inc (StrPos);
 
-                 Session.io.AnsiGotoXY (Screen.CursorX + 1, Screen.CursorY);
+                 Session.io.AnsiGotoXY (Console.CursorX + 1, Console.CursorY);
               End;
         #75 : If StrPos > 1 Then Begin
                 If CurPos = 1 Then ScrollLeft;
@@ -262,7 +262,7 @@ Begin
                 Dec (StrPos);
                 Dec (CurPos);
 
-                Session.io.AnsiGotoXY (Screen.CursorX - 1, Screen.CursorY);
+                Session.io.AnsiGotoXY (Console.CursorX - 1, Console.CursorY);
               End;
         #71 : If StrPos > 1 Then Begin
                 StrPos := 1;
@@ -303,7 +303,7 @@ Begin
                 If CurPos = 1 Then
                   ScrollLeft
                 Else Begin
-                  Session.io.AnsiMoveX(Screen.CursorX - 1);
+                  Session.io.AnsiMoveX(Console.CursorX - 1);
 
                   Dec (CurPos);
 

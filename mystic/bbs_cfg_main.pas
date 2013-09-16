@@ -36,7 +36,7 @@ Procedure Configuration_ExecuteEditor (Mode: Char);
 Var
   TmpImage : TConsoleImageRec;
 Begin
-  Screen.GetScreenImage (1, 1, 79, 24, TmpImage);
+  Console.GetScreenImage (1, 1, 79, 24, TmpImage);
 
   Case Mode of
     'A' : Configuration_ArchiveEditor;
@@ -98,7 +98,7 @@ Var
   Begin
     Len := Length(Text) + 6;
 
-    Screen.GetScreenImage(X1, 1, X1 + Len, 3, Image);
+    Console.GetScreenImage(X1, 1, X1 + Len, 3, Image);
 
     WriteXYPipe (X1, 1, 8, Len, '‹|15‹|11‹‹|03‹‹|09‹|03‹|09' + strRep('‹', Len - 9) + '|08‹');
     WriteXYPipe (X1, 2, 8, Len, '›|09|17≤ |15' + Text + ' |00∞|16|08ﬁ');
@@ -316,9 +316,9 @@ Begin
 
   Form.Free;
 
-  ReWrite (ConfigFile);
-  Write   (ConfigFile, bbsCfg);
-  Close   (ConfigFile);
+  ReWrite (Session.ConfigFile);
+  Write   (Session.ConfigFile, bbsCfg);
+  Close   (Session.ConfigFile);
 End;
 
 End.

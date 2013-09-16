@@ -1563,11 +1563,11 @@ Begin
     3   : Session.io.AnsiClrEOL;
     4   : Session.io.AnsiGotoXY(Param[1].B, Param[2].B);
     5   : Begin
-            TempByte := Screen.CursorX;
+            TempByte := Console.CursorX;
             Store(TempByte, 1);
           End;
     6   : Begin
-            TempByte := Screen.CursorY;
+            TempByte := Console.CursorY;
             Store(TempByte, 1);
           End;
     7   : Begin
@@ -1612,7 +1612,7 @@ Begin
             {$IFDEF UNIX}
               TempBool := Input.KeyPressed;
             {$ELSE}
-              TempBool := Input.KeyPressed OR Session.Client.DataWaiting;
+              TempBool := Keyboard.KeyPressed OR Session.Client.DataWaiting;
             {$ENDIF}
             Store (TempBool, 1);
             Session.io.BufFlush;
@@ -1873,7 +1873,7 @@ Begin
             Store (TempStr, 256);
           End;
     85  : Begin
-            TempByte := Screen.TextAttr;
+            TempByte := Console.TextAttr;
             Store (TempByte, 1);
           End;
     86  : Session.io.AnsiColor(Param[1].B);
@@ -2020,7 +2020,7 @@ Begin
             TempChar := #0;
 
             If (Param[1].B < 81) and (Param[2].B < 26) Then
-              TempChar := Screen.Buffer[Param[2].B][Param[1].B].UnicodeChar;
+              TempChar := Console.Buffer[Param[2].B][Param[1].B].UnicodeChar;
 
             Store (TempChar, 1);
           End;
@@ -2028,7 +2028,7 @@ Begin
             TempByte := 0;
 
             If (Param[1].B < 81) and (Param[2].B < 26) Then
-              TempByte := Screen.Buffer[Param[2].B][Param[1].B].Attributes;
+              TempByte := Console.Buffer[Param[2].B][Param[1].B].Attributes;
 
             Store (TempByte, 1);
           End;
@@ -2118,7 +2118,7 @@ Begin
             Store (TempBool, 1);
           End;
     559 : If ClassValid(Param[1].L, mplClass_Image) Then
-            Screen.GetScreenImage (Param[2].B, Param[3].B, Param[4].B, Param[5].B, TConsoleImageRec(ClassData[Param[1].L].ClassPtr^));
+            Console.GetScreenImage (Param[2].B, Param[3].B, Param[4].B, Param[5].B, TConsoleImageRec(ClassData[Param[1].L].ClassPtr^));
     560 : If ClassValid(Param[1].L, mplClass_Image) Then
             Session.io.RemoteRestore(TConsoleImageRec(ClassData[Param[1].L].ClassPtr^));
   End;

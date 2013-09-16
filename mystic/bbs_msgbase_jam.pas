@@ -12,7 +12,6 @@ Interface
 Uses
   m_Strings,
   BBS_Records,
-  BBS_Common,
   BBS_MsgBase_ABS;
 
 Const
@@ -256,7 +255,8 @@ Uses
   m_CRC,
   m_FileIO,
   m_DateTime,
-  MKCRAP;  // REMOVE THIS ASAP.
+  BBS_DataBase,
+  MKCRAP;
 
 Type
   SubFieldPTR  = ^SubFieldType;
@@ -701,10 +701,10 @@ Begin
     End;
     If ((JM^.Dest.Zone <> 0) or (JM^.Dest.Net <> 0) or
       (JM^.Dest.Node <> 0) or (JM^.Dest.Point <> 0)) Then
-      AddSubField(1, strAddr2Str(JM^.Dest));
+      AddSubField(1, Addr2Str(JM^.Dest));
     If ((JM^.Orig.Zone <> 0) or (JM^.Orig.Net <> 0) or
       (JM^.Orig.Node <> 0) or (JM^.Orig.Point <> 0)) Then
-      AddSubField(0, strAddr2Str(JM^.Orig));
+      AddSubField(0, Addr2Str(JM^.Orig));
     WriteError := IoResult;
   End;
 
@@ -845,10 +845,10 @@ Begin
       End;
       If ((JM^.Dest.Zone <> 0) or (JM^.Dest.Net <> 0) or
         (JM^.Dest.Node <> 0) or (JM^.Dest.Point <> 0)) Then
-        AddSubField(1, strAddr2Str(JM^.Dest));
+        AddSubField(1, Addr2Str(JM^.Dest));
       If ((JM^.Orig.Zone <> 0) or (JM^.Orig.Net <> 0) or
         (JM^.Orig.Node <> 0) or (JM^.Orig.Point <> 0)) Then
-        AddSubField(0, strAddr2Str(JM^.Orig));
+        AddSubField(0, Addr2Str(JM^.Orig));
       Seek(JM^.HdrFile, FileSize(JM^.HdrFile)); {Seek to end of .jhr file}
       WriteError := IoResult;
       End;
@@ -957,7 +957,7 @@ Procedure TMsgBaseJAM.MsgStartUp;
              TmpStr[0] := Chr(SubPtr^.DataLen and $ff);
              If Ord(TmpStr[0]) > 128 Then TmpStr[0] := #128;
              Move(SubPtr^.Data, TmpStr[1], Ord(TmpStr[0]));
-             If strStr2Addr(TmpStr, JM^.Orig) Then;
+             If Str2Addr(TmpStr, JM^.Orig) Then;
              End;
           1: Begin {Dest}
              FillChar(JM^.Dest, SizeOf(JM^.Dest), #0);
@@ -965,7 +965,7 @@ Procedure TMsgBaseJAM.MsgStartUp;
              If Ord(TmpStr[0]) > 128 Then
                TmpStr[0] := #128;
              Move(SubPtr^.Data, TmpStr[1], Ord(TmpStr[0]));
-            If strStr2Addr(TmpStr, JM^.Dest) Then;
+            If Str2Addr(TmpStr, JM^.Dest) Then;
              End;
           2: Begin {MsgFrom}
              JM^.MsgFrom[0] := Chr(SubPtr^.DataLen and $ff);

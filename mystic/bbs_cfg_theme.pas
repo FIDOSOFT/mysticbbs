@@ -414,8 +414,8 @@ Var
 
       Session.io.OutFull(SimStr);
 
-      SavedX := Screen.CursorX;
-      SavedY := Screen.CursorY;
+      SavedX := Console.CursorX;
+      SavedY := Console.CursorY;
 
       WriteXY (1, 23, 112, strPadC('Simulating Prompt', 79, ' '));
 
@@ -463,7 +463,7 @@ Var
   Image      : TConsoleImageRec;
   SavedTheme : RecTheme;
 Begin
-  Screen.GetScreenImage(1, 1, 79, 24, Image);
+  Console.GetScreenImage(1, 1, 79, 24, Image);
 
   If Not LoadStringData Then Exit;
 

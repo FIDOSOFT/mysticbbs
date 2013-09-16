@@ -63,9 +63,9 @@ Begin
 
   Repeat
     If Update <> TimerMinutes Then Begin
-      X := Screen.CursorX;
-      Y := Screen.CursorY;
-      A := Screen.TextAttr;
+      X := Console.CursorX;
+      Y := Console.CursorY;
+      A := Console.TextAttr;
 
       If Session.io.ScreenInfo[9].X <> 0 Then Begin
         Session.io.AnsiGotoXY (Session.io.ScreenInfo[9].X, Session.io.ScreenInfo[9].Y);
@@ -103,7 +103,7 @@ Begin
     End;
 
     Case Ch of
-      #00 : If Session.io.LocalInput Then ProcessSysopCommand(Input.ReadKey);
+      #00 : If Session.io.LocalInput Then ProcessSysopCommand(Keyboard.ReadKey);
       ^R  : If Session.io.LocalInput Then Total_ReDraw;
       #08 : If Session.io.LocalInput Then Begin
               If SysopX > Session.io.ScreenInfo[7].X Then Begin
@@ -173,7 +173,7 @@ Begin
           inc (sysopy);
           Session.io.AnsiGotoXY(Session.io.ScreenInfo[7].x, sysopy);
           Session.io.OutRaw (sysopstr);
-          sysopx := Screen.CursorX;
+          sysopx := Console.CursorX;
         end;
       End Else Begin
         Session.io.BufAddChar (ch);
@@ -196,7 +196,7 @@ Begin
           inc(usery);
           Session.io.AnsiGotoXY (Session.io.ScreenInfo[3].x, usery);
           Session.io.OutRaw(userstr);
-          userx := Screen.CursorX;
+          userx := Console.CursorX;
         end;
       end;
     End;
@@ -259,7 +259,7 @@ Var
 Begin
   Session.User.InChat := True;
 
-  Screen.GetScreenImage(1,1,79,24,Image);
+  Console.GetScreenImage(1,1,79,24,Image);
 
   UpdateStatusLine (0, '(ESC) to Quit, (Ctrl-R) to Redraw');
 
@@ -287,7 +287,7 @@ Begin
 
   Session.io.RemoteRestore(Image);
 
-  UpdateStatusLine (StatusPtr, '');
+  UpdateStatusLine (Session.StatusPtr, '');
 End;
 
 End.

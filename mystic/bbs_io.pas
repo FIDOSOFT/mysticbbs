@@ -235,7 +235,7 @@ Begin
       SocketEvent := WSACreateEvent;
   {$ENDIF}
 
-  Term := TTermAnsi.Create(Screen);
+  Term := TTermAnsi.Create(Console);
 End;
 
 Destructor TBBSIO.Destroy;
@@ -328,7 +328,7 @@ Begin
 
     OutBufPos := 0;
 
-    Screen.BufFlush;
+    Console.BufFlush;
   {$ENDIF}
 End;
 
@@ -338,7 +338,7 @@ Var
 Begin
   If Graphics = 0 Then Exit;
 
-  T := Screen.CursorY;
+  T := Console.CursorY;
 
   If Y > T Then BufAddStr (#27 + '[' + strI2S(Y-T) + 'B') Else
   If Y < T Then BufAddStr (#27 + '[' + strI2S(T-Y) + 'A');
@@ -350,7 +350,7 @@ Var
 Begin
   If Graphics = 0 Then Exit;
 
-  T := Screen.CursorX;
+  T := Console.CursorX;
 
   If X > T Then BufAddStr (#27 + '[' + strI2S(X-T) + 'C') Else
   If X < T Then BufAddStr (#27 + '[' + strI2S(T-X) + 'D');
@@ -361,7 +361,7 @@ Var
   Attr : Byte;
   Ch   : Char;
 Begin
-  Attr := Screen.TextAttr;
+  Attr := Console.TextAttr;
 
   OutFull (TBBSCore(Core).GetPrompt(22));
 
@@ -384,13 +384,13 @@ Var
 Begin
   SavedMCI  := AllowMCI;
   AllowMCI  := True;
-  SavedAttr := Screen.TextAttr;
+  SavedAttr := Console.TextAttr;
 
   OutFull (TBBSCore(Core).GetPrompt(132));
 
   Ch := OneKey('YNC' + #13, False);
 
-  OutBS     (Screen.CursorX, True);
+  OutBS     (Console.CursorX, True);
   AnsiColor (SavedAttr);
 
   PausePtr := 1;
@@ -522,9 +522,9 @@ Begin
     '!' : If Code[2] in ['0'..'9'] Then Begin
             A := strS2I(Code[2]);
 
-            ScreenInfo[A].X := Screen.CursorX;
-            ScreenInfo[A].Y := Screen.CursorY;
-            ScreenInfo[A].A := Screen.TextAttr;
+            ScreenInfo[A].X := Console.CursorX;
+            ScreenInfo[A].Y := Console.CursorY;
+            ScreenInfo[A].A := Console.TextAttr;
           End Else Begin
             Result := False;
 
@@ -885,19 +885,19 @@ Begin
                 FmtString := False;
               End;
           8 : Begin
-                AnsiMoveY (Screen.CursorY - FmtLen);
+                AnsiMoveY (Console.CursorY - FmtLen);
                 FmtString := False;
               End;
           9 : Begin
-                AnsiMoveY (Screen.CursorY + FmtLen);
+                AnsiMoveY (Console.CursorY + FmtLen);
                 FmtString := False;
               End;
           10: Begin
-                AnsiMoveX (Screen.CursorX + FmtLen);
+                AnsiMoveX (Console.CursorX + FmtLen);
                 FmtString := False;
               End;
           11: Begin
-                AnsiMoveX (Screen.CursorX - FmtLen);
+                AnsiMoveX (Console.CursorX - FmtLen);
                 FmtString := False;
               End;
           12: Begin
@@ -915,7 +915,7 @@ Begin
                 FmtString := False;
               End;
           15: Begin
-                While Screen.CursorX > FmtLen Do
+                While Console.CursorX > FmtLen Do
                   OutBS(1, True);
 
                 FmtString := False;
@@ -924,8 +924,8 @@ Begin
                 Inc (A);
                 FmtString := False;
 
-                If Screen.CursorX < FmtLen Then
-                  BufAddStr (strRep(Str[A], FmtLen - Screen.CursorX + 1));
+                If Console.CursorX < FmtLen Then
+                  BufAddStr (strRep(Str[A], FmtLen - Console.CursorX + 1));
               End;
         End;
       End;
@@ -974,7 +974,7 @@ Begin
   End;
 
   If Color in [00..07] Then
-    Color := (Screen.TextAttr SHR 4) and 7 + 16;
+    Color := (Console.TextAttr SHR 4) and 7 + 16;
 
   Case Color of
     16: Result := Result + #27 + '[40m';
@@ -999,14 +999,14 @@ Begin
 
   If Graphics = 0 Then Exit;
 
-  CurBG  := (Screen.TextAttr SHR 4) AND 7;
-  CurFG  := Screen.TextAttr AND $F;
+  CurBG  := (Console.TextAttr SHR 4) AND 7;
+  CurFG  := Console.TextAttr AND $F;
   Prefix := '';
 
   If Color < 16 Then Begin
     If Color = CurFG Then Exit;
 
-//    Screen.TextAttr := Color + CurBG * 16;
+//    Console.TextAttr := Color + CurBG * 16;
 
     If (Color < 8) and (CurFG > 7) Then Prefix := '0;';
     If (Color > 7) and (CurFG < 8) Then Prefix := '1;';
@@ -1040,7 +1040,7 @@ Begin
   End Else Begin
     If (Color - 16) = CurBG Then Exit;
 
-//    Screen.TextAttr := CurFG + (Color - 16) * 16;
+//    Console.TextAttr := CurFG + (Color - 16) * 16;
 
     Case Color of
       16: Result := #27 + '[40m';
@@ -1086,12 +1086,12 @@ Var
 Begin
   Result := '';
 
-  If (Attr = Screen.TextAttr) or (Graphics = 0) Then Exit;
+  If (Attr = Console.TextAttr) or (Graphics = 0) Then Exit;
 
   FG    := Attr and $F;
   BG    := Attr shr 4;
-  OldFG := Screen.TextAttr and $F;
-  OldBG := Screen.TextAttr shr 4;
+  OldFG := Console.TextAttr and $F;
+  OldBG := Console.TextAttr shr 4;
 
   If (OldFG <> 7) or (FG = 7) or ((OldFG > 7) and (FG < 8)) or ((OldBG > 7) and (BG < 8)) Then Begin
     Result := '0';
@@ -1137,10 +1137,10 @@ Procedure TBBSIO.AnsiGotoXY (X: Byte; Y: Byte);
 Begin
   If Graphics = 0 Then Exit;
 
-//  If (X = Screen.CursorX) and (Y = Screen.CursorY) Then Exit;
+//  If (X = Console.CursorX) and (Y = Console.CursorY) Then Exit;
 
-  If X = 0 Then X := Screen.CursorX;
-  If Y = 0 Then Y := Screen.CursorY;
+  If X = 0 Then X := Console.CursorX;
+  If Y = 0 Then Y := Console.CursorY;
 
   BufAddStr (#27'[' + strI2S(Y) + ';' + strI2S(X) + 'H');
 End;
@@ -1347,19 +1347,19 @@ Begin
                         FmtString := False;
                       End;
                   8 : Begin
-                        AnsiMoveY (Screen.CursorY - FmtLen);
+                        AnsiMoveY (Console.CursorY - FmtLen);
                         FmtString := False;
                       End;
                   9 : Begin
-                        AnsiMoveY (Screen.CursorY + FmtLen);
+                        AnsiMoveY (Console.CursorY + FmtLen);
                         FmtString := False;
                       End;
                   10: Begin
-                        AnsiMoveX (Screen.CursorX + FmtLen);
+                        AnsiMoveX (Console.CursorX + FmtLen);
                         FmtString := False;
                       End;
                   11: Begin
-                        AnsiMoveX (Screen.CursorX - FmtLen);
+                        AnsiMoveX (Console.CursorX - FmtLen);
                         FmtString := False;
                       End;
                   12: Begin
@@ -1377,7 +1377,7 @@ Begin
                         FmtString := False;
                       End;
                   15: Begin
-                        While Screen.CursorX > FmtLen Do
+                        While Console.CursorX > FmtLen Do
                           OutBS(1, True);
 
                         FmtString := False;
@@ -1389,8 +1389,8 @@ Begin
                   17: Begin
                         FmtString := False;
 
-                        If Screen.CursorX < FmtLen Then
-                          BufAddStr (strRep(GetChar, FmtLen - Screen.CursorX + 1));
+                        If Console.CursorX < FmtLen Then
+                          BufAddStr (strRep(GetChar, FmtLen - Console.CursorX + 1));
                       End;
                 End;
               End;
@@ -1440,7 +1440,7 @@ Var
 Begin
   Result := #255;
 
-  Handles[0] := Input.ConIn;
+  Handles[0] := Keyboard.ConIn;
 
   If Not TBBSCore(Core).LocalMode Then Begin
     If TBBSCore(Core).Client.FInBufPos < TBBSCore(Core).Client.FInBufEnd Then
@@ -1467,16 +1467,16 @@ Begin
 
   Case InType of
     1 : Begin // LOCAL input event
-          If Not Input.ProcessQueue Then Exit;
+          If Not Keyboard.ProcessQueue Then Exit;
 
-          Result     := Input.ReadKey;
+          Result     := Keyboard.ReadKey;
           LocalInput := True;
           IsArrow    := False;
 
           If Result = #0 Then Begin
-            Result := Input.ReadKey;
+            Result := Keyboard.ReadKey;
 
-            If (AllowArrow) and (Result in [#71..#73, #75, #77, #79..#83]) and (Screen.Active) Then Begin
+            If (AllowArrow) and (Result in [#71..#73, #75, #77, #79..#83]) and (Console.Active) Then Begin
               IsArrow := True;
               Exit;
             End;
@@ -1486,7 +1486,7 @@ Begin
             Result := #255;
           End;
 
-          If Not Screen.Active Then Result := #255;
+          If Not Console.Active Then Result := #255;
         End;
     2 : Begin // SOCKET read event
           If TBBSCore(Core).Client.ReadBuf(Result, 1) < 0 Then Begin
@@ -1574,7 +1574,7 @@ Begin
     Session.LastTimeLeft := TimeCount;
 
     {$IFNDEF UNIX}
-      UpdateStatusLine(StatusPtr, '');
+      UpdateStatusLine(Session.StatusPtr, '');
     {$ENDIF}
 
     If TBBSCore(Core).TimerOn Then Begin
@@ -1644,7 +1644,7 @@ Begin
 
   Temp       := AllowArrow;
   AllowArrow := True;
-  X          := Screen.CursorX;
+  X          := Console.CursorX;
 
   Repeat
     AnsiMoveX (X);
@@ -1765,7 +1765,7 @@ Begin
   RangeValue := -1;
   HiStr      := strI2S(Hi);
   Field      := Length(strI2S(Hi));
-  xPos       := Screen.CursorX;
+  xPos       := Console.CursorX;
 
   If UseInField and (Graphics = 1) Then Begin
     AnsiColor (TBBSCore(Core).Theme.FieldColor2);
@@ -1934,7 +1934,7 @@ Begin
     If InSize <= Max Then Max := InSize;
   End;
 
-  xPos    := Screen.CursorX;
+  xPos    := Console.CursorX;
   FieldCh := ' ';
 
   // this is poorly implemented but to expand on it will require MPL
@@ -2014,7 +2014,7 @@ Begin
 
                 If CurPos < 1 then CurPos := 1;
 
-                AnsiMoveX (Screen.CursorX - 1);
+                AnsiMoveX (Console.CursorX - 1);
               End;
         #77 : If StrPos < Length(Str) + 1 Then Begin
                 If (CurPos = Field) and (StrPos < Length(Str)) Then
@@ -2023,7 +2023,7 @@ Begin
                 Inc (CurPos);
                 Inc (StrPos);
 
-                AnsiMoveX (Screen.CursorX + 1);
+                AnsiMoveX (Console.CursorX + 1);
               End;
         #79 : Begin
                 StrPos := Length(Str) + 1;
@@ -2188,9 +2188,9 @@ Var
   FillSize : Byte;
   Attr     : Byte;
 Begin
-  Attr := Screen.TextAttr;
+  Attr := Console.TextAttr;
 
-  Screen.TextAttr := 0;  // kludge to force it to return full ansi codes
+  Console.TextAttr := 0;  // kludge to force it to return full ansi codes
 
   If Part > Whole Then Part := Whole;
 
@@ -2298,23 +2298,23 @@ Begin
   {$ENDIF}
   {$IFDEF WINDOWS}
   If Not TBBSCore(Core).LocalMode Then TBBSCore(Core).Client.PurgeInputData(100);
-  If TBBSCore(Core).LocalMode Then While Input.KeyPressed Do Input.ReadKey;
+  If TBBSCore(Core).LocalMode Then While Keyboard.KeyPressed Do Keyboard.ReadKey;
   {$ENDIF}
 End;
 
 {$IFDEF WINDOWS}
 Procedure TBBSIO.LocalScreenDisable;
 Begin
-  Screen.ClearScreenNoUpdate;
-  Screen.WriteXYNoUpdate(1, 1, 7, 'Screen disabled. Press ALT-V to view user');
-  Screen.Active := False;
+  Console.ClearScreenNoUpdate;
+  Console.WriteXYNoUpdate(1, 1, 7, 'Screen disabled. Press ALT-V to view user');
+  Console.Active := False;
 End;
 
 Procedure TBBSIO.LocalScreenEnable;
 Begin
-  Screen.Active := True;
-  Screen.ShowBuffer;
-  UpdateStatusLine(StatusPtr, '');
+  Console.Active := True;
+  Console.ShowBuffer;
+  UpdateStatusLine(Session.StatusPtr, '');
 End;
 {$ENDIF}
 

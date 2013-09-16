@@ -12,7 +12,7 @@ Uses
   m_FileIO,
   m_Strings,
   BBS_Records,
-  BBS_Common,
+  BBS_DataBase,
   mUtil_Common,
   mUtil_Status;
 
@@ -70,7 +70,7 @@ Begin
       MsgSubj := INI.ReadString  (Header_MsgPost, 'file' + strI2S(Count) + '_subj', '');
       DelFile := INI.ReadBoolean (Header_MsgPost, 'file' + strI2S(Count) + '_delfile', False);
 
-      strStr2Addr(INI.ReadString(Header_MsgPost, 'file' + strI2S(Count) + '_addr', '0:0/0'), MsgAddr);
+      Str2Addr(INI.ReadString(Header_MsgPost, 'file' + strI2S(Count) + '_addr', '0:0/0'), MsgAddr);
 
       If (MsgFrom = '') or (MsgTo = '') Then Begin
         Log (2, '!', '   Invalid From to To: ' + MsgFrom + '/' + MsgTo);

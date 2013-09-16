@@ -16,7 +16,8 @@ Uses
   MIS_Server,
   MIS_NodeData,
   MIS_Common,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 Function CreateNNTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
@@ -180,21 +181,13 @@ Begin
       If (TempBase.NewsName = Data) and CheckAccess(User, True, TempBase.ReadACS) Then Begin
         Found := True;
 
-        Case TempBase.BaseType of
-          0 : MsgBase := New(PMsgBaseJAM, Init);
-          1 : MsgBase := New(PMsgBaseSquish, Init);
-        End;
-
-        MsgBase^.SetMsgPath  (TempBase.Path + TempBase.FileName);
-        MsgBase^.SetTempFile (TempPath + 'msgbuf.');
-
-        If MsgBase^.OpenMsgBase Then Begin
+        If MBaseOpenCreate (MsgBase, TempBase, TempPath) Then Begin
           Low    := 1;
           High   := MsgBase^.GetHighMsgNum;
           Active := MsgBase^.NumberOfMsgs;
-        End;
 
-        Dispose (MsgBase, Done);
+          Dispose (MsgBase, Done);
+        End;
 
         MBase      := TempBase;
         MBasePos   := MBaseFile.FilePosRecord;
@@ -261,20 +254,12 @@ Begin
           True  : PostAbility := 'y';
         End;
 
-        Case TempBase.BaseType of
-          0 : MsgBase := New(PMsgBaseJAM, Init);
-          1 : MsgBase := New(PMsgBaseSquish, Init);
-        End;
-
-        MsgBase^.SetMsgPath  (TempBase.Path + TempBase.FileName);
-        MsgBase^.SetTempFile (TempPath + 'msgbuf.');
-
-        If MsgBase^.OpenMsgBase Then Begin
+        If MBaseOpenCreate (MsgBase, TempBase, TempPath) Then Begin
           LowMessage  := 1;
           HighMessage := MsgBase^.GetHighActiveMsgNum;
-        End;
 
-        Dispose (MsgBase, Done);
+          Dispose (MsgBase, Done);
+        End;
 
         ClientWriteLine (TempBase.NewsName + ' ' + strI2S(LowMessage) + ' ' + strI2S(HighMessage) + ' ' + PostAbility);
       End;
@@ -559,7 +544,9 @@ Begin
     Exit;
   End;
 
-  Found     := False;
+  Found := False;
+
+  // ignore groups and check postacs in loop instead of below?
 
   Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
 
@@ -575,9 +562,9 @@ Begin
         Break;
       End;
     End;
-  End;
 
-  Close (MBaseFile);
+    Close (MBaseFile);
+  End;
 
   If Not Found or (Newsgroup = '') Then Begin
     MsgText.Free;
@@ -595,65 +582,39 @@ Begin
     Exit;
   End;
 
-  Case TempBase.BaseType of
-    0 : MsgBase := New(PMsgBaseJAM, Init);
-    1 : MsgBase := New(PMsgBaseSquish, Init);
+  If Not MBaseOpenCreate (MsgBase, TempBase, TempPath) Then Begin
+    MsgText.Free;
+
+    ClientWriteLine('441 Cannot save');
+
+    Exit;
   End;
 
-  MsgBase^.SetMsgPath  (TempBase.Path + TempBase.FileName);
-  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
+  MBaseAssignData (User, MsgBase, TempBase);
 
-  If Not MsgBase^.OpenMsgBase Then
-    If Not MsgBase^.CreateMsgBase (TempBase.MaxMsgs, TempBase.MaxAge) Then Begin
-      Dispose(MsgBase, Done);
-      MsgText.Free;
-      Client.WriteLine('441 Cannot save');
-      Exit;
-    End Else
-      If Not MsgBase^.OpenMsgBase Then Begin
-        Dispose(MsgBase, Done);
-        MsgText.Free;
-        Client.WriteLine('411 Cannot save');
-        Exit;
-      End;
-
-  MsgBase^.StartNewMsg;
-
-  MsgBase^.SetLocal (True);
-  MsgBase^.SetDate  (FormatDateTime('mm/dd/yy', Now));
-  MsgBase^.SetTime  (FormatDateTime('hh:nn', Now));
-  MsgBase^.SetTo    ('All');
-  MsgBase^.SetSubj  (Subject);
-
-  If TempBase.Flags And MBRealNames <> 0 Then
-    MsgBase^.SetFrom(User.RealName)
-  Else
-    MsgBase^.SetFrom(User.Handle);
-
-  If TempBase.NetType > 0 Then Begin
-    MsgBase^.SetMailType(mmtEchoMail);
-
-    Case TempBase.NetType of
-      1 : If TempBase.QwkConfID = 0 Then
-            Assign (SemFile, bbsConfig.SemaPath + fn_SemFileEchoOut)
-          Else
-            Assign (SemFile, bbsConfig.SemaPath + fn_SemFileQwk);
-      2 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileNews);
-    End;
-
-    ReWrite (SemFile);
-    Close   (SemFile);
-  End Else
-    MsgBase^.SetMailType(mmtNormal);
-
-  MsgBase^.SetPriv (TempBase.Flags and MBPrivate <> 0);
+  MsgBase^.SetTo   ('All');
+  MsgBase^.SetSubj (Subject);
 
   For Count := 1 to MsgText.Count Do Begin
     InData := MsgText.Strings[Count - 1];
 
     If Length(InData) > 79 Then InData[0] := #79;
+    // auto wrap option?
 
     MsgBase^.DoStringLn(InData);
+  End;
+
+  // lets make a function to mbaseappendorigin
+
+  If TempBase.NetType > 0 Then Begin
+    MsgBase^.DoStringLn (#13 + '--- ' + mysSoftwareID + '/NNTP v' + mysVersion + ' (' + OSID + ')');
+
+    InData := ' * Origin: ' + GetOriginLine(TempBase);
+
+    If MBase.QwkNetID = 0 Then
+      InData := InData + ' (' + Addr2Str(MsgBase^.GetOrigAddr) + ')';
+
+    MsgBase^.DoStringLn (InData);
   End;
 
   MsgBase^.WriteMsg;
@@ -663,7 +624,7 @@ Begin
 
   MsgText.Free;
 
-  ClientWriteLine ('240 Article posted ok');
+  ClientWriteLine ('240 Article posted ok (' + TempBase.Name + ')');
 End;
 
 Procedure TNNTPServer.cmd_ARTICLE;
@@ -685,18 +646,8 @@ Begin
 
   ArticleNum := strS2I(Data);
 
-  Case MBase.BaseType of
-    0 : MsgBase := New(PMsgBaseJAM, Init);
-    1 : MsgBase := New(PMsgBaseSquish, Init);
-  End;
-
-  MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
-  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
-
-  If Not MsgBase^.OpenMsgBase Then Begin
+  If Not MBaseOpenCreate (MsgBase, MBase, TempPath) THen Begin
     ClientWriteLine('423 No such article');
-
-    Dispose (MsgBase, Done);
 
     Exit;
   End;
@@ -770,18 +721,8 @@ Begin
     Last  := First;
   End;
 
-  Case MBase.BaseType of
-    0 : MsgBase := New(PMsgBaseJAM, Init);
-    1 : MsgBase := New(PMsgBaseSquish, Init);
-  End;
-
-  MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
-  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
-
-  If Not MsgBase^.OpenMsgBase Then Begin
+  If Not MBaseOpenCreate (MsgBase, MBase, TempPath) THen Begin
     ClientWriteLine('420 No article(s) selected');
-
-    Dispose (MsgBase, Done);
 
     Exit;
   End;

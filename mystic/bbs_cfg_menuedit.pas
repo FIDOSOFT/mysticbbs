@@ -1,4 +1,4 @@
-Unit bbs_cfg_MenuEdit;
+Unit BBS_Cfg_MenuEdit;
 
 {$I M_OPS.PAS}
 
@@ -174,7 +174,7 @@ Var
   OldData  : TMenuData;
   TmpImage : TConsoleImageRec;
 Begin
-  Screen.GetScreenImage (1, 1, 79, 24, TmpImage);
+  Console.GetScreenImage (1, 1, 79, 24, TmpImage);
 
   Session.io.OutFull('|07|16|CL');
   Session.io.BufFlush;

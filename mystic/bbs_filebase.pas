@@ -211,17 +211,17 @@ Procedure ProtocolStatus (Start, Finish: Boolean; Status: RecProtocolStatus);
 Var
   KBRate : LongInt;
 Begin
-  Screen.WriteXY (19, 10, 113, strPadR(Status.FileName, 56, ' '));
-  Screen.WriteXY (19, 11, 113, strPadR(strComma(Status.FileSize), 15, ' '));
-  Screen.WriteXY (19, 12, 113, strPadR(strComma(Status.Position), 15, ' '));
-  Screen.WriteXY (64, 11, 113, strPadR(strI2S(Status.Errors), 3, ' '));
+  Console.WriteXY (19, 10, 113, strPadR(Status.FileName, 56, ' '));
+  Console.WriteXY (19, 11, 113, strPadR(strComma(Status.FileSize), 15, ' '));
+  Console.WriteXY (19, 12, 113, strPadR(strComma(Status.Position), 15, ' '));
+  Console.WriteXY (64, 11, 113, strPadR(strI2S(Status.Errors), 3, ' '));
 
   KBRate := 0;
 
   If (TimerSeconds - Status.StartTime > 0) and (Status.Position > 0) Then
     KBRate := Round((Status.Position / (TimerSeconds - Status.StartTime)) / 1024);
 
-  Screen.WriteXY (64, 12, 113, strPadR(strI2S(KBRate) + ' k/sec', 12, ' '));
+  Console.WriteXY (64, 12, 113, strPadR(strI2S(KBRate) + ' k/sec', 12, ' '));
 End;
 {$ENDIF}
 {$ENDIF}
@@ -232,17 +232,17 @@ Procedure XferStatus (P: AbstractProtocolPtr; First, Last: Boolean);
 Var
   KBRate : LongInt;
 Begin
-  Screen.WriteXY (19, 10, 113, strPadR(P^.PathName, 56, ' '));
-  Screen.WriteXY (19, 11, 113, strPadR(strComma(P^.SrcFileLen), 15, ' '));
-  Screen.WriteXY (19, 12, 113, strPadR(strComma(P^.BytesTransferred), 15, ' '));
-  Screen.WriteXY (64, 11, 113, strPadR(strI2S(P^.TotalErrors), 3, ' '));
+  Console.WriteXY (19, 10, 113, strPadR(P^.PathName, 56, ' '));
+  Console.WriteXY (19, 11, 113, strPadR(strComma(P^.SrcFileLen), 15, ' '));
+  Console.WriteXY (19, 12, 113, strPadR(strComma(P^.BytesTransferred), 15, ' '));
+  Console.WriteXY (64, 11, 113, strPadR(strI2S(P^.TotalErrors), 3, ' '));
 
   KBRate := 0;
 
   If (TimerSeconds - P^.StartTimer > 0) and (P^.BytesTransferred > 0) Then
     KBRate := Round((P^.SrcFileLen / (TimerSeconds - P^.StartTimer)) / 1024);
 
-  Screen.WriteXY (64, 12, 113, strPadR(strI2S(KBRate) + ' k/sec', 12, ' '));
+  Console.WriteXY (64, 12, 113, strPadR(strI2S(KBRate) + ' k/sec', 12, ' '));
 End;
 {$ENDIF}
     Procedure XferResult (P: AbstractProtocolPTR; Status: LogFileType);
@@ -354,7 +354,7 @@ Var
       Protocol^.SetShowStatusProc(@XferStatus);
 
       SavedL            := Session.LocalMode;
-      SavedA            := Screen.Active;
+      SavedA            := Console.Active;
       Session.LocalMode := True;
 
       Session.io.LocalScreenEnable;
@@ -368,11 +368,11 @@ Var
 
       Box.Open (6, 8, 76, 14);
 
-      Screen.WriteXY ( 8, 10, 112, 'File Name:');
-      Screen.WriteXY (13, 11, 112, 'Size:');
-      Screen.WriteXY ( 9, 12, 112, 'Position:');
-      Screen.WriteXY (56, 11, 112, 'Errors:');
-      Screen.WriteXY (58, 12, 112, 'Rate:');
+      Console.WriteXY ( 8, 10, 112, 'File Name:');
+      Console.WriteXY (13, 11, 112, 'Size:');
+      Console.WriteXY ( 9, 12, 112, 'Position:');
+      Console.WriteXY (56, 11, 112, 'Errors:');
+      Console.WriteXY (58, 12, 112, 'Rate:');
     {$ENDIF}
 
     Case Mode of
@@ -452,7 +452,7 @@ Var
 
     {$IFNDEF UNIX}
       SavedL              := Session.LocalMode;
-      SavedA              := Screen.Active;
+      SavedA              := Console.Active;
       Session.LocalMode   := True;
       Protocol.StatusProc := ProtocolStatus;
 
@@ -467,11 +467,11 @@ Var
 
       Box.Open (6, 8, 76, 14);
 
-      Screen.WriteXY ( 8, 10, 112, 'File Name:');
-      Screen.WriteXY (13, 11, 112, 'Size:');
-      Screen.WriteXY ( 9, 12, 112, 'Position:');
-      Screen.WriteXY (56, 11, 112, 'Errors:');
-      Screen.WriteXY (58, 12, 112, 'Rate:');
+      Console.WriteXY ( 8, 10, 112, 'File Name:');
+      Console.WriteXY (13, 11, 112, 'Size:');
+      Console.WriteXY ( 9, 12, 112, 'Position:');
+      Console.WriteXY (56, 11, 112, 'Errors:');
+      Console.WriteXY (58, 12, 112, 'Rate:');
     {$ENDIF}
 
     Case Mode of
@@ -940,7 +940,7 @@ Begin
     Session.io.PromptInfo[1] := FBase.Name;
     Session.io.PromptInfo[3] := strI2S(AreaFiles);
 
-    Session.io.OutBS     (Screen.CursorX, False);
+    Session.io.OutBS     (Console.CursorX, False);
     Session.io.OutFullLn (Session.GetPrompt(223));
   End;
 
@@ -2129,9 +2129,9 @@ Var
     Attr : Byte;
   Begin
     If Bool_Search(Data, Temp) Then Begin
-      Attr := Screen.TextAttr;
+      Attr := Console.TextAttr;
 
-      Screen.TextAttr := 255;
+      Console.TextAttr := 255;
 
       Insert (
         Session.io.Attr2Ansi(Session.Theme.FileDescLo),
@@ -2139,14 +2139,14 @@ Var
         Pos(Data, strUpper(Temp)) + Length(Data)
       );
 
-      Screen.TextAttr := 255;
+      Console.TextAttr := 255;
 
       Insert (
         Session.io.Attr2Ansi(Session.Theme.FileDescHi),
         Temp,
         Pos(Data, strUpper(Temp)));
 
-      Screen.TextAttr := Attr;
+      Console.TextAttr := Attr;
     End;
   End;
 
@@ -2396,7 +2396,7 @@ Var
         Inc (ListSize);
 
         List[ListSize].FileName := FDir.FileName;
-        List[ListSize].YPos     := Screen.CursorY - 1;
+        List[ListSize].YPos     := Console.CursorY - 1;
         List[ListSize].RecPos   := FilePos(FDirFile) - 1;
       End Else
         HeaderCheck;
@@ -3514,7 +3514,7 @@ Var
   Begin
     Session.io.PromptInfo[1] := FBase.Name;
 
-    Session.io.OutBS   (Screen.CursorX, True);
+    Session.io.OutBS   (Console.CursorX, True);
     Session.io.OutFull (Session.GetPrompt(87));
 
     Session.io.BufFlush;
@@ -3597,7 +3597,7 @@ Var
   Begin
     Session.io.PromptInfo[1] := FBase.Name;
 
-    Session.io.OutBS   (Screen.CursorX, True);
+    Session.io.OutBS   (Console.CursorX, True);
     Session.io.OutFull (Session.GetPrompt(87));
     Session.io.BufFlush;
 

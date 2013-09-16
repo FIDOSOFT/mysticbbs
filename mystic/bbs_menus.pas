@@ -492,7 +492,7 @@ Begin
         Else
           TBBSCore(Owner).io.OutFull(strPadR(Data.Item[Count]^.Text, Format + Length(Data.Item[Count]^.Text) - strMCILen(Data.Item[Count]^.Text), ' '));
 
-        While Screen.CursorX < Format Do
+        While Console.CursorX < Format Do
           Session.io.BufAddChar(' ');
 
         If Listed MOD Cols = 0 Then
@@ -761,20 +761,20 @@ Var
 
       Session.io.OutFull(Data.Item[CurItem]^.TextLo);
 
-      If Screen.CursorX > MaxDESize Then
-        MaxDESize := Screen.CursorX;
+      If Console.CursorX > MaxDESize Then
+        MaxDESize := Console.CursorX;
 
-      While Screen.CursorX < MaxDESize Do
+      While Console.CursorX < MaxDESize Do
         Session.io.OutRaw(' ');
     End;
 
     Session.io.AnsiGotoXY (ItemX, ItemY);
     Session.io.OutFull    (Data.Item[CurItem]^.TextHi);
 
-    If Screen.CursorX > MaxLBSize Then
-      MaxLBSize := Screen.CursorX;
+    If Console.CursorX > MaxLBSize Then
+      MaxLBSize := Console.CursorX;
 
-    While Screen.CursorX < MaxLBSize Do
+    While Console.CursorX < MaxLBSize Do
       Session.io.OutRaw(' ');
   End;
 
@@ -788,8 +788,8 @@ Begin
 
     If ReDraw Then GenerateMenu(-1, False);
 
-    ItemX := Screen.CursorX;
-    ItemY := Screen.CursorY;
+    ItemX := Console.CursorX;
+    ItemY := Console.CursorY;
 
     TBBSCore(Owner).io.AllowArrow := True;
 
@@ -958,7 +958,7 @@ Var
       Exit;
     End;
 
-    SavedAttr := Screen.TextAttr; // tbbscore
+    SavedAttr := Console.TextAttr; // tbbscore
 
     If Ch = #08 Then
       Offset := Length(TempStr) + 1
@@ -1041,9 +1041,9 @@ Begin
 
       TBBSCore(Owner).io.BufFlush;
 
-      PromptX := Screen.CursorX; //tbbscore
-      PromptY := Screen.CursorY; //tbbscore
-      PromptA := Screen.TextAttr; //tbbscore
+      PromptX := Console.CursorX; //tbbscore
+      PromptY := Console.CursorY; //tbbscore
+      PromptA := Console.TextAttr; //tbbscore
     End;
 
     For Count := 1 to Data.NumItems Do

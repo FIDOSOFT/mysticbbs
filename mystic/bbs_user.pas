@@ -423,8 +423,8 @@ Begin
   Session.io.OutFull (Session.GetPrompt(258));
   Session.io.BufFlush;
 
-  Screen.BufAddStr(#27 + '[6n');
-  Screen.BufFlush;
+  Console.BufAddStr(#27 + '[6n');
+  Console.BufFlush;
 
   For Loop := 1 to 24 Do Begin
     While Input.KeyPressed Do
@@ -1067,30 +1067,30 @@ Begin
 { update last caller information }
 
   If Not Session.LocalMode And Not Session.Chat.Invisible And (ThisUser.Flags AND UserNoLastCall = 0) Then Begin
-    Reset (LastOnFile);
+    Reset (Session.LastOnFile);
 
-    If FileSize(LastOnFile) >= 10 Then
-      KillRecord (LastOnFile, 1, SizeOf(RecLastOn));
+    If FileSize(Session.LastOnFile) >= 10 Then
+      KillRecord (Session.LastOnFile, 1, SizeOf(RecLastOn));
 
-    LastOn.Handle        := ThisUser.Handle;
-    LastOn.City          := ThisUser.City;
-    LastOn.Node          := Session.NodeNum;
-    LastOn.DateTime      := CurDateDos;
-    LastOn.CallNum       := bbsCfg.SystemCalls;
-    LastOn.Address       := ThisUser.Address;
-    LastOn.EmailAddr     := ThisUser.Email;
-    LastOn.UserInfo      := ThisUser.UserInfo;
-    LastOn.Gender        := ThisUser.Gender;
-    LastOn.PeerIP        := Session.UserIPInfo;
-    LastOn.PeerHost      := Session.UserHostInfo;
-    LastOn.NewUser       := ThisUser.Calls = 0;
+    Session.LastOn.Handle        := ThisUser.Handle;
+    Session.LastOn.City          := ThisUser.City;
+    Session.LastOn.Node          := Session.NodeNum;
+    Session.LastOn.DateTime      := CurDateDos;
+    Session.LastOn.CallNum       := bbsCfg.SystemCalls;
+    Session.LastOn.Address       := ThisUser.Address;
+    Session.LastOn.EmailAddr     := ThisUser.Email;
+    Session.LastOn.UserInfo      := ThisUser.UserInfo;
+    Session.LastOn.Gender        := ThisUser.Gender;
+    Session.LastOn.PeerIP        := Session.UserIPInfo;
+    Session.LastOn.PeerHost      := Session.UserHostInfo;
+    Session.LastOn.NewUser       := ThisUser.Calls = 0;
 
     For Count := 1 to 10 Do
-      LastOn.OptionData[Count] := ThisUser.OptionData[Count];
+      Session.LastOn.OptionData[Count] := ThisUser.OptionData[Count];
 
-    Seek  (LastOnFile, FileSize(LastOnFile));
-    Write (LastOnFile, LastOn);
-    Close (LastOnFile);
+    Seek  (Session.LastOnFile, FileSize(Session.LastOnFile));
+    Write (Session.LastOnFile, Session.LastOn);
+    Close (Session.LastOnFile);
   End;
 
 { update node info / settings }
@@ -1153,13 +1153,13 @@ Begin
   End;
 
   If Not Session.LocalMode And (ThisUser.Flags AND UserNoLastCall = 0) Then Begin
-    Reset (ConfigFile);
-    Read  (ConfigFile, bbsCfg);
+    Reset (Session.ConfigFile);
+    Read  (Session.ConfigFile, bbsCfg);
     Inc   (bbsCfg.SystemCalls);
 
-    Reset (ConfigFile);
-    Write (ConfigFile, bbsCfg);
-    Close (ConfigFile);
+    Reset (Session.ConfigFile);
+    Write (Session.ConfigFile, bbsCfg);
+    Close (Session.ConfigFile);
   End;
 
   Inc (ThisUser.Calls);
@@ -1234,7 +1234,7 @@ Begin
     End;
 
   {$IFNDEF UNIX}
-    UpdateStatusLine(StatusPtr, '');
+    UpdateStatusLine(Session.StatusPtr, '');
   {$ENDIF}
 End;
 

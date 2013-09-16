@@ -31,12 +31,12 @@ Function GetChatRecord (Node: Byte; Var Chat: ChatRec) : Boolean;
 Begin
   Result := False;
 
-  Assign (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Node) + '.dat');
+  Assign (Session.ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Node) + '.dat');
 
-  If Not ioReset(ChatFile, SizeOf(ChatFile), fmRWDN) Then Exit;
+  If Not ioReset(Session.ChatFile, SizeOf(Session.ChatFile), fmRWDN) Then Exit;
 
-  Read  (ChatFile, Chat);
-  Close (ChatFile);
+  Read  (Session.ChatFile, Chat);
+  Close (Session.ChatFile);
 
   Result := True;
 End;
@@ -59,8 +59,8 @@ End;
 
 Procedure Set_Node_Action (Action: String);
 Begin
-  Assign  (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
-  ReWrite (ChatFile);
+  Assign  (Session.ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+  ReWrite (Session.ChatFile);
 
   If Action <> '' Then Begin
     Session.Chat.Active    := True;
@@ -82,12 +82,12 @@ Begin
     Session.Chat.Gender    := '?';
   End;
 
-  Write  (ChatFile, Session.Chat);
-  Close  (ChatFile);
+  Write  (Session.ChatFile, Session.Chat);
+  Close  (Session.ChatFile);
 
   {$IFDEF WINDOWS}
-    Screen.SetWindowTitle (bbsCfg.BBSName + ' Node ' + strI2S(Session.NodeNum) + ' : ' + Session.User.ThisUser.Handle + ' : ' + strStripPipe(Action));
-//    Screen.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum) + ' - ' + Session.User.ThisUser.Handle + ' - ' + strStripPipe(Action));
+    Console.SetWindowTitle (bbsCfg.BBSName + ' Node ' + strI2S(Session.NodeNum) + ' : ' + Session.User.ThisUser.Handle + ' : ' + strStripPipe(Action));
+//    Console.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum) + ' - ' + Session.User.ThisUser.Handle + ' - ' + strStripPipe(Action));
   {$ENDIF}
 End;
 
@@ -249,7 +249,7 @@ Begin
   KillRecord (MsgFile, 1, SizeOf(Msg));
   Close      (MsgFile);
 
-  Screen.GetScreenImage (1, 1, 79, 24, Image);
+  Console.GetScreenImage (1, 1, 79, 24, Image);
 
   Session.io.PromptInfo[1] := Msg.FromWho;
   Session.io.PromptInfo[2] := strI2S(Msg.FromNode);

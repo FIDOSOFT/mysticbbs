@@ -23,8 +23,8 @@ Var
   bbsCfg       : RecConfig;
   bbsCfgPath   : String;
   bbsCfgStatus : Byte;
-  Console      : TOutput = NIL;
-  Keyboard     : TInput  = NIL;
+  Console      : TOutput;
+  Keyboard     : TInput;
 
 Const
   CfgOK       = 0;
@@ -40,6 +40,7 @@ Function  GetBaseConfiguration  (UseEnv: Boolean; Var TempCfg: RecConfig) : Byte
 Function  PutBaseConfiguration  (Var TempCfg: RecConfig) : Boolean;
 Function  ExecuteProgram        (ExecPath: String; Command: String) : LongInt;
 Function  Addr2Str              (Addr : RecEchoMailAddr) : String;
+Function  Str2Addr              (S : String; Var Addr: RecEchoMailAddr) : Boolean;
 
 // MESSAGE BASE
 
@@ -84,6 +85,37 @@ Begin
   If Addr.Point <> 0 Then Temp := Temp + '.' + strI2S(Addr.Point);
 
   Result := Temp;
+End;
+
+Function Str2Addr (S : String; Var Addr: RecEchoMailAddr) : Boolean;
+Var
+  A     : Byte;
+  B     : Byte;
+  C     : Byte;
+  Point : Boolean;
+Begin
+  Result := False;
+  Point  := True;
+
+  A := Pos(':', S);
+  B := Pos('/', S);
+  C := Pos('.', S);
+
+  If (A = 0) or (B <= A) Then Exit;
+
+  If C = 0 Then Begin
+    Point      := False;
+    C          := Length(S) + 1;
+    Addr.Point := 0;
+  End;
+
+  Addr.Zone := strS2I(Copy(S, 1, A - 1));
+  Addr.Net  := strS2I(Copy(S, A + 1, B - 1 - A));
+  Addr.Node := strS2I(Copy(S, B + 1, C - 1 - B));
+
+  If Point Then Addr.Point := strS2I(Copy(S, C + 1, Length(S)));
+
+  Result := True;
 End;
 
 Function GetOriginLine (Var mArea: RecMessageBase) : String;
@@ -414,6 +446,7 @@ Begin
   Msg^.SetPriv (TempBase.Flags and MBPrivate <> 0);
   Msg^.SetDate (DateDos2Str(CurDateDos, 1));
   Msg^.SetTime (TimeDos2Str(CurDateDos, 0));
+  Msg^.SetSent (False);
 End;
 
 Function GetTotalFiles (Var TempBase: RecFileBase) : LongInt;
@@ -597,5 +630,7 @@ End;
 Initialization
 
   bbsCfgStatus := GetBaseConfiguration(True, bbsCfg);
+  Console      := NIL;
+  Keyboard     := NIL;
 
 End.

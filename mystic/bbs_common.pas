@@ -28,24 +28,10 @@ Const
   WinConsoleTitle = mysSoftwareID + ' Node ';
   DateTypeStr : Array[1..4] of String[8] = ('MM/DD/YY', 'DD/MM/YY', 'YY/DD/MM', 'Ask     ');
 
-Var
-  Screen      : TOutput;
-  Input       : TInput;
-  CurRoom     : Byte;
-  ConfigFile  : File of RecConfig;
-  ChatFile    : File of ChatRec;
-  RoomFile    : File of RoomRec;
-  Room        : RoomRec;
-  LastOnFile  : File of RecLastOn;
-  LastOn      : RecLastOn;
-  StatusPtr   : Byte = 1;
-
 Function  DrawAccessFlags (Var Flags: AccessFlagType) : String;
 Procedure KillRecord      (Var dFile; RecNum: LongInt; RecSize: Word);
 Procedure AddRecord       (var dFile; RecNum: LongInt; RecSize: Word);
 Function  Bool_Search     (Mask: String; Str: String) : Boolean;
-Function  strAddr2Str     (Addr: RecEchoMailAddr) : String;
-Function  strStr2Addr     (S : String; Var Addr: RecEchoMailAddr) : Boolean;
 Function  ShellDOS        (ExecPath: String; Command: String) : LongInt;
 
 {$IFNDEF UNIX}
@@ -138,50 +124,6 @@ Begin
   Bool_Search := Pos(strUpper(Mask), strUpper(Str)) > 0;
 End;
 
-Function strStr2Addr (S : String; Var Addr: RecEchoMailAddr) : Boolean;
-{ converts address string to type.  returns false is invalid string }
-Var
-  A     : Byte;
-  B     : Byte;
-  C     : Byte;
-  Point : Boolean;
-Begin
-  Result := False;
-  Point  := True;
-
-  A := Pos(':', S);
-  B := Pos('/', S);
-  C := Pos('.', S);
-
-  If (A = 0) or (B <= A) Then Exit;
-
-  If C = 0 Then Begin
-    Point      := False;
-    C          := Length(S) + 1;
-    Addr.Point := 0;
-  End;
-
-  Addr.Zone := strS2I(Copy(S, 1, A - 1));
-  Addr.Net  := strS2I(Copy(S, A + 1, B - 1 - A));
-  Addr.Node := strS2I(Copy(S, B + 1, C - 1 - B));
-
-  If Point Then Addr.Point := strS2I(Copy(S, C + 1, Length(S)));
-
-  Result := True;
-End;
-
-Function strAddr2Str (Addr : RecEchoMailAddr) : String;
-Var
-  Temp : String[20];
-Begin
-  Temp := strI2S(Addr.Zone) + ':' + strI2S(Addr.Net) + '/' +
-          strI2S(Addr.Node);
-
-  If Addr.Point <> 0 Then Temp := Temp + '.' + strI2S(Addr.Point);
-
-  Result := Temp;
-End;
-
 Function ShellDOS (ExecPath: String; Command: String) : LongInt;
 Begin
   Session.SystemLog('DEBUG: In ShellOS for: (' + ExecPath + ') ' + Command);
@@ -200,13 +142,13 @@ Begin
   End;
 
   {$IFNDEF UNIX}
-    Screen.SetWindow (1, 1, 80, 25, False);
-    Screen.TextAttr := 7;
-    Screen.ClearScreen;
+    Console.SetWindow (1, 1, 80, 25, False);
+    Console.TextAttr := 7;
+    Console.ClearScreen;
   {$ENDIF}
 
   {$IFDEF UNIX}
-    Screen.SetRawMode(False);
+    Console.SetRawMode(False);
   {$ENDIF}
 
   If ExecPath <> '' Then Begin
@@ -231,11 +173,11 @@ Begin
   {$ENDIF}
 
   {$IFDEF UNIX}
-    Screen.SetRawMode(True);
+    Console.SetRawMode(True);
   {$ENDIF}
 
   {$IFDEF WINDOWS}
-    Screen.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum));
+    Console.SetWindowTitle (WinConsoleTitle + strI2S(Session.NodeNum));
   {$ENDIF}
 
   DirChange(bbsCfg.SystemPath);
@@ -250,7 +192,7 @@ Begin
 //  Reset (Session.PromptFile);
 
   {$IFNDEF UNIX}
-    If Screen.Active Then
+    If Console.Active Then
       Session.io.LocalScreenEnable
     Else
       Session.io.LocalScreenDisable;
@@ -264,41 +206,41 @@ Procedure UpdateStatusLine (Mode: Byte; Str: String);
 Begin
   If Not bbsCfg.UseStatusBar Then Exit;
 
-  Screen.SetWindow (1, 1, 80, 25, False);
+  Console.SetWindow (1, 1, 80, 25, False);
 
   Case Mode of
-    0 : Screen.WriteXY (1, 25, bbsCfg.StatusColor3, strPadC(Str, 80, ' '));
+    0 : Console.WriteXY (1, 25, bbsCfg.StatusColor3, strPadC(Str, 80, ' '));
     1 : Begin
-          Screen.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' Alias ' + strRep(' ', 35) + 'Age       SecLevel      TimeLeft      ');
-          Screen.WriteXY ( 8, 25, bbsCfg.StatusColor2, Session.User.ThisUser.Handle + ' #' + strI2S(Session.User.ThisUser.PermIdx));
-          Screen.WriteXY (47, 25, bbsCfg.StatusColor2, Session.User.ThisUser.Gender + '/' + strI2S(DaysAgo(Session.User.ThisUser.Birthday, 1) DIV 365));
-          Screen.WriteXY (62, 25, bbsCfg.StatusColor2, strI2S(Session.User.ThisUser.Security));
-          Screen.WriteXY (76, 25, bbsCfg.StatusColor2, strI2S(Session.TimeLeft));
+          Console.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' Alias ' + strRep(' ', 35) + 'Age       SecLevel      TimeLeft      ');
+          Console.WriteXY ( 8, 25, bbsCfg.StatusColor2, Session.User.ThisUser.Handle + ' #' + strI2S(Session.User.ThisUser.PermIdx));
+          Console.WriteXY (47, 25, bbsCfg.StatusColor2, Session.User.ThisUser.Gender + '/' + strI2S(DaysAgo(Session.User.ThisUser.Birthday, 1) DIV 365));
+          Console.WriteXY (62, 25, bbsCfg.StatusColor2, strI2S(Session.User.ThisUser.Security));
+          Console.WriteXY (76, 25, bbsCfg.StatusColor2, strI2S(Session.TimeLeft));
         End;
     2 : Begin
-          Screen.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' Email ' + strRep(' ', 35) + ' Location ' + strRep(' ', 27) + ' ');
-          Screen.WriteXY ( 8, 25, bbsCfg.StatusColor2, strPadR(Session.User.ThisUser.Email, 36, ' '));
-          Screen.WriteXY (53, 25, bbsCfg.StatusColor2, strPadR(Session.User.ThisUser.City, 27, ' '));
+          Console.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' Email ' + strRep(' ', 35) + ' Location ' + strRep(' ', 27) + ' ');
+          Console.WriteXY ( 8, 25, bbsCfg.StatusColor2, strPadR(Session.User.ThisUser.Email, 36, ' '));
+          Console.WriteXY (53, 25, bbsCfg.StatusColor2, strPadR(Session.User.ThisUser.City, 27, ' '));
         End;
     3 : Begin
-          Screen.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' IP ' + strRep(' ', 19) + ' Host ' + strRep(' ', 49) + ' ');
-          Screen.WriteXY ( 5, 25, bbsCfg.StatusColor2, Session.UserIPInfo);
-          Screen.WriteXY (31, 25, bbsCfg.StatusColor2, strPadR(Session.UserHostInfo, 49, ' '));
+          Console.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' IP ' + strRep(' ', 19) + ' Host ' + strRep(' ', 49) + ' ');
+          Console.WriteXY ( 5, 25, bbsCfg.StatusColor2, Session.UserIPInfo);
+          Console.WriteXY (31, 25, bbsCfg.StatusColor2, strPadR(Session.UserHostInfo, 49, ' '));
         End;
     4 : Begin
-          Screen.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' Flags 1 ' + strRep(' ', 35) + ' Flags 2 ');
-          Screen.WriteXY (10, 25, bbsCfg.StatusColor2, DrawAccessFlags(Session.User.ThisUser.AF1));
-          Screen.WriteXY (54, 25, bbsCfg.StatusColor2, DrawAccessFlags(Session.User.ThisUser.AF2));
+          Console.WriteXY ( 1, 25, bbsCfg.StatusColor1, ' Flags 1 ' + strRep(' ', 35) + ' Flags 2 ');
+          Console.WriteXY (10, 25, bbsCfg.StatusColor2, DrawAccessFlags(Session.User.ThisUser.AF1));
+          Console.WriteXY (54, 25, bbsCfg.StatusColor2, DrawAccessFlags(Session.User.ThisUser.AF2));
         End;
-    5 : Screen.WriteXY (1, 25, bbsCfg.StatusColor3, '  ALTS/C Chat ALTE Edit ALTH Hangup ALT+/- Time ALTB Info ALTT Bar ALTV Screen  ');
+    5 : Console.WriteXY (1, 25, bbsCfg.StatusColor3, '  ALTS/C Chat ALTE Edit ALTH Hangup ALT+/- Time ALTB Info ALTT Bar ALTV Screen  ');
   End;
 
-  Screen.SetWindow (1, 1, 80, 24, False);
+  Console.SetWindow (1, 1, 80, 24, False);
 End;
 
 Procedure ProcessSysopCommand (Cmd: Char);
 Begin
-  If Not Screen.Active And (Cmd <> #47) Then Exit;
+  If Not Console.Active And (Cmd <> #47) Then Exit;
 
   Case Cmd of
 {E} #18 : If (Not Session.InUserEdit) and (Session.User.UserNum <> -1) Then
@@ -307,10 +249,10 @@ Begin
             bbsCfg.UseStatusBar := Not bbsCfg.UseStatusBar;
 
             If Not bbsCfg.UseStatusBar Then Begin
-              Screen.WriteXY   (1, 25, 0, strRep(' ', 80));
-              Screen.SetWindow (1, 1, 80, 25, False);
+              Console.WriteXY   (1, 25, 0, strRep(' ', 80));
+              Console.SetWindow (1, 1, 80, 25, False);
             End Else
-              UpdateStatusLine (StatusPtr, '');
+              UpdateStatusLine (Session.StatusPtr, '');
           End;
 {S} #31 : If Not Session.User.InChat Then OpenChat(True);
 {H} #35 : Begin
@@ -318,17 +260,17 @@ Begin
             Halt(0);
           End;
 {C} #46 : If Not Session.User.InChat Then OpenChat(False);
-{V} #47 : If Screen.Active Then
+{V} #47 : If Console.Active Then
             Session.io.LocalScreenDisable
           Else
             Session.io.LocalScreenEnable;
 {B} #48 : Begin
-            If StatusPtr < 5 Then
-              Inc (StatusPtr)
+            If Session.StatusPtr < 5 Then
+              Inc (Session.StatusPtr)
             Else
-              StatusPtr := 1;
+              Session.StatusPtr := 1;
 
-            UpdateStatusLine (StatusPtr, '');
+            UpdateStatusLine (Session.StatusPtr, '');
           End;
     #59..
     #62 : Begin
@@ -343,11 +285,11 @@ Begin
           End;
 {+} #130: If Session.TimeLeft > 1 Then Begin
             Session.SetTimeLeft(Session.TimeLeft-1);
-            UpdateStatusLine(StatusPtr, '');
+            UpdateStatusLine(Session.StatusPtr, '');
           End;
 {-} #131: If Session.TimeLeft < 999 Then Begin
             Session.SetTimeLeft(Session.TimeLeft+1);
-            UpdateStatusLine(StatusPtr, '');
+            UpdateStatusLine(Session.StatusPtr, '');
           End;
   End;
 End;

@@ -82,6 +82,14 @@ Type
     LastScanHadNew : Boolean;
     LastScanHadYou : Boolean;
     PromptData     : Array[0..mysMaxThemeText] of Pointer;
+    StatusPtr      : Byte;
+    CurRoom        : Byte;
+    ConfigFile     : File of RecConfig;
+    ChatFile       : File of ChatRec;
+    RoomFile       : File of RoomRec;
+    Room           : RoomRec;
+    LastOnFile     : File of RecLastOn;
+    LastOn         : RecLastOn;
 
     Constructor Create;
     Destructor  Destroy; Override;
@@ -141,6 +149,7 @@ Begin
   AllowMessages := True;
   InMessage     := False;
   MessageCheck  := mysMessageThreshold;
+  StatusPtr     := 1;
 
   {$IFNDEF UNIX}
     Client := TIOSocket.Create;

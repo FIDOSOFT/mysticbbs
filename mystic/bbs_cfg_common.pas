@@ -86,10 +86,10 @@ Begin
     Exit;
   End;
 
-	If Last - First > mdlMaxSortSize Then Begin
-		ShowMsgBox(0, 'Cannot sort more than ' + strI2S(mdlMaxSortSize) + ' items');
-		Exit;
-	End;
+  If Last - First > mdlMaxSortSize Then Begin
+    ShowMsgBox(0, 'Cannot sort more than ' + strI2S(mdlMaxSortSize) + ' items');
+    Exit;
+  End;
 
   Result := True;
 End;

@@ -3757,4 +3757,10 @@
  ! Fixed a compatibility issue with the BINKP server when used against a BINKD
    client.
 
+ ! Fixed a bug when posting messages via NNTP.  Since there is no "To" in
+   NNTP, Mystic now sets all posts to "To: All".  This fixed a problem where
+   some messages posted via NNTP were not showing up inside of Mystic.
+
+ ! Fixed: Posts to networked bases via NNTP were not adding origin lines.
+
    <ALPHA 38 RELEASED>

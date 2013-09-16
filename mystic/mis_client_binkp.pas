@@ -120,6 +120,8 @@ Type
     Destructor  Destroy; Override;
     Procedure   RemoveFilesFromFLO (FN: String);
     Function    AuthenticateNode (AddrList: String) : Boolean;
+    Function    EscapeFileName (Str: String) : String;
+    Function    RestoreFileName (Str: String) : String;
     Function    GetDataStr : String;
     Procedure   SendFrame (CmdType: Byte; CmdData: String);
     Procedure   SendDataFrame (Var Buf; BufSize: Word);
@@ -129,6 +131,11 @@ Type
   End;
 
 Function CreateBINKP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
+
+// these need to be moved to a generic area
+
+Function GetFTNOutPath (EchoNode: RecEchoMailNode) : String;
+Procedure QueueByNode (Var Queue: TProtocolQueue; SkipHold: Boolean; EchoNode: RecEchoMailNode);
 
 Type
   TBINKPServer = Class(TServerClient)
@@ -182,6 +189,34 @@ End;
 Destructor TBinkP.Destroy;
 Begin
   Inherited Destroy;
+End;
+
+Function TBinkP.EscapeFileName (Str: String) : String;
+Var
+  BadChars : Array[1..1] of Char = (' ');
+  Count    : Byte;
+Begin
+  Result := Str;
+
+  //Result := strReplace(Result, '\', '\ASCIICODEFORSLASH');
+
+  For Count := 1 to SizeOf(BadChars) Do
+    While Pos(BadChars[Count], Result) > 0 Do
+      Result := strReplace(Result, BadChars[Count], '\' + strI2H(Byte(BadChars[Count]), 2));
+End;
+
+Function TBinkP.RestoreFileName (Str: String) : String;
+Var
+  Count : Byte;
+  Hex   : String;
+Begin
+  Result := Str;
+
+  While (Pos('\', Result) > 0) Do Begin
+    Count  := Pos('\', Result);
+    Hex    := Result[Count+1] + Result[Count+2];
+    Result := strReplace(Result, '\' + Hex, Char(strH2I(Hex)));
+  End;
 End;
 
 Function TBinkP.AuthenticateNode (AddrList: String) : Boolean;
@@ -585,7 +620,7 @@ Begin
                        // translate filename, fix up file times
 
                        Str    := GetDataStr;
-                       InFN   := strWordGet(1, Str, ' ');
+                       InFN   := RestoreFileName(strWordGet(1, Str, ' '));
                        InSize := strS2I(strWordGet(2, Str, ' '));
                        InTime := strS2I(strWordGet(3, Str, ' '));
                        InPos  := strS2I(strWordGet(4, Str, ' '));
@@ -596,11 +631,11 @@ Begin
                          // fix timestamp and escape filen
 
                          If FSize >= InSize Then Begin
-                           SendFrame (M_SKIP, InFN + ' ' + strI2S(FSize) + ' ' + strI2S(InTime));
+                           SendFrame (M_SKIP, EscapeFileName(InFN) + ' ' + strI2S(FSize) + ' ' + strI2S(InTime));
 
                            Continue;
                          End Else Begin
-                           SendFrame (M_GET, InFN + ' ' + strI2S(FSize) + ' ' + strI2S(InTime));
+                           SendFrame (M_GET, EscapeFileName(InFN) + ' ' + strI2S(FSize) + ' ' + strI2S(InTime));
 
                            StatusUpdate(Owner, 'Receiving: ' + InFN);
 
@@ -632,10 +667,11 @@ Begin
                      NeedHeader := True;
 
                      If InPos = InSize Then Begin
-                       // fix time, escape filename
+                       // set file time based on intime value
+                       // does this not work in linux?
 
                        Close     (InFile);
-                       SendFrame (M_GOT, InFN + ' ' + strI2S(InSize) + ' ' + strI2S(InTime));
+                       SendFrame (M_GOT, EscapeFileName(InFN) + ' ' + strI2S(InSize) + ' ' + strI2S(InTime));
 
                        Inc (RcvdFiles);
 
@@ -673,8 +709,8 @@ Begin
 
                      If IoResult <> 0 Then Continue;
 
-                     // need to escape filename here and fix file time
-                     SendFrame (M_FILE, FileList.QData[FileList.QPos].FileNew + ' ' + strI2S(FileList.QData[FileList.QPos].FileSize) + ' ' + strI2S(TempFileTime) + ' 0');
+                     // use real filetime instead of tempfiletime
+                     SendFrame (M_FILE, EscapeFileName(FileList.QData[FileList.QPos].FileNew) + ' ' + strI2S(FileList.QData[FileList.QPos].FileSize) + ' ' + strI2S(TempFileTime) + ' 0');
 
                      StatusUpdate (Owner, 'Sending ' + FileList.QData[FileList.QPos].FileNew);
 
@@ -697,8 +733,9 @@ Begin
 
                        Seek (OutFile, strS2I(Str));
 
-                       // fix file time and escape filename
-                       SendFrame (M_FILE, FileList.QData[FileList.QPos].FileNew + ' ' + Str + ' ' + strI2S(TempFileTime) + ' 0');
+                       // use real filetime instead of tempfiletime
+
+                       SendFrame (M_FILE, EscapeFileName(FileList.QData[FileList.QPos].FileNew) + ' ' + Str + ' ' + strI2S(TempFileTime) + ' 0');
 
                        HaveHeader := False;
                        NeedHeader := True;

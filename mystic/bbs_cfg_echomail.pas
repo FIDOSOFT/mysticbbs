@@ -309,7 +309,7 @@ Var
     While Not Eof(EchoFile) Do Begin
       Read (EchoFile, EchoNode);
 
-      List.Add(strPadR(strI2S(FilePos(EchoFile)), 7, ' ') + ' ' + strPadL(strYN(EchoNode.Active), 3, ' ') + '  ' + strPadR(EchoNode.Description, 35, ' ') + ' ' + strPadL(strAddr2Str(EchoNode.Address), 17, ' '), 0);
+      List.Add(strPadR(strI2S(FilePos(EchoFile)), 7, ' ') + ' ' + strPadL(strYN(EchoNode.Active), 3, ' ') + '  ' + strPadR(EchoNode.Description, 35, ' ') + ' ' + strPadL(Addr2Str(EchoNode.Address), 17, ' '), 0);
     End;
 
     List.Add('', 2);
@@ -461,7 +461,7 @@ Function Configuration_EchomailAddress (Edit: Boolean) : Byte;
     Form.Free;
     Box.Free;
 
-    If strAddr2Str(bbsCfg.NetAddress[Num]) = '0:0/0' Then
+    If Addr2Str(bbsCfg.NetAddress[Num]) = '0:0/0' Then
       bbsCfg.NetDomain[Num] := ''
     Else
     If bbsCfg.NetDomain[Num] = '' Then Begin
@@ -481,7 +481,7 @@ Var
     List.Clear;
 
     For A := 1 to 30 Do
-      List.Add(strPadR(strAddr2Str(bbsCfg.NetAddress[A]), 23, ' ') + ' ' + strPadR(bbsCfg.NetDomain[A], 8, ' ') + '  ' + strPadR(strYN(bbsCfg.NetPrimary[A]), 3, ' ') + '  ' + bbsCfg.NetDesc[A], 0);
+      List.Add(strPadR(Addr2Str(bbsCfg.NetAddress[A]), 23, ' ') + ' ' + strPadR(bbsCfg.NetDomain[A], 8, ' ') + '  ' + strPadR(strYN(bbsCfg.NetPrimary[A]), 3, ' ') + '  ' + bbsCfg.NetDesc[A], 0);
   End;
 
 Var
@@ -547,7 +547,7 @@ Var
       Read (ExportFile, ExpNode);
 
       If GetNodeByIndex(ExpNode, Node) Then
-        List.Add(strPadR(strI2S(FilePos(ExportFile)), 4, ' ') + ' ' + strPadR(Node.Description, 37, ' ') + ' ' + strPadL(strAddr2Str(Node.Address), 12, ' '), 0)
+        List.Add(strPadR(strI2S(FilePos(ExportFile)), 4, ' ') + ' ' + strPadR(Node.Description, 37, ' ') + ' ' + strPadL(Addr2Str(Node.Address), 12, ' '), 0)
       Else
         List.Add('XXX  UNKNOWN - DELETE THIS', 0);
     End;

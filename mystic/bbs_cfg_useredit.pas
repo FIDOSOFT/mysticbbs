@@ -85,7 +85,7 @@ Begin
 
   Box.Open (6, 5, 74, 21);
 
-  Screen.GetScreenImage (6, 5, 74, 21, BoxImage);
+  Console.GetScreenImage (6, 5, 74, 21, BoxImage);
 
   Birthdate := DateJulian2Str(U.Birthday, 1);
   FirstCall := DateDos2Str(U.FirstOn, 1);
@@ -352,7 +352,7 @@ Begin
 
   Configuration_EditUser (Session.User.ThisUser);
 
-  Screen.WriteXY (1, 24, 7, strRep(' ', 80));
+  Console.WriteXY (1, 24, 7, strRep(' ', 80));
 
   Session.InUserEdit := False;
   Session.LocalMode  := SavedLocal;
@@ -360,7 +360,7 @@ Begin
   Session.SetTimeLeft(Session.User.ThisUser.TimeLeft);
 
   {$IFNDEF UNIX}
-    UpdateStatusLine(StatusPtr, '');
+    UpdateStatusLine(Session.StatusPtr, '');
   {$ENDIF}
 End;
 

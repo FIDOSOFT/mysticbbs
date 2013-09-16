@@ -112,7 +112,7 @@ Uses
   m_Strings,
   BBS_Core,
   BBS_IO,
-  BBS_Common,
+  BBS_DataBase,
   BBS_Ansi_MenuInput;
 
 Procedure WriteXY (X, Y, A: Byte; S: String);
@@ -244,7 +244,7 @@ Var
   Count : Byte;
 Begin
   For Count := Y1 to Y2 Do
-    WriteXY (X, Count, 112, '³');
+    WriteXY (X, Count, 112, #179);
 End;
 
 Function ShowMsgBox (BoxType : Byte; Str : String) : Boolean;
@@ -354,9 +354,9 @@ Var
 Begin
   If Not WasOpened Then
     If Shadow Then
-      Screen.GetScreenImage(X1, Y1, X2 + 2, Y2 + 1, Image)
+      Console.GetScreenImage(X1, Y1, X2 + 2, Y2 + 1, Image)
     Else
-      Screen.GetScreenImage(X1, Y1, X2, Y2, Image);
+      Console.GetScreenImage(X1, Y1, X2, Y2, Image);
 
   WasOpened := True;
 
@@ -389,14 +389,14 @@ Begin
   If Shadow Then Begin
     For A := Y1 + 1 to Y2 + 1 Do
       For B := X2 + 1 to X2 + 2 Do Begin
-        Ch := Screen.ReadCharXY(B, A);
+        Ch := Console.ReadCharXY(B, A);
         WriteXY (B, A, ShadowAttr, Ch);
       End;
 
     A := Y2 + 1;
 
     For B := (X1 + 2) To (X2 + 2) Do Begin
-      Ch := Screen.ReadCharXY(B, A);
+      Ch := Console.ReadCharXY(B, A);
       WriteXY (B, A, ShadowAttr, Ch);
     End;
   End;
@@ -413,7 +413,7 @@ Begin
 
   GetMem (HideImage, SizeOf(TConsoleImageRec));
 
-  Screen.GetScreenImage (Image.X1, Image.Y1, Image.X2, Image.Y2, HideImage^);
+  Console.GetScreenImage (Image.X1, Image.Y1, Image.X2, Image.Y2, HideImage^);
 
   Session.io.RemoteRestore(Image);
 End;

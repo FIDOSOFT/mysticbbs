@@ -14,94 +14,6 @@ Uses
 Var
   TempPath : String;
 
-(*
-Function PollByQWKNet (QwkNet: RecQwkNetwork) : Boolean;
-Var
-  QWK      : TQwkEngine;
-  FTP      : TFTPClient;
-  User     : RecUser;
-  SentFile : Boolean;
-  ExpTotal : LongInt;
-Begin
-  Result   := False;
-  SentFile := False;
-
-  If (QwkNet.MemberType <> 1) or
-     (QwkNet.PacketID = '') or
-     (QwkNet.ArcType = '') Then Exit;
-
-  WriteLn ('- Exchanging Mail for ' + QwkNet.Description);
-
-  DirClean (TempPath, '');
-
-  User.Handle     := QwkNet.PacketID;
-  User.QwkNetwork := QwkNet.Index;
-
-  QWK := TQwkEngine.Create (TempPath, QwkNet.PacketID, 1, User);
-
-  QWK.IsNetworked := True;
-  QWK.IsExtended  := QwkNet.UseQWKE;
-
-  QWK.ExportPacket(True);
-
-  ExecuteArchive (TempPath, TempPath + QwkNet.PacketID + '.rep', QwkNet.ArcType, TempPath + '*', 1);
-
-  WriteLn ('   - Exported @' + QwkNet.PacketID + '.rep -> ', QWK.TotalMessages, ' msgs ');
-  WriteLn ('   - Connecting via FTP to ' + QWkNet.HostName);
-
-  ExpTotal := QWK.TotalMessages;
-
-  If ExpTotal = 0 Then
-    DirClean (TempPath, '');
-
-  FTP := TFTPClient.Create(bbsCfg.inetInterface);
-
-  If FTP.OpenConnection(QwkNet.HostName) Then Begin
-    WriteLn ('   - Connected');
-
-    If FTP.Authenticate(QwkNet.Login, QwkNet.Password) Then Begin
-      WriteLn ('   - Logged in as ', QwkNet.Login);
-      WriteLn ('   - Sending reply packet');
-
-      SentFile := FTP.SendFile (QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.rep');
-
-      WriteLn ('   - Downloading QWK packet');
-
-      DirClean       (TempPath, '');
-      FTP.GetFile    (QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.qwk');
-
-      If FileExist(TempPath + QwkNet.PacketID + '.qwk') Then Begin
-        WriteLn ('   - Unpacking QWK packet');
-
-        ExecuteArchive (TempPath, TempPath + QwkNet.PacketID + '.qwk', QwkNet.ArcType, '*', 2);
-
-        WriteLn ('   - Importing QWK packet');
-
-        If QWK.ImportPacket(True) Then
-          WriteLn ('   - Imported ', QWK.RepOK, ' messages (', QWK.RepFailed, ' failed)')
-        Else
-          WriteLn ('   - Unable to find QWK packet');
-      End Else
-        Writeln ('   - No QWK file received');
-    End;
-  End;
-
-  If (ExpTotal > 0) and Not SentFile Then Begin
-    WriteLn ('   - Send of REP failed; reseting export pointers');
-
-    QWK.ResetSentFlagByQLR;
-    writeln('DEBUG done');
-  End;
-
-  FTP.Free;
-  QWK.Free;
-
-  DirClean (TempPath, '');
-
-  WriteLn;
-End;
-*)
-
 Function PollByQWKNet (QwkNet: RecQwkNetwork) : Boolean;
 Var
   QWK      : TQwkEngine;
@@ -145,13 +57,24 @@ Begin
 
     If FTP.Authenticate(QwkNet.Login, QwkNet.Password) Then Begin
       WriteLn ('   - Logged in as ', QwkNet.Login);
-      WriteLn ('   - Sending reply packet');
 
-      SentFile := FTP.SendFile (QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.rep');
+      If QWK.TotalMessages > 0 Then Begin
+        WriteLn ('   - Sending reply packet');
+
+        Case FTP.SendFile(QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.rep') of
+          ftpResOK      : SentFile := True;
+          ftpResFailed  : WriteLn ('      - Failed');
+          ftpResBadData : WriteLn ('      - Unable to open data connection');
+        End;
+      End;
 
       WriteLn ('   - Downloading QWK packet');
 
-      FTP.GetFile (QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.qwk');
+      Case FTP.GetFile (QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.qwk') of
+        ftpResOK      : WriteLn ('      - OK: ' + QwkNet.PacketID + '.qwk', ' (' + strComma(FileByteSize(TempPath + QwkNet.PacketID + '.qwk')) + ' bytes)');
+        ftpResFailed  : WriteLn ('      - Failed');
+        ftpResBadData : WriteLn ('      - Unable to open data connection');
+      End;
     End;
   End;
 

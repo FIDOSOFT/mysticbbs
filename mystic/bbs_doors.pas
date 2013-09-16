@@ -233,7 +233,7 @@ Begin
 
   WRITE_DOOR32(PassHandle);
 
-  Screen.GetScreenImage(1,1,80,25, Image);
+  Console.GetScreenImage(1,1,80,25, Image);
 
   Cmd := Cmd + #0;
 
@@ -264,10 +264,10 @@ Begin
     Close  (Session.User.UserFile);
   End;
 
-  Screen.SetWindowTitle(WinConsoleTitle + strI2S(Session.NodeNum));
-  Screen.PutScreenImage(Image);
+  Console.SetWindowTitle(WinConsoleTitle + strI2S(Session.NodeNum));
+  Console.PutScreenImage(Image);
 
-  UpdateStatusLine(StatusPtr, '');
+  UpdateStatusLine(Session.StatusPtr, '');
 
   Session.TimeOut := TimerSeconds;
 End;

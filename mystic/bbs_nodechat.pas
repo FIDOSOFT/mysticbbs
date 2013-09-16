@@ -55,20 +55,20 @@ Var
 Begin
   If (R < 1) or (R > 99) Then Exit;
 
-  Reset (RoomFile);
-  Seek  (RoomFile, R-1);
-  Read  (RoomFile, Room);
-  Close (RoomFile);
+  Reset (Session.RoomFile);
+  Seek  (Session.RoomFile, R - 1);
+  Read  (Session.RoomFile, Session.Room);
+  Close (Session.RoomFile);
 
   Session.Chat.Room := R;
-  CurRoom   := R;
+  Session.CurRoom   := R;
 
   Assign (CF, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
   Reset  (CF);
   Write  (CF, Session.Chat);
   Close  (CF);
 
-  Send_Node_Message (5, strI2S(Session.NodeNum) + ';' + 'Now chatting in channel ' + strI2S(CurRoom), 0); //++lang
+  Send_Node_Message (5, strI2S(Session.NodeNum) + ';' + 'Now chatting in channel ' + strI2S(Session.CurRoom), 0); //++lang
 End;
 
 Procedure Update_Topic;
@@ -81,12 +81,12 @@ Begin
   Session.io.AnsiGotoXY   (Session.io.ScreenInfo[4].X, Session.io.ScreenInfo[4].Y);
   Session.io.AnsiColor (Session.io.ScreenInfo[4].A);
 
-  Session.io.OutRaw (strPadR(strI2S(CurRoom), 2, ' '));
+  Session.io.OutRaw (strPadR(strI2S(Session.CurRoom), 2, ' '));
 
   Session.io.AnsiGotoXY (Session.io.ScreenInfo[5].X, Session.io.ScreenInfo[5].Y);
   Session.io.AnsiColor  (Session.io.ScreenInfo[5].A);
 
-  Session.io.OutRaw (strPadR(Room.Name, 40, ' '));
+  Session.io.OutRaw (strPadR(Session.Room.Name, 40, ' '));
 End;
 
 Function GetKeyNodeChatFunc (Forced: Boolean) : Boolean;
@@ -131,9 +131,9 @@ Begin
 
     If ioReset(MsgFile, SizeOf(Msg), fmRWDN) Then Begin
 
-      OldAttr := Screen.TextAttr;
-      OldX    := Screen.CursorX;
-      OldY    := Screen.CursorY;
+      OldAttr := Console.TextAttr;
+      OldX    := Console.CursorX;
+      OldY    := Console.CursorY;
 
       While Not Eof(MsgFile) Do Begin
         Read (MsgFile, Msg);
@@ -145,7 +145,7 @@ Begin
             1 : If Msg.Room = 0 Then
                   Str := strReplace(Session.GetPrompt(319), '|&1', Msg.FromWho)
                 Else
-                If Msg.Room = CurRoom Then
+                If Msg.Room = Session.CurRoom Then
                   Str := strReplace(Session.GetPrompt(181), '|&1', Msg.FromWho)
                 Else
                   Continue;
@@ -153,10 +153,10 @@ Begin
             5 : Str := Session.GetPrompt(226);
             6 : Str := strReplace(Session.GetPrompt(229), '|&1', Msg.FromWho);
             7 : Begin
-                  Reset (RoomFile);
-                  Seek  (RoomFile, CurRoom - 1);
-                  Read  (RoomFile, Room);
-                  Close (RoomFile);
+                  Reset (Session.RoomFile);
+                  Seek  (Session.RoomFile, Session.CurRoom - 1);
+                  Read  (Session.RoomFile, Session.Room);
+                  Close (Session.RoomFile);
 
                   Update_Topic;
                   Str := Session.GetPrompt(226);
@@ -199,7 +199,7 @@ Begin
             Session.io.AnsiGotoXY (OldX, OldY);
           End Else Begin
             If Session.io.Graphics = 0 Then
-              Session.io.OutBS (Screen.CursorX, True)
+              Session.io.OutBS (Console.CursorX, True)
             Else Begin
               Session.io.AnsiMoveX(1);
               Session.io.AnsiClrEOL;
@@ -237,8 +237,8 @@ Procedure Node_Chat;
       Exit;
     End;
 
-    Session.io.PromptInfo[1] := strI2S(CurRoom);
-    Session.io.PromptInfo[2] := Room.Name;
+    Session.io.PromptInfo[1] := strI2S(Session.CurRoom);
+    Session.io.PromptInfo[2] := Session.Room.Name;
 
     Session.io.OutFile ('ansitele', True, 0);
 
@@ -258,10 +258,10 @@ Procedure Node_Chat;
     For A := 1 to bbsCfg.INetTNNodes Do
       If GetChatRecord(A, Temp) Then
         If Temp.InChat Then Begin
-          Reset (RoomFile);
-          Seek  (RoomFile, Temp.Room - 1);
-          Read  (RoomFile, RM);
-          Close (RoomFile);
+          Reset (Session.RoomFile);
+          Seek  (Session.RoomFile, Temp.Room - 1);
+          Read  (Session.RoomFile, RM);
+          Close (Session.RoomFile);
 
           Session.io.PromptInfo[1] := Temp.Name;
           Session.io.PromptInfo[2] := strI2S(A);
@@ -372,10 +372,10 @@ Begin
   Session.Chat.InChat    := True;
   Session.Chat.Available := False;
 
-  Assign (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
-  Reset  (ChatFile);
-  Write  (ChatFile, Session.Chat);
-  Close  (ChatFile);
+  Assign (Session.ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+  Reset  (Session.ChatFile);
+  Write  (Session.ChatFile, Session.Chat);
+  Close  (Session.ChatFile);
 
   FileErase(Session.TempPath + 'chat.tmp');
 
@@ -403,9 +403,9 @@ Begin
     Session.io.OutFull (Session.GetPrompt(427));
 
     If Full Then
-      Str := Session.io.GetInput (79 - Screen.CursorX + 1, 250, 19, '')
+      Str := Session.io.GetInput (79 - Console.CursorX + 1, 250, 19, '')
     Else
-      Str := Session.io.GetInput (79 - Screen.CursorX + 1, 250, 11, '');
+      Str := Session.io.GetInput (79 - Console.CursorX + 1, 250, 11, '');
 
     If Str[1] = '/' Then Begin
       Session.io.GetKeyCallBack := NIL;
@@ -439,7 +439,7 @@ Begin
         Str := Copy(Str, 5, Length(Str));
 
         If Str <> '' Then
-          Send_Node_Message (6, '0;' + Str, CurRoom);
+          Send_Node_Message (6, '0;' + Str, Session.CurRoom);
       End Else
       If Str2 = '/MSG' Then
         Send_Private_Message(Str)
@@ -458,20 +458,20 @@ Begin
         FullReDraw;
       End Else
       If Str2 = '/TOPIC' Then Begin
-        Room.Name := Copy(Str, strWordPos(2, Str, ' '), Length(Str));
+        Session.Room.Name := Copy(Str, strWordPos(2, Str, ' '), Length(Str));
 
-        Reset (RoomFile);
-        Seek  (RoomFile, CurRoom - 1);
-        Write (RoomFile, Room);
-        Close (RoomFile);
+        Reset (Session.RoomFile);
+        Seek  (Session.RoomFile, Session.CurRoom - 1);
+        Write (Session.RoomFile, Session.Room);
+        Close (Session.RoomFile);
 
-        Send_Node_Message (7, '0;Topic changed to "' + Room.Name + '"', CurRoom); // ++lang
+        Send_Node_Message (7, '0;Topic changed to "' + Session.Room.Name + '"', Session.CurRoom); // ++lang
       End;
 
       Session.io.GetKeyCallBack := GetKeyNodeChatFunc;
     End Else
     If Str <> '' Then Begin
-      Send_Node_Message (1, '0;' + Str, CurRoom);
+      Send_Node_Message (1, '0;' + Str, Session.CurRoom);
       If Not Full Then Session.io.OutRawLn('');
       GetKeyNodeChatFunc(True);
     End;
@@ -484,10 +484,10 @@ Begin
 
   Session.AllowMessages := True;
 
-  Assign (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
-  Reset  (ChatFile);
-  Write  (ChatFile, Session.Chat);
-  Close  (ChatFile);
+  Assign (Session.ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Session.NodeNum) + '.dat');
+  Reset  (Session.ChatFile);
+  Write  (Session.ChatFile, Session.Chat);
+  Close  (Session.ChatFile);
 
   FileErase(Session.TempPath + 'chat.tmp');
 

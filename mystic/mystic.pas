@@ -65,31 +65,29 @@ End;
 
 Procedure InitClasses;
 Begin
-  Assign (ConfigFile, 'mystic.dat');
-
-  if ioReset(ConfigFile, SizeOf(RecConfig), fmReadWrite + fmDenyNone) Then Begin
-    Read  (ConfigFile, bbsCfg);
-    Close (ConfigFile);
-  End Else Begin
-    WriteLn('ERROR: Unable to read mystic.dat');
-    Halt(1);
+  Case BBSCfgStatus of
+    CfgNotFound : Begin
+                    WriteLn('ERROR: Unable to read mystic.dat');
+                    Halt(1);
+                  End;
+    CfgMisMatch : Begin
+                    WriteLn('ERROR: Data files are not current and must be upgraded');
+                    Halt(1);
+                  End;
   End;
 
-  If bbsCfg.DataChanged <> mysDataChanged Then Begin
-    WriteLn('ERROR: Data files are not current and must be upgraded');
-    Halt(1);
-  End;
+  Console  := TOutput.Create(True);
+  Keyboard := TInput.Create;
+  Session  := TBBSCore.Create;
 
-  Screen  := TOutput.Create(True);
-  Input   := TInput.Create;
-  Session := TBBSCore.Create;
+  Assign (Session.ConfigFile, bbsCfgPath + 'mystic.dat');
 End;
 
 Procedure DisposeClasses;
 Begin
   Session.Free;
-  Input.Free;
-  Screen.Free;
+  Keyboard.Free;
+  Console.Free;
 End;
 
 Var
@@ -150,11 +148,11 @@ Begin
 
   {$IFNDEF LOGGING}
     {$IFNDEF UNIX}
-      Screen.TextAttr := 14;
+      Console.TextAttr := 14;
 
-      Screen.SetWindow (1, 1, 80, 25, False);
-      Screen.ClearScreen;
-      Screen.WriteLine ('Exiting with Errorlevel ' + strI2S(ExitCode));
+      Console.SetWindow (1, 1, 80, 25, False);
+      Console.ClearScreen;
+      Console.WriteLine ('Exiting with Errorlevel ' + strI2S(ExitCode));
     {$ENDIF}
   {$ENDIF}
 
@@ -166,7 +164,7 @@ End;
 Procedure CheckDIR (Dir: String);
 Begin
   If Not DirExists(Dir) Then Begin
-    Screen.WriteLine ('ERROR: ' + Dir + ' does not exist.');
+    Console.WriteLine ('ERROR: ' + Dir + ' does not exist.');
 
     DisposeClasses;
 
@@ -182,15 +180,15 @@ Begin
   Session.NodeNum := 0;
 
   For Count := 1 to bbsCfg.INetTNNodes Do Begin
-    Assign (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Count) + '.dat');
+    Assign (Session.ChatFile, bbsCfg.DataPath + 'chat' + strI2S(Count) + '.dat');
 
-    If Not ioReset (ChatFile, Sizeof(ChatRec), fmRWDN) Then Begin
+    If Not ioReset (Session.ChatFile, Sizeof(ChatRec), fmRWDN) Then Begin
       Session.NodeNum := Count;
 
       Break;
     End Else Begin
-      ioRead (ChatFile, TChat);
-      Close  (ChatFile);
+      ioRead (Session.ChatFile, TChat);
+      Close  (Session.ChatFile);
 
       If Not TChat.Active Then Begin
         Session.NodeNum := Count;
@@ -267,7 +265,7 @@ Begin
   {$I-} Reset (Session.User.UserFile); {$I+}
   If IoResult <> 0 Then Begin
     If FileExist(bbsCfg.DataPath + 'users.dat') Then Begin
-      Screen.WriteLine ('ERROR: Unable to access USERS.DAT');
+      Console.WriteLine ('ERROR: Unable to access USERS.DAT');
       DisposeClasses;
       Halt(1);
     End;
@@ -284,7 +282,7 @@ Begin
   Assign (Session.ThemeFile, bbsCfg.DataPath + 'theme.dat');
   {$I-} Reset (Session.ThemeFile); {$I+}
   If IoResult <> 0 Then Begin
-    Screen.WriteLine ('ERROR: No theme configuration.');
+    Console.WriteLine ('ERROR: No theme configuration.');
     DisposeClasses;
     Halt(1);
   End;
@@ -292,7 +290,7 @@ Begin
 
   If Not Session.LoadThemeData(bbsCfg.DefThemeFile) Then Begin
     If Not Session.ConfigMode Then Begin
-      Screen.WriteLine ('ERROR: Default theme prompts not found: ' + bbsCfg.DefThemeFile + '.txt');
+      Console.WriteLine ('ERROR: Default theme prompts not found: ' + bbsCfg.DefThemeFile + '.txt');
       DisposeClasses;
       Halt(1);
     End;
@@ -309,15 +307,15 @@ Begin
   CheckDIR (bbsCfg.ScriptPath);
   CheckDIR (bbsCfg.LogsPath);
 
-  Assign (RoomFile, bbsCfg.DataPath + 'chatroom.dat');
-  {$I-} Reset (RoomFile); {$I+}
+  Assign (Session.RoomFile, bbsCfg.DataPath + 'chatroom.dat');
+  {$I-} Reset (Session.RoomFile); {$I+}
   If IoResult <> 0 Then Begin
-    ReWrite (RoomFile);
-    Room.Name := 'None';
+    ReWrite (Session.RoomFile);
+    Session.Room.Name := 'None';
     For Count := 1 to 99 Do
-      Write (RoomFile, Room);
+      Write (Session.RoomFile, Session.Room);
   End;
-  Close (RoomFile);
+  Close (Session.RoomFile);
 
   Assign (Session.FileBase.FBaseFile, bbsCfg.DataPath + 'fbases.dat');
   {$I-} Reset(Session.FileBase.FBaseFile); {$I+}
@@ -327,7 +325,7 @@ Begin
   Assign (Session.Msgs.MBaseFile, bbsCfg.DataPath + 'mbases.dat');
   {$I-} Reset(Session.Msgs.MBaseFile); {$I+}
   If IoResult <> 0 Then Begin
-    Screen.WriteLine ('ERROR: No message base configuration. Use MYSTIC -CFG');
+    Console.WriteLine ('ERROR: No message base configuration. Use MYSTIC -CFG');
     DisposeClasses;
     Halt(1);
   End;
@@ -353,10 +351,10 @@ Begin
   End;
   Close (Session.User.SecurityFile);
 
-  Assign (LastOnFile, bbsCfg.DataPath + 'callers.dat');
-  {$I-} Reset(LastOnFile); {$I+}
-  If IoResult <> 0 Then ReWrite(LastOnFile);
-  Close (LastOnFile);
+  Assign (Session.LastOnFile, bbsCfg.DataPath + 'callers.dat');
+  {$I-} Reset(Session.LastOnFile); {$I+}
+  If IoResult <> 0 Then ReWrite(Session.LastOnFile);
+  Close (Session.LastOnFile);
 
   Assign (Session.FileBase.ArcFile, bbsCfg.DataPath + 'archive.dat');
   {$I-} Reset(Session.FileBase.ArcFile); {$I+}
@@ -384,8 +382,8 @@ Begin
 
   InitClasses;
 
-  Screen.TextAttr := 7;
-  Screen.WriteLine('');
+  Console.TextAttr := 7;
+  Console.WriteLine('');
 
   For Count := 1 to ParamCount Do Begin
     Temp := strUpper(ParamStr(Count));
@@ -461,13 +459,13 @@ Begin
   If Session.ConfigMode Then Begin
     Session.NodeNum := 0;
 
-    Screen.SetWindowTitle ('Mystic Configuration');
+    Console.SetWindowTitle ('Mystic Configuration');
 
     Configuration_MainMenu;
 
-    Screen.TextAttr := 7;
-    Screen.ClearScreen;
-    Screen.BufFlush;
+    Console.TextAttr := 7;
+    Console.ClearScreen;
+    Console.BufFlush;
 
     Halt(0);
   End;
