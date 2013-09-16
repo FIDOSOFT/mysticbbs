@@ -5,9 +5,13 @@ Unit m_Tcp_Client_FTP;
 Interface
 
 Uses
-//  SysUtils, //wordrec
   m_io_Sockets,
   m_Tcp_Client;
+
+Const
+  ftpResOK      = 0;
+  ftpResFailed  = 1;
+  ftpResBadData = 2;
 
 Type
   WordRec = Record
@@ -30,8 +34,8 @@ Type
     Function    OpenConnection    (HostName: String) : Boolean;
     Function    Authenticate      (Login, Password: String) : Boolean;
     Function    ChangeDirectory   (Str: String) : Boolean;
-    Function    SendFile          (Passive: Boolean; FileName: String) : Boolean;
-    Function    GetFile           (Passive: Boolean; FileName: String) : Boolean;
+    Function    SendFile          (Passive: Boolean; FileName: String) : Byte;
+    Function    GetFile           (Passive: Boolean; FileName: String) : Byte;
     Procedure   CloseConnection;
   End;
 
@@ -40,9 +44,6 @@ Implementation
 Uses
   m_FileIO,
   m_Strings;
-
-Const
-  ftpDefaultDataPort = 20;
 
 Constructor TFTPClient.Create (NetI: String);
 Begin
@@ -158,14 +159,14 @@ Begin
   End;
 End;
 
-Function TFTPClient.SendFile (Passive: Boolean; FileName: String) : Boolean;
+Function TFTPClient.SendFile (Passive: Boolean; FileName: String) : Byte;
 Var
   F      : File;
   Buffer : Array[1..8 * 1024] of Char;
   Res    : LongInt;
   OK     : Boolean;
 Begin
-  Result := False;
+  Result := ftpResFailed;
 
   If Not FileExist(FileName) Then Exit;
 
@@ -193,25 +194,23 @@ Begin
 
     CloseDataSession;
 
-    Result := GetResponse = 226;
+    If GetResponse = 226 Then
+      Result := ftpResOK;
   End Else Begin
-//    If IsPassive Then
-//      WriteLn ('DEBUG unable to connect to FTP server for data session')
-//    Else
-//      WriteLn ('DEBUG unable to establish data session on port ', DataPort);
+    Result := ftpResBadData;
 
     CloseDataSession;
   End;
 End;
 
-Function TFTPClient.GetFile (Passive: Boolean; FileName: String) : Boolean;
+Function TFTPClient.GetFile (Passive: Boolean; FileName: String) : Byte;
 Var
   F      : File;
   Res    : LongInt;
-  Buffer : Array[1..8*1024] of Char;
+  Buffer : Array[1..8 * 1024] of Char;
   OK     : Boolean;
 Begin
-  Result := False;
+  Result := ftpResFailed;
 
   If FileExist(FileName) Then Exit;
 
@@ -239,12 +238,10 @@ Begin
 
     CloseDataSession;
 
-    Result := GetResponse = 226;
+    If GetResponse = 226 Then
+      Result := ftpResOK;
   End Else Begin
-//    If IsPassive Then
-//      WriteLn ('DEBUG unable to connect to FTP server for data session')
-//    Else
-//      WriteLn ('DEBUG unable to establish data session on port ', DataPort);
+    Result := ftpResBadData;
 
     CloseDataSession;
   End;
