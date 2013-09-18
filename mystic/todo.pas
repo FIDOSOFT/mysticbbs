@@ -44,6 +44,7 @@ BUGS AND POSSIBLE ISSUES
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
 - auto create qwk network message bases?
+- make -CFG mode NOT use inactivity timeout
 - ability when editing a posted message to be able to toggle the Private flag
   if the base is Pub/Priv
 - when editing an already posted message with reference linkage, export the

@@ -158,7 +158,7 @@ Begin
   Form.AddBits ('9', ' Pvt Reply'   , 55, 21, 68, 21, 11, MBPrivReply, @MBase.Flags, Topic + 'Allow private posts in public?');
 
   Repeat
-    WriteXY (19, 15, 113, strPadR(Addr2Str(bbsCfg.NetAddress[MBase.NetAddr]), 19, ' '));
+    WriteXY (19, 15, 113, strPadR(Addr2Str(bbsCfg.NetAddress[MBase.NetAddr]) + ' (' + bbsCfg.NetDesc[MBase.NetAddr] + ')', 33, ' '));
 
     Links := FileByteSize(MBase.Path + MBase.FileName + '.lnk');
 
@@ -478,7 +478,7 @@ Var
     Write (MBaseFile, MBase);
   End;
 
-  Procedure EraseData;
+  Procedure EraseData (DoScn: Boolean);
   Begin
     FileErase (MBase.Path + MBase.FileName + '.jhr');
     FileErase (MBase.Path + MBase.FileName + '.jlr');
@@ -487,7 +487,9 @@ Var
     FileErase (MBase.Path + MBase.FileName + '.sqd');
     FileErase (MBase.Path + MBase.FileName + '.sqi');
     FileErase (MBase.Path + MBase.FileName + '.sql');
-    FileErase (MBase.Path + MBase.FileName + '.scn');
+
+    If DoScn Then
+      FileErase (MBase.Path + MBase.FileName + '.scn');
   End;
 
 Var
@@ -526,7 +528,7 @@ Begin
 
     Case List.ExitCode of
       '/' : If Edit Then
-            Case GetCommandOption(8, 'I-Insert|D-Delete|C-Copy|M-Move|P-Paste|G-Global|S-Sort|') of
+            Case GetCommandOption(8, 'I-Insert|D-Delete|C-Copy|M-Move|P-Paste|G-Global|S-Sort|R-Reset|') of
               'I' : If List.Picked > 1 Then Begin
                       AssignRecord(False);
                       MakeList;
@@ -543,7 +545,7 @@ Begin
                             KillRecord (MBaseFile, Count, SizeOf(MBase));
                             FileErase  (MBase.Path + MBase.FileName + '.lnk');
 
-                            If KillData Then EraseData;
+                            If KillData Then EraseData(True);
                           End;
 
                         MakeList;
@@ -558,7 +560,7 @@ Begin
                         FileErase  (MBase.Path + MBase.FileName + '.lnk');
 
                         If ShowMsgBox(1, 'Delete data: ' + strStripPipe(MBase.Name)) Then
-                          EraseData;
+                          EraseData(True);
 
                         MakeList;
                       End;
@@ -605,6 +607,27 @@ Begin
                       GlobalEdit (MBase);
                     End;
               'S' : SortMessageBases (List, MBaseFile);
+              'R' : If List.Marked > 0 Then Begin
+                      If ShowMsgBox(1, 'Reset msgs in ' + strI2S(List.Marked) + ' bases?') Then Begin
+                        For Count := List.ListMax DownTo 1 Do
+                          If List.List[Count].Tagged = 1 Then Begin
+                            Seek (MBaseFile, Count - 1);
+                            Read (MBaseFile, MBase);
+
+                            EraseData(False);
+                          End;
+
+                        If ShowMsgBox (1, 'Reset echomail duplicate tracking?') Then
+                          FileErase (bbsCfg.DataPath + 'echodupes.dat');
+                      End;
+                    End Else
+                    If (List.Picked > 1) and (List.Picked < List.ListMax) Then
+                      If ShowMsgBox(1, 'Reset msgs in this base?') Then Begin
+                        Seek (MBaseFile, List.Picked - 1);
+                        Read (MBaseFile, MBase);
+
+                        EraseData(False);
+                      End;
             End;
       #13 : If List.Picked < List.ListMax Then Begin
               Seek (MBaseFile, List.Picked - 1);

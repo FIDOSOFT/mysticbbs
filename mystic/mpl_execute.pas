@@ -1610,7 +1610,7 @@ Begin
           End;
     18  : Begin
             {$IFDEF UNIX}
-              TempBool := Input.KeyPressed;
+              TempBool := Keyboard.KeyPressed;
             {$ELSE}
               TempBool := Keyboard.KeyPressed OR Session.Client.DataWaiting;
             {$ENDIF}

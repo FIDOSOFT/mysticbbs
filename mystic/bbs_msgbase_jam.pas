@@ -758,7 +758,7 @@ Begin
     End;
 
     MsgHdr^.JamHdr.Rev := 1;
-    MsgHdr^.JamHdr.DateArrived := ToUnixDate(CurDateDos); {Get date processed}
+    MsgHdr^.JamHdr.DateArrived := DateDos2Unix(CurDateDos); {Get date processed}
 
     DT.Year  := strS2I(Copy(JM^.MsgDate, 7, 2)); {Convert date written}
     DT.Month := strS2I(Copy(JM^.MsgDate, 1, 2));
@@ -773,7 +773,7 @@ Begin
     DT.Hour := strS2I(Copy(JM^.MsgTime, 1, 2));
     DT.Min  := strS2I(Copy(JM^.MsgTime, 4, 2));
 
-    MsgHdr^.JamHdr.DateWritten := DTToUnixDate(DT);
+    MsgHdr^.JamHdr.DateWritten := DateDT2Unix(DT);
   End;
 
   If WriteError = 0 Then Begin             {Lock message base for update}
@@ -941,7 +941,7 @@ Procedure TMsgBaseJAM.MsgStartUp;
       Error := IoResult;
     End;
     If Error = 0 Then Begin
-      UnixToDt(MsgHdr^.JamHdr.DateWritten, DT);
+      DT := DateUnix2DT(MsgHdr^.JamHdr.DateWritten);
 
       JM^.MsgDate := strZero(DT.Month) + '-' + strZero(DT.Day) + '-' + Copy(strI2S(DT.Year), 3, 2);
       JM^.MsgTime := strZero(DT.Hour)  + ':' + strZero(DT.Min);
@@ -1542,7 +1542,7 @@ Begin
     TmpHdr^.Signature[2] :=  'A';
     TmpHdr^.Signature[3] :=  'M';
     TmpHdr^.BaseMsgNum   := 1;
-    TmpHdr^.Created      := ToUnixDate(CurDateDos);
+    TmpHdr^.Created      := DateDos2Unix(CurDateDos);
     TmpHdr^.PwdCrc       := -1;
     CreateError          := SaveFilePos(JM^.MsgPath + '.jhr', TmpHdr^, SizeOf(TmpHdr^), 0);
 

@@ -1414,12 +1414,12 @@ Begin
   Result  := #255;
   IsArrow := False;
 
-  If Input.KeyWait(Wait) Then Begin
-    Result     := Input.ReadKey;
+  If Keyboard.KeyWait(Wait) Then Begin
+    Result     := Keyboard.ReadKey;
     LocalInput := True;
 
     If Result = #0 Then Begin
-      Result := Input.ReadKey;
+      Result := Keyboard.ReadKey;
 
       If (AllowArrow) and (Result in [#71..#73, #75, #77, #79..#83]) Then Begin
         IsArrow := True;
@@ -2294,7 +2294,7 @@ End;
 Procedure TBBSIO.PurgeInputBuffer;
 Begin
   {$IFDEF UNIX}
-  While Input.KeyPressed Do Input.ReadKey;
+  While Keyboard.KeyPressed Do Keyboard.ReadKey;
   {$ENDIF}
   {$IFDEF WINDOWS}
   If Not TBBSCore(Core).LocalMode Then TBBSCore(Core).Client.PurgeInputData(100);

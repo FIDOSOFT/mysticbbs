@@ -473,7 +473,6 @@ Var
   Count     : LongInt;
   GotStart  : Boolean;
   Found     : Boolean;
-  SemFile   : File;
 Begin
   If Not LoggedIn Then Begin
     ClientWriteLine(re_AuthReq);

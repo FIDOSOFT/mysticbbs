@@ -13,9 +13,10 @@ Interface
 Uses
   DOS;
 
-Function  ToUnixDate    (DosDate: LongInt): LongInt;
-Function  DTToUnixDate  (DT: DateTime): LongInt;
-Procedure UnixToDT      (SecsPast: LongInt; Var Dt: DateTime);
+Function  DateDos2Unix  (DosDate: LongInt): LongInt;
+Function  DateDT2Unix   (DT: DateTime): LongInt;
+Function  DateUnix2DT   (SecsPast: LongInt) : DateTime;
+Function  DateUnix2Dos  (D: LongInt) : LongInt;
 Procedure Str2Az        (Str: String; MaxLen: Byte; Var AZStr); {Convert string to asciiz}
 Function  LoadFilePos   (FN: String; Var Rec; FS: Word; FPos: LongInt): Word;
 Function  ExtendFile    (FN: String; ToSize: LongInt): Word;
@@ -34,7 +35,15 @@ Const
 //  DATED1    =  146097;
 //  DATED2    = 1721119;
 
-Function DTToUnixDate (DT: DateTime): LongInt;
+Function DateUnix2Dos (D: LongInt) : LongInt;
+Var
+  DT : DateTime;
+Begin
+  DT := DateUnix2DT(D);
+  PackTime (DT, Result);
+End;
+
+Function DateDT2Unix (DT: DateTime): LongInt;
 Var
   SecsPast, DaysPast: LongInt;
 Begin
@@ -44,33 +53,33 @@ Begin
   SecsPast := DaysPast * 86400;
   SecsPast := SecsPast + (LongInt(DT.Hour) * 3600) + (DT.Min * 60) + (DT.Sec);
 
-  DTToUnixDate := SecsPast;
+  Result := SecsPast;
 End;
 
-Function ToUnixDate (DosDate: LongInt): LongInt;
+Function DateDos2Unix (DosDate: LongInt): LongInt;
 Var
   DT: DateTime;
 Begin
   UnpackTime(DosDate, DT);
 
-  ToUnixDate := DTToUnixDate(DT);
+  Result := DateDT2Unix(DT);
 End;
 
-Procedure UnixToDT (SecsPast: LongInt; Var DT: DateTime);
+Function DateUnix2DT (SecsPast: LongInt) : DateTime;
 Var
   DateNum : LongInt;  //might be able to remove this
 Begin
-  Datenum := (SecsPast Div 86400) + DATEc1970;
+  DateNum := (SecsPast Div 86400) + DATEc1970;
 
-  FillChar(DT, SizeOf(DT), 0);
+  FillChar(Result, SizeOf(Result), 0);
 
-  DateJ2G(DateNum, SmallInt(DT.Year), SmallInt(DT.Month), SmallInt(DT.Day));
+  DateJ2G(DateNum, SmallInt(Result.Year), SmallInt(Result.Month), SmallInt(Result.Day));
 
-  SecsPast := SecsPast Mod 86400;
-  DT.Hour  := SecsPast Div 3600;
-  SecsPast := SecsPast Mod 3600;
-  DT.Min   := SecsPast Div 60;
-  DT.Sec   := SecsPast Mod 60;
+  SecsPast    := SecsPast Mod 86400;
+  Result.Hour := SecsPast Div 3600;
+  SecsPast    := SecsPast Mod 3600;
+  Result.Min  := SecsPast Div 60;
+  Result.Sec  := SecsPast Mod 60;
 End;
 
 Function SaveFilePos (FN: String; Var Rec; FS: Word; FPos: LongInt): Word;

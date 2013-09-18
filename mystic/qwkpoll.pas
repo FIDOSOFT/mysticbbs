@@ -63,17 +63,19 @@ Begin
 
         Case FTP.SendFile(QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.rep') of
           ftpResOK      : SentFile := True;
-          ftpResFailed  : WriteLn ('      - Failed');
           ftpResBadData : WriteLn ('      - Unable to open data connection');
+        Else
+          WriteLn ('      - Failed');
         End;
       End;
 
       WriteLn ('   - Downloading QWK packet');
 
-      Case FTP.GetFile (QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.qwk') of
+      Case FTP.GetFile(QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.qwk') of
         ftpResOK      : WriteLn ('      - OK: ' + QwkNet.PacketID + '.qwk', ' (' + strComma(FileByteSize(TempPath + QwkNet.PacketID + '.qwk')) + ' bytes)');
         ftpResFailed  : WriteLn ('      - Failed');
         ftpResBadData : WriteLn ('      - Unable to open data connection');
+        ftpResNoFile  : WriteLn ('      - Packet does not exist on remote');
       End;
     End;
   End;
@@ -93,12 +95,13 @@ Begin
 
     WriteLn ('   - Importing QWK packet');
 
+    filecopy(temppath + qwknet.packetid + '.qwk', 'd:\s7\vert.qwk');
+
     If QWK.ImportPacket(True) Then
       WriteLn ('   - Imported ', QWK.RepOK, ' messages (', QWK.RepFailed, ' failed)')
     Else
       WriteLn ('   - Unable to find QWK packet');
-  End Else
-    Writeln ('   - No QWK file received');
+  End;
 
   QWK.Free;
 

@@ -3763,4 +3763,24 @@
 
  ! Fixed: Posts to networked bases via NNTP were not adding origin lines.
 
+ ! BINKP server should now properly escape filenames with spaces in them.
+
+ + When tossing ECHOMAIL PKT files and bundles, Mystic will now sort the
+   entire incoming directory by filename and then filename as a secondary and
+   process each PKT or bundle in order.
+
+ + When tossing an ECHOMAIL bundle, Mystic will now extract the bundle and
+   then sort the contents of the bundle by filedate and secondly by filename
+   and process each PKT in the sorted order.
+
+ + The message base editor now has a new function /R (Reset messages).  This
+   will take a single base or a selection of tagged bases and remove ALL
+   messages in them without effecting your user's new scan/qwk scan settings
+   OR the echomail linkage.  IF bases are tagged before /R Mystic will also
+   offer to reset the echomail duplicate tracking pointers as well.
+
+ + QWKPOLL should now provide more detail during the polling process,
+   including possible data port issues and when the HUB does not have a QWK
+   packet with new messages for you.
+
    <ALPHA 38 RELEASED>

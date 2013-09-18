@@ -6,6 +6,7 @@ Interface
 
 Uses
   DOS,
+  MKCRAP,
   m_io_Sockets,
   m_DateTime,
   m_FileIO,
@@ -670,6 +671,7 @@ Begin
                        // set file time based on intime value
                        // does this not work in linux?
 
+                       SetFTime  (InFile, DateUnix2Dos(InTime));
                        Close     (InFile);
                        SendFrame (M_GOT, EscapeFileName(InFN) + ' ' + strI2S(InSize) + ' ' + strI2S(InTime));
 

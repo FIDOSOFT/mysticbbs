@@ -427,8 +427,8 @@ Begin
   Console.BufFlush;
 
   For Loop := 1 to 24 Do Begin
-    While Input.KeyPressed Do
-      If Input.ReadKey in [#27, '[', '0'..'9', ';', 'R'] Then Begin
+    While Keyboard.KeyPressed Do
+      If Keyboard.ReadKey in [#27, '[', '0'..'9', ';', 'R'] Then Begin
         Session.io.Graphics := 1;
         Break;
       End;
@@ -438,7 +438,8 @@ Begin
     WaitMS(250);
   End;
 
-  While Input.KeyPressed Do Loop := Byte(Input.ReadKey);
+  While Keyboard.KeyPressed Do
+    Loop := Byte(Keyboard.ReadKey);
 
   Session.io.OutFullLn (Session.GetPrompt(259));
   Session.io.BufFlush;

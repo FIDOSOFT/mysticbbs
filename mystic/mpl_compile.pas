@@ -1737,6 +1737,8 @@ Function TParserEngine.ParseVariableInfo (Param: Boolean; IsRec: Boolean; Var In
   End;
 
 Begin
+  Result := 0;
+
   FillChar (Info, SizeOf(Info), 0);
 
   Case tkwType of

@@ -10,8 +10,10 @@ Implementation
 
 Uses
   DOS,
+  Classes,
   m_FileIO,
   m_Strings,
+  m_DateTime,
   AView,
   BBS_Records,
   BBS_DataBase,
@@ -242,7 +244,7 @@ Var
 
           Inc (TotalEcho);
 
-          Log (2, '+', '      Added Msg #' + strI2S(MsgBase^.GetHighMsgNum) + ' to ' + strStripPipe(MBase.Name));
+          Log (2, '+', '      Added Msg #' + strI2S(MsgBase^.GetHighMsgNum) + ' (' + MsgBase^.GetDate + ') to ' + strStripPipe(MBase.Name));
         End;
       End;
     End;
@@ -264,13 +266,13 @@ Var
 
   Procedure ImportPacketBundle (PktBundle: String);
   Var
-    PKTFound   : Boolean;
     PKTMatched : Boolean;
     DirInfo    : SearchRec;
     NodeFile   : File of RecEchoMailNode;
     EchoNode   : RecEchoMailNode;
     ArcType    : String[4];
-    Count      : Byte;
+    Count      : LongInt;
+    BundleList : TStringList;
   Begin
     PKTMatched := False;
 
@@ -306,21 +308,18 @@ Var
       End;
     End;
 
-    PKTFound := False;
-
     ProcessStatus ('Extracting ' + PktBundle, False);
 
     ExecuteArchive (TempPath, bbsCfg.InboundPath + PktBundle, ArcType, '*', 2);
+
+    BundleList := TStringList.Create;
 
     FindFirst (TempPath + '*', AnyFile, DirInfo);
 
     While DosError = 0 Do Begin
       If DirInfo.Attr And Directory = 0 Then Begin
-        If strUpper(JustFileExt(DirInfo.Name)) = 'PKT' Then Begin
-          PKTFound := True;
-
-          ImportPacketFile (TempPath + DirInfo.Name);
-        End;
+        If strUpper(JustFileExt(DirInfo.Name)) = 'PKT' Then
+          BundleList.Add(FormatDate(DateDos2DT(DirInfo.Time), 'YYYYMMDDHHIISS') + ' ' + DirInfo.Name);
       End;
 
       FindNext (DirInfo);
@@ -328,16 +327,26 @@ Var
 
     FindClose (DirInfo);
 
-    If Not PKTFound Then
+    BundleList.Sort;
+
+    If BundleList.Count = 0 Then
       Log (2, '!', '   Unable to extract bundle; skipping')
-    Else
+    Else Begin
+      For Count := 1 to BundleList.Count Do
+        ImportPacketFile (TempPath + strWordGet(2, BundleList.Strings[Count - 1], ' '));
+
       FileErase (bbsCfg.InboundPath + PktBundle);
+    End;
+
+    BundleList.Free;
   End;
 
 Var
-  DirInfo : SearchRec;
-  Count   : LongInt;
-  FileExt : String;
+  DirInfo  : SearchRec;
+  Count    : LongInt;
+  FileExt  : String;
+  PktList  : TStringList;
+  FileName : String;
 Begin
   TotalEcho  := 0;
   TotalNet   := 0;
@@ -386,39 +395,48 @@ Begin
     If Not GetMBaseByIndex (DupeIndex, DupeMBase) Then
       DupeIndex := -1;
 
+  PktList := TStringList.Create;
+
   FindFirst (bbsCfg.InboundPath + '*', AnyFile, DirInfo);
 
   While DosError = 0 Do Begin
-    If DirInfo.Attr And Directory = 0 Then Begin
-      FileExt := Copy(strUpper(JustFileExt(DirInfo.Name)), 1, 2);
-
-      If FileExt = 'PK' Then
-        ImportPacketFile(bbsCfg.InboundPath + DirInfo.Name)
-      Else
-      If (FileExt = 'SU') or
-         (FileExt = 'MO') or
-         (FileExt = 'TU') or
-         (FileExt = 'WE') or
-         (FileExt = 'TH') or
-         (FileExt = 'FR') or
-         (FileExt = 'SA') Then
-           ImportPacketBundle(DirInfo.Name)
-      Else
-        Log (2, '!', '   Unknown inbound file ' + DirInfo.Name);
-    End;
+    If DirInfo.Attr And Directory = 0 Then
+      PktList.Add(FormatDate(DateDos2DT(DirInfo.Time), 'YYYYMMDDHHIISS') + ' ' + DirInfo.Name);
 
     FindNext (DirInfo);
   End;
 
   FindClose (DirInfo);
 
+  PktList.Sort;
+
+  For Count := 1 to PktList.Count Do Begin
+    FileName := strWordGet(2, PktList.Strings[Count - 1], ' ');
+    FileExt  := Copy(strUpper(JustFileExt(FileName)), 1, 2);
+
+    If FileExt = 'PK' Then
+      ImportPacketFile(bbsCfg.InboundPath + FileName)
+    Else
+    If (FileExt = 'SU') or
+       (FileExt = 'MO') or
+       (FileExt = 'TU') or
+       (FileExt = 'WE') or
+       (FileExt = 'TH') or
+       (FileExt = 'FR') or
+       (FileExt = 'SA') Then
+         ImportPacketBundle(FileName)
+    Else
+      Log (2, '!', '   Unknown inbound file ' + FileName);
+  End;
+
   PKT.Free;
   Dupes.Free;
+  PktList.Free;
 
   ProcessStatus ('Total |15' + strI2S(TotalEcho) + ' |07echo |15' + strI2S(TotalNet) + ' |07net |15' + strI2S(TotalDupes) + ' |07dupe', True);
   ProcessResult (rDONE, True);
 
   FileErase (bbsCfg.SemaPath + fn_SemFileEchoIn);
- End;
+End;
 
 End.
