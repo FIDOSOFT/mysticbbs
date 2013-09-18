@@ -95,8 +95,6 @@ Begin
 
     WriteLn ('   - Importing QWK packet');
 
-    filecopy(temppath + qwknet.packetid + '.qwk', 'd:\s7\vert.qwk');
-
     If QWK.ImportPacket(True) Then
       WriteLn ('   - Imported ', QWK.RepOK, ' messages (', QWK.RepFailed, ' failed)')
     Else
