@@ -57,6 +57,7 @@ Var
   Avail : LongWord;
 Begin
   Result := False;
+  Temp   := 0;
 
   If PipeHandle = -1 Then Exit;
 

@@ -556,8 +556,8 @@ Begin
     Exit;
   End;
 
-  Data   := Ord (Not Block);
-  Result := ioctlSocket (FSocketHandle, FIONBIO, Data);
+  Data   := Ord(Not Block);
+  Result := ioctlSocket(FSocketHandle, LongInt(FIONBIO), @Data);
 End;
 {$ENDIF}
 
