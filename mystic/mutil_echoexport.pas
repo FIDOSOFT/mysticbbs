@@ -210,7 +210,11 @@ Var
 
       FillChar (PH, SizeOf(PH), 0);
 
+      PH.OrigZone := MsgBase^.GetOrigAddr.Zone;
+      PH.OrigNet  := MsgBase^.GetOrigAddr.Net;
       PH.OrigNode := MsgBase^.GetOrigAddr.Node;
+      PH.DestZone := EchoNode.Address.Zone;
+      PH.DestNet  := EchoNode.Address.Net;
       PH.DestNode := EchoNode.Address.Node;
       PH.Year     := DT.Year;
       PH.Month    := DT.Month;
@@ -219,11 +223,7 @@ Var
       PH.Minute   := DT.Min;
       PH.Second   := DT.Sec;
       PH.PKTType  := 2;
-      PH.OrigNet  := MsgBase^.GetOrigAddr.Net;
-      PH.DestNet  := EchoNode.Address.Net;
       PH.ProdCode := 254; // RESEARCH THIS
-      PH.OrigZone := MsgBase^.GetOrigAddr.Zone;
-      PH.DestZone := EchoNode.Address.Zone;
       //Password : Array[1..8] of Char;  // RESEARCH THIS
 
       BlockWrite (F, PH, SizeOf(PH));
@@ -231,12 +231,18 @@ Var
 
     FillChar (MH, SizeOf(MH), 0);
 
-    MH.MsgType  := 2;
-    MH.OrigNode := MsgBase^.GetOrigAddr.Node;
-    MH.DestNode := EchoNode.Address.Node;
-    MH.OrigNet  := MsgBase^.GetOrigAddr.Net;
-    MH.DestNet  := EchoNode.Address.Net;
+    MH.MsgType := 2;
 
+    If MBase.NetType = 3 Then Begin
+      MH.DestNode := MsgBase^.GetDestAddr.Node;
+      MH.DestNet  := MsgBase^.GetDestAddr.Net;
+    End Else Begin
+      MH.DestNode := EchoNode.Address.Node;
+      MH.DestNet  := EchoNode.Address.Net;
+    End;
+
+    MH.OrigNode := MsgBase^.GetOrigAddr.Node;
+    MH.OrigNet  := MsgBase^.GetOrigAddr.Net;
     TempStr1 := FormatDate(DT, 'DD NNN YY  HH:II:SS') + #0;
     Move (TempStr1[1], MH.DateTime[0], 20);
 
@@ -256,7 +262,7 @@ Var
       WriteStr ('AREA:' + MBase.EchoTag, #13);
 
     If MBase.NetType = 3 Then
-      WriteStr (#1 + 'INTL ' + strAddr2Str(EchoNode.Address) + ' ' + strAddr2Str(MsgBase^.GetOrigAddr), #13);
+      WriteStr (#1 + 'INTL ' + strAddr2Str(MsgBase^.GetDestAddr) + ' ' + strAddr2Str(MsgBase^.GetOrigAddr), #13);
 
     WriteStr (#1 + 'TID: ' + mysSoftwareID + ' ' + mysVersion, #13);
 

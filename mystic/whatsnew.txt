@@ -3783,4 +3783,8 @@
    including possible data port issues and when the HUB does not have a QWK
    packet with new messages for you.
 
+ ! Fixed a bug where Mystic would incorrectly address routed Netmail in both
+   the header and INTL kludge.  This could cause tossers to not correctly
+   reroute netmail to the correct destination.
+
    <ALPHA 38 RELEASED>
