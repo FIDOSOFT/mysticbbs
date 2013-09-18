@@ -20,6 +20,7 @@ Function  CurDateDos        : LongInt;
 Function  CurDateJulian     : LongInt;
 Function  CurDateDT         : DateTime;
 Function  DateDos2Str       (Date: LongInt; Format: Byte) : String;
+Function  DateDos2DT        (Date: LongInt) : DateTime;
 Function  DateJulian2Str    (Date: LongInt; Format: Byte) : String;
 Function  DateStr2Dos       (Str: String) : LongInt;
 Function  DateStr2Julian    (Str: String) : LongInt;
@@ -151,6 +152,11 @@ Var
 Begin
   GetDate  (Result.Year, Result.Month, Result.Day, Temp);
   GetTime  (Result.Hour, Result.Min, Result.Sec, Temp);
+End;
+
+Function DateDos2DT (Date: LongInt) : DateTime;
+Begin
+  UnPackTime (Date, Result);
 End;
 
 Function TimerSeconds : LongInt;

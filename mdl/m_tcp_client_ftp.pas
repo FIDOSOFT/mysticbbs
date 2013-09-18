@@ -12,6 +12,7 @@ Const
   ftpResOK      = 0;
   ftpResFailed  = 1;
   ftpResBadData = 2;
+  ftpResNoFile  = 3;
 
 Type
   WordRec = Record
@@ -174,9 +175,10 @@ Begin
 
   Client.WriteLine ('STOR ' + JustFile(FileName));
 
-  OK := OpenDataSession;
+  OK  := OpenDataSession;
+  Res := GetResponse;
 
-  If OK and (GetResponse = 150) Then Begin
+  If OK and (Res = 150) Then Begin
     Assign (F, FileName);
 
     If ioReset(F, 1, fmRWDN) Then Begin
@@ -197,7 +199,10 @@ Begin
     If GetResponse = 226 Then
       Result := ftpResOK;
   End Else Begin
-    Result := ftpResBadData;
+    If Res = 550 Then
+      Result := ftpResNoFile
+    Else
+      Result := ftpResBadData;
 
     CloseDataSession;
   End;
@@ -218,9 +223,10 @@ Begin
 
   Client.WriteLine('RETR ' + JustFile(FileName));
 
-  OK := OpenDataSession;
+  OK  := OpenDataSession;
+  Res := GetResponse;
 
-  If OK And (GetResponse = 150) Then Begin
+  If OK And (Res = 150) Then Begin
     Assign (F, FileName);
 
     If ioReWrite(F, 1, fmRWDW) Then Begin
@@ -241,7 +247,10 @@ Begin
     If GetResponse = 226 Then
       Result := ftpResOK;
   End Else Begin
-    Result := ftpResBadData;
+    If Res = 550 Then
+      Result := ftpResNoFile
+    Else
+      Result := ftpResBadData;
 
     CloseDataSession;
   End;
