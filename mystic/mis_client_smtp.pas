@@ -21,7 +21,8 @@ Uses
   MIS_Server,
   MIS_NodeData,
   MIS_Common,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 Function CreateSMTP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
@@ -89,7 +90,7 @@ Begin
   If IsFrom Then
     Server.Status(ProcessID, 'User: ' + InName + ' Domain: ' + InDomain);
 
-  If InDomain <> bbsConfig.iNetDomain Then Begin
+  If InDomain <> bbsCfg.iNetDomain Then Begin
     Server.Status(ProcessID, 'Refused by domain: ' + InName + '@' + InDomain);
     Exit;
   End;
@@ -114,7 +115,7 @@ End;
 
 Procedure TSMTPServer.cmdHELO;
 Begin
-  Client.WriteLine('250 ' + bbsConfig.inetDomain);
+  Client.WriteLine('250 ' + bbsCfg.inetDomain);
 End;
 
 Procedure TSMTPServer.cmdRSET;
@@ -209,7 +210,7 @@ Begin
     MsgText.Add(InData);
   Until False;
 
-  Assign  (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
+  Assign  (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
   ioReset (MBaseFile, SizeOf(RecMessageBase), fmRWDN);
   ioRead  (MBaseFile, MBase);
   Close   (MBaseFile);
@@ -295,10 +296,10 @@ Var
 Begin
   ResetSession;
 
-  Client.WriteLine('220 ' + bbsConfig.iNetDomain + ' Mystic SMTP Ready');
+  Client.WriteLine('220 ' + bbsCfg.iNetDomain + ' Mystic SMTP Ready');
 
   Repeat
-    If Client.WaitForData(bbsConfig.inetSMTPTimeout * 1000) = 0 Then Break;
+    If Client.WaitForData(bbsCfg.inetSMTPTimeout * 1000) = 0 Then Break;
 
     If Terminated Then Exit;
 

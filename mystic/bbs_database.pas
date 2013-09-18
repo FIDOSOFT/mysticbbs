@@ -64,6 +64,10 @@ Function  ImportFileDIZ         (Var Desc: FileDescBuffer; Var DescLines: Byte; 
 
 Function IsThisUser             (U: RecUser; Str: String) : Boolean;
 
+// ECHOMAIL
+
+Function GetNodeByAddress (Addr: String; Var TempNode: RecEchoMailNode) : Boolean;
+
 Implementation
 
 Uses
@@ -625,6 +629,25 @@ Begin
 
     Result := True;
   End;
+End;
+
+Function GetNodeByAddress (Addr: String; Var TempNode: RecEchoMailNode) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, bbsCfg.DataPath + 'echonode.dat');
+
+  If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
+
+  While Not Eof(F) And Not Result Do Begin
+    ioRead(F, TempNode);
+
+    Result := Addr2Str(TempNode.Address) = Addr;
+  End;
+
+  Close (F);
 End;
 
 Initialization

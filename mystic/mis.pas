@@ -80,41 +80,21 @@ Var
 {$I MIS_ANSIWFC.PAS}
 
 Procedure ReadConfiguration;
-Var
-  FileConfig : TFileBuffer;
-  DatLoc     : String;
 Begin
-  FileConfig := TFileBuffer.Create(SizeOf(RecConfig));
+  Case bbsCfgStatus of
+    cfgNotFound : If Not DaemonMode Then Begin
+                    Console.WriteLine (#13#10 + 'ERROR: Unable to read MYSTIC.DAT.  This file must exist in the same');
+                    Console.WriteLine ('directory as MIS or MYSTICBBS environment location');
 
-  If Not FileConfig.OpenStream ('mystic.dat', 1, fmOpen, fmRWDN) Then Begin
-    DatLoc := GetEnv('mysticbbs');
-
-    If DatLoc <> '' Then DatLoc := DirSlash(DatLoc);
-
-    If Not FileConfig.OpenStream (DatLoc + 'mystic.dat', 1, fmOpen, fmRWDN) Then Begin
-      If Not DaemonMode Then Begin
-        Console.WriteLine (#13#10 + 'ERROR: Unable to read MYSTIC.DAT.  This file must exist in the same');
-        Console.WriteLine ('directory as MIS');
-
-        Keyboard.Free;
-        Console.Free;
-      End;
-
-      FileConfig.Free;
-
-      Halt (1);
-    End;
+                    Halt(1);
+                  End;
+    cfgMisMatch : Begin
+                    WriteLn('ERROR: Data files are not current and must be upgraded.');
+                    Halt(1);
+                  End;
   End;
 
-  FileConfig.ReadBlock (bbsConfig, SizeOf(bbsConfig));
-  FileConfig.Free;
-
-  If bbsConfig.DataChanged <> mysDataChanged Then Begin
-    WriteLn('ERROR: Data files are not current and must be upgraded.');
-    Halt(1);
-  End;
-
-  DirChange(bbsConfig.SystemPath);
+  DirChange(bbsCfg.SystemPath);
 End;
 
 Function GetFocusPtr : TServerManager;
@@ -253,6 +233,7 @@ Begin
   End;
 End;
 
+(*
 Procedure LocalLogin;
 Const
   BufferSize = 1024 * 4;
@@ -271,7 +252,7 @@ Begin
 
   Client.FTelnetClient := True;
 
-  If Not Client.Connect(bbsConfig.inetInterface{'127.0.0.1'}, bbsConfig.InetTNPort) Then
+  If Not Client.Connect(bbsCfg.inetInterface{'127.0.0.1'}, bbsCfg.InetTNPort) Then
     Console.WriteLine('Unable to connect')
   Else Begin
     Done := False;
@@ -332,7 +313,7 @@ Begin
 
   SwitchFocus;
 End;
-
+*)
 {$IFDEF UNIX}
 Procedure SetUserOwner;
 Var
@@ -362,63 +343,63 @@ Begin
   SMTPServer   := NIL;
   NNTPServer   := NIL;
   BINKPServer  := NIL;
-  NodeData     := TNodeData.Create(bbsConfig.INetTNNodes);
+  NodeData     := TNodeData.Create(bbsCfg.INetTNNodes);
 
-  If bbsConfig.InetTNUse Then Begin
-    TelnetServer := TServerManager.Create(bbsConfig, bbsConfig.InetTNPort, bbsConfig.INetTNNodes, NodeData, @CreateTelnet);
+  If bbsCfg.InetTNUse Then Begin
+    TelnetServer := TServerManager.Create(bbsCfg, bbsCfg.InetTNPort, bbsCfg.INetTNNodes, NodeData, @CreateTelnet);
 
     TelnetServer.Server.FTelnetServer := True;
-    TelnetServer.ClientMaxIPs         := bbsConfig.InetTNDupes;
+    TelnetServer.ClientMaxIPs         := bbsCfg.InetTNDupes;
     TelnetServer.LogFile              := 'telnet';
 
     Result := True;
   End;
 
-  If bbsConfig.InetSMTPUse Then Begin
-    SMTPServer := TServerManager.Create(bbsConfig, bbsConfig.INetSMTPPort, bbsConfig.inetSMTPMax, NodeData, @CreateSMTP);
+  If bbsCfg.InetSMTPUse Then Begin
+    SMTPServer := TServerManager.Create(bbsCfg, bbsCfg.INetSMTPPort, bbsCfg.inetSMTPMax, NodeData, @CreateSMTP);
 
     SMTPServer.Server.FTelnetServer := False;
-    SMTPServer.ClientMaxIPs         := bbsConfig.INetSMTPDupes;
+    SMTPServer.ClientMaxIPs         := bbsCfg.INetSMTPDupes;
     SMTPServer.LogFile              := 'smtp';
 
     Result := True;
   End;
 
-  If bbsConfig.InetPOP3Use Then Begin
-    POP3Server := TServerManager.Create(bbsConfig, bbsConfig.INetPOP3Port, bbsConfig.inetPOP3Max, NodeData, @CreatePOP3);
+  If bbsCfg.InetPOP3Use Then Begin
+    POP3Server := TServerManager.Create(bbsCfg, bbsCfg.INetPOP3Port, bbsCfg.inetPOP3Max, NodeData, @CreatePOP3);
 
     POP3Server.Server.FTelnetServer := False;
-    POP3Server.ClientMaxIPs         := bbsConfig.inetPOP3Dupes;
+    POP3Server.ClientMaxIPs         := bbsCfg.inetPOP3Dupes;
     POP3Server.LogFile              := 'pop3';
 
     Result := True;
   End;
 
-  If bbsConfig.InetFTPUse Then Begin
-    FTPServer := TServerManager.Create(bbsConfig, bbsConfig.InetFTPPort, bbsConfig.inetFTPMax, NodeData, @CreateFTP);
+  If bbsCfg.InetFTPUse Then Begin
+    FTPServer := TServerManager.Create(bbsCfg, bbsCfg.InetFTPPort, bbsCfg.inetFTPMax, NodeData, @CreateFTP);
 
     FTPServer.Server.FTelnetServer := False;
-    FTPServer.ClientMaxIPs         := bbsConfig.inetFTPDupes;
+    FTPServer.ClientMaxIPs         := bbsCfg.inetFTPDupes;
     FTPServer.LogFile              := 'ftp';
 
     Result := True;
   End;
 
-  If bbsConfig.InetNNTPUse Then Begin
-    NNTPServer := TServerManager.Create(bbsConfig, bbsConfig.InetNNTPPort, bbsConfig.inetNNTPMax, NodeData, @CreateNNTP);
+  If bbsCfg.InetNNTPUse Then Begin
+    NNTPServer := TServerManager.Create(bbsCfg, bbsCfg.InetNNTPPort, bbsCfg.inetNNTPMax, NodeData, @CreateNNTP);
 
     NNTPServer.Server.FTelnetServer := False;
-    NNTPServer.ClientMaxIPs         := bbsConfig.inetNNTPDupes;
+    NNTPServer.ClientMaxIPs         := bbsCfg.inetNNTPDupes;
     NNTPServer.LogFile              := 'nntp';
 
     Result := True;
   End;
 
-  If bbsConfig.InetBINKPUse Then Begin
-    BINKPServer := TServerManager.Create(bbsConfig, bbsConfig.InetBINKPPort, bbsConfig.inetBINKPMax, NodeData, @CreateBINKP);
+  If bbsCfg.InetBINKPUse Then Begin
+    BINKPServer := TServerManager.Create(bbsCfg, bbsCfg.InetBINKPPort, bbsCfg.inetBINKPMax, NodeData, @CreateBINKP);
 
     BINKPServer.Server.FTelnetServer := False;
-    BINKPServer.ClientMaxIPs         := bbsConfig.inetBINKPDupes;
+    BINKPServer.ClientMaxIPs         := bbsCfg.inetBINKPDupes;
     BINKPServer.LogFile              := 'binkp';
 
     Result := True;
@@ -428,7 +409,7 @@ Begin
     SetUserOwner;
   {$ENDIF}
 
-  TempPath := bbsConfig.SystemPath + 'temp0' + PathChar;
+  TempPath := bbsCfg.SystemPath + 'temp0' + PathChar;
 
   DirCreate(TempPath);
 End;
@@ -613,7 +594,7 @@ Begin
         #09 : SwitchFocus;
 //        #13 : {$IFDEF UNIX}Snoop{$ENDIF};
         #27 : Break;
-      	#32 : LocalLogin;
+//      	#32 : LocalLogin;
       End;
 
     If (FocusPtr <> NIL) Then
@@ -656,8 +637,6 @@ Begin
   Console.WriteLine (' (DONE)');
 
   NodeData.Free;
-  Keyboard.Free;
-  Console.Free;
 
   Halt(255);
 End.

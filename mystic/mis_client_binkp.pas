@@ -16,7 +16,8 @@ Uses
   MIS_Server,
   MIS_NodeData,
   MIS_Common,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 Const
   M_NUL  = 0;
@@ -85,7 +86,7 @@ Type
     Data
   );
 
-  TBinkPStatusUpdate = Procedure (Owner: Pointer; Str: String);
+  TBinkPStatusUpdate = Procedure (Owner: Pointer; Level: Byte; Str: String);
 
   TBinkP = Class
     Owner        : Pointer;
@@ -116,6 +117,8 @@ Type
     PasswordMD5  : Boolean;
     FileList     : TProtocolQueue;
     RcvdFiles    : LongInt;
+    SentFiles    : LongInt;
+    SkipFiles    : LongInt;
 
     Constructor Create (O: Pointer; Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
     Destructor  Destroy; Override;
@@ -182,6 +185,8 @@ Begin
   HaveNode     := False;
   AuthState    := SendWelcome;
   RcvdFiles    := 0;
+  SentFiles    := 0;
+  SkipFiles    := 0;
 
   If Not IsClient and UseMD5 Then
     AuthState := SendChallenge;
@@ -230,7 +235,7 @@ Var
 Begin
   Result := False;
 
-  Assign (EchoFile, bbsConfig.DataPath + 'echonode.dat');
+  Assign (EchoFile, bbsCfg.DataPath + 'echonode.dat');
 
   If Not ioReset(EchoFile, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
 
@@ -239,7 +244,7 @@ Begin
 
     For Count := 1 to strWordCount(AddrList, ' ') Do Begin
       Addr1     := strWordGet(Count, AddrList, ' ');
-      Addr2     := strAddr2Str(EchoNode.Address);
+      Addr2     := Addr2Str(EchoNode.Address);
       UseDomain := Pos('@', Addr1) > 0;
 
       If UseDomain Then
@@ -346,12 +351,12 @@ Procedure TBinkP.SendFrame (CmdType: Byte; CmdData: String);
 Var
   DataSize : Word;
 Begin
-  DataSize := (Length(CmdData) + 2) OR $8000;
+  DataSize := (Length(CmdData) + 1) OR $8000;
 
-  Client.BufWriteStr(Char(Hi(DataSize)) + Char(Lo(DataSize)) + Char(CmdType) + CmdData + #0);
+  Client.BufWriteStr(Char(Hi(DataSize)) + Char(Lo(DataSize)) + Char(CmdType) + CmdData);
   Client.BufFlush;
 
-  StatusUpdate (Owner, 'S ' + BinkCmdStr[CmdType] + ' ' + CmdData);
+  StatusUpdate (Owner, 2, 'S ' + BinkCmdStr[CmdType] + ' ' + CmdData);
 
 //  WriteLn ('    S ' + BinkCmdStr[CmdType] + ' ' + CmdData);
 //  waitms(1000);
@@ -411,7 +416,7 @@ Begin
     End;
 
     If RxFrameType = Command Then
-      StatusUpdate (Owner, 'R ' + BinkCmdStr[RxCommand] + ' ' + GetDataStr);
+      StatusUpdate (Owner, 2, 'R ' + BinkCmdStr[RxCommand] + ' ' + GetDataStr);
 
 
 //    Case RxFrameType of
@@ -450,8 +455,8 @@ Begin
       If Count > 0 Then
         MD5Challenge := Copy(Str, Count + 4, 255);
 
-      If Not IsClient Then
-        StatusUpdate (Owner, Str);
+//      If Not IsClient Then
+        StatusUpdate (Owner, 1, Str);
     End;
 
 //    WriteLn ('AuthState: ', GetStateStr(AuthState), ', HasHeader: ', HaveHeader, ' Data: ', GetDataStr);
@@ -469,20 +474,20 @@ Begin
                         AuthState := SendWelcome;
                       End;
       SendWelcome   : Begin
-                        SendFrame (M_NUL, 'SYS ' + bbsConfig.BBSName);
-                        SendFrame (M_NUL, 'ZYZ ' + bbsConfig.SysopName);
+                        SendFrame (M_NUL, 'SYS ' + bbsCfg.BBSName);
+                        SendFrame (M_NUL, 'ZYZ ' + bbsCfg.SysopName);
                         SendFrame (M_NUL, 'VER Mystic/' + Copy(mysVersion, 1, 4) + ' binkp/1.0');
 
                         Str := '';
 
                         For Count := 1 to 30 Do
-                          If strAddr2Str(bbsConfig.NetAddress[Count]) <> '0:0/0' Then Begin
+                          If Addr2Str(bbsCfg.NetAddress[Count]) <> '0:0/0' Then Begin
                             If Str <> '' Then Str := Str + ' ';
 
-                            Str := Str + strAddr2Str(bbsConfig.NetAddress[Count]);
+                            Str := Str + Addr2Str(bbsCfg.NetAddress[Count]);
 
-                            If bbsConfig.NetDomain[Count] <> '' Then
-                              Str := Str + '@' + bbsConfig.NetDomain[Count];
+                            If bbsCfg.NetDomain[Count] <> '' Then
+                              Str := Str + '@' + bbsCfg.NetDomain[Count];
                           End;
 
                         SendFrame (M_ADR, Str);
@@ -526,7 +531,7 @@ Begin
                           NeedHeader  := True;
                           HaveHeader  := False;
 
-                          StatusUpdate (Owner, 'ADR ' + AddressList);
+                          StatusUpdate (Owner, 1, 'ADR ' + AddressList);
                         End;
                       End;
       WaitPassword  : If HaveHeader Then Begin
@@ -561,7 +566,7 @@ Begin
                         End;
 
                         If AuthState <> AuthOK Then
-                          StatusUpdate(Owner, 'Authorization failed');
+                          StatusUpdate(Owner, 1, 'Authorization failed');
                       End;
       WaitPwdOK     : If HaveHeader Then Begin
                         If RxCommand <> M_OK Then
@@ -587,6 +592,10 @@ Var
   InPos   : Cardinal;
   InTime  : Cardinal;
   FSize   : Cardinal;
+//  LastRx  : TBinkRxState = RxNone;
+//  LastTx  : TBinkTxState = TxNone;
+//  LastHH  : Boolean = False;
+//  LastNH  : Boolean = False;
 Begin
   //WriteLn ('Begin File Transfers');
 
@@ -601,10 +610,16 @@ Begin
 
     // need to update states to handle getting FILE during an xfer
     // and what to do if the file frame goes past file size (fail/quit), etc
+(*
+    If (RxState <> LastRx) or (TxState <> LastTx) or (HaveHeader <> LastHH) or (NeedHeader <> LastNH) Then Begin
+      lastrx := rxstate;
+      lasttx := txstate;
+      lasthh := haveheader;
+      lastnh := needheader;
 
-//    waitms(100);
-//    writeln ('rxstate=', ord(rxstate), '  txstate=', ord(txstate), '  have header ', haveheader, '  need header ', needheader);
-
+      WriteLn ('rxstate=', ord(rxstate), '  txstate=', ord(txstate), '  have header ', haveheader, '  need header ', needheader);
+    End;
+*)
     Case RxState of
       RxWaitFile : If HaveHeader Then Begin
                      If RxFrameType = Data Then Begin
@@ -626,25 +641,27 @@ Begin
                        InTime := strS2I(strWordGet(3, Str, ' '));
                        InPos  := strS2I(strWordGet(4, Str, ' '));
 
-                       If FileExist(bbsConfig.InBoundPath + InFN) Then Begin
-                         FSize := FileByteSize(bbsConfig.InBoundPath + InFN);
+                       If FileExist(bbsCfg.InBoundPath + InFN) Then Begin
+                         FSize := FileByteSize(bbsCfg.InBoundPath + InFN);
 
                          // fix timestamp and escape filen
 
                          If FSize >= InSize Then Begin
-                           SendFrame (M_SKIP, EscapeFileName(InFN) + ' ' + strI2S(FSize) + ' ' + strI2S(InTime));
+                           SendFrame (M_SKIP, EscapeFileName(InFN) + ' ' + strI2S(InSize) + ' ' + strI2S(InTime));
+
+                           Inc (SkipFiles);
 
                            Continue;
                          End Else Begin
                            SendFrame (M_GET, EscapeFileName(InFN) + ' ' + strI2S(FSize) + ' ' + strI2S(InTime));
 
-                           StatusUpdate(Owner, 'Receiving: ' + InFN);
-
                            InPos := FSize;
                          End;
                        End;
 
-                       Assign (InFile, bbsConfig.InBoundPath + InFN);
+                       StatusUpdate(Owner, 1, 'Receiving: ' + InFN);
+
+                       Assign (InFile, bbsCfg.InBoundPath + InFN);
                        Reset  (InFile, 1);
 
                        If IoResult <> 0 Then ReWrite (InFile, 1);
@@ -657,6 +674,10 @@ Begin
                        NeedHeader := True;
                        HaveHeader := False;
                        RxState    := RxDone;
+                       // It seems BINKP never sends this IF the last file
+                       // was skipped?  Odd.  Do we add a "LastWasSkipped"
+                       // and do something after a small wait time?  or
+                       // just wait for it to timeout like it does now
                      End;
                    End;
       RxGetData  : If HaveHeader And (RxFrameType = Data) Then Begin
@@ -693,6 +714,8 @@ Begin
                          HaveHeader := False;
                          NeedHeader := True;
                          TxState    := TxNextFile;
+
+                         Inc (SkipFiles);
                        End Else
                        If RxCommand = M_GOT Then Begin
                          FileList.QData[FileList.QPos].Status := QueueSuccess;
@@ -703,6 +726,8 @@ Begin
                          HaveHeader := False;
                          NeedHeader := True;
                          TxState    := TxNextFile;
+
+                         Inc (SentFiles);
                        End;
                    End;
       TxNextFile : If FileList.Next Then Begin
@@ -714,7 +739,7 @@ Begin
                      // use real filetime instead of tempfiletime
                      SendFrame (M_FILE, EscapeFileName(FileList.QData[FileList.QPos].FileNew) + ' ' + strI2S(FileList.QData[FileList.QPos].FileSize) + ' ' + strI2S(TempFileTime) + ' 0');
 
-                     StatusUpdate (Owner, 'Sending ' + FileList.QData[FileList.QPos].FileNew);
+                     StatusUpdate (Owner, 1, 'Sending ' + FileList.QData[FileList.QPos].FileNew);
 
                      TxState := TxSendData;
                    End Else Begin
@@ -729,6 +754,8 @@ Begin
                        TxState    := TxNextFile;
                        HaveHeader := False;
                        NeedHeader := True;
+
+                       Inc (SkipFiles);
                      End Else
                      If HaveHeader And (RxCommand = M_GET) Then Begin
                        Str := strWordGet(4, GetDataStr, ' ');
@@ -759,8 +786,7 @@ Begin
     End;
   Until ((RxState = RxDone) and (TxState = TxDone)) or (Not Client.Connected) or (TimerUp(TimeOut));
 
-  If Not IsClient Then
-    StatusUpdate(Owner, 'Session complete');
+  StatusUpdate(Owner, 1, 'Session complete (' + strI2S(SentFiles) + ' sent, ' + strI2S(RcvdFiles) + ' rcvd, ' + strI2S(SkipFiles) + ' skip)');
 
   If Client.Connected Then Client.BufFlush;
 End;
@@ -772,9 +798,9 @@ Var
   Count : Byte;
 Begin
   For Count := 1 to 30 Do
-    If (strUpper(EchoNode.Domain) = strUpper(bbsConfig.NetDomain[Count])) and
-       (EchoNode.Address.Zone = bbsConfig.NetAddress[Count].Zone) and
-       (bbsConfig.NetPrimary[Count]) Then Begin
+    If (strUpper(EchoNode.Domain) = strUpper(bbsCfg.NetDomain[Count])) and
+       (EchoNode.Address.Zone = bbsCfg.NetAddress[Count].Zone) and
+       (bbsCfg.NetPrimary[Count]) Then Begin
          Result := True;
 
          Exit;
@@ -794,9 +820,9 @@ End;
 Function GetFTNOutPath (EchoNode: RecEchoMailNode) : String;
 Begin;
   If IsFTNPrimary(EchoNode) Then
-    Result := bbsConfig.OutboundPath
+    Result := bbsCfg.OutboundPath
   Else
-    Result := DirLast(bbsConfig.OutboundPath) + strLower(EchoNode.Domain + '.' + strPadL(strI2H(EchoNode.Address.Zone, 3), 3, '0')) + PathChar;
+    Result := DirLast(bbsCfg.OutboundPath) + strLower(EchoNode.Domain + '.' + strPadL(strI2H(EchoNode.Address.Zone, 3), 3, '0')) + PathChar;
 
   If EchoNode.Address.Point <> 0 Then
     Result := Result + strI2H((EchoNode.Address.Net SHL 16) OR EchoNode.Address.Node, 8) + '.pnt' + PathChar;
@@ -909,7 +935,7 @@ Var
   F       : File;
 Begin
   Queue := TProtocolQueue.Create;
-  BinkP := TBinkP.Create (Server, Client, Queue, False, bbsConfig.inetBINKPTimeOut);
+  BinkP := TBinkP.Create (Server, Client, Queue, False, bbsCfg.inetBINKPTimeOut);
 
   BinkP.StatusUpdate := @Status;
 
@@ -923,7 +949,7 @@ Begin
 
         QueueByNode(Queue, False, BinkP.EchoNode);
 
-        Server.Status (ProcessID, 'Queued ' + strI2S(Queue.QSize - Before) + ' files for ' + strAddr2Str(BinkP.EchoNode.Address));
+        Server.Status (ProcessID, 'Queued ' + strI2S(Queue.QSize - Before) + ' files for ' + Addr2Str(BinkP.EchoNode.Address));
       End;
     End;
 
@@ -931,7 +957,7 @@ Begin
     BinkP.DoTransfers;
 
     If BinkP.RcvdFiles > 0 Then Begin
-      Assign  (F, bbsConfig.SemaPath + 'echomail.in');
+      Assign  (F, bbsCfg.SemaPath + fn_SemFileEchoIn);
       ReWrite (F, 1);
       Close   (F);
     End;

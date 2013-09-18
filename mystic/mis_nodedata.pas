@@ -7,6 +7,7 @@ Unit MIS_NodeData;
 Interface
 
 Uses
+  BBS_DataBase,
   MIS_Common;
 
 Type
@@ -50,7 +51,7 @@ Begin
   For Count := 1 to NodeTotal Do Begin
     GetNodeInfo (Count, NI);
 
-    Assign (ChatFile, bbsConfig.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
+    Assign (ChatFile, bbsCfg.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
 
     If ioReset(ChatFile, SizeOf(ChatRec), fmRWDN) Then Begin
       ioRead (ChatFile, Chat);

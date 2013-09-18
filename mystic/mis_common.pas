@@ -6,19 +6,18 @@ Interface
 
 Uses
   m_Output,
-  m_Term_Ansi,
-  BBS_Records;
+//  m_Term_Ansi,
+  BBS_Records,
+  BBS_DataBase;
 
 Var
-  TempPath  : String;
-//  Console   : TOutput;
-  Term      : TTermAnsi;
-  bbsConfig : RecConfig;
+  TempPath : String;
+//  Term     : TTermAnsi;
 
 Function SearchForUser    (UN: String; Var Rec: RecUser; Var RecPos: LongInt) : Boolean;
 Function CheckAccess      (User: RecUser; IgnoreGroup: Boolean; Str: String) : Boolean;
 Function GetSecurityLevel (Level: Byte; SecLevel: RecSecurity) : Boolean;
-Function strAddr2Str      (Addr : RecEchoMailAddr) : String;
+//Function strAddr2Str      (Addr : RecEchoMailAddr) : String;
 
 Implementation
 
@@ -38,7 +37,7 @@ Begin
 
   UserFile := TFileBuffer.Create (8 * 1024);
 
-  If UserFile.OpenStream (bbsConfig.DataPath + 'users.dat', SizeOf(RecUser), fmOpen, fmRWDN) Then
+  If UserFile.OpenStream (bbsCfg.DataPath + 'users.dat', SizeOf(RecUser), fmOpen, fmRWDN) Then
     While Not UserFile.EOF Do Begin
       UserFile.ReadRecord (Rec);
 
@@ -203,7 +202,7 @@ Var
 Begin
   Result := False;
 
-  Assign (SecLevelFile, bbsConfig.DataPath + 'security.dat');
+  Assign (SecLevelFile, bbsCfg.DataPath + 'security.dat');
 
   If Not ioReset (SecLevelFile, SizeOf(SecLevel), fmRWDN) Then Exit;
 
@@ -214,6 +213,7 @@ Begin
   Result := True;
 End;
 
+(*
 Function strAddr2Str (Addr : RecEchoMailAddr) : String;
 Var
   Temp : String[20];
@@ -225,5 +225,5 @@ Begin
 
   Result := Temp;
 End;
-
+*)
 End.

@@ -1,6 +1,6 @@
-{$I M_OPS.PAS}
-
 Unit MIS_Client_POP3;
+
+{$I M_OPS.PAS}
 
 // RFC 1939
 // optional TOP and APOP not implemented
@@ -23,7 +23,8 @@ Uses
   BBS_MsgBase_ABS,
   BBS_MsgBase_JAM,
   BBS_MsgBase_Squish,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 Function CreatePOP3 (Owner: TServerManager; Config: RecConfig; ND: TNodeData; CliSock: TIOSocket) : TServerClient;
 
@@ -181,7 +182,7 @@ Var
   End;
 
 Begin
-  Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
+  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
@@ -216,9 +217,9 @@ Begin
       MailInfo[MailSize].Text := TStringList.Create;
 
       AddLine ('Date: ' + ParseDateTime(MsgBase^.GetDate, MsgBase^.GetTime));
-      AddLine ('From: ' + MsgBase^.GetFrom + ' <' + strReplace(MsgBase^.GetFrom, ' ', '_') + '@' + bbsConfig.inetDomain + '>');
+      AddLine ('From: ' + MsgBase^.GetFrom + ' <' + strReplace(MsgBase^.GetFrom, ' ', '_') + '@' + bbsCfg.inetDomain + '>');
       AddLine ('X-Mailer: Mystic BBS ' + mysVersion);
-      AddLine ('To: ' + MsgBase^.GetTo + ' <' + strReplace(MsgBase^.GetTo, ' ', '_') + '@' + bbsConfig.inetDomain + '>');
+      AddLine ('To: ' + MsgBase^.GetTo + ' <' + strReplace(MsgBase^.GetTo, ' ', '_') + '@' + bbsCfg.inetDomain + '>');
       AddLine ('Subject: ' + MsgBase^.GetSubj);
       AddLine ('Content-Type: text/plain; charset=us-ascii');
       AddLine ('');
@@ -246,7 +247,7 @@ Var
   MBase     : RecMessageBase;
   MsgBase   : PMsgBaseABS;
 Begin
-  Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
+  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
 
   If Not ioReset(MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then Exit;
 
@@ -267,7 +268,7 @@ Begin
   End;
 
   For Count := 1 to MailSize Do Begin
-    If MailInfo[Count].Deleted or (MailInfo[Count].GotRETR and bbsConfig.inetPOP3Delete) Then Begin
+    If MailInfo[Count].Deleted or (MailInfo[Count].GotRETR and bbsCfg.inetPOP3Delete) Then Begin
       MsgBase^.SeekFirst(1);
 
       While MsgBase^.SeekFound Do Begin
@@ -457,7 +458,7 @@ Begin
   Client.WriteLine(re_Greeting);
 
   Repeat
-    If Client.WaitForData(bbsConfig.inetPOP3TimeOut * 1000) = 0 Then Break;
+    If Client.WaitForData(bbsCfg.inetPOP3TimeOut * 1000) = 0 Then Break;
 
     If Terminated Then Exit;
 

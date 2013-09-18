@@ -172,7 +172,7 @@ Begin
 
   MBaseFile := TFileBuffer.Create(FileReadBuffer);
 
-  If MBaseFile.OpenStream (bbsConfig.DataPath + 'mbases.dat', SizeOf(TempBase), fmOpen, fmRWDN) Then Begin
+  If MBaseFile.OpenStream (bbsCfg.DataPath + 'mbases.dat', SizeOf(TempBase), fmOpen, fmRWDN) Then Begin
     MBaseFile.ReadRecord (TempBase);
 
     While Not MBaseFile.EOF Do Begin
@@ -237,7 +237,7 @@ Begin
 
   MBaseFile := TFileBuffer.Create(FileReadBuffer);
 
-  If MBaseFile.OpenStream (bbsConfig.DataPath + 'mbases.dat', SizeOf(TempBase), fmOpen, fmRWDN) Then Begin
+  If MBaseFile.OpenStream (bbsCfg.DataPath + 'mbases.dat', SizeOf(TempBase), fmOpen, fmRWDN) Then Begin
     MBaseFile.ReadRecord (TempBase);
 
     While Not MBaseFile.EOF Do Begin
@@ -359,7 +359,7 @@ Begin
   Found     := False;
   MBaseFile := TBufFile.Create(FileReadBuffer);
 
-  If MBaseFile.Open(bbsConfig.DataPath + 'mbases.dat', fmOpen, fmRWDN, SizeOf(RecMessageBase)) Then Begin
+  If MBaseFile.Open(bbsCfg.DataPath + 'mbases.dat', fmOpen, fmRWDN, SizeOf(RecMessageBase)) Then Begin
     MBaseFile.Read(TempBase);
 
     While Not MBaseFile.EOF Do Begin
@@ -430,8 +430,8 @@ Begin
     MsgBase^.SetMailType(mmtEchoMail);
 
     Case TempBase.NetType of
-      1 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileEcho);
-      2 : Assign (SemFile, bbsConfig.SemaPath + fn_SemFileNews);
+      1 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileEcho);
+      2 : Assign (SemFile, bbsCfg.SemaPath + fn_SemFileNews);
     End;
 
     ReWrite (SemFile);
@@ -547,7 +547,7 @@ Begin
 
   // ignore groups and check postacs in loop instead of below?
 
-  Assign (MBaseFile, bbsConfig.DataPath + 'mbases.dat');
+  Assign (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
 
   If ioReset(MBaseFile, SizeOf(RecMessageBase), fmRWDN) Then Begin
     ioRead (MBaseFile, TempBase);
@@ -785,7 +785,7 @@ Begin
   ClientWriteLine(re_Greeting);
 
   Repeat
-    If Client.WaitForData(bbsConfig.inetNNTPTimeout * 1000) = 0 Then Break;
+    If Client.WaitForData(bbsCfg.inetNNTPTimeout * 1000) = 0 Then Break;
 
     If Terminated Then Exit;
 

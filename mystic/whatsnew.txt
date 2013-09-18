@@ -3770,8 +3770,8 @@
    process each PKT or bundle in order.
 
  + When tossing an ECHOMAIL bundle, Mystic will now extract the bundle and
-   then sort the contents of the bundle by filedate and secondly by filename
-   and process each PKT in the sorted order.
+   then sort the contents of the bundle by filedate and secondly by filename,
+   then process each PKT in the sorted order.
 
  + The message base editor now has a new function /R (Reset messages).  This
    will take a single base or a selection of tagged bases and remove ALL
@@ -3786,5 +3786,18 @@
  ! Fixed a bug where Mystic would incorrectly address routed Netmail in both
    the header and INTL kludge.  This could cause tossers to not correctly
    reroute netmail to the correct destination.
+
+ ! Fixed a bug in BINKP protocol on the client side where the client was not
+   sending the proper SKIP filesize back to the server.  With BINKD this
+   could cause the BINKD server to just wait until the session times out
+   instead of sending EOB.
+
+ + FIDOPOLL can now poll a single node by the address.  IE:
+      fidopoll 46:1/100
+
+ + FIDOPOLL now logs to "fidopoll.log" in the logs directory.
+
+ ! SEEN-BY and PATH kludge lines are no longer added to exported netmail
+   messages.
 
    <ALPHA 38 RELEASED>

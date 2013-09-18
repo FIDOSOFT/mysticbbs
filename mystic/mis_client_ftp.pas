@@ -151,7 +151,7 @@ Begin
   Password   := '';
   UserPos    := -1;
   DataIP     := '';
-  DataPort   := Random(bbsConfig.inetFTPPortMax - bbsConfig.inetFTPPortMin) + bbsConfig.inetFTPPortMin;
+  DataPort   := Random(bbsCfg.inetFTPPortMax - bbsCfg.inetFTPPortMin) + bbsCfg.inetFTPPortMin;
   DataSocket := NIL;
   IsPassive  := False;
   FBasePos   := -1;
@@ -166,7 +166,7 @@ Var
   UserFile : File of RecUser;
 Begin
   // change to getuserbypos
-  Assign  (UserFile, bbsConfig.DataPath + 'users.dat');
+  Assign  (UserFile, bbsCfg.DataPath + 'users.dat');
   ioReset (UserFile, SizeOf(RecUser), fmRWDW);
   ioSeek  (UserFile, UserPos - 1);
   ioRead  (UserFile, User);
@@ -189,7 +189,7 @@ Begin
     Inc (User.DLk, FDir.Size DIV 1024);
     Inc (User.DLkToday, FDir.Size DIV 1024);
 
-    Assign  (FDirFile, bbsConfig.DataPath + TFBase.FileName + '.dir');
+    Assign  (FDirFile, bbsCfg.DataPath + TFBase.FileName + '.dir');
     ioReset (FDirFile, SizeOf(RecFileList), fmRWDW);
     ioSeek  (FDirFile, DirPos - 1);
     ioWrite (FDirFile, FDir);
@@ -200,7 +200,7 @@ Begin
   ioWrite (UserFile, User);
   Close   (UserFile);
 
-  Assign  (HistFile, bbsConfig.DataPath + 'history.dat');
+  Assign  (HistFile, bbsCfg.DataPath + 'history.dat');
   ioReset (HistFile, SizeOf(RecHistory), fmRWDW);
 
   If IoResult <> 0 Then ReWrite(HistFile);
@@ -248,8 +248,8 @@ Begin
 
   If FDir.Flags And FDirOffline <> 0 Then Exit;
 
-  If (FDir.Flags And FDirInvalid <> 0) And Not CheckAccess(User, True, bbsConfig.AcsDLUnvalid) Then Exit;
-  If (FDir.Flags And FDirFailed  <> 0) And Not CheckAccess(User, True, bbsConfig.AcsDLFailed)  Then Exit;
+  If (FDir.Flags And FDirInvalid <> 0) And Not CheckAccess(User, True, bbsCfg.AcsDLUnvalid) Then Exit;
+  If (FDir.Flags And FDirFailed  <> 0) And Not CheckAccess(User, True, bbsCfg.AcsDLFailed)  Then Exit;
 
   If (FDir.Flags And FDirFree <> 0) or (User.Flags and UserNoRatio <> 0) or (TempFBase.Flags and FBFreeFiles <> 0) Then Begin
     Result := 0;
@@ -302,7 +302,7 @@ Begin
     WaitSock.FTelnetServer := False;
     WaitSock.FTelnetClient := False;
 
-    WaitSock.WaitInit(bbsConfig.inetInterface, DataPort);
+    WaitSock.WaitInit(bbsCfg.inetInterface, DataPort);
 
     DataSocket := WaitSock.WaitConnection(10000);
 
@@ -372,7 +372,7 @@ Begin
 
   FBaseFile := TFileBuffer.Create(FileBufSize);
 
-  If FBaseFile.OpenStream (bbsConfig.DataPath + 'fbases.dat', SizeOf(TempBase), fmOpen, fmRWDN) Then Begin
+  If FBaseFile.OpenStream (bbsCfg.DataPath + 'fbases.dat', SizeOf(TempBase), fmOpen, fmRWDN) Then Begin
     Found := False;
 
     While Not FBaseFile.EOF Do Begin
@@ -605,7 +605,7 @@ Procedure TFTPServer.cmdREIN;
 Begin
   ResetSession;
 
-  If Not Client.WriteFile('220', bbsConfig.DataPath + 'ftpbanner.txt') Then
+  If Not Client.WriteFile('220', bbsCfg.DataPath + 'ftpbanner.txt') Then
     Client.WriteLine (re_Greeting);
 End;
 
@@ -636,12 +636,12 @@ Procedure TFTPServer.cmdPASV;
 //  WaitSock : TIOSocket;
 Begin
   If LoggedIn Then Begin
-    If Not bbsConfig.inetFTPPassive Then Begin
+    If Not bbsCfg.inetFTPPassive Then Begin
       Client.WriteLine(re_BadCommand);
       Exit;
     End;
 
-    DataPort := Random(bbsConfig.inetFTPPortMax - bbsConfig.inetFTPPortMin) + bbsConfig.inetFTPPortMin;
+    DataPort := Random(bbsCfg.inetFTPPortMax - bbsCfg.inetFTPPortMin) + bbsCfg.inetFTPPortMin;
 
     {$IFDEF FTPDEBUG}
       LOG('PASV on host ' + Client.HostIP + ' port ' + strI2S(DataPort));
@@ -660,7 +660,7 @@ Begin
 
     {$IFDEF FTPDEBUG} LOG('PASV Init'); {$ENDIF}
 
-    WaitSock.WaitInit(bbsConfig.inetInterface, DataPort);
+    WaitSock.WaitInit(bbsCfg.inetInterface, DataPort);
 
     {$IFDEF FTPDEBUG} LOG('PASV Wait'); {$ENDIF}
 
@@ -738,13 +738,13 @@ Begin
 
     DirFile := TFileBuffer.Create(FileBufSize);
 
-    If DirFile.OpenStream (bbsConfig.DataPath + TempBase.FileName + '.dir', SizeOf(RecFileList), fmOpenCreate, fmRWDN) Then Begin
+    If DirFile.OpenStream (bbsCfg.DataPath + TempBase.FileName + '.dir', SizeOf(RecFileList), fmOpenCreate, fmRWDN) Then Begin
       While Not DirFile.EOF Do Begin
         DirFile.ReadRecord (Dir);
 
         If (Dir.Flags And FDirDeleted <> 0) Then Continue;
-        If (Dir.Flags And FDirInvalid <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeUnvalid)) Then Continue;
-        If (Dir.Flags And FDirFailed <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeFailed)) Then Continue;
+        If (Dir.Flags And FDirInvalid <> 0) And (Not CheckAccess(User, True, bbsCfg.AcsSeeUnvalid)) Then Continue;
+        If (Dir.Flags And FDirFailed <> 0) And (Not CheckAccess(User, True, bbsCfg.AcsSeeFailed)) Then Continue;
 
         If WildMatch(FileMask, Dir.FileName, False) Then
           DataSocket.WriteLine(Dir.FileName);
@@ -796,7 +796,7 @@ Begin
 
       FBaseFile := TFileBuffer.Create(FileBufSize);
 
-      If FBaseFile.OpenStream (bbsConfig.DataPath + 'fbases.dat', SizeOf(RecFileBase), fmOpen, fmRWDN) Then Begin
+      If FBaseFile.OpenStream (bbsCfg.DataPath + 'fbases.dat', SizeOf(RecFileBase), fmOpen, fmRWDN) Then Begin
         While Not FBaseFile.EOF Do Begin
           FBaseFile.ReadRecord (TempBase);
 
@@ -822,14 +822,14 @@ Begin
 
     DirFile := TFileBuffer.Create(FileBufSize);
 
-    If DirFile.OpenStream (bbsConfig.DataPath + TempBase.FileName + '.dir', SizeOf(RecFileList), fmOpenCreate, fmRWDN) Then Begin
+    If DirFile.OpenStream (bbsCfg.DataPath + TempBase.FileName + '.dir', SizeOf(RecFileList), fmOpenCreate, fmRWDN) Then Begin
       While Not DirFile.EOF Do Begin
         DirFile.ReadRecord (Dir);
 
         If (Dir.Flags And FDirDeleted <> 0) Then Continue;
-        If (Dir.Flags and FDirOffline <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeOffline)) Then Continue;
-        If (Dir.Flags And FDirInvalid <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeUnvalid)) Then Continue;
-        If (Dir.Flags And FDirFailed  <> 0) And (Not CheckAccess(User, True, bbsConfig.AcsSeeFailed))  Then Continue;
+        If (Dir.Flags and FDirOffline <> 0) And (Not CheckAccess(User, True, bbsCfg.AcsSeeOffline)) Then Continue;
+        If (Dir.Flags And FDirInvalid <> 0) And (Not CheckAccess(User, True, bbsCfg.AcsSeeUnvalid)) Then Continue;
+        If (Dir.Flags And FDirFailed  <> 0) And (Not CheckAccess(User, True, bbsCfg.AcsSeeFailed))  Then Continue;
 
         If WildMatch(FileMask, Dir.FileName, False) Then
           DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL(strI2S(Dir.Size), 13, ' ') + ' ' + GetFTPDate(Dir.DateTime) + ' ' + Dir.FileName)
@@ -1024,7 +1024,7 @@ Begin
     DirFile := TFileBuffer.Create(FileBufSize);
     Found   := -1;
 
-    If DirFile.OpenStream (bbsConfig.DataPath + TempBase.FileName + '.dir', SizeOf(RecFileList), fmOpenCreate, fmRWDN) Then Begin
+    If DirFile.OpenStream (bbsCfg.DataPath + TempBase.FileName + '.dir', SizeOf(RecFileList), fmOpenCreate, fmRWDN) Then Begin
       While Not DirFile.EOF Do Begin
         DirFile.ReadRecord (Dir);
 
@@ -1109,14 +1109,14 @@ Var
 Begin
   If LoggedIn Then Begin
     If Data = '' Then Begin
-      DataPort  := Random(bbsConfig.inetFTPPortMax - bbsConfig.inetFTPPortMin) + bbsConfig.inetFTPPortMin;
+      DataPort  := Random(bbsCfg.inetFTPPortMax - bbsCfg.inetFTPPortMin) + bbsCfg.inetFTPPortMin;
       IsPassive := True;
 
       Client.WriteLine('229 Entering Extended Passive Mode (|||' + strI2S(DataPort) + '|)');
 
       WaitSock := TIOSocket.Create;
 
-      WaitSock.WaitInit(bbsConfig.inetInterface, DataPort);
+      WaitSock.WaitInit(bbsCfg.inetInterface, DataPort);
 
       DataSocket := WaitSock.WaitConnection(10000);
 
@@ -1151,7 +1151,7 @@ Begin
   Repeat
     {$IFDEF FTPDEBUG} LOG('Execute loop'); {$ENDIF}
 
-    If Client.WaitForData(bbsConfig.inetFTPTimeout * 1000) = 0 Then Break;
+    If Client.WaitForData(bbsCfg.inetFTPTimeout * 1000) = 0 Then Break;
 
     If Terminated Then Exit;
 

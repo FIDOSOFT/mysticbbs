@@ -271,19 +271,21 @@ Var
     While Not MsgBase^.EOM Do
       WriteStr (MsgBase^.GetString(79), #13);
 
-    // SEEN-BY needs to include yourself and ANYTHING it is sent to (downlinks)
-    // so we need to cycle through nodes for this mbase and add ALL of them
+    If MBase.NetType <> 3 Then Begin
+      // SEEN-BY needs to include yourself and ANYTHING it is sent to (downlinks)
+      // so we need to cycle through nodes for this mbase and add ALL of them
 
-    TempStr1 := 'SEEN-BY: ' + strI2S(MsgBase^.GetOrigAddr.Net) + '/' + strI2S(MsgBase^.GetOrigAddr.Node) + ' ';
+      TempStr1 := 'SEEN-BY: ' + strI2S(MsgBase^.GetOrigAddr.Net) + '/' + strI2S(MsgBase^.GetOrigAddr.Node) + ' ';
 
-    If MsgBase^.GetOrigAddr.Net <> EchoNode.Address.Net Then
-      TempStr1 := TempStr1 + strI2S(EchoNode.Address.Net) + '/';
+      If MsgBase^.GetOrigAddr.Net <> EchoNode.Address.Net Then
+        TempStr1 := TempStr1 + strI2S(EchoNode.Address.Net) + '/';
 
-    TempStr1 := TempStr1 + strI2S(EchoNode.Address.Node);
+      TempStr1 := TempStr1 + strI2S(EchoNode.Address.Node);
 
-    WriteStr (TempStr1, #13);
-    WriteStr (#1 + 'PATH: ' + strI2S(MsgBase^.GetOrigAddr.Net) + '/' + strI2S(MsgBase^.GetOrigAddr.Node), #13);
-    WriteStr (#0#0, #0);
+      WriteStr (TempStr1, #13);
+      WriteStr (#1 + 'PATH: ' + strI2S(MsgBase^.GetOrigAddr.Net) + '/' + strI2S(MsgBase^.GetOrigAddr.Node), #13);
+      WriteStr (#0#0, #0);
+    End;
 
     Close (F);
   End;

@@ -40,7 +40,8 @@ Uses
   MIS_Common,
   MIS_NodeData,
   MIS_Server,
-  BBS_Records;
+  BBS_Records,
+  BBS_DataBase;
 
 {$IFDEF USEFORK}
   function forkpty(__amaster:Plongint; __name:Pchar; __termp:Pointer; __winp:Pointer):longint;cdecl;external 'c' name 'forkpty';
@@ -108,7 +109,7 @@ Begin
 
   SI.dwFlags := STARTF_USESHOWWINDOW;
 
-  If bbsConfig.inetTNHidden Then
+  If bbsCfg.inetTNHidden Then
     SI.wShowWindow := SW_HIDE
   Else
     SI.wShowWindow := SW_SHOWMINNOACTIVE;
@@ -124,7 +125,7 @@ Begin
 
   ND.SetNodeInfo(Num, NI);
 
-  FileErase (bbsConfig.DataPath + 'chat' + strI2S(Num) + '.dat');
+  FileErase (bbsCfg.DataPath + 'chat' + strI2S(Num) + '.dat');
 End;
 {$ENDIF}
 
