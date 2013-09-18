@@ -156,7 +156,7 @@ Implementation
 
 // PROTOCOL CLASS IMPLEMENTATION
 
-Procedure DefaultBinkPStatusProc (Owner: Pointer; Str: String);
+Procedure DefaultBinkPStatusProc (Owner: Pointer; Level: Byte; Str: String);
 Begin
 //writeln(str);
 End;
@@ -429,7 +429,7 @@ Begin
 
 End;
 
-Function TBinkP.DoAuthentication;
+Function TBinkP.DoAuthentication : Boolean;
 Var
   Str   : String;
   Count : LongInt;
@@ -453,10 +453,14 @@ Begin
       Count := Pos('MD5-', Str);
 
       If Count > 0 Then
-        MD5Challenge := Copy(Str, Count + 4, 255);
-
-//      If Not IsClient Then
-        StatusUpdate (Owner, 1, Str);
+        MD5Challenge := Copy(Str, Count + 4, 255)
+      Else
+        StatusUpdate(Owner, 1, Str);
+//        Case String(Copy(Str, 1, 3)) of
+//          'LOC',
+//          'SYS',
+//          'ZYZ' : StatusUpdate (Owner, 1, Str);
+//        End;
     End;
 
 //    WriteLn ('AuthState: ', GetStateStr(AuthState), ', HasHeader: ', HaveHeader, ' Data: ', GetDataStr);
@@ -659,7 +663,7 @@ Begin
                          End;
                        End;
 
-                       StatusUpdate(Owner, 1, 'Receiving: ' + InFN);
+                       StatusUpdate(Owner, 1, 'Receiving ' + InFN + ' (' + strComma(InSize) + ' bytes)');
 
                        Assign (InFile, bbsCfg.InBoundPath + InFN);
                        Reset  (InFile, 1);
@@ -718,10 +722,10 @@ Begin
                          Inc (SkipFiles);
                        End Else
                        If RxCommand = M_GOT Then Begin
-                         FileList.QData[FileList.QPos].Status := QueueSuccess;
+                         FileList.QData[FileList.QPos]^.Status := QueueSuccess;
 
-                         FileErase          (FileList.QData[FileList.QPos].FilePath + FileList.QData[FileList.QPos].FileName);
-                         RemoveFilesFromFLO (FileList.QData[FileList.QPos].FilePath + FileList.QData[FileList.QPos].FileName);
+                         FileErase          (FileList.QData[FileList.QPos]^.FilePath + FileList.QData[FileList.QPos]^.FileName);
+                         RemoveFilesFromFLO (FileList.QData[FileList.QPos]^.FilePath + FileList.QData[FileList.QPos]^.FileName);
 
                          HaveHeader := False;
                          NeedHeader := True;
@@ -731,15 +735,15 @@ Begin
                        End;
                    End;
       TxNextFile : If FileList.Next Then Begin
-                     Assign (OutFile, FileList.QData[FileList.QPos].FilePath + FileList.QData[FileList.QPos].FileName);
+                     Assign (OutFile, FileList.QData[FileList.QPos]^.FilePath + FileList.QData[FileList.QPos]^.FileName);
                      Reset  (OutFile, 1);
 
                      If IoResult <> 0 Then Continue;
 
                      // use real filetime instead of tempfiletime
-                     SendFrame (M_FILE, EscapeFileName(FileList.QData[FileList.QPos].FileNew) + ' ' + strI2S(FileList.QData[FileList.QPos].FileSize) + ' ' + strI2S(TempFileTime) + ' 0');
+                     SendFrame (M_FILE, EscapeFileName(FileList.QData[FileList.QPos]^.FileNew) + ' ' + strI2S(FileList.QData[FileList.QPos]^.FileSize) + ' ' + strI2S(TempFileTime) + ' 0');
 
-                     StatusUpdate (Owner, 1, 'Sending ' + FileList.QData[FileList.QPos].FileNew);
+                     StatusUpdate (Owner, 1, 'Sending ' + FileList.QData[FileList.QPos]^.FileNew + ' (' + strComma(FileList.QData[FileList.QPos]^.FileSize) + ' bytes)');
 
                      TxState := TxSendData;
                    End Else Begin
@@ -764,7 +768,7 @@ Begin
 
                        // use real filetime instead of tempfiletime
 
-                       SendFrame (M_FILE, EscapeFileName(FileList.QData[FileList.QPos].FileNew) + ' ' + Str + ' ' + strI2S(TempFileTime) + ' 0');
+                       SendFrame (M_FILE, EscapeFileName(FileList.QData[FileList.QPos]^.FileNew) + ' ' + Str + ' ' + strI2S(TempFileTime) + ' 0');
 
                        HaveHeader := False;
                        NeedHeader := True;
@@ -912,7 +916,7 @@ Begin
   Result := TBINKPServer.Create(Owner, CliSock);
 End;
 
-Procedure Status (Owner: Pointer; Str: String);
+Procedure Status (Owner: Pointer; Level: Byte; Str: String);
 Begin
   TServerManager(Owner).Status(-1, Str);
 End;

@@ -215,27 +215,12 @@ Begin
   ioRead  (MBaseFile, MBase);
   Close   (MBaseFile);
 
-  Case MBase.BaseType of
-    0 : MsgBase := New(PMsgBaseJAM, Init);
-    1 : MsgBase := New(PMsgBaseSquish, Init);
+  If Not MBaseOpenCreate (MsgBase, MBase, TempPath) Then Begin
+    MsgText.Free;
+    Client.WriteLine(re_ErrorSending);
+
+    Exit;
   End;
-
-  MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
-  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
-
-  If Not MsgBase^.OpenMsgBase Then
-    If Not MsgBase^.CreateMsgBase (MBase.MaxMsgs, MBase.MaxAge) Then Begin
-      Dispose(MsgBase, Done);
-      MsgText.Free;
-      Client.WriteLine(re_ErrorSending);
-      Exit;
-    End Else
-      If Not MsgBase^.OpenMsgBase Then Begin
-        Dispose(MsgBase, Done);
-        MsgText.Free;
-        Client.WriteLine(re_ErrorSending);
-        Exit;
-      End;
 
   MsgSubject := '';
   Count      := 0;

@@ -243,7 +243,7 @@ Begin
                         KillData := ShowMsgBox(1, 'Delete data files for ' + strI2S(List.Marked) + ' bases?');
 
                         For Count := List.ListMax DownTo 1 Do
-                          If List.List[Count].Tagged = 1 Then Begin
+                          If List.List[Count]^.Tagged = 1 Then Begin
                             Seek (FBaseFile, Count - 1);
                             Read (FBaseFile, FBase);
 

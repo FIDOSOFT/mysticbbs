@@ -53,7 +53,7 @@ Type
   TTelnetServer = Class(TServerClient)
     ND : TNodeData;
 
-    Constructor Create (Owner: TServerManager; ND: TNodeData; CliSock: TIOSocket);
+    Constructor Create (Owner: TServerManager; NewND: TNodeData; CliSock: TIOSocket);
     Procedure   Execute; Override;
     Destructor  Destroy; Override;
   End;
@@ -65,11 +65,11 @@ Begin
   Result := TTelnetServer.Create(Owner, ND, CliSock);
 End;
 
-Constructor TTelnetServer.Create (Owner: TServerManager; ND: TNodeData; CliSock: TIOSocket);
+Constructor TTelnetServer.Create (Owner: TServerManager; NewND: TNodeData; CliSock: TIOSocket);
 Begin
   Inherited Create(Owner, CliSock);
 
-  Self.ND := ND;
+  Self.ND := NewND;
 End;
 
 {$IFDEF WINDOWS}

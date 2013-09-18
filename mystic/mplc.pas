@@ -75,7 +75,7 @@ Begin
       FindFirst ('*.mps', AnyFile - Directory - VolumeID, Dir);
 
       While DosError = 0 Do Begin
-        Parser := TParserEngine.Create(Status);
+        Parser := TParserEngine.Create(@Status);
 
         Parser.Compile(Dir.Name);
 
@@ -86,7 +86,7 @@ Begin
 
       FindClose(Dir);
     End Else Begin
-      Parser := TParserEngine.Create(Status);
+      Parser := TParserEngine.Create(@Status);
       Parser.Compile(ParamStr(1));
       Parser.Free;
     End;

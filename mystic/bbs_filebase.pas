@@ -78,7 +78,7 @@ Type
     Procedure   BatchDelete;
     Procedure   SetFileScan;
     Procedure   GetFileScan;
-    Function    SelectProtocol        (UseDefault, Batch: Boolean) : Char;
+    Function    SelectProtocol        (UseDefault, UseBatch: Boolean) : Char;
     Procedure   CheckFileNameLength   (FPath : String; Var FName: String);
     Procedure   GetFileDescription    (FN: String);
     Function    CheckFileLimits       (DL: Byte; DLK: Integer) : Byte;
@@ -956,17 +956,17 @@ End;
 
 Function TFileBase.ArchiveList (FName : String) : Boolean;
 Var
-  Arc : PArchive;
-  SR  : ArcSearchRec;
+  ArcView : PArchive;
+  SR      : ArcSearchRec;
 Begin
   Result := False;
 
   If Not FileExist(FName) Then Exit;
 
-  Arc := New(PArchive, Init);
+  ArcView := New(PArchive, Init);
 
-  If Not Arc^.Name(FName) Then Begin
-    Dispose (Arc, Done);
+  If Not ArcView^.Name(FName) Then Begin
+    Dispose (ArcView, Done);
 
     If FileExist(FName) Then Begin
       ExecuteArchive (FName, '', '_view_.tmp', 3);
@@ -986,7 +986,7 @@ Begin
 
   Session.io.OutFullLn (Session.GetPrompt(192));
 
-  Arc^.FindFirst(SR);
+  ArcView^.FindFirst(SR);
 
   While SR.Name <> '' Do Begin
     Session.io.PromptInfo[1] := SR.Name;
@@ -1007,10 +1007,10 @@ Begin
         'C' : Session.io.AllowPause := False;
       End;
 
-    Arc^.FindNext(SR);
+    ArcView^.FindNext(SR);
   End;
 
-  Dispose (Arc, Done);
+  Dispose (ArcView, Done);
 
   Result := True;
 
@@ -1360,7 +1360,7 @@ Begin
   Result := True;
 End;
 
-Function TFileBase.SelectProtocol (UseDefault, Batch: Boolean) : Char;
+Function TFileBase.SelectProtocol (UseDefault, UseBatch: Boolean) : Char;
 
   Function LoadByKey (Key: Char) : Boolean;
   Begin
@@ -1377,7 +1377,7 @@ Function TFileBase.SelectProtocol (UseDefault, Batch: Boolean) : Char;
     While Not Eof(ProtocolFile) Do Begin
       Read (ProtocolFile, Protocol);
 
-      If ((Protocol.Active) And (Key = Protocol.Key) And (Protocol.Batch = Batch) And ((Protocol.OSType = OSType) or (Protocol.OSType = 3))) Then Begin
+      If ((Protocol.Active) And (Key = Protocol.Key) And (Protocol.Batch = UseBatch) And ((Protocol.OSType = OSType) or (Protocol.OSType = 3))) Then Begin
         Result := True;
         Break;
       End;
@@ -1411,7 +1411,7 @@ Begin
     While Not Eof(ProtocolFile) Do Begin
       Read (ProtocolFile, Protocol);
 
-      If Protocol.Active And (Protocol.Batch = Batch) And ((Protocol.OSType = OSTYpe) or (Protocol.OSType = 3)) Then Begin
+      If Protocol.Active And (Protocol.Batch = UseBatch) And ((Protocol.OSType = OSTYpe) or (Protocol.OSType = 3)) Then Begin
         Keys := Keys + Protocol.Key;
 
         Session.io.PromptInfo[1] := Protocol.Key;

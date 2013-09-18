@@ -56,7 +56,7 @@ Type
     Procedure   WriteLine    (Line: Word; Flush: Boolean);
     Procedure   DrawLine     (Y, Line: Word; Flush: Boolean);
     Procedure   DrawPage     (pStart, pEnd, pLine: Word);
-    Procedure   SetLineColor (Attr, Line: Word);
+    Procedure   SetLineColor (NewAttr, Line: Word);
     Procedure   RemoveLine   (Line: Word);
   End;
 
@@ -536,12 +536,12 @@ Begin
   Session.io.BufFlush;
 End;
 
-Procedure TMsgBaseAnsi.SetLineColor (Attr, Line: Word);
+Procedure TMsgBaseAnsi.SetLineColor (NewAttr, Line: Word);
 Var
   Count : Word;
 Begin
   For Count := 1 to 80 Do
-    Data[Line][Count].Attr := Attr;
+    Data[Line][Count].Attr := NewAttr;
 End;
 
 Procedure TMsgBaseAnsi.RemoveLine (Line: Word);

@@ -546,7 +546,7 @@ End;
 
 Procedure TMsgBase.GetMailStats (Var Total, UnRead: LongInt);
 Var
-  MsgBase  : PMsgBaseABS;
+  TempMsg  : PMsgBaseABS;
   TempBase : RecMessageBase;
 Begin
   Total    := 0;
@@ -557,24 +557,24 @@ Begin
   Read  (MBaseFile, TempBase);
   Close (MBaseFile);
 
-  If MBaseOpenCreate (MsgBase, TempBase, Session.TempPath) Then Begin
-    MsgBase^.SeekFirst (1);
+  If MBaseOpenCreate (TempMsg, TempBase, Session.TempPath) Then Begin
+    TempMsg^.SeekFirst (1);
 
-    While MsgBase^.SeekFound Do Begin
-      MsgBase^.MsgStartUp;
+    While TempMsg^.SeekFound Do Begin
+      TempMsg^.MsgStartUp;
 
-      If Session.User.IsThisUser(MsgBase^.GetTo) Then Begin
+      If Session.User.IsThisUser(TempMsg^.GetTo) Then Begin
         Inc (Total);
 
-        If Not MsgBase^.IsRcvd Then Inc (UnRead);
+        If Not TempMsg^.IsRcvd Then Inc (UnRead);
       End;
 
-      MsgBase^.SeekNext;
+      TempMsg^.SeekNext;
     End;
 
-    MsgBase^.CloseMsgBase;
+    TempMsg^.CloseMsgBase;
 
-    Dispose (MsgBase, Done);
+    Dispose (TempMsg, Done);
   End;
 End;
 
@@ -2396,7 +2396,7 @@ Var
           If PageTotal < PageSize Then Begin
             FirstPage := True;
 
-            MsgBase.SeekFirst(MsgInfo[PageTotal].Num);
+            MsgBase^.SeekFirst(MsgInfo[PageTotal].Num);
 
             While SeekNextMsg(False, False) and (PageTotal < PageSize) Do Begin
               Inc (PageTotal);
@@ -3228,7 +3228,7 @@ End;
 
 Procedure TMsgBase.CheckEMail (CmdData: String);
 Var
-  MsgBase  : PMsgBaseABS;
+  TempMsg  : PMsgBaseABS;
   TempBase : RecMessageBase;
   Total    : Integer;
   UnRead   : Integer;
@@ -3255,34 +3255,34 @@ Begin
       Exit;
   End;
 
-  If MBaseOpenCreate (MsgBase, MBase, Session.TempPath) Then Begin
-    MsgBase^.SeekFirst (1);
+  If MBaseOpenCreate (TempMsg, MBase, Session.TempPath) Then Begin
+    TempMsg^.SeekFirst (1);
 
-    While MsgBase^.SeekFound Do Begin
-      MsgBase^.MsgStartUp;
+    While TempMsg^.SeekFound Do Begin
+      TempMsg^.MsgStartUp;
 
-      If Session.User.IsThisUser(MsgBase^.GetTo) Then Begin
+      If Session.User.IsThisUser(TempMsg^.GetTo) Then Begin
         Inc (Total);
 
-        If Not MsgBase^.IsRcvd Then Inc (UnRead);
+        If Not TempMsg^.IsRcvd Then Inc (UnRead);
 
         If Total = 1 Then
           Session.io.OutFullLn (Session.GetPrompt(125));
 
         Session.io.PromptInfo[1] := strI2S(Total);
-        Session.io.PromptInfo[2] := MsgBase^.GetFrom;
-        Session.io.PromptInfo[3] := MsgBase^.GetSubj;
-        Session.io.PromptInfo[4] := MsgBase^.GetDate;
+        Session.io.PromptInfo[2] := TempMsg^.GetFrom;
+        Session.io.PromptInfo[3] := TempMsg^.GetSubj;
+        Session.io.PromptInfo[4] := TempMsg^.GetDate;
 
         Session.io.OutFullLn (Session.GetPrompt(126));
       End;
 
-      MsgBase^.SeekNext;
+      TempMsg^.SeekNext;
     End;
 
-    MsgBase^.CloseMsgBase;
+    TempMsg^.CloseMsgBase;
 
-    Dispose (MsgBase, Done);
+    Dispose (TempMsg, Done);
   End;
 
   Session.LastScanHadNew := UnRead > 0;
@@ -3922,7 +3922,7 @@ Procedure TMsgBase.PostTextFile (Data: String; AllowCodes: Boolean);
 Const
   MaxLines = 10000;
 Var
-  MBaseFile : File;
+  MBFile    : File;
   mName     : String;
   mArea     : Word;
   mFrom     : String;
@@ -3958,20 +3958,20 @@ Begin
     Exit;
   End;
 
-  Assign  (MBaseFile, bbsCfg.DataPath + 'mbases.dat');
-  ioReset (MBaseFile, SizeOf(RecMessageBase), fmReadWrite + fmDenyNone);
+  Assign  (MBFile, bbsCfg.DataPath + 'mbases.dat');
+  ioReset (MBFile, SizeOf(RecMessageBase), fmRWDN);
 
-  If Not ioSeek (MBaseFile, mArea) Then Begin
-    Close (MBaseFile);
+  If Not ioSeek (MBFile, mArea) Then Begin
+    Close (MBFile);
     Exit;
   End;
 
-  If Not ioRead (MBaseFile, TempBase) Then Begin
-    Close (MBaseFile);
+  If Not ioRead (MBFile, TempBase) Then Begin
+    Close (MBFile);
     Exit;
   End;
 
-  Close (MBaseFile);
+  Close (MBFile);
 
   Assign     (InFile, mName);
   SetTextBuf (InFile, TextBuf, SizeOf(TextBuf));

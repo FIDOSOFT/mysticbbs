@@ -538,7 +538,7 @@ Begin
                         KillData := ShowMsgBox(1, 'Delete data files for ' + strI2S(List.Marked) + ' bases?');
 
                         For Count := List.ListMax DownTo 1 Do
-                          If List.List[Count].Tagged = 1 Then Begin
+                          If List.List[Count]^.Tagged = 1 Then Begin
                             Seek (MBaseFile, Count - 1);
                             Read (MBaseFile, MBase);
 
@@ -610,7 +610,7 @@ Begin
               'R' : If List.Marked > 0 Then Begin
                       If ShowMsgBox(1, 'Reset msgs in ' + strI2S(List.Marked) + ' bases?') Then Begin
                         For Count := List.ListMax DownTo 1 Do
-                          If List.List[Count].Tagged = 1 Then Begin
+                          If List.List[Count]^.Tagged = 1 Then Begin
                             Seek (MBaseFile, Count - 1);
                             Read (MBaseFile, MBase);
 

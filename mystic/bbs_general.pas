@@ -1166,9 +1166,9 @@ Var
       Session.io.PromptInfo[5] := '';
       Session.io.PromptInfo[6] := '';
     End Else Begin
-      Session.io.PromptInfo[4] := DirList[BarPos].Author;
-      Session.io.PromptInfo[5] := DirList[BarPos].Title;
-      Session.io.PromptInfo[6] := DirList[BarPos].Group;
+      Session.io.PromptInfo[4] := DirList[BarPos]^.Author;
+      Session.io.PromptInfo[5] := DirList[BarPos]^.Title;
+      Session.io.PromptInfo[6] := DirList[BarPos]^.Group;
     End;
   End;
 

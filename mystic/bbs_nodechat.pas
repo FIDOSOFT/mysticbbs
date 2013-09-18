@@ -393,7 +393,7 @@ Begin
 
   Session.AllowMessages := False;
 
-  Session.io.GetKeyCallBack := GetKeyNodeChatFunc;
+  Session.io.GetKeyCallBack := @GetKeyNodeChatFunc;
 
   Repeat
     Session.io.PromptInfo[1] := Session.User.ThisUser.Handle;
@@ -468,7 +468,7 @@ Begin
         Send_Node_Message (7, '0;Topic changed to "' + Session.Room.Name + '"', Session.CurRoom); // ++lang
       End;
 
-      Session.io.GetKeyCallBack := GetKeyNodeChatFunc;
+      Session.io.GetKeyCallBack := @GetKeyNodeChatFunc;
     End Else
     If Str <> '' Then Begin
       Send_Node_Message (1, '0;' + Str, Session.CurRoom);

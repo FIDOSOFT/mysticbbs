@@ -125,8 +125,8 @@ Begin
 
   For Count := 1 to MailSize Do
     If MailInfo[Count] <> NIL Then Begin
-      If Assigned(MailInfo[Count].Text) Then
-        MailInfo[Count].Text.Free;
+      If Assigned(MailInfo[Count]^.Text) Then
+        MailInfo[Count]^.Text.Free;
 
       Dispose (MailInfo[Count]);
     End;
@@ -142,9 +142,9 @@ Begin
   TotalSize := 0;
 
   For Count := 1 to MailSize Do
-    If Not MailInfo[Count].Deleted Then Begin
+    If Not MailInfo[Count]^.Deleted Then Begin
       Inc (TotalMsg);
-      Inc (TotalSize, MailInfo[Count].MsgSize);
+      Inc (TotalSize, MailInfo[Count]^.MsgSize);
     End;
 End;
 
@@ -176,9 +176,9 @@ Var
 
   Procedure AddLine (Str: String);
   Begin
-    MailInfo[MailSize].Text.Add(Str);
+    MailInfo[MailSize]^.Text.Add(Str);
 
-    Inc (MailInfo[MailSize].MsgSize, Length(Str) + 2); {CRLF}
+    Inc (MailInfo[MailSize]^.MsgSize, Length(Str) + 2); {CRLF}
   End;
 
 Begin
@@ -189,18 +189,7 @@ Begin
   ioRead (MBaseFile, MBase);
   Close  (MBaseFile);
 
-  Case MBase.BaseType of
-    0 : MsgBase := New(PMsgBaseJAM, Init);
-    1 : MsgBase := New(PMsgBaseSquish, Init);
-  End;
-
-  MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
-  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
-
-  If Not MsgBase^.OpenMsgBase Then Begin
-    Dispose (MsgBase, Done);
-    Exit;
-  End;
+  If Not MBaseOpenCreate (MsgBase, MBase, TempPath) Then Exit;
 
   MsgBase^.SeekFirst(1);
 
@@ -214,11 +203,11 @@ Begin
 
       New (MailInfo[MailSize]);
 
-      MailInfo[MailSize].Text := TStringList.Create;
+      MailInfo[MailSize]^.Text := TStringList.Create;
 
       AddLine ('Date: ' + ParseDateTime(MsgBase^.GetDate, MsgBase^.GetTime));
       AddLine ('From: ' + MsgBase^.GetFrom + ' <' + strReplace(MsgBase^.GetFrom, ' ', '_') + '@' + bbsCfg.inetDomain + '>');
-      AddLine ('X-Mailer: Mystic BBS ' + mysVersion);
+      AddLine ('X-Mailer: Mystic ' + mysVersion);
       AddLine ('To: ' + MsgBase^.GetTo + ' <' + strReplace(MsgBase^.GetTo, ' ', '_') + '@' + bbsCfg.inetDomain + '>');
       AddLine ('Subject: ' + MsgBase^.GetSubj);
       AddLine ('Content-Type: text/plain; charset=us-ascii');
@@ -227,9 +216,9 @@ Begin
       While Not MsgBase^.EOM Do
         AddLine(MsgBase^.GetString(79));
 
-      MailInfo[MailSize].MD5     := GetMessageUID(MsgBase);
-      MailInfo[MailSize].GotRETR := False;
-      MailInfo[MailSize].Deleted := False;
+      MailInfo[MailSize]^.MD5     := GetMessageUID(MsgBase);
+      MailInfo[MailSize]^.GotRETR := False;
+      MailInfo[MailSize]^.Deleted := False;
     End;
 
     MsgBase^.SeekNext;
@@ -254,28 +243,17 @@ Begin
   ioRead (MBaseFile, MBase);
   Close  (MBaseFile);
 
-  Case MBase.BaseType of
-    0 : MsgBase := New(PMsgBaseJAM, Init);
-    1 : MsgBase := New(PMsgBaseSquish, Init);
-  End;
-
-  MsgBase^.SetMsgPath  (MBase.Path + MBase.FileName);
-  MsgBase^.SetTempFile (TempPath + 'msgbuf.');
-
-  If Not MsgBase^.OpenMsgBase Then Begin
-    Dispose (MsgBase, Done);
-    Exit;
-  End;
+  If Not MBaseOpenCreate (MsgBase, MBase, TempPath) Then Exit;
 
   For Count := 1 to MailSize Do Begin
-    If MailInfo[Count].Deleted or (MailInfo[Count].GotRETR and bbsCfg.inetPOP3Delete) Then Begin
+    If MailInfo[Count]^.Deleted or (MailInfo[Count]^.GotRETR and bbsCfg.inetPOP3Delete) Then Begin
       MsgBase^.SeekFirst(1);
 
       While MsgBase^.SeekFound Do Begin
         MsgBase^.MsgStartUp;
 
         If IsUser(MsgBase^.GetTo) Then
-          If GetMessageUID(MsgBase) = MailInfo[Count].MD5 Then Begin
+          If GetMessageUID(MsgBase) = MailInfo[Count]^.MD5 Then Begin
             MsgBase^.DeleteMsg;
             Break;
           End;
@@ -344,8 +322,8 @@ Begin
     If Data <> '' Then Begin
       MsgNum := strS2I(Data);
 
-      If (MsgNum > 0) and (MsgNum <= MailSize) and (Not MailInfo[MsgNum].Deleted) Then
-        Client.WriteLine(re_OK + strI2S(MsgNum) + ' ' + strI2O(MailInfo[MsgNum].MsgSize))
+      If (MsgNum > 0) and (MsgNum <= MailSize) and (Not MailInfo[MsgNum]^.Deleted) Then
+        Client.WriteLine(re_OK + strI2S(MsgNum) + ' ' + strI2O(MailInfo[MsgNum]^.MsgSize))
       Else
         Client.WriteLine(re_UnknownMail);
     End Else Begin
@@ -354,8 +332,8 @@ Begin
       Client.WriteLine (re_OK + strI2S(MsgNum) + ' messages (' + strI2O(MsgSize) + ' octets)');
 
       For Count := 1 to MailSize Do
-        If Not MailInfo[Count].Deleted Then
-          Client.WriteLine (strI2S(Count) + ' ' + strI2O(MailInfo[Count].MsgSize));
+        If Not MailInfo[Count]^.Deleted Then
+          Client.WriteLine (strI2S(Count) + ' ' + strI2O(MailInfo[Count]^.MsgSize));
 
       Client.WriteLine('.');
     End;
@@ -372,16 +350,16 @@ Begin
     If Data <> '' Then Begin
       MsgNum := strS2I(Data);
 
-      If (MsgNum > 0) and (MsgNum <= MailSize) and (Not MailInfo[MsgNum].Deleted) Then
-        Client.WriteLine(re_OK + strI2S(MsgNum) + ' ' + MailInfo[MsgNum].MD5)
+      If (MsgNum > 0) and (MsgNum <= MailSize) and (Not MailInfo[MsgNum]^.Deleted) Then
+        Client.WriteLine(re_OK + strI2S(MsgNum) + ' ' + MailInfo[MsgNum]^.MD5)
       Else
         Client.WriteLine(re_UnknownMail);
     End Else Begin
       Client.WriteLine (re_OK + 'Message list follows');
 
       For Count := 1 to MailSize Do
-        If Not MailInfo[Count].Deleted Then Begin
-          Client.WriteLine (strI2S(Count) + ' ' + MailInfo[Count].MD5);
+        If Not MailInfo[Count]^.Deleted Then Begin
+          Client.WriteLine (strI2S(Count) + ' ' + MailInfo[Count]^.MD5);
         End;
       Client.WriteLine('.');
     End;
@@ -397,15 +375,15 @@ Begin
   If LoggedIn Then Begin
     MsgNum := strS2I(Data);
 
-    If (MsgNum > 0) and (MsgNum <= MailSize) and (Not MailInfo[MsgNum].Deleted) Then Begin
+    If (MsgNum > 0) and (MsgNum <= MailSize) and (Not MailInfo[MsgNum]^.Deleted) Then Begin
       Client.WriteLine (re_GetMessage + strI2S(MsgNum));
 
-      For Count := 0 to MailInfo[MsgNum].Text.Count - 1 Do
-        Client.WriteLine(MailInfo[MsgNum].Text[Count]);
+      For Count := 0 to MailInfo[MsgNum]^.Text.Count - 1 Do
+        Client.WriteLine(MailInfo[MsgNum]^.Text[Count]);
 
       Client.WriteLine('.');
 
-      MailInfo[MsgNum].GotRETR := True;
+      MailInfo[MsgNum]^.GotRETR := True;
     End Else
       Client.WriteLine(re_UnknownMail);
   End Else
@@ -418,7 +396,7 @@ Var
 Begin
   If LoggedIn Then Begin
     For Count := 1 to MailSize Do
-      MailInfo[Count].Deleted := False;
+      MailInfo[Count]^.Deleted := False;
 
     Client.WriteLine (re_ResetOK);
   End Else
@@ -432,8 +410,8 @@ Begin
   If LoggedIn Then Begin
     MsgNum := strS2I(Data);
 
-    If (MsgNum > 0) and (MsgNum <= MailSize) and (Not MailInfo[MsgNum].Deleted) Then Begin
-      MailInfo[MsgNum].Deleted := True;
+    If (MsgNum > 0) and (MsgNum <= MailSize) and (Not MailInfo[MsgNum]^.Deleted) Then Begin
+      MailInfo[MsgNum]^.Deleted := True;
 
       Client.WriteLine(re_MsgDeleted);
     End Else

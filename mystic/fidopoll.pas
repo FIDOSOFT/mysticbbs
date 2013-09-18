@@ -87,7 +87,7 @@ Begin
 
   BinkP := TBinkP.Create(Client, Client, Queue, True, EchoNode.binkTimeOut * 100);
 
-  BinkP.StatusUpdate := BinkPStatus;
+  BinkP.StatusUpdate := @BinkPStatus;
   BinkP.SetOutPath   := GetFTNOutPath(EchoNode);
   BinkP.SetPassword  := EchoNode.binkPass;
   BinkP.SetBlockSize := EchoNode.binkBlock;

@@ -174,7 +174,7 @@ Var
                       Res := Access(Session.Msgs.MBase.SysopACS);
 
                       If Session.Msgs.Reading Then
-                        Res := Res or IsThisUser(Session.msgs.MsgBase^.GetFrom);
+                        Res := Res or IsThisUser(Session.Msgs.MsgBase^.GetFrom);
                     End;
               'N' : Res := Session.LastScanHadNew;
               'P' : If (ThisUser.Calls > 0) And (ThisUser.Flags AND UserNoRatio = 0) Then Begin

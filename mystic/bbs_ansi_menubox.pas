@@ -450,7 +450,7 @@ Begin
   NoInput    := False;
   LastBarPos := 0;
   StatusProc := NIL;
-  SearchProc := DefListBoxSearch;
+  SearchProc := @DefListBoxSearch;
   SearchX    := 0;
   SearchY    := 0;
   SearchA    := 0;

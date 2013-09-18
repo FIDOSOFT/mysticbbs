@@ -369,7 +369,6 @@ End;
 
 Var
   Count  : Byte;
-  Saved  : LongInt;
   Temp   : String[120];
   Script : String[120];
 Begin
