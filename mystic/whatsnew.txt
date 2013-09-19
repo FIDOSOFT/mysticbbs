@@ -3800,4 +3800,16 @@
  ! SEEN-BY and PATH kludge lines are no longer added to exported netmail
    messages.
 
+ + Mystic will now flush the buffer after displaying the Inactivity timeout
+   prompt so that your remote users will actually see it!
+
+ + When sending NETMAIL, Mystic's nodelist browser will now filter out any
+   nodes which are part of net "0" in the address searches.  Using the browser
+   menu command will still show them.  Assuming you have Forced NL compliance
+   turned on, this will prevent users from ever being able to select a net 0
+   address.
+
+ + Mystic's netmail fowarding will now strip leading and trailing spaces in
+   case of typos in the .INI.
+
    <ALPHA 38 RELEASED>

@@ -205,7 +205,7 @@ Begin
 
   ND.SetNodeInfo(Num, NI);
 
-  FileErase (bbsConfig.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
+  FileErase (bbsCfg.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
 End;
 {$ENDIF}
 
@@ -266,7 +266,7 @@ Begin
 
   ND.SetNodeInfo(Num, NI);
 
-  FileErase (bbsConfig.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
+  FileErase (bbsCfg.DataPath + 'chat' + strI2S(NI.Num) + '.dat');
 End;
 {$ENDIF}
 

@@ -121,8 +121,8 @@ Var
         If Not ProcessedByAreaFix(PKT) Then
           If GetMBaseByNetZone (PKT.PKTHeader.DestZone, MBase) Then Begin
             For Count := 1 to ForwardSize Do
-              If strUpper(strWordGet(1, ForwardList[Count], ';')) = strUpper(PKT.MsgTo) Then
-                PKT.MsgTo := strWordGet(2, ForwardList[Count], ';');
+              If strUpper(strStripB(strWordGet(1, ForwardList[Count], ';'), ' ')) = strUpper(PKT.MsgTo) Then
+                PKT.MsgTo := strStripB(strWordGet(2, ForwardList[Count], ';'), ' ');
 
             CurTag := '';
 
@@ -244,7 +244,7 @@ Var
 
           Inc (TotalEcho);
 
-          Log (2, '+', '      Added Msg #' + strI2S(MsgBase^.GetHighMsgNum) + ' (' + MsgBase^.GetDate + ') to ' + strStripPipe(MBase.Name));
+          Log (2, '+', '      Added Msg #' + strI2S(MsgBase^.GetHighMsgNum) + ' to ' + strStripPipe(MBase.Name));
         End;
       End;
     End;
@@ -383,7 +383,7 @@ Begin
 
     Inc (ForwardSize);
 
-    ForwardList[ForwardSize] := FileExt;
+    ForwardList[ForwardSize] := strStripB(FileExt, ' ');
   Until ForwardSize = 50;
 
   INI.SetSequential(False);

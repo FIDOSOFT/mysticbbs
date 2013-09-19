@@ -1555,6 +1555,7 @@ Begin
     If (bbsCfg.Inactivity > 0) and (Session.User.ThisUser.Flags And UserNoTimeOut = 0) and (TimerSeconds - TBBSCore(Core).TimeOut >= bbsCfg.Inactivity) Then Begin
       TBBSCore(Core).SystemLog('Inactivity timeout');
       OutFullLn (TBBSCore(Core).GetPrompt(136));
+      BufFlush;
       Halt(0);
     End;
 

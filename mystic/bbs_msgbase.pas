@@ -238,6 +238,7 @@ Begin
 
     While NodeList.FindNext(NodeData) Do Begin
       Case ListType of
+        0 : If Not FromMenu and (NodeData.Address.Net = 0) Then Continue;
         1 : If NodeData.Keyword <> 'ZONE' Then Continue;
         2 : If (NodeData.Keyword <> 'ZONE') and (NodeData.Keyword <> 'REGION') and (NodeData.Keyword <> 'HOST') Then Continue;
       End;
@@ -1113,6 +1114,8 @@ Begin
       Areas := 0;
       Session.User.ThisUser.LastMGroup := FilePos(GroupFile);
 
+      // use gettotalbases(true) here!?
+      
       If bbsCfg.MShowBases Then Begin
         Reset (MBaseFile);
         Read  (MBaseFile, tMBase); { Skip EMAIL base }

@@ -7,6 +7,7 @@ design elements/issues.
 
 BUGS AND POSSIBLE ISSUES
 ========================
+- fidonet NA export
 - shift+c key in OSX does not work without shiftlock (rudi)?
 - need to add QWK network ID to all message bases (remove QWK net flag?)
 - need to add QWK networking editor (type: hub, or node)
@@ -43,17 +44,19 @@ BUGS AND POSSIBLE ISSUES
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
+- matrix disconnect if they use the XL command too many times
+- index00.html or whatever in FTP server
+- buffer echomail export and use mailer LR pointers
+- add mystic's downlinks to areas.bbs export?
+- add exportto into mutil.ini for [ImportMessageBase] ??
 - auto create qwk network message bases?
+- qwk net msg dupe detection?
 - make -CFG mode NOT use inactivity timeout
 - ability when editing a posted message to be able to toggle the Private flag
   if the base is Pub/Priv
 - when editing an already posted message with reference linkage, export the
   quote data from the original message...
 - in file listing jump to files by typing the file number
-- remove console class code from mutil since its in bbs_database
-     ^ same with keyboard
-- think through the Local flag for all QWK networking situations
-  as well as semaphore file creation
 - add QWKNet base type or no?  leaning towards no because it might limit
   hybrid FIDO/QWK networks which maybe we can do currently?  need to think
   about the SENT flag and how we could determine which type it was circulated
