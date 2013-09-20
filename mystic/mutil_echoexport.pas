@@ -284,10 +284,10 @@ Var
 
       WriteStr (TempStr1, #13);
       WriteStr (#1 + 'PATH: ' + strI2S(MsgBase^.GetOrigAddr.Net) + '/' + strI2S(MsgBase^.GetOrigAddr.Node), #13);
-      WriteStr (#0#0, #0);
     End;
 
-    Close (F);
+    WriteStr (#0#0, #0);
+    Close    (F);
   End;
 
 Begin
