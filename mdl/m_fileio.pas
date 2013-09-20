@@ -397,12 +397,13 @@ Function JustFileName (Str: String) : String;
 Var
   Temp : Byte;
 Begin
-  Temp := Pos ('.', Str);
-
-  If Temp > 0 Then
-    Delete (Str, Temp, Ord(Str[0]));
-
   Result := Str;
+
+  For Temp := Length(Result) DownTo 1 Do
+    If Result[Temp] = '.' Then Begin
+      Delete (Result, Temp, 255);
+      Break;
+    End;
 End;
 
 Function JustFileExt (Str: String) : String;
