@@ -17,7 +17,7 @@ Uses
 Var
   TempPath : String;
 
-Procedure BinkPStatus (Owner: Pointer; Level: Byte; Str: String);
+Procedure PrintStatus (Owner: Pointer; Level: Byte; Str: String);
 Var
   TF : Text;
 Begin
@@ -42,7 +42,29 @@ Begin
   End;
 End;
 
-Function PollNode (OnlyNew: Boolean; Var Queue: TProtocolQueue; Var EchoNode: RecEchoMailNode) : Boolean;
+Function PollNodeDirectory (OnlyNew: Boolean; Var Queue: TProtocolQueue; Var EchoNode: RecEchoMailNode) : Boolean;
+Begin
+  Result := False;
+End;
+
+Function PollNodeFTP (OnlyNew: Boolean; Var Queue: TProtocolQueue; Var EchoNode: RecEchoMailNode) : Boolean;
+Begin
+  Result := False;
+
+  Queue.Clear;
+
+  PrintStatus(NIL, 1, 'Scanning ' + Addr2Str(EchoNode.Address));
+
+  QueueByNode (Queue, True, EchoNode);
+
+  PrintStatus(NIL, 1, 'Queued ' + strI2S(Queue.QSize) + ' files (' + strI2S(Queue.QFSize) + ' bytes) to ' + Addr2Str(EchoNode.Address));
+
+  If OnlyNew and (Queue.QSize = 0) Then Exit;
+
+  PrintStatus(NIL, 1, 'Polling FTP node ' + Addr2Str(EchoNode.Address));
+End;
+
+Function PollNodeBINKP (OnlyNew: Boolean; Var Queue: TProtocolQueue; Var EchoNode: RecEchoMailNode) : Boolean;
 Var
   BinkP  : TBinkP;
   Client : TIOSocket;
@@ -50,44 +72,42 @@ Var
 Begin
   Result := False;
 
-  If Not (EchoNode.Active and (EchoNode.ProtType = 0)) Then Exit;
-
   Queue.Clear;
 
-  BinkPStatus(NIL, 1, 'Scanning ' + Addr2Str(EchoNode.Address));
+  PrintStatus(NIL, 1, 'Scanning ' + Addr2Str(EchoNode.Address));
 
   QueueByNode (Queue, True, EchoNode);
 
-  BinkPStatus(NIL, 1, 'Queued ' + strI2S(Queue.QSize) + ' files (' + strI2S(Queue.QFSize) + ' bytes) to ' + Addr2Str(EchoNode.Address));
+  PrintStatus(NIL, 1, 'Queued ' + strI2S(Queue.QSize) + ' files (' + strI2S(Queue.QFSize) + ' bytes) to ' + Addr2Str(EchoNode.Address));
 
   If OnlyNew and (Queue.QSize = 0) Then Exit;
 
-  BinkPStatus(NIL, 1, 'Polling node ' + Addr2Str(EchoNode.Address));
+  PrintStatus(NIL, 1, 'Polling BINKP node ' + Addr2Str(EchoNode.Address));
 
   Client := TIOSocket.Create;
 
   Client.FTelnetClient := False;
   Client.FTelnetServer := False;
 
-  BinkPStatus (NIL, 1, 'Connecting to ' + EchoNode.binkHost);
+  PrintStatus (NIL, 1, 'Connecting to ' + EchoNode.binkHost);
 
   Port := strS2I(strWordGet(2, EchoNode.binkHost, ':'));
 
   If Port = 0 Then Port := 24554;
 
   If Not Client.Connect (strWordGet(1, EchoNode.binkHost, ':'), Port) Then Begin
-    BinkPStatus (NIL, 1, 'UNABLE TO CONNECT');
+    PrintStatus (NIL, 1, 'UNABLE TO CONNECT');
 
     Client.Free;
 
     Exit;
   End;
 
-  BinkPStatus(NIL, 1, 'Connected');
+  PrintStatus(NIL, 1, 'Connected');
 
   BinkP := TBinkP.Create(Client, Client, Queue, True, EchoNode.binkTimeOut * 100);
 
-  BinkP.StatusUpdate := @BinkPStatus;
+  BinkP.StatusUpdate := @PrintStatus;
   BinkP.SetOutPath   := GetFTNOutPath(EchoNode);
   BinkP.SetPassword  := EchoNode.binkPass;
   BinkP.SetBlockSize := EchoNode.binkBlock;
@@ -115,11 +135,19 @@ Begin
 
   Result := GetNodeByAddress(Addr, EchoNode);
 
-  If Result Then
-    If PollNode(False, Queue, EchoNode) Then Begin
-      EchoNode.LastSent := PollTime;
-      // needs to save updated polltime
+  If Result And EchoNode.Active Then Begin
+    Case EchoNode.ProtType of
+      0 : If PollNodeBINKP(False, Queue, EchoNode) Then
+            EchoNode.LastSent := PollTime;
+      1 : If PollNodeFTP(False, Queue, EchoNode) Then
+            EchoNode.LastSent := PollTime;
+      2 : If PollNodeDirectory(False, Queue, EchoNode) Then
+            EchoNode.LastSent := PollTime;
     End;
+
+    // needs to save updated polltime
+  End Else
+    Result := False;
 
   Queue.Free;
 End;
@@ -134,7 +162,7 @@ Var
 Begin
   PollTime := CurDateDos;
 
-  WriteLn ('Polling BINKP nodes...');
+  WriteLn ('Polling nodes...');
   WriteLn;
 
   Total := 0;
@@ -148,10 +176,15 @@ Begin
   While Not Eof(EchoFile) Do Begin
     Read (EchoFile, EchoNode);
 
-    If PollNode(OnlyNew, Queue, EchoNode) Then Begin
-      Inc (Total);
-
-      EchoNode.LastSent := PollTime;
+    If EchoNode.Active Then Begin
+      Case EchoNode.ProtType of
+        0 : If PollNodeBINKP(OnlyNew, Queue, EchoNode) Then
+              EchoNode.LastSent := PollTime;
+        1 : If PollNodeFTP(OnlyNew, Queue, EchoNode) Then
+              EchoNode.LastSent := PollTime;
+        2 : If PollNodeDirectory(False, Queue, EchoNode) Then
+              EchoNode.LastSent := PollTime;
+      End;
 
       Seek  (EchoFile, FilePos(EchoFile) - 1);
       Write (EchoFile, EchoNode);
@@ -163,7 +196,7 @@ Begin
   Queue.Free;
 
   WriteLn;
-  BinkPStatus (NIL, 1, 'Polled ' + strI2S(Total) + ' nodes');
+  PrintStatus (NIL, 1, 'Polled ' + strI2S(Total) + ' nodes');
 End;
 
 Var
@@ -208,5 +241,5 @@ Begin
     PollAll (Str = 'SEND')
   Else
   If Not PollByAddress(Str) Then
-    BinkPStatus (NIL, 1, 'Invalid command line or address');
+    PrintStatus (NIL, 1, 'Invalid command line or address');
 End.

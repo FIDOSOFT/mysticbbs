@@ -131,6 +131,55 @@ Begin
   Close (F);
 End;
 
+Procedure EditSessionInfo (Var Node: RecEchoMailNode);
+Var
+  Box   : TAnsiMenuBox;
+  Form  : TAnsiMenuForm;
+  Topic : String;
+Begin
+  Topic := '|03(|09Echomail Session|03) |01-|09> |15';
+  Box   := TAnsiMenuBox.Create;
+  Form  := TAnsiMenuForm.Create;
+
+  Case Node.ProtType of
+    0 : Begin
+          Box.Header := ' BINKP ';
+
+          Box.Open (17, 7, 63, 15);
+
+          VerticalLine (30, 9, 13);
+
+          Form.AddStr  ('H', ' Host'         , 24,  9, 32,  9,  6, 20, 60, @Node.binkHost, Topic + '<hostname>:<port>');
+          Form.AddMask ('S', ' Password'     , 20, 10, 32, 10, 10, 20, 20, @Node.binkPass, Topic);
+          Form.AddWord ('T', ' TimeOut'      , 21, 11, 32, 11,  9,  4, 10, 9999, @Node.binkTimeOut, Topic + 'Inactive session timeout (seconds)');
+          Form.AddWord ('B', ' BlockSize'    , 19, 12, 32, 12, 11,  5, 4096, 30720, @Node.binkBlock, Topic + 'Blocksize in bytes');
+          Form.AddTog  ('M', ' CRAM-MD5'     , 20, 13, 32, 13, 10,  6, 0,  2, 'No Yes Forced', @Node.binkMD5, Topic);
+
+          Form.Execute;
+
+          Box.Close;
+        End;
+    2 : Begin
+          Box.Header := ' DIRECTORY ';
+
+          Box.Open (15, 8, 64, 13);
+
+          VerticalLine (31, 10, 11);
+
+          Form.AddPath ('O', ' Outbound Dir', 17, 10, 33, 10, 14, 30, 60, @Node.DirOutDir, Topic);
+          Form.AddPath ('I', ' Inbound Dir' , 18, 11, 33, 11, 13, 30, 60, @Node.DirInDir, Topic);
+
+          Form.Execute;
+
+          Box.Close;
+
+        End;
+  End;
+
+  Form.Free;
+  Box.Free;
+End;
+
 Procedure EditNode (Var Node: RecEchoMailNode);
 Var
   Box   : TAnsiMenuBox;
@@ -142,40 +191,33 @@ Begin
   Form  := TAnsiMenuForm.Create;
 
   Box.Header := ' Index ' + strI2S(Node.Index) + ' ';
-  Box.Shadow := False;
 
-  Box.Open (3, 5, 76, 22);
+  Box.Open (10, 5, 70, 17);
 
-  VerticalLine (19,  7, 14);
-  VerticalLine (19, 17, 21);
-  VerticalLine (53,  7, 11);
-//  VerticalLine (53, 14, 19);
+  VerticalLine (27,  7, 13);
+  VerticalLine (59,  7, 11);
 
-  WriteXY (13, 16, 112, 'BINKP');
-//  WriteXY (49, 13, 112, 'FTP');
+  Form.AddStr  ('D', ' Description'  , 14,  7, 29,  7, 13, 23, 35, @Node.Description, Topic + 'Node description');
+  Form.AddBol  ('A', ' Active'       , 19,  8, 29,  8,  8,  3, @Node.Active, Topic + 'Is node active?');
+  Form.AddStr  ('R', ' Archive Type' , 13,  9, 29,  9, 14,  4, 4, @Node.ArcType, Topic + 'Archive type for packets');
+  Form.AddTog  ('Y', ' Export Type'  , 14, 10, 29, 10, 13,  6, 0, 3, 'Normal Crash Direct Hold', @Node.MailType, Topic);
+  Form.AddPass ('F', ' AllFix PW'    , 16, 11, 29, 11, 11, 20, 20, @Node.AreaFixPass, Topic + 'Password for Area/FileFix');
+  Form.AddTog  ('T', ' Session Type' , 13, 12, 29, 12, 14,  9, 0, 2, 'BinkP FTP Directory', @Node.ProtType, Topic + 'Transfer using BinkP, FTP, or to a file directory');
+  Form.AddStr  ('U', ' Route Info'   , 15, 13, 29, 13, 12, 40, 128, @Node.RouteInfo, Topic + 'Route info (ie "2:* 3:*")');
 
-  Form.AddStr  ('D', ' Description'  ,  6,  7, 21,  7, 13, 23, 35, @Node.Description, Topic + 'Node description');
-  Form.AddBol  ('A', ' Active'       , 11,  8, 21,  8,  8,  3, @Node.Active, Topic + 'Is node active?');
-  Form.AddStr  ('R', ' Archive Type' ,  5,  9, 21,  9, 14,  4, 4, @Node.ArcType, Topic + 'Archive type for packets');
-//  Form.AddTog  ('E', ' Network Type' ,  5, 10, 21, 10, 14,  7, 0, 1, 'FidoNet QWK', @Node.NetType, Topic);
-  Form.AddTog  ('L', ' Session Type' ,  5, 11, 21, 11, 14,  5, 0, 1, 'BinkP FTP', @Node.ProtType, Topic);
-  Form.AddTog  ('Y', ' Export Type'  ,  6, 12, 21, 12, 13,  6, 0, 3, 'Normal Crash Direct Hold', @Node.MailType, Topic);
-  Form.AddStr  ('W', ' *Fix Password',  4, 13, 21, 13, 15, 20, 20, @Node.AreaFixPass, Topic + 'Password required for Area/FileFix');
-  Form.AddStr  ('U', ' Route Info'   ,  7, 14, 21, 14, 12, 54, 128, @Node.RouteInfo, Topic + 'Route info (ie "2:* 3:*")');
+  Form.AddNone ('S', ' Session Options', 32, 15, 32, 15, 17, Topic);
 
-  Form.AddStr  ('H', ' Host'         , 13, 17, 21, 17,  6, 20, 60, @Node.binkHost, Topic + '<hostname>:<port>');
-  Form.AddMask ('S', ' Password'     ,  9, 18, 21, 18, 10, 20, 20, @Node.binkPass, Topic);
-  Form.AddWord ('T', ' TimeOut'      , 10, 19, 21, 19,  9,  4, 10, 9999, @Node.binkTimeOut, Topic + 'Inactive session timeout (seconds)');
-  Form.AddWord ('B', ' BlockSize'    ,  8, 20, 21, 20, 11,  5, 4096, 30720, @Node.binkBlock, Topic + 'Blocksize in bytes');
-  Form.AddTog  ('M', ' CRAM-MD5'     ,  9, 21, 21, 21, 10,  6, 0,  2, 'No Yes Forced', @Node.binkMD5, Topic);
+  Form.AddWord ('Z', ' Zone'         , 53,  7, 61,  7,  6,  5,  0, 65535, @Node.Address.Zone,  Topic + 'Network Zone');
+  Form.AddWord ('N', ' Net'          , 54,  8, 61,  8,  5,  5,  0, 65535, @Node.Address.Net,   Topic + 'Network Net');
+  Form.AddWord ('O', ' Node'         , 53,  9, 61,  9,  6,  5,  0, 65535, @Node.Address.Node,  Topic + 'Network Node');
+  Form.AddWord ('P', ' Point'        , 52, 10, 61, 10,  7,  5,  0, 65535, @Node.Address.Point, Topic + 'Network Point');
+  Form.AddStr  ('I', ' Domain'       , 51, 11, 61, 11,  8,  8,  8, @Node.Domain, Topic + 'Network Domain');
 
-  Form.AddWord ('Z', ' Zone'         , 47,  7, 55,  7,  6,  5,  0, 65535, @Node.Address.Zone,  Topic + 'Network Zone');
-  Form.AddWord ('N', ' Net'          , 48,  8, 55,  8,  5,  5,  0, 65535, @Node.Address.Net,   Topic + 'Network Net');
-  Form.AddWord ('O', ' Node'         , 47,  9, 55,  9,  6,  5,  0, 65535, @Node.Address.Node,  Topic + 'Network Node');
-  Form.AddWord ('P', ' Point'        , 46, 10, 55, 10,  7,  5,  0, 65535, @Node.Address.Point, Topic + 'Network Point');
-  Form.AddStr  ('I', ' Domain'       , 45, 11, 55, 11,  8,  8,  8, @Node.Domain, Topic + 'Network Domain');
+  Repeat
+    If Form.Execute <> 'S' Then Break;
 
-  Form.Execute;
+    EditSessionInfo(Node);
+  Until False;
 
   Box.Close;
 

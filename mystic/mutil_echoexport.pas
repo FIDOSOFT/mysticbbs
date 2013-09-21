@@ -161,6 +161,12 @@ Var
        (EchoNode.Address.Node  = MsgBase^.GetOrigAddr.Node) and
        (EchoNode.Address.Point = MsgBase^.GetOrigAddr.Point) Then Exit;
 
+    // if netmail is TO someone on this system do not export
+
+    If MBase.NetType = 3 Then
+      If IsValidAKA(MsgBase^.GetDestAddr.Zone, MsgBase^.GetDestAddr.Net, MsgBase^.GetDestAddr.Node) Then
+        Exit;
+
     Log (2, '+', '      Export #' + strI2S(MsgBase^.GetMsgNum) + ' to ' + strAddr2Str(EchoNode.Address));
 
     GetDate (DT.Year, DT.Month, DT.Day, Temp);
@@ -216,6 +222,7 @@ Var
       PH.DestZone := EchoNode.Address.Zone;
       PH.DestNet  := EchoNode.Address.Net;
       PH.DestNode := EchoNode.Address.Node;
+      // ^^ does this need to change for netmail too?
       PH.Year     := DT.Year;
       PH.Month    := DT.Month;
       PH.Day      := DT.Day;
@@ -261,8 +268,10 @@ Var
     If MBase.NetType <> 3 Then
       WriteStr ('AREA:' + MBase.EchoTag, #13);
 
-    If MBase.NetType = 3 Then
+    If MBase.NetType = 3 Then Begin
       WriteStr (#1 + 'INTL ' + strAddr2Str(MsgBase^.GetDestAddr) + ' ' + strAddr2Str(MsgBase^.GetOrigAddr), #13);
+      // Add Via here and do an ELSE TID for nettype <> 3?
+    End;
 
     WriteStr (#1 + 'TID: ' + mysSoftwareID + ' ' + mysVersion, #13);
 

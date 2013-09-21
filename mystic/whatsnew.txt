@@ -3812,4 +3812,7 @@
  + Mystic's netmail fowarding will now strip leading and trailing spaces in
    case of typos in the .INI.
 
+ ! Netmail messages will no longer export from MUTIL if their destination
+   address is one of your configured AKA addresses.
+
    <ALPHA 38 RELEASED>

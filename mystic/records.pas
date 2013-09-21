@@ -106,7 +106,7 @@ Type
     Address     : RecEchoMailAddr;
     Domain      : String[8];
     ArcType     : String[4];
-    MailType    : Byte;
+    MailType    : Byte;                                         // 0=BINKP,1=FTP,2=Dir
     binkHost    : String[60];
     UNUSED1     : Byte;
     ProtType    : Byte;
@@ -114,7 +114,7 @@ Type
     binkBlock   : Word;
     binkMD5     : Byte;
     ftpOutHost  : String[60];
-    ftpOutPort  : Word;
+    UNUSED2     : Word;
     ftpOutLogin : String[20];
     ftpOutPass  : String[20];
     ftpInDir    : String[60];
@@ -130,7 +130,9 @@ Type
     binkPass    : String[20];
     RouteInfo   : String[128];
     AreaFixPass : String[20];
-    Res         : Array[1..341] of Byte;
+    DirInDir    : String[60];
+    DirOutDir   : String[60];
+    Res         : Array[1..219] of Byte;
   End;
 
   RecQwkNetwork = Record
