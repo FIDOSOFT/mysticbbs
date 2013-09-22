@@ -282,7 +282,7 @@ Begin
   Assign (Session.ThemeFile, bbsCfg.DataPath + 'theme.dat');
   {$I-} Reset (Session.ThemeFile); {$I+}
   If IoResult <> 0 Then Begin
-    Console.WriteLine ('ERROR: No theme configuration.');
+    Console.WriteLine ('ERROR: No theme configuration');
     DisposeClasses;
     Halt(1);
   End;

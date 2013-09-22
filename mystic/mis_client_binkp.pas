@@ -122,7 +122,6 @@ Type
 
     Constructor Create (O: Pointer; Var C: TIOSocket; Var FL: TProtocolQueue; IsCli: Boolean; TOV: Word);
     Destructor  Destroy; Override;
-    Procedure   RemoveFilesFromFLO (FN: String);
     Function    AuthenticateNode (AddrList: String) : Boolean;
     Function    EscapeFileName (Str: String) : String;
     Function    RestoreFileName (Str: String) : String;
@@ -138,8 +137,10 @@ Function CreateBINKP (Owner: TServerManager; Config: RecConfig; ND: TNodeData; C
 
 // these need to be moved to a generic area
 
-Function GetFTNOutPath (EchoNode: RecEchoMailNode) : String;
-Procedure QueueByNode (Var Queue: TProtocolQueue; SkipHold: Boolean; EchoNode: RecEchoMailNode);
+Function  GetFTNFlowName     (Dest: RecEchoMailAddr) : String;
+Function  GetFTNOutPath      (EchoNode: RecEchoMailNode) : String;
+Procedure QueueByNode        (Var Queue: TProtocolQueue; SkipHold: Boolean; EchoNode: RecEchoMailNode);
+Procedure RemoveFilesFromFLO (OutPath, TP, FN: String);
 
 Type
   TBINKPServer = Class(TServerClient)
@@ -271,66 +272,6 @@ Begin
   End;
 
   Close (EchoFile);
-End;
-
-Procedure TBinkP.RemoveFilesFromFLO (FN: String);
-Var
-  Str      : String;
-  DirInfo  : SearchRec;
-  OrigFile : Text;
-  NewFile  : Text;
-  Matched  : Boolean;
-Begin
-  // Scan all FLO files in outbound directory, and PRUNE them all.
-
-  // possible issue if multiple BINKP connections are going.  we need
-  // to revamp this to perform appropriate file locking and waiting.
-  // also should be moved to mis_common since FTN-FTP will also perform
-  // the same procedure.
-  // could also perform a critical section as a cheesy way to do this?
-
-  FindFirst (SetOutPath + '*.?lo', AnyFile, DirInfo);
-
-  While DosError = 0 Do Begin
-    FileRename (SetOutPath + DirInfo.Name, TempPath + DirInfo.Name);
-
-    Assign  (NewFile, SetOutPath + DirInfo.Name);
-    ReWrite (NewFile);
-    Append  (NewFile);
-
-    Assign  (OrigFile, TempPath + DirInfo.Name);
-    Reset   (OrigFile);
-
-    While Not Eof (OrigFile) Do Begin
-      ReadLn (OrigFile, Str);
-
-      If (Str = '') or (Str[1] = '!') Then
-        WriteLn (NewFile, Str)
-      Else Begin
-        Case Str[1] of
-          '~',
-          '#',
-          '^'  : Matched := strUpper(FN) = strUpper(Copy(Str, 2, 255));
-        Else
-          Matched := (strUpper(FN) = strUpper(Str));
-        End;
-
-        If Not Matched Then
-          WriteLn (NewFile, Str);
-      End;
-    End;
-
-    Close (NewFile);
-    Close (OrigFile);
-    Erase (OrigFile);
-
-    If FileByteSize(SetOutPath + DirInfo.Name) = 0 Then
-      FileErase(SetOutPath + DirInfo.Name);
-
-    FindNext (DirInfo);
-  End;
-
-  FindClose (DirInfo);
 End;
 
 Function TBinkP.GetDataStr : String;
@@ -725,7 +666,7 @@ Begin
                          FileList.QData[FileList.QPos]^.Status := QueueSuccess;
 
                          FileErase          (FileList.QData[FileList.QPos]^.FilePath + FileList.QData[FileList.QPos]^.FileName);
-                         RemoveFilesFromFLO (FileList.QData[FileList.QPos]^.FilePath + FileList.QData[FileList.QPos]^.FileName);
+                         RemoveFilesFromFLO (SetOutPath, TempPath, FileList.QData[FileList.QPos]^.FilePath + FileList.QData[FileList.QPos]^.FileName);
 
                          HaveHeader := False;
                          NeedHeader := True;
@@ -832,6 +773,65 @@ Begin;
     Result := Result + strI2H((EchoNode.Address.Net SHL 16) OR EchoNode.Address.Node, 8) + '.pnt' + PathChar;
 End;
 
+Procedure RemoveFilesFromFLO (OutPath, TP, FN: String);
+Var
+  Str      : String;
+  DirInfo  : SearchRec;
+  OrigFile : Text;
+  NewFile  : Text;
+  Matched  : Boolean;
+Begin
+  // Scan all FLO files in outbound directory, and PRUNE them all.
+
+  // This should probably be changed to honor and create BSY files and
+  // instead of pruning ALL FLO files it should prune a single file.
+  // Need to review the code and figure out why I did it this way to
+  // begin with.
+
+  FindFirst (OutPath + '*.?lo', AnyFile, DirInfo);
+
+  While DosError = 0 Do Begin
+    FileRename (OutPath + DirInfo.Name, TP + DirInfo.Name);
+
+    Assign  (NewFile, OutPath + DirInfo.Name);
+    ReWrite (NewFile);
+    Append  (NewFile);
+
+    Assign  (OrigFile, TP + DirInfo.Name);
+    Reset   (OrigFile);
+
+    While Not Eof (OrigFile) Do Begin
+      ReadLn (OrigFile, Str);
+
+      If (Str = '') or (Str[1] = '!') Then
+        WriteLn (NewFile, Str)
+      Else Begin
+        Case Str[1] of
+          '~',
+          '#',
+          '^'  : Matched := strUpper(FN) = strUpper(Copy(Str, 2, 255));
+        Else
+          Matched := (strUpper(FN) = strUpper(Str));
+        End;
+
+        If Not Matched Then
+          WriteLn (NewFile, Str);
+      End;
+    End;
+
+    Close (NewFile);
+    Close (OrigFile);
+    Erase (OrigFile);
+
+    If FileByteSize(OutPath + DirInfo.Name) = 0 Then
+      FileErase(OutPath + DirInfo.Name);
+
+    FindNext (DirInfo);
+  End;
+
+  FindClose (DirInfo);
+End;
+
 Procedure QueueByNode (Var Queue: TProtocolQueue; SkipHold: Boolean; EchoNode: RecEchoMailNode);
 Var
   DirInfo : SearchRec;
@@ -855,7 +855,7 @@ Begin
       Continue;
     End;
 
-    If Not ((strUpper(JustFileName(DirInfo.Name)) = strUpper(GetFTNFlowName(EchoNode.Address))) and EchoNode.Active and (EchoNode.ProtType = 0)) Then Begin
+    If Not ((strUpper(JustFileName(DirInfo.Name)) = strUpper(GetFTNFlowName(EchoNode.Address))) and EchoNode.Active) Then Begin
       FindNext (DirInfo);
 
       Continue;
@@ -895,7 +895,7 @@ Begin
       Continue;
     End;
 
-    If Not ((strUpper(JustFileName(DirInfo.Name)) = strUpper(GetFTNFlowName(EchoNode.Address))) and EchoNode.Active and (EchoNode.ProtType = 0)) Then Begin
+    If Not ((strUpper(JustFileName(DirInfo.Name)) = strUpper(GetFTNFlowName(EchoNode.Address))) and EchoNode.Active) Then Begin
       FindNext (DirInfo);
 
       Continue;

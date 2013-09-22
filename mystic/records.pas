@@ -108,7 +108,7 @@ Type
     ArcType     : String[4];
     MailType    : Byte;                                         // 0=BINKP,1=FTP,2=Dir
     binkHost    : String[60];
-    UNUSED1     : Byte;
+    ftpPassive  : Boolean;
     ProtType    : Byte;
     binkTimeout : Word;
     binkBlock   : Word;

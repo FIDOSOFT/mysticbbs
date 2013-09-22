@@ -206,6 +206,9 @@ Var
               MBase.DefQScan  := INI.ReadInteger(Header_ECHOIMPORT, 'qwk_scan', 1);
               MBase.NetAddr   := 1;
 
+              MBase.FileName := strReplace(MBase.FileName, '/', '_');
+              MBase.FileName := strReplace(MBase.FileName, '\', '_');
+
               For Count := 1 to 30 Do
                 If bbsCfg.NetAddress[Count].Zone = PKT.PKTHeader.DestZone Then Begin
                   MBase.NetAddr := Count;

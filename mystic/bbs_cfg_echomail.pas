@@ -159,8 +159,27 @@ Begin
 
           Box.Close;
         End;
+    1 : Begin
+          Box.Header := ' FTP ';
+
+          Box.Open (15, 7, 65, 16);
+
+          VerticalLine (32, 9, 14);
+
+          Form.AddStr  ('H', ' Hostname'     , 22,  9, 34,  9, 10, 30, 60, @Node.ftpOutHost, Topic);
+          Form.AddStr  ('L', ' Login'        , 25, 10, 34, 10,  7, 20, 20, @Node.ftpOutLogin, Topic);
+          Form.AddMask ('P', ' Password'     , 22, 11, 34, 11, 10, 20, 20, @Node.ftpOutPass, Topic);
+          Form.AddBol  ('A', ' Passive'      , 23, 12, 34, 12,  9, 3, @Node.ftpPassive, Topic);
+          Form.AddStr  ('O', ' Out Directory', 17, 13, 34, 13, 15, 30, 60, @Node.ftpOutDir, Topic);
+          Form.AddStr  ('I', ' In Directory' , 18, 14, 34, 14, 14, 30, 60, @Node.ftpInDir, Topic);
+
+          Form.Execute;
+
+          Box.Close;
+
+        End;
     2 : Begin
-          Box.Header := ' DIRECTORY ';
+          Box.Header := ' Directory ';
 
           Box.Open (15, 8, 64, 13);
 

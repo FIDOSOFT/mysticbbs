@@ -70,6 +70,9 @@ Begin
       MBase.DefQScan  := INI.ReadInteger(Header_IMPORTMB, 'qwk_scan', 1);
       MBase.NetAddr   := 1;
 
+      MBase.FileName := strReplace(MBase.FileName, '/', '_');
+      MBase.FileName := strReplace(MBase.FileName, '\', '_');
+
       For Count := 1 to 30 Do
         If strAddr2Str(bbsCfg.NetAddress[Count]) = INI.ReadString(Header_IMPORTNA, 'netaddress', '') Then Begin
           MBase.NetAddr := Count;

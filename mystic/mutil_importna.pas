@@ -51,6 +51,12 @@ Begin
     TagName  := strStripLow(strWordGet(1, Str, ' '));
     BaseName := strStripLow(strStripB(Copy(Str, Pos(' ', Str), 255), ' '));
 
+//    TagName := strReplace(TagName, '/', '_');
+//    TagName := strReplace(TagName, '\', '_');
+
+//    If Pos(TagName, '/') > 0 Then Continue;
+//    If Pos(TagName, '\') > 0 Then Continue;
+
     ProcessStatus (BaseName, False);
 
     If Not IsDupeMBase(TagName) Then Begin
@@ -85,6 +91,9 @@ Begin
       MBase.DefNScan  := strS2I(INI.ReadString(Header_IMPORTNA, 'new_scan', '1'));
       MBase.DefQScan  := strS2I(INI.ReadString(Header_IMPORTNA, 'qwk_scan', '1'));
       MBase.NetAddr   := 1;
+
+      MBase.FileName := strReplace(MBase.FileName, '/', '_');
+      MBase.FileName := strReplace(MBase.FileName, '\', '_');
 
       For Count := 1 to 30 Do
         If strAddr2Str(bbsCfg.NetAddress[Count]) = INI.ReadString(Header_IMPORTNA, 'netaddress', '') Then Begin

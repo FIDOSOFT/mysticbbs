@@ -736,6 +736,9 @@ Begin
 
     OpenDataSession;
 
+    // if qwlbyFTP.acs then
+    DataSocket.WriteLine(bbsCfg.QwkBBSID + '.qwk');
+
     DirFile := TFileBuffer.Create(FileBufSize);
 
     If DirFile.OpenStream (bbsCfg.DataPath + TempBase.FileName + '.dir', SizeOf(RecFileList), fmOpenCreate, fmRWDN) Then Begin

@@ -61,7 +61,7 @@ Begin
       If QWK.TotalMessages > 0 Then Begin
         WriteLn ('   - Sending reply packet');
 
-        Case FTP.SendFile(QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.rep') of
+        Case FTP.SendFile(QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.rep', QwkNet.PacketID) of
           ftpResOK      : SentFile := True;
           ftpResBadData : WriteLn ('      - Unable to open data connection');
         Else

@@ -1,5 +1,26 @@
 Program FidoPoll;
 
+// ====================================================================
+// Mystic BBS Software               Copyright 1997-2013 By James Coyle
+// ====================================================================
+//
+// This file is part of Mystic BBS.
+//
+// Mystic BBS is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Mystic BBS is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Mystic BBS.  If not, see <http://www.gnu.org/licenses/>.
+//
+// ====================================================================
+
 {$I M_OPS.PAS}
 
 Uses
@@ -10,6 +31,7 @@ Uses
   m_Strings,
   m_IO_Sockets,
   m_Protocol_Queue,
+  m_tcp_Client_FTP,
   BBS_Records,
   BBS_DataBase,
   MIS_Client_BINKP;
@@ -42,26 +64,146 @@ Begin
   End;
 End;
 
-Function PollNodeDirectory (OnlyNew: Boolean; Var Queue: TProtocolQueue; Var EchoNode: RecEchoMailNode) : Boolean;
+Function FindBundleName (Str: String) : String;
+Var
+  FN   : String;
+  Ext  : String;
+  Last : Byte;
 Begin
-  Result := False;
+  FN  := JustFileName(Str);
+  Ext := strLower(JustFileExt(Str));
+
+  Last := Byte(Ext[Length(Ext)]);
+
+  If Not (Last in [48..57, 97..122]) Then Last := 48;
+
+  Repeat
+    Result := FN + '.' + Ext;
+    Result[Length(Result)] := Char(Last);
+
+    If Not FileExist(Result) Then Break;
+
+    Inc (Last);
+
+    If Last = 58  Then Last := 97;
+    If Last = 123 Then Exit; // no 0-9,a-z could be generated
+  Until False;
 End;
 
 Function PollNodeFTP (OnlyNew: Boolean; Var Queue: TProtocolQueue; Var EchoNode: RecEchoMailNode) : Boolean;
+Var
+  FTP   : TFTPClient;
+  Count : LongInt;
 Begin
   Result := False;
 
   Queue.Clear;
 
-  PrintStatus(NIL, 1, 'Scanning ' + Addr2Str(EchoNode.Address));
+  PrintStatus (NIL, 1, 'Scanning ' + Addr2Str(EchoNode.Address));
 
   QueueByNode (Queue, True, EchoNode);
+
+  PrintStatus (NIL, 1, 'Queued ' + strI2S(Queue.QSize) + ' files (' + strI2S(Queue.QFSize) + ' bytes) to ' + Addr2Str(EchoNode.Address));
+
+  If OnlyNew and (Queue.QSize = 0) Then Exit;
+
+  PrintStatus (NIL, 1, 'Polling FTP node ' + Addr2Str(EchoNode.Address));
+
+  FTP := TFTPClient.Create(bbsCfg.iNetInterface);
+
+  If FTP.OpenConnection(EchoNode.ftpOutHost) Then Begin
+    PrintStatus (NIL, 1, 'Connected');
+
+    If FTP.Authenticate(EchoNode.ftpOutLogin, EchoNode.ftpOutPass) Then Begin
+      If FTP.GetDirectoryList(EchoNode.ftpPassive, True, EchoNode.ftpInDir) Then Begin
+        For Count := 1 to FTP.ResponseData.Count Do Begin
+          PrintStatus (NIL, 1, 'Receiving ' + FTP.ResponseData.Strings[Count - 1]);
+
+          If FTP.GetFile (EchoNode.ftpPassive, bbsCfg.InboundPath + FTP.ResponseData.Strings[Count - 1]) = ftpResOK Then Begin
+            If FTP.SendCommand('DELE ' + FTP.ResponseData.Strings[Count - 1]) <> 250 Then
+              FileErase(bbsCfg.InboundPath + FTP.ResponseData.Strings[Count - 1])
+            Else
+              PrintStatus (NIL, 1, 'Unable to delete from server ' + FTP.ResponseData.Strings[Count - 1]);
+          End Else
+            PrintStatus (NIL, 1, 'Failed');
+        End;
+      End Else
+        PrintStatus (NIL, 1, 'Unable to list ' + EchoNode.ftpInDir);
+
+      If Queue.QSize > 0 Then Begin
+        If FTP.ChangeDirectory(EchoNode.ftpOutDir) Then Begin
+          For Count := 1 to Queue.QSize Do Begin
+            PrintStatus (NIL, 1, 'Sending ' + Queue.QData[Count]^.FileNew);
+
+            If FTP.SendFile(EchoNode.ftpPassive, Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName, Queue.QData[Count]^.FileNew) = ftpResOK Then Begin
+              FileErase          (Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName);
+              RemoveFilesFromFLO (GetFTNOutPath(EchoNode), TempPath, Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName);
+            End Else
+              PrintStatus (NIL, 1, 'Failed');
+          End;
+        End Else
+          PrintStatus (NIL, 1, 'Unable to change to ' + echoNode.ftpOutDir);
+      End;
+    End Else
+      PrintStatus (NIL, 1, 'Unable to authenticate');
+  End Else
+    PrintStatus (NIL, 1, 'Unable to connect');
+
+  PrintStatus (NIL, 1, 'Session complete');
+
+  FTP.Free;
+End;
+
+Function PollNodeDirectory (OnlyNew: Boolean; Var Queue: TProtocolQueue; Var EchoNode: RecEchoMailNode) : Boolean;
+Var
+  Count   : LongInt;
+  DirInfo : SearchRec;
+  PKTName : String;
+  NewName : String;
+  OutPath : String;
+Begin
+  Result := False;
+
+  Queue.Clear;
+
+  PrintStatus (NIL, 1, 'Scanning ' + Addr2Str(EchoNode.Address));
+
+  QueueByNode (Queue, False, EchoNode);
 
   PrintStatus(NIL, 1, 'Queued ' + strI2S(Queue.QSize) + ' files (' + strI2S(Queue.QFSize) + ' bytes) to ' + Addr2Str(EchoNode.Address));
 
   If OnlyNew and (Queue.QSize = 0) Then Exit;
 
-  PrintStatus(NIL, 1, 'Polling FTP node ' + Addr2Str(EchoNode.Address));
+  PrintStatus(NIL, 1, 'Polling DIRECTORY node ' + Addr2Str(EchoNode.Address));
+
+  OutPath := GetFTNOutPath(EchoNode);
+
+  For Count := 1 to Queue.QSize Do Begin
+    PKTName := Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName;
+    NewName := FindBundleName(EchoNode.DirInDir + Queue.QData[Count]^.FileNew);
+
+    PrintStatus (NIL, 1, 'Move ' + PKTName + ' to ' + NewName);
+
+    If (Not FileExist(NewName)) And FileReName(PKTName, NewName) Then
+      RemoveFilesFromFLO (OutPath, TempPath, PKTName)
+    Else
+      PrintStatus (NIL, 1, 'Failed to move to ' + NewName);
+  End;
+
+  FindFirst (EchoNode.DirOutDir + '*', AnyFile, DirInfo);
+
+  While DosError = 0 Do Begin
+    If DirInfo.Attr And Directory = 0 Then Begin
+      PrintStatus (NIL, 1, 'Move ' + EchoNode.DirOutDir + DirInfo.Name + ' to ' + bbsCfg.InboundPath);
+
+      If (Not FileExist(bbsCfg.InboundPath + DirInfo.Name)) and (Not FileReName(EchoNode.DirOutDir + DirInfo.Name, bbsCfg.InboundPath + DirInfo.Name)) Then
+        PrintStatus (NIL, 1, 'Failed to move to ' + EchoNode.DirOutDir + DirInfo.Name);
+    End;
+
+    FindNext (DirInfo);
+  End;
+
+  FindClose (DirInfo);
 End;
 
 Function PollNodeBINKP (OnlyNew: Boolean; Var Queue: TProtocolQueue; Var EchoNode: RecEchoMailNode) : Boolean;
@@ -220,9 +362,8 @@ Begin
   End;
 
   If ParamCount = 0 Then Begin
-    WriteLn ('This will likely be a temporary program which will be fused into');
-    WriteLn ('either MIS or MUTIL in the future (or both). Note only BINKP is');
-    WriteLn ('currently supported.  FTN via FTP may be included in the future');
+    WriteLn ('This program will send and retreive echomail packets for configured');
+    WriteLn ('echomail nodes using any of BINKP, FTP, or Directory-based transmission');
     WriteLn;
     WriteLn ('FIDOPOLL SEND      - Only send/poll if node has new outbound messages');
     WriteLn ('FIDOPOLL FORCED    - Poll/send to all configured/activenodes');

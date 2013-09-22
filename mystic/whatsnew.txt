@@ -3815,4 +3815,16 @@
  ! Netmail messages will no longer export from MUTIL if their destination
    address is one of your configured AKA addresses.
 
+ + Mystic echomail nodes can now be configured as a "Directory" session type,
+   which means that Mystic (FIDOPOLL) will send bundles to/from locally
+   configured inbound and outbound directories instead of using BINKP or FTP.
+
+ ! Mystic's FTP server was not sending the QWK packet name in directory
+   listings when the NLST command was used (instead of LIST).
+
+ + When importing a FIDONET.NA format file, or when creating message bases
+   during echomail import OR when using the ImportMsgBase function, MUTIL
+   will now change any filenames (calculated from ECHOTAG) to replace both
+   \ and / with a _ character.
+
    <ALPHA 38 RELEASED>
