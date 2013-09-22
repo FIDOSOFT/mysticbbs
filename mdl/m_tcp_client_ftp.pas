@@ -35,7 +35,8 @@ Type
     Function    OpenConnection    (HostName: String) : Boolean;
     Function    Authenticate      (Login, Password: String) : Boolean;
     Function    ChangeDirectory   (Str: String) : Boolean;
-    Function    SendFile          (Passive: Boolean; FileName: String) : Byte;
+    Function    GetDirectoryList  (Passive, Change: Boolean; Str: String) : Boolean;
+    Function    SendFile          (Passive: Boolean; LocalFile, RemoteFile: String) : Byte;
     Function    GetFile           (Passive: Boolean; FileName: String) : Byte;
     Procedure   CloseConnection;
   End;
@@ -99,6 +100,7 @@ End;
 Procedure TFTPClient.CloseDataSession;
 Begin
   If DataSocket <> NIL Then Begin
+    //DataSocket.Disconnect;
     DataSocket.Free;
 
     DataSocket := NIL;
@@ -160,7 +162,7 @@ Begin
   End;
 End;
 
-Function TFTPClient.SendFile (Passive: Boolean; FileName: String) : Byte;
+Function TFTPClient.SendFile (Passive: Boolean; LocalFile, RemoteFile: String) : Byte;
 Var
   F      : File;
   Buffer : Array[1..8 * 1024] of Char;
@@ -169,17 +171,17 @@ Var
 Begin
   Result := ftpResFailed;
 
-  If Not FileExist(FileName) Then Exit;
+  If Not FileExist(LocalFile) Then Exit;
 
   SetPassive(Passive);
 
-  Client.WriteLine ('STOR ' + JustFile(FileName));
+  Client.WriteLine ('STOR ' + JustFile(RemoteFile));
 
   OK  := OpenDataSession;
   Res := GetResponse;
 
   If OK and (Res = 150) Then Begin
-    Assign (F, FileName);
+    Assign (F, LocalFile);
 
     If ioReset(F, 1, fmRWDN) Then Begin
       Repeat
@@ -259,6 +261,37 @@ End;
 Function TFTPClient.ChangeDirectory (Str: String) : Boolean;
 Begin
   Result := SendCommand('CWD ' + Str) = 250;
+End;
+
+Function TFTPClient.GetDirectoryList (Passive, Change: Boolean; Str: String) : Boolean;
+Begin
+  Result := False;
+
+  If Change Then Begin
+    Result := ChangeDirectory(Str);
+
+    If Not Result Then Exit;
+  End;
+
+  SetPassive(Passive);
+
+  Client.WriteLine ('NLST');
+
+  If OpenDataSession and (GetResponse = 150) Then Begin
+  
+    ResponseData.Clear;
+
+    Repeat
+      If DataSocket.ReadLine(Str) <> -1 Then
+        ResponseData.Add(Str)
+      Else
+        Break;
+    Until Not DataSocket.Connected;
+
+    Result := GetResponse = 226;
+  End;
+
+  CloseDataSession;
 End;
 
 Procedure TFTPClient.CloseConnection;

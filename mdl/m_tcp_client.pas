@@ -4,7 +4,7 @@ Unit m_TCP_Client;
 
 Interface
 
-{.$DEFINE USESTRINGLIST}
+{$DEFINE USESTRINGLIST}
 
 Uses
   {$IFDEF USESTRINGLIST}
