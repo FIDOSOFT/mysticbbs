@@ -309,9 +309,9 @@ Begin
 
   Box.Header := ' FTP Server ';
 
-  Box.Open (26, 7, 55, 18);
+  Box.Open (26, 7, 55, 19);
 
-  VerticalLine (47, 9, 16);
+  VerticalLine (47, 9, 17);
 
   Form.AddBol  ('U', ' Use FTP Server',     31,  9, 49,  9, 16,  3, @bbsCfg.inetFTPUse, Topic + 'Enable FTP server');
   Form.AddWord ('P', ' Server Port',        34, 10, 49, 10, 13,  5, 0, 65535, @bbsCfg.inetFTPPort, Topic + 'FTP Server port');
@@ -321,6 +321,7 @@ Begin
   Form.AddWord ('I', ' Data Port Min',      32, 14, 49, 14, 15,  5, 0, 65535, @bbsCfg.inetFTPPortMin, Topic + 'Passive port range (minimum)');
   Form.AddWord ('A', ' Data Port Max',      32, 15, 49, 15, 15,  5, 0, 65535, @bbsCfg.inetFTPPortMax, Topic + 'Passive port range (maximum)');
   Form.AddBol  ('Y', ' Allow Passive',      32, 16, 49, 16, 15,  3, @bbsCfg.inetFTPPassive, Topic + 'Allow passive data transfers');
+  Form.AddBol  ('Q', ' Hide User QWK',      31, 17, 49, 17, 15,  3, @bbsCfg.inetFTPHideQWK, Topic + 'Hide QWK packets in listings');
 
   Form.Execute;
   Form.Free;

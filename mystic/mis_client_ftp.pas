@@ -105,8 +105,8 @@ Const
   re_UserOkay    = '331 User name okay, need password.';
   re_NoData      = '425 Unable to open data connection';
   re_BadCommand  = '503 Bad sequence of commands.';
-  re_UserUnknown = '530 Not logged in.';
-  re_BadPW       = '530 Login or password incorrect';
+//  re_UserUnknown = '530 Not logged in.';
+  re_BadPW       = '530 Invalid login';
   re_BadDir      = '550 Directory change failed';
   re_BadFile     = '550 File not found';
   re_NoAccess    = '550 Access denied';
@@ -570,6 +570,7 @@ Begin
   // update user stats posts and bbs history if not networked
 End;
 
+(*
 Procedure TFTPServer.cmdUSER;
 Begin
   ResetSession;
@@ -581,7 +582,21 @@ Begin
   End Else
     Client.WriteLine(re_UserUnknown);
 End;
+*)
 
+Procedure TFTPServer.cmdUSER;
+Begin
+  ResetSession;
+
+  If SearchForUser(Data, User, UserPos) Then
+    UserName := Data
+  Else
+    UserPos := -1;
+
+  Client.WriteLine(re_UserOkay);
+End;
+
+(*
 Procedure TFTPServer.cmdPASS;
 Begin
   If (UserName = '') or (UserPos = -1) Then Begin
@@ -590,6 +605,26 @@ Begin
   End;
 
   If strUpper(Data) = User.Password Then Begin
+    LoggedIn := True;
+
+    Client.WriteLine(re_LoggedIn);
+
+    GetSecurityLevel(User.Security, SecLevel);
+
+    Server.Status (ProcessID, User.Handle + ' logged in');
+  End Else
+    Client.WriteLine(re_BadPW);
+End;
+*)
+
+Procedure TFTPServer.cmdPASS;
+Begin
+  If UserName = '' Then Begin
+    Client.WriteLine ('332 Need account');
+    Exit;
+  End;
+
+  If (UserPos <> -1) and (strUpper(Data) = User.Password) Then Begin
     LoggedIn := True;
 
     Client.WriteLine(re_LoggedIn);
@@ -632,8 +667,6 @@ Begin
 End;
 
 Procedure TFTPServer.cmdPASV;
-//Var
-//  WaitSock : TIOSocket;
 Begin
   If LoggedIn Then Begin
     If Not bbsCfg.inetFTPPassive Then Begin
@@ -652,30 +685,6 @@ Begin
     Client.WriteLine(re_PassiveOK + '(' + strReplace(Client.HostIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo) + ').');
 
     IsPassive := True;
-(*
-    WaitSock  := TIOSocket.Create;
-
-    WaitSock.FTelnetServer := False;
-    WaitSock.FTelnetClient := False;
-
-    {$IFDEF FTPDEBUG} LOG('PASV Init'); {$ENDIF}
-
-    WaitSock.WaitInit(bbsCfg.inetInterface, DataPort);
-
-    {$IFDEF FTPDEBUG} LOG('PASV Wait'); {$ENDIF}
-
-    DataSocket := WaitSock.WaitConnection(10000);
-
-    {$IFDEF FTPDEBUG} LOG('PASV WaitDone'); {$ENDIF}
-
-    If Not Assigned(DataSocket) Then Begin
-      WaitSock.Free;
-      Client.WriteLine(re_NoData);
-      Exit;
-    End;
-
-    WaitSock.Free;
-*)
   End Else
     Client.WriteLine(re_BadCommand);
 End;
@@ -736,8 +745,8 @@ Begin
 
     OpenDataSession;
 
-    // if qwlbyFTP.acs then
-    DataSocket.WriteLine(bbsCfg.QwkBBSID + '.qwk');
+    If Not bbsCfg.inetFTPHideQWK Then
+      DataSocket.WriteLine(bbsCfg.QwkBBSID + '.qwk');
 
     DirFile := TFileBuffer.Create(FileBufSize);
 
@@ -794,8 +803,8 @@ Begin
 
       {$IFDEF FTPDEBUG} LOG('Back from data session'); {$ENDIF}
 
-      // if qwlbyFTP.acs then
-      DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + bbsCfg.QwkBBSID + '.qwk');
+      If Not bbsCfg.inetFTPHideQWK Then
+        DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + bbsCfg.QwkBBSID + '.qwk');
 
       FBaseFile := TFileBuffer.Create(FileBufSize);
 
@@ -841,7 +850,8 @@ Begin
 
     DirFile.Free;
 
-    DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + bbsCfg.QwkBBSID + '.qwk');
+    If Not bbsCfg.inetFTPHideQWK Then
+      DataSocket.WriteLine('-rw-r--r--   1 ftp      ftp ' + strPadL('0', 13, ' ') + ' ' + GetFTPDate(CurDateDos) + ' ' + bbsCfg.QwkBBSID + '.qwk');
 
     CloseDataSession;
   End Else
@@ -1171,7 +1181,7 @@ Begin
       LOG('Cmd: ' + Cmd + ' Data: ' + Data);
     {$ENDIF}
 
-//    Server.Status (ProcessID, 'Cmd: ' + Cmd + ' Data: ' + Data);
+    Server.Status (ProcessID, 'Cmd: ' + Cmd + ' Data: ' + Data);
 
     If Cmd = 'APPE' Then cmdSTOR(True) Else
     If Cmd = 'CDUP' Then cmdCDUP Else
@@ -1210,7 +1220,8 @@ Begin
   If GotQuit Then Begin
     Client.WriteLine(re_Goodbye);
 
-    Server.Status (ProcessID, User.Handle + ' logged out');
+    If UserPos <> -1 Then
+      Server.Status (ProcessID, User.Handle + ' logged out');
   End;
 End;
 

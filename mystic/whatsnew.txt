@@ -3827,4 +3827,11 @@
    will now change any filenames (calculated from ECHOTAG) to replace both
    \ and / with a _ character.
 
+ + Mystic echomail nodes can now be configured as a "FTP" session type, which
+   means Mystic (FIDOPOLL) will send/receive bundles with their uplink using
+   the FTP protocol (as opposed to BINKP or Directory).
+
+ + Added the ability to turn off showing the user's QWK packet in FTP
+   directory listings (Internet Servers > FTP)
+
    <ALPHA 38 RELEASED>

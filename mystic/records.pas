@@ -362,7 +362,8 @@ Type
     inetBINKPTimeOut: Word;
     inetBINKPCram5  : Boolean;
     QwkNetMenu      : String[20];
-    Reserved        : Array[1..757] of Char;
+    inetFTPHideQWK  : Boolean;
+    Reserved        : Array[1..756] of Char;
   End;
 
 Const

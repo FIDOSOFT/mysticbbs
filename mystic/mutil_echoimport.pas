@@ -46,8 +46,6 @@ Begin
   MB^.SetPriv     ((PKT.MsgHDR.Attribute AND pktPrivate <> 0) OR NetMail);
   MB^.SetCrash    (PKT.MsgHDR.Attribute AND pktCrash    <> 0);
   MB^.SetRcvd     (PKT.MsgHDR.Attribute AND pktReceived <> 0);
-  //MB^.SetSent   (PKT.MsgHDR.Attribute AND pktSent     <> 0);
-//  MB^.SetSent     (NetMail);
   MB^.SetSent     (False);  // force to send to downlinks?
   MB^.SetHold     (PKT.MsgHDR.Attribute AND pktHold     <> 0);
   MB^.SetKillSent (PKT.MsgHDR.Attribute AND pktKillSent <> 0);
