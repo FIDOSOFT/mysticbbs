@@ -3834,4 +3834,9 @@
  + Added the ability to turn off showing the user's QWK packet in FTP
    directory listings (Internet Servers > FTP)
 
+ + The autocreating message base while Importing Echomail can now have a
+   lowercase_filename = 1 value to convert all msg base filenames to lower
+   cased.  This was previously only available in FIDOBONE/FIDONET.NA
+   importing but it works under [ImportEchoMail] now too
+
    <ALPHA 38 RELEASED>

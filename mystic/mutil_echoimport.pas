@@ -213,6 +213,9 @@ Var
                   Break;
                 End;
 
+              If INI.ReadString(Header_ECHOIMPORT, 'lowercase_filename', '1') = '1' Then
+                MBase.FileName := strLower(MBase.FileName);
+
               If INI.ReadString(Header_ECHOIMPORT, 'use_autosig', '1') = '1' Then
                 MBase.Flags := MBase.Flags OR MBAutoSigs;
 
