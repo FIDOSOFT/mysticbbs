@@ -1,3 +1,15 @@
+IMMEDIATE PRIORITIES (IN ORDER) FOR 1.10 AS OF Sept 22, 2013
+
+1. Netmail/echomail pass-through and HUB stuff
+1. FTP FTN server
+2. AreaFix
+3. TIC processing
+4. FileFix
+5. Netmail attachments/File hatching
+6. Gating
+
+=====================================
+
 This file showcases the direction of where this software wants to go as it
 continues to expand.  Some things that will probably be mentioned will be
 vague, and serve mostly to remind me of my own ideas.
@@ -44,6 +56,8 @@ BUGS AND POSSIBLE ISSUES
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
+- MIS escape confirmation
+- Prompts for CONFIG editors
 - matrix disconnect if they use the XL command too many times
 - index00.html or whatever in FTP server
 - buffer echomail export and use mailer LR pointers

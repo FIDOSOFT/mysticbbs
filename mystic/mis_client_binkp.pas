@@ -665,8 +665,10 @@ Begin
                        If RxCommand = M_GOT Then Begin
                          FileList.QData[FileList.QPos]^.Status := QueueSuccess;
 
+                         // only erase if certain markings OR move
+                         // this to removefilesfromflow
                          FileErase          (FileList.QData[FileList.QPos]^.FilePath + FileList.QData[FileList.QPos]^.FileName);
-                         RemoveFilesFromFLO (SetOutPath, TempPath, FileList.QData[FileList.QPos]^.FilePath + FileList.QData[FileList.QPos]^.FileName);
+                         RemoveFilesFromFLO (FileList.QData[FileList.QPos]^.Extra, TempPath, FileList.QData[FileList.QPos]^.FilePath + FileList.QData[FileList.QPos]^.FileName);
 
                          HaveHeader := False;
                          NeedHeader := True;
@@ -774,6 +776,19 @@ Begin;
 End;
 
 Procedure RemoveFilesFromFLO (OutPath, TP, FN: String);
+(*
+procedure tlog (s: string);
+var
+  t : text;
+begin
+  assign (t, bbscfg.logspath + 'flo.log');
+  {$I-}Append(t);{$I+}
+  if ioresult <> 0 then rewrite(t);
+
+  writeln(t, s);
+  close(t);
+end;
+*)
 Var
   Str      : String;
   DirInfo  : SearchRec;
@@ -788,9 +803,13 @@ Begin
   // Need to review the code and figure out why I did it this way to
   // begin with.
 
+//  tlog('begin removefilesfromflo ' + outpath + '*.?lo');
+
   FindFirst (OutPath + '*.?lo', AnyFile, DirInfo);
 
   While DosError = 0 Do Begin
+//    tlog ('renaming ' + outpath + dirinfo.name + ' to ' + tp + dirinfo.name);
+
     FileRename (OutPath + DirInfo.Name, TP + DirInfo.Name);
 
     Assign  (NewFile, OutPath + DirInfo.Name);
@@ -803,6 +822,8 @@ Begin
     While Not Eof (OrigFile) Do Begin
       ReadLn (OrigFile, Str);
 
+//      tlog('got orig str: '+ str);
+
       If (Str = '') or (Str[1] = '!') Then
         WriteLn (NewFile, Str)
       Else Begin
@@ -813,6 +834,8 @@ Begin
         Else
           Matched := (strUpper(FN) = strUpper(Str));
         End;
+
+//        tlog ('matching: ' + fn + '   with   ' + str);
 
         If Not Matched Then
           WriteLn (NewFile, Str);
@@ -873,11 +896,11 @@ Begin
       FN   := JustFile(Str);
       Path := JustPath(Str);
 
-      Queue.Add (True, Path, FN, '');
+      If Queue.Add (True, Path, FN, '') Then
+        Queue.QData[Queue.QSize]^.Extra := OutPath;
     End;
 
-    Close (FLOFile);
-
+    Close    (FLOFile);
     FindNext (DirInfo);
   End;
 
@@ -901,7 +924,8 @@ Begin
       Continue;
     End;
 
-    Queue.Add (True, OutPath, DirInfo.Name, FileNewExt(DirInfo.Name, 'pkt'));
+    If Queue.Add(True, OutPath, DirInfo.Name, FileNewExt(DirInfo.Name, 'pkt')) Then
+      Queue.QData[Queue.QSize]^.Extra := OutPath;
 
     FindNext (DirInfo);
   End;
@@ -954,6 +978,10 @@ Begin
         QueueByNode(Queue, False, BinkP.EchoNode);
 
         Server.Status (ProcessID, 'Queued ' + strI2S(Queue.QSize - Before) + ' files for ' + Addr2Str(BinkP.EchoNode.Address));
+
+        BinkP.SetBlockSize := BinkP.EchoNode.binkBlock;
+        BinkP.UseMD5       := BinkP.EchoNode.binkMD5 > 0;
+        BinkP.ForceMD5     := BinkP.EchoNode.binkMD5 = 2;
       End;
     End;
 

@@ -136,6 +136,7 @@ Begin
             PrintStatus (NIL, 1, 'Sending ' + Queue.QData[Count]^.FileNew);
 
             If FTP.SendFile(EchoNode.ftpPassive, Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName, Queue.QData[Count]^.FileNew) = ftpResOK Then Begin
+              // only remove by markings... or move to removefilesfromflo
               FileErase          (Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName);
               RemoveFilesFromFLO (GetFTNOutPath(EchoNode), TempPath, Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName);
             End Else

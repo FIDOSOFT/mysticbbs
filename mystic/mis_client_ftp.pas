@@ -571,6 +571,7 @@ Begin
 End;
 
 (*
+// works with google chrome auth, not IE
 Procedure TFTPServer.cmdUSER;
 Begin
   ResetSession;
@@ -580,10 +581,10 @@ Begin
 
     UserName := Data;
   End Else
-    Client.WriteLine(re_UserUnknown);
+    Client.WriteLine(re_BadPW);
 End;
 *)
-
+// works with IE for auth prompt, not chrome
 Procedure TFTPServer.cmdUSER;
 Begin
   ResetSession;
@@ -595,7 +596,6 @@ Begin
 
   Client.WriteLine(re_UserOkay);
 End;
-
 (*
 Procedure TFTPServer.cmdPASS;
 Begin
@@ -620,7 +620,7 @@ End;
 Procedure TFTPServer.cmdPASS;
 Begin
   If UserName = '' Then Begin
-    Client.WriteLine ('332 Need account');
+    Client.WriteLine ('332 No account');
     Exit;
   End;
 
@@ -667,6 +667,8 @@ Begin
 End;
 
 Procedure TFTPServer.cmdPASV;
+Var
+  WaitSock : TIOSocket;
 Begin
   If LoggedIn Then Begin
     If Not bbsCfg.inetFTPPassive Then Begin
@@ -685,6 +687,17 @@ Begin
     Client.WriteLine(re_PassiveOK + '(' + strReplace(Client.HostIP, '.', ',') + ',' + strI2S(WordRec(DataPort).Hi) + ',' + strI2S(WordRec(DataPort).Lo) + ').');
 
     IsPassive := True;
+
+    WaitSock  := TIOSocket.Create;
+
+    WaitSock.FTelnetServer := False;
+    WaitSock.FTelnetClient := False;
+
+    WaitSock.WaitInit(bbsCfg.inetInterface, DataPort);
+
+    DataSocket := WaitSock.WaitConnection(10000);
+
+    WaitSock.Free;
   End Else
     Client.WriteLine(re_BadCommand);
 End;
@@ -1020,7 +1033,7 @@ Var
 Begin
   If LoggedIn Then Begin
 
-    If strUpper(Data) = strUpper(bbsCfg.QwkBBSID + '.qwk') Then Begin
+    If strUpper(JustFile(Data)) = strUpper(bbsCfg.QwkBBSID + '.qwk') Then Begin
       QWKCreatePacket;
 
       Exit;
