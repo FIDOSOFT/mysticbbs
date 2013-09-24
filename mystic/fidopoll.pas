@@ -120,10 +120,10 @@ Begin
           PrintStatus (NIL, 1, 'Receiving ' + FTP.ResponseData.Strings[Count - 1]);
 
           If FTP.GetFile (EchoNode.ftpPassive, bbsCfg.InboundPath + FTP.ResponseData.Strings[Count - 1]) = ftpResOK Then Begin
-            If FTP.SendCommand('DELE ' + FTP.ResponseData.Strings[Count - 1]) <> 250 Then
-              FileErase(bbsCfg.InboundPath + FTP.ResponseData.Strings[Count - 1])
-            Else
+            If FTP.SendCommand('DELE ' + FTP.ResponseData.Strings[Count - 1]) <> 250 Then Begin
               PrintStatus (NIL, 1, 'Unable to delete from server ' + FTP.ResponseData.Strings[Count - 1]);
+              FileErase(bbsCfg.InboundPath + FTP.ResponseData.Strings[Count - 1]);
+            End;
           End Else
             PrintStatus (NIL, 1, 'Failed');
         End;
