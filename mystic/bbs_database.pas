@@ -67,6 +67,7 @@ Function IsThisUser             (U: RecUser; Str: String) : Boolean;
 // ECHOMAIL
 
 Function GetNodeByAddress (Addr: String; Var TempNode: RecEchoMailNode) : Boolean;
+Function GetFTNBundleExt  (IncOnly: Boolean; Str: String) : String;
 
 Implementation
 
@@ -648,6 +649,44 @@ Begin
   End;
 
   Close (F);
+End;
+
+Function GetFTNBundleExt (IncOnly: Boolean; Str: String) : String;
+Var
+  FN    : String;
+  Ext   : String;
+  Last  : Byte;
+  First : Byte;
+Begin
+  FN  := JustFileName(Str);
+  Ext := strLower(JustFileExt(Str));
+
+  Last := Byte(Ext[Length(Ext)]);
+
+  If Not (Last in [48..57, 97..122]) Then Last := 48;
+
+  First := Last;
+
+  Repeat
+    Result := FN + '.' + Ext;
+    Result[Length(Result)] := Char(Last);
+
+    If IncOnly Then Begin
+      If First <> Last Then
+        Break;
+    End Else
+      If Not FileExist(Result) Then Break;
+
+    Inc (Last);
+
+    If Last = 58  Then Last := 97;
+    If Last = 123 Then Last := 48; // loop
+
+    If First = Last Then Begin
+      Result[Length(Result)] := Char(123);
+      Break;
+    End;
+  Until False;
 End;
 
 Initialization

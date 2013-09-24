@@ -92,18 +92,18 @@ Begin
       FLOName    := BundlePath + GetFTNFlowName(EchoNode.Address);
       BundleName := BundlePath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + strLower(DayString[DayOfWeek(CurDateDos)]);
 
+      BundleName[Length(BundleName)] := '0';
+
+      //check for filesize... and...
+      //force every bundle to increment
+      //BundleName := GetFTNBundleExt(BundlePath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + Copy(strLower(DayString[DayOfWeek(CurDateDos)]), 1, 2) + '0');
+
       Case EchoNode.MailType of
         0 : FLOName := FLOName + '.flo';
         1 : FLOName := FLOName + '.clo';
         2 : FLOName := FLOName + '.dlo';
         3 : FLOName := FLOName + '.hlo';
       End;
-
-      // TODO
-      // check for existance, packet size limitations, etc and increment
-      // from 0-9 A-Z
-
-      BundleName[Length(BundleName)] := '0';
 
       ExecuteArchive (TempPath, BundleName, EchoNode.ArcType, TempPath + PKTName, 1);
       FileErase      (TempPath + PKTName);

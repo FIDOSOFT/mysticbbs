@@ -64,36 +64,35 @@ Begin
   End;
 End;
 
-Function FindBundleName (Str: String) : String;
-Var
-  FN   : String;
-  Ext  : String;
-  Last : Byte;
-Begin
-  FN  := JustFileName(Str);
-  Ext := strLower(JustFileExt(Str));
-
-  Last := Byte(Ext[Length(Ext)]);
-
-  If Not (Last in [48..57, 97..122]) Then Last := 48;
-
-  Repeat
-    Result := FN + '.' + Ext;
-    Result[Length(Result)] := Char(Last);
-
-    If Not FileExist(Result) Then Break;
-
-    Inc (Last);
-
-    If Last = 58  Then Last := 97;
-    If Last = 123 Then Exit; // no 0-9,a-z could be generated
-  Until False;
-End;
-
 Function PollNodeFTP (OnlyNew: Boolean; Var Queue: TProtocolQueue; Var EchoNode: RecEchoMailNode) : Boolean;
 Var
-  FTP   : TFTPClient;
-  Count : LongInt;
+  FTP : TFTPClient;
+
+  Function ExistsOnServer (Str: String) : Boolean;
+  Var
+    Count : LongInt;
+  Begin
+    Result := False;
+
+    writeln ('debug checking exists ', str, '  files:', ftp.responsedata.count);
+
+    For Count := 1 to FTP.ResponseData.Count Do Begin
+      writeln('debug    remote: ', FTP.ResponseData.Strings[Count - 1]);
+
+      If strUpper(JustFile(Str)) = strUpper(FTP.ResponseData.Strings[Count - 1]) Then Begin
+        Result := True;
+
+        Break;
+      End;
+    End;
+  End;
+
+Var
+  Count  : LongInt;
+  Count2 : LongInt;
+  OldFN  : String;
+  NewFN  : String;
+  IsDupe : Boolean;
 Begin
   Result := False;
 
@@ -131,19 +130,40 @@ Begin
         PrintStatus (NIL, 1, 'Unable to list ' + EchoNode.ftpInDir);
 
       If Queue.QSize > 0 Then Begin
-        If FTP.ChangeDirectory(EchoNode.ftpOutDir) Then Begin
+        If FTP.GetDirectoryList(EchoNode.ftpPassive, True, EchoNode.ftpOutDir) Then Begin
           For Count := 1 to Queue.QSize Do Begin
-            PrintStatus (NIL, 1, 'Sending ' + Queue.QData[Count]^.FileNew);
+            OldFN  := Queue.QData[Count]^.FileNew;
+            NewFN  := OldFN;
+            IsDupe := False;
 
-            If FTP.SendFile(EchoNode.ftpPassive, Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName, Queue.QData[Count]^.FileNew) = ftpResOK Then Begin
-              // only remove by markings... or move to removefilesfromflo
-              FileErase          (Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName);
-              RemoveFilesFromFLO (GetFTNOutPath(EchoNode), TempPath, Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName);
-            End Else
-              PrintStatus (NIL, 1, 'Failed');
+            Repeat
+              If ExistsOnServer(NewFN) Then Begin
+                NewFN := GetFTNBundleExt(True, NewFN);
+
+                If NewFN = OldFN Then Begin
+                  IsDupe := True;
+
+                  Break;
+                End;
+              End Else
+                Break;
+            Until False;
+
+            If IsDupe Then
+              PrintStatus (NIL, 1, 'Cannot send ' + OldFN + '; already exists')
+            Else Begin
+              PrintStatus (NIL, 1, 'Sending ' + OldFN + ' as ' + NewFN);
+
+              If FTP.SendFile(EchoNode.ftpPassive, Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName, NewFN) = ftpResOK Then Begin
+                // only remove by markings... or move to removefilesfromflo
+                FileErase          (Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName);
+                RemoveFilesFromFLO (GetFTNOutPath(EchoNode), TempPath, Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName);
+              End Else
+                PrintStatus (NIL, 1, 'Failed');
+            End;
           End;
         End Else
-          PrintStatus (NIL, 1, 'Unable to change to ' + echoNode.ftpOutDir);
+          PrintStatus (NIL, 1, 'Unable to list ' + EchoNode.ftpOutDir);
       End;
     End Else
       PrintStatus (NIL, 1, 'Unable to authenticate');
@@ -181,7 +201,7 @@ Begin
 
   For Count := 1 to Queue.QSize Do Begin
     PKTName := Queue.QData[Count]^.FilePath + Queue.QData[Count]^.FileName;
-    NewName := FindBundleName(EchoNode.DirInDir + Queue.QData[Count]^.FileNew);
+    NewName := GetFTNBundleExt(False, EchoNode.DirInDir + Queue.QData[Count]^.FileNew);
 
     PrintStatus (NIL, 1, 'Move ' + PKTName + ' to ' + NewName);
 
