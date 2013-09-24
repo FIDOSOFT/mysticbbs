@@ -6,6 +6,7 @@ Interface
 
 Uses
   m_io_Sockets,
+  sockets,
   m_Tcp_Client;
 
 Const
@@ -129,9 +130,10 @@ Begin
   If SendCommand('USER ' + Login) <> 331 Then Exit;
   If SendCommand('PASS ' + Password) <> 230 Then Exit;
 
-  // tossing in BIN mode here for lack of a better place
+  // Setup misc session crap here
 
   If SendCommand('TYPE I') = 200 Then;
+  If SendCommand('MODE S') = 200 Then;
 
   Result := True;
 End;
@@ -268,9 +270,10 @@ Begin
 End;
 
 Function TFTPClient.GetDirectoryList (Passive, Change: Boolean; Str: String) : Boolean;
+Var
+  OK  : Boolean;
+  Res : LongInt;
 Begin
-  Result := False;
-
   If Change Then Begin
     Result := ChangeDirectory(Str);
 
@@ -280,22 +283,35 @@ Begin
   SetPassive(Passive);
 
   Client.WriteLine ('NLST');
+  writeln('debug NLST');
 
-  If OpenDataSession and (GetResponse = 150) Then Begin
+  OK     := OpenDataSession;
+  Res    := GetResponse;
+  Result := Res = 550;
+
+  If (Res in [125, 150]) Then Begin
+
+    writeln('debug got nlst response');
 
     ResponseData.Clear;
 
     Repeat
-      If DataSocket.ReadLine(Str) <> -1 Then
-        ResponseData.Add(Str)
-      Else
+      If DataSocket.ReadLine(Str) <> -1 Then begin
+        ResponseData.Add(Str);
+        writeln('debug got ', str);
+      end Else begin
+        writeln('debug readline is -1');
+        writeln('debug ', socketerror);
         Break;
+      end;
     Until Not DataSocket.Connected;
 
-    Result := GetResponse = 226;
+    Result := GetResponse in [226, 550];
   End;
 
   CloseDataSession;
+
+  writeln('res final ', result);
 End;
 
 Procedure TFTPClient.CloseConnection;

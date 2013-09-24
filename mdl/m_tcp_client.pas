@@ -68,7 +68,7 @@ Begin
 
   If Client.FSocketHandle = -1 Then Exit;
 
-//  WriteLn ('DEBUG SENT ' + Str);
+  WriteLn ('DEBUG SENT ' + Str);
 
   Client.PurgeInputData(1);
 
@@ -93,7 +93,7 @@ Begin
       ResponseType := strS2I(Copy(ResponseStr, 1, 3));
       Result       := ResponseType;
 
-//       WriteLn ('DEBUG RECV ' + ResponseStr);
+       WriteLn ('DEBUG RECV ' + ResponseStr);
 
 //       writeln('debug restype=', responsetype);
 
