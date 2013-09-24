@@ -129,6 +129,10 @@ Begin
   If SendCommand('USER ' + Login) <> 331 Then Exit;
   If SendCommand('PASS ' + Password) <> 230 Then Exit;
 
+  // tossing in BIN mode here for lack of a better place
+
+  If SendCommand('TYPE I') = 200 Then;
+
   Result := True;
 End;
 
@@ -278,7 +282,7 @@ Begin
   Client.WriteLine ('NLST');
 
   If OpenDataSession and (GetResponse = 150) Then Begin
-  
+
     ResponseData.Clear;
 
     Repeat
