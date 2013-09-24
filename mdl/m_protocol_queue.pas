@@ -21,6 +21,7 @@ Type
     FilePath : String[QueueMaxPathSize];
     FileName : String[QueueMaxNameSize];
     FileNew  : String[QueueMaxNameSize];
+    Extra    : String[QueueMaxPathSize];
     FileSize : Int64;
     Status   : Byte;
   End;
