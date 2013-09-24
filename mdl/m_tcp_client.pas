@@ -68,7 +68,7 @@ Begin
 
   If Client.FSocketHandle = -1 Then Exit;
 
-  WriteLn ('DEBUG SENT ' + Str);
+//  WriteLn ('DEBUG SENT ' + Str);
 
   Client.PurgeInputData(1);
 
@@ -86,12 +86,16 @@ Begin
 
   If Client.FSocketHandle = -1 Then Exit;
 
+//  writeln ('debug in getresponse');
+
   If Client.WaitForData(10000) > 0 Then
     If Client.ReadLine(ResponseStr) > 0 Then Begin
       ResponseType := strS2I(Copy(ResponseStr, 1, 3));
       Result       := ResponseType;
 
-       WriteLn ('DEBUG RECV ' + ResponseStr);
+//       WriteLn ('DEBUG RECV ' + ResponseStr);
+
+//       writeln('debug restype=', responsetype);
 
       If ResponseStr[4] = '-' Then Begin
         {$IFDEF USESTRINGLIST}
@@ -100,6 +104,8 @@ Begin
 
         Repeat
           Res := Client.ReadLine(Str);
+
+//          writeln ('debug got extended res:', res);
 
           If Res < 0 Then
             Break;
@@ -111,6 +117,8 @@ Begin
         Until Copy(Str, 1, 4) = strI2S(ResponseType) + ' ';
       End;
     End;
+
+//  writeln ('debug getres done');
 End;
 
 End.
