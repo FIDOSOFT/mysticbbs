@@ -411,13 +411,16 @@ Var
   Net  : LongInt;
   Node : LongInt;
 Begin
-  Net  := Orig.Net  - Dest.Net;
-  Node := Orig.Node - Dest.Node;
+  If Dest.Point = 0 Then Begin
+    Net  := Orig.Net  - Dest.Net;
+    Node := Orig.Node - Dest.Node;
 
-  If Net  < 0 Then Net  := 65536 + Net;
-  If Node < 0 Then Node := 65536 + Node;
+    If Net  < 0 Then Net  := 65536 + Net;
+    If Node < 0 Then Node := 65536 + Node;
 
-  Result := strI2H((Net SHL 16) OR Node, 8);
+    Result := strI2H((Net SHL 16) OR Node, 8);
+  End Else
+    Result := strI2H(Dest.Point, 8);
 End;
 
 Function GetFTNFlowName (Dest: RecEchoMailAddr) : String;

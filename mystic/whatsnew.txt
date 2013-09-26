@@ -3839,4 +3839,11 @@
    cased.  This was previously only available in FIDOBONE/FIDONET.NA
    importing but it works under [ImportEchoMail] now too
 
+ ! When hubbing FTN point systems, if you had multiple point systems their
+   PKTs were all getting stuffed into one bundle.  Fixed.
+
+ + FIDOPOLL's FTP send client will now list echomail packets on the remote
+   server and automatically increment packet names (ie we1->we2) until it
+   finds an unused packet name on the remote server.
+
    <ALPHA 38 RELEASED>

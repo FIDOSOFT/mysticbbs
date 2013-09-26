@@ -131,6 +131,7 @@ FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 - Email validation
 - Recode FCHECK into MUTIL, but also add the option to phsyically delete the
   file record instead of marking it offline.
+- multiple add export in globa msg base editor
 - Need ALL mystic servers to hvae the option to auto-ban an IP address if it
   connects X amount of times in X seconds.
 - Outbound telnet feature
