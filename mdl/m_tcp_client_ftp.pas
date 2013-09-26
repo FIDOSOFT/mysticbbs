@@ -289,8 +289,8 @@ Begin
     If Not Result Then Exit;
   End;
 
-  Result := False;
   Res    := SendDataCommand(Passive, 'NLST');
+  Result := Res = 550;
 
   If (Res = 125) or (Res = 150) Then Begin
     ResponseData.Clear;
