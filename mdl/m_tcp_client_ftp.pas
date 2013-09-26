@@ -6,7 +6,6 @@ Interface
 
 Uses
   m_io_Sockets,
-  sockets,
   m_Tcp_Client;
 
 Const
@@ -33,6 +32,7 @@ Type
     Function    OpenDataSession   : Boolean;
     Procedure   CloseDataSession;
     Function    SetPassive        (IsOn: Boolean) : Boolean;
+    Function    SendDataCommand   (UsePassive: Boolean; Cmd: String) : LongInt;
     Function    OpenConnection    (HostName: String) : Boolean;
     Function    Authenticate      (Login, Password: String) : Boolean;
     Function    ChangeDirectory   (Str: String) : Boolean;
@@ -66,12 +66,16 @@ Begin
   Result := False;
 
   If DataSocket <> NIL Then Begin
+//  writeln('DEBUG data socket was not NIL');
     DataSocket.Free;
+
     DataSocket := NIL;
   End;
 
   If IsPassive Then Begin
     DataSocket := TIOSocket.Create;
+
+//    writeln ('DEBUG connecting PASV to ', dataip, ':', dataport);
 
     If Not DataSocket.Connect(DataIP, DataPort) Then Begin
       DataSocket.Free;
@@ -79,11 +83,10 @@ Begin
 
       Exit;
     End;
+
+//    writeln ('DEBUG connected PASV');
   End Else Begin
     WaitSock := TIOSocket.Create;
-
-    WaitSock.FTelnetServer := False;
-    WaitSock.FTelnetClient := False;
 
     WaitSock.WaitInit(NetInterface, DataPort);
 
@@ -171,22 +174,16 @@ End;
 Function TFTPClient.SendFile (Passive: Boolean; LocalFile, RemoteFile: String) : Byte;
 Var
   F      : File;
-  Buffer : Array[1..8 * 1024] of Char;
+  Buffer : Array[1..16 * 1024] of Char;
   Res    : LongInt;
-  OK     : Boolean;
 Begin
   Result := ftpResFailed;
 
   If Not FileExist(LocalFile) Then Exit;
 
-  SetPassive(Passive);
+  Res := SendDataCommand(Passive, 'STOR ' + JustFile(RemoteFile));
 
-  Client.WriteLine ('STOR ' + JustFile(RemoteFile));
-
-  OK  := OpenDataSession;
-  Res := GetResponse;
-
-  If OK and (Res = 150) Then Begin
+  If (Res = 150) Then Begin
     Assign (F, LocalFile);
 
     If ioReset(F, 1, fmRWDN) Then Begin
@@ -220,21 +217,15 @@ Function TFTPClient.GetFile (Passive: Boolean; FileName: String) : Byte;
 Var
   F      : File;
   Res    : LongInt;
-  Buffer : Array[1..8 * 1024] of Char;
-  OK     : Boolean;
+  Buffer : Array[1..16 * 1024] of Char;
 Begin
   Result := ftpResFailed;
 
   If FileExist(FileName) Then Exit;
 
-  SetPassive(Passive);
+  Res := SendDataCommand (Passive, 'RETR ' + JustFile(FileName));
 
-  Client.WriteLine('RETR ' + JustFile(FileName));
-
-  OK  := OpenDataSession;
-  Res := GetResponse;
-
-  If OK And (Res = 150) Then Begin
+  If (Res = 150) Then Begin
     Assign (F, FileName);
 
     If ioReWrite(F, 1, fmRWDW) Then Begin
@@ -269,9 +260,27 @@ Begin
   Result := SendCommand('CWD ' + Str) = 250;
 End;
 
+Function TFTPClient.SendDataCommand (UsePassive: Boolean; Cmd: String) : LongInt;
+Var
+  OK : Boolean;
+Begin
+  SetPassive (UsePassive);
+
+  If UsePassive Then Begin
+    OK := OpenDataSession;
+
+    If OK Then
+      Result := SendCommand(Cmd);
+  End Else Begin
+    Result := SendCommand(Cmd);
+    OK     := OpenDataSession;
+  End;
+
+  If Not OK Then Result := -1;
+End;
+
 Function TFTPClient.GetDirectoryList (Passive, Change: Boolean; Str: String) : Boolean;
 Var
-  OK  : Boolean;
   Res : LongInt;
 Begin
   If Change Then Begin
@@ -280,38 +289,24 @@ Begin
     If Not Result Then Exit;
   End;
 
-  SetPassive(Passive);
+  Result := False;
+  Res    := SendDataCommand(Passive, 'NLST');
 
-  Client.WriteLine ('NLST');
-  writeln('debug NLST');
-
-  OK     := OpenDataSession;
-  Res    := GetResponse;
-  Result := Res = 550;
-
-  If (Res in [125, 150]) Then Begin
-
-    writeln('debug got nlst response');
-
+  If (Res = 125) or (Res = 150) Then Begin
     ResponseData.Clear;
 
     Repeat
-      If DataSocket.ReadLine(Str) <> -1 Then begin
-        ResponseData.Add(Str);
-        writeln('debug got ', str);
-      end Else begin
-        writeln('debug readline is -1');
-        writeln('debug ', socketerror);
+      If DataSocket.ReadLine(Str) <> -1 Then
+        ResponseData.Add(Str)
+      Else
         Break;
-      end;
     Until Not DataSocket.Connected;
 
-    Result := GetResponse in [226, 550];
+    Res    := GetResponse;
+    Result := Res = 226;
   End;
 
   CloseDataSession;
-
-  writeln('res final ', result);
 End;
 
 Procedure TFTPClient.CloseConnection;

@@ -5,7 +5,7 @@ Unit m_io_Base;
 Interface
 
 Const
-  TIOBufferSize = 8 * 1024 - 1;
+  TIOBufferSize = 16 * 1024 - 1;
 
 Type
   TIOBuffer = Array[0..TIOBufferSize] of Char;

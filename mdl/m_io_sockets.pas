@@ -258,36 +258,6 @@ Begin
   Result := True;
 End;
 
-(*
-Function TIOSocket.WriteFile (Str: String) : Boolean;
-Var
-  Buf  : Array[1..4096] of Char;
-  Size : LongInt;
-  F    : File;
-Begin
-  Result := False;
-
-  FileMode := 66;
-
-  Assign (F, Str);
-  Reset  (F, 1);
-
-  If IoResult <> 0 Then Exit;
-
-  Repeat
-    BlockRead (F, Buf, SizeOf(Buf), Size);
-
-    If Size = 0 Then Break;
-
-    If Buf[Size] = #26 Then Dec(Size);
-
-    WriteBuf (Buf, Size);
-  Until Size <> SizeOf(Buf);
-
-  Result := True;
-End;
-*)
-
 Function TIOSocket.WriteBufEscaped (Var Buf: TIOBuffer; Var Len: LongInt) : LongInt;
 Var
   Temp    : Array[0..TIOBufferSize * 2] of Char;
@@ -513,7 +483,8 @@ Begin
   Res := 0;
 
   Repeat
-    If FInBufPos = FInBufEnd Then Res := ReadBuf(Ch, 0);
+    If FInBufPos = FInBufEnd Then
+      Res := ReadBuf(Ch, 0);
 
     Ch := FInBuf[FInBufPos];
 

@@ -98,6 +98,7 @@ Begin
 //       writeln('debug restype=', responsetype);
 
       If ResponseStr[4] = '-' Then Begin
+//        WriteLn ('DEBUG RECV EXT RES');
         {$IFDEF USESTRINGLIST}
           ResponseData.Clear;
         {$ENDIF}
