@@ -82,7 +82,7 @@ Begin
       If QWK.TotalMessages > 0 Then Begin
         WriteLn ('   - Sending reply packet');
 
-        Case FTP.SendFile(QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.rep', QwkNet.PacketID) of
+        Case FTP.SendFile(QwkNet.UsePassive, TempPath + QwkNet.PacketID + '.rep', QwkNet.PacketID + '.rep') of
           ftpResOK      : SentFile := True;
           ftpResBadData : WriteLn ('      - Unable to open data connection');
         Else
@@ -110,8 +110,6 @@ Begin
   End;
 
   If FileExist(TempPath + QwkNet.PacketID + '.qwk') Then Begin
-    WriteLn ('   - Unpacking QWK packet');
-
     ExecuteArchive (TempPath, TempPath + QwkNet.PacketID + '.qwk', QwkNet.ArcType, '*', 2);
 
     WriteLn ('   - Importing QWK packet');
