@@ -376,7 +376,7 @@ Begin
   Msg^.SetTo   (mTo);
   Msg^.SetSubj (mSubj);
 
-  If (mArea.NetType > 0) and (mArea.NetType <> 3) Then
+  If (mArea.NetType > 0) and (mArea.QwkNetID = 0) Then
     Msg^.DoStringLn (#1 + 'MSGID: ' + strAddr2Str(bbsCfg.NetAddress[mArea.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
 
   For Count := 1 to mLines Do

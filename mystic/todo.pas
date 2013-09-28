@@ -56,6 +56,7 @@ BUGS AND POSSIBLE ISSUES
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
+- Make point mail bundles based off of their uplink (your address)?
 - MIS escape confirmation
 - Prompts for CONFIG editors
 - matrix disconnect if they use the XL command too many times

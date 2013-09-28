@@ -3846,4 +3846,7 @@
    server and automatically increment packet names (ie we1->we2) until it
    finds an unused packet name on the remote server.
 
+ ! Fixed a bug when using spaces in menu filenames which caused the menu
+   editor to fail to edit, copy, and delete menus.
+
    <ALPHA 38 RELEASED>

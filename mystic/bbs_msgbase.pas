@@ -635,7 +635,7 @@ Var
   S  : String;
   A  : SmallInt;
 Begin
-  If (MBase.NetType > 0) and (MBase.NetType <> 3) and (MBase.QwkNetID = 0) Then Begin
+  If (MBase.NetType > 0) and (MBase.QwkNetID = 0) Then Begin
     Msg^.DoStringLn (#1 + 'MSGID: ' + Addr2Str(bbsCfg.NetAddress[MBase.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
 
     If ReplyID <> '' Then
@@ -1115,7 +1115,7 @@ Begin
       Session.User.ThisUser.LastMGroup := FilePos(GroupFile);
 
       // use gettotalbases(true) here!?
-      
+
       If bbsCfg.MShowBases Then Begin
         Reset (MBaseFile);
         Read  (MBaseFile, tMBase); { Skip EMAIL base }

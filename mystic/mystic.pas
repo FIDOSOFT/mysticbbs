@@ -42,14 +42,14 @@ Uses
   m_Input,
   m_Pipe,
   BBS_Records,
-  bbs_Common,
-  bbs_DataBase,
-  bbs_Core,
-  bbs_NodeInfo,
+  BBS_Common,
+  BBS_DataBase,
+  BBS_Core,
+  BBS_NodeInfo,
   {$IFDEF TESTEDITOR}
     BBS_Edit_Ansi,
   {$ENDIF}
-  bbs_Cfg_Main;
+  BBS_Cfg_Main;
 
 {$IFDEF TESTEDITOR}
 Procedure TestEditor;

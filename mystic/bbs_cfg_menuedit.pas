@@ -624,7 +624,7 @@ Var
       End Else
         Desc := '';
 
-      List.Add(strPadR(Sort.Data[Count]^.Name, 22, ' ') + Desc, 0);
+      List.Add(strPadR(Sort.Data[Count]^.Name, mysMaxMenuNameLen + 2, ' ') + Desc, 0);
 
       If Sort.Data[Count]^.Name = OldName Then
         List.Picked := List.ListMax;
@@ -703,15 +703,16 @@ Begin
     Case List.ExitCode of
       '/' : Case GetCommandOption(10, 'I-Insert|D-Delete|C-Copy|') of
               'C' : If List.ListMax > 0 Then
-                      CopyMenu(strWordGet(1, List.List[List.Picked]^.Name, ' '));
+                      CopyMenu(strStripR(Copy(List.List[List.Picked]^.Name, 1, mysMaxMenuNameLen), ' '));
               'I' : InsertMenu;
               'D' : If List.ListMax > 0 Then
-                      If ShowMsgBox(1, 'Delete menu: ' + strWordGet(1, List.List[List.Picked]^.Name, ' ')) Then
-                        FileErase (Theme.MenuPath + strWordGet(1, List.List[List.Picked]^.Name, ' ') + '.mnu');
+                      If ShowMsgBox(1, 'Delete menu: ' + strStripR(Copy(List.List[List.Picked]^.Name, 1, mysMaxMenuNameLen), ' ')) Then
+                        FileErase (Theme.MenuPath + strStripR(Copy(List.List[List.Picked]^.Name, 1, mysMaxMenuNameLen), ' ') + '.mnu');
             End;
       #13 : Begin
               If List.ListMax <> 0 Then
-                Result := strWordGet(1, List.List[List.Picked]^.Name, ' ');
+                Result := strStripR(Copy(List.List[List.Picked]^.Name, 1, mysMaxMenuNameLen), ' ');
+
               Break;
             End;
       #27 : Break;
