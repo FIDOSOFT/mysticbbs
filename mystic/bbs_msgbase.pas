@@ -636,7 +636,9 @@ Var
   A  : SmallInt;
 Begin
   If (MBase.NetType > 0) and (MBase.QwkNetID = 0) Then Begin
-    Msg^.DoStringLn (#1 + 'MSGID: ' + Addr2Str(bbsCfg.NetAddress[MBase.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
+    Msg^.DoStringLn (#1 + 'MSGID: ' + Addr2Str(Msg^.GetOrigAddr) + ' ' + strI2H(CurDateDos, 8));
+
+    //Msg^.DoStringLn (#1 + 'MSGID: ' + Addr2Str(bbsCfg.NetAddress[MBase.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
 
     If ReplyID <> '' Then
       Msg^.DoStringLn (#1 + 'REPLY: ' + ReplyID);
