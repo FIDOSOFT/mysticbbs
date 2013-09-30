@@ -89,7 +89,6 @@ Var
 
 Var
   Count  : LongInt;
-  Count2 : LongInt;
   OldFN  : String;
   NewFN  : String;
   IsDupe : Boolean;
