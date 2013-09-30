@@ -40,8 +40,8 @@ Begin
     MB^.SetMailType (mmtEchoMail);
 
   MB^.SetLocal (False);
-  MB^.SetOrig  (PKT.Orig);
-  MB^.SetDest  (PKT.Dest);
+  MB^.SetOrig  (PKT.PKTOrig);
+  MB^.SetDest  (PKT.PKTDest);
 
   MB^.SetPriv     ((PKT.MsgHDR.Attribute AND pktPrivate <> 0) OR NetMail);
   MB^.SetCrash    (PKT.MsgHDR.Attribute AND pktCrash    <> 0);
@@ -93,7 +93,7 @@ Var
       Exit;
     End;
 
-    If Not IsValidAKA(PKT.Dest.Zone, PKT.Dest.Net, PKT.Dest.Node) Then Begin
+    If Not IsValidAKA(PKT.PKTDest.Zone, PKT.PKTDest.Net, PKT.PKTDest.Node) Then Begin
       Log (3, '!', '   ' + JustFile(PktFN) + ' does not match an AKA');
 
       PKT.Close;

@@ -42,7 +42,6 @@ Const
   Header_NODELIST   = 'MergeNodeLists';
 
 Procedure Log                (Level: Byte; Code: Char; Str: String);
-Function  strAddr2Str        (Addr : RecEchoMailAddr) : String;
 Function  GetUserBaseSize    : Cardinal;
 Function  GenerateMBaseIndex : LongInt;
 Function  GenerateFBaseIndex : LongInt;
@@ -90,18 +89,6 @@ Begin
     WriteLn (T, Code + ' ' + FormatDate(CurDateDT, 'NNN DD YYYY HH:II') + ' ' + Str);
 
   Close (T);
-End;
-
-Function strAddr2Str (Addr : RecEchoMailAddr) : String;
-Var
-  Temp : String[20];
-Begin
-  Temp := strI2S(Addr.Zone) + ':' + strI2S(Addr.Net) + '/' +
-          strI2S(Addr.Node);
-
-  If Addr.Point <> 0 Then Temp := Temp + '.' + strI2S(Addr.Point);
-
-  Result := Temp;
 End;
 
 Function GetUserBaseSize : Cardinal;
@@ -377,14 +364,14 @@ Begin
   Msg^.SetSubj (mSubj);
 
   If (mArea.NetType > 0) and (mArea.QwkNetID = 0) Then
-    Msg^.DoStringLn (#1 + 'MSGID: ' + strAddr2Str(bbsCfg.NetAddress[mArea.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
+    Msg^.DoStringLn (#1 + 'MSGID: ' + Addr2Str(bbsCfg.NetAddress[mArea.NetAddr]) + ' ' + strI2H(CurDateDos, 8));
 
   For Count := 1 to mLines Do
     Msg^.DoStringLn(mText[Count]);
 
   If mArea.NetType > 0 Then Begin
-    Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' BBS v' + mysVersion + ' (' + OSID + ')');
-    Msg^.DoStringLn (' * Origin: ' + mArea.Origin + ' (' + strAddr2Str(bbsCfg.NetAddress[mArea.NetAddr]) + ')');
+    Msg^.DoStringLn (#13 + '--- ' + mysSoftwareID + ' v' + mysVersion + ' (' + OSID + ')');
+    Msg^.DoStringLn (' * Origin: ' + mArea.Origin + ' (' + Addr2Str(bbsCfg.NetAddress[mArea.NetAddr]) + ')');
   End;
 
   Msg^.WriteMsg;

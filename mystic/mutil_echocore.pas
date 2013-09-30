@@ -93,8 +93,10 @@ Type
 
   TPKTReader = Class
     PKTHeader : RecPKTHeader;
-    Orig      : RecEchoMailAddr;
-    Dest      : RecEchoMailAddr;
+    PKTOrig   : RecEchoMailAddr;
+    PKTDest   : RecEchoMailAddr;
+    MsgOrig   : RecEchoMailAddr;
+    MsgDest   : RecEchoMailAddr;
     MsgHdr    : RecPKTMessageHdr;
     MsgFile   : TFileBuffer;
     MsgTo     : String[50];
@@ -105,9 +107,10 @@ Type
     MsgText   : Array[1..mysMaxMsgLines] of ^RecMsgLine;
     MsgSize   : LongInt;
     MsgLines  : LongInt;
-    MsgArea   : String;
+    MsgArea   : String[60];
     MsgCRC    : RecMsgDupe;
     Opened    : Boolean;
+    //IsNetMail : Boolean;
 
     Constructor Create;
     Destructor  Destroy; Override;
@@ -237,14 +240,14 @@ Begin
 
     Opened := False;
   End Else Begin
-    Orig.Zone := PKTHeader.OrigZone;
-    Orig.Net  := PKTHeader.OrigNet;
-    Orig.Node := PKTHeader.OrigNode;
-    Dest.Zone := PKTHeader.DestZone;
-    Dest.Net  := PKTHeader.DestNet;
-    Dest.Node := PKTHeader.DestNode;
-    Result    := True;
-    Opened    := True;
+    PKTOrig.Zone := PKTHeader.OrigZone;
+    PKTOrig.Net  := PKTHeader.OrigNet;
+    PKTOrig.Node := PKTHeader.OrigNode;
+    PKTDest.Zone := PKTHeader.DestZone;
+    PKTDest.Net  := PKTHeader.DestNet;
+    PKTDest.Node := PKTHeader.DestNode;
+    Result       := True;
+    Opened       := True;
   End;
 End;
 
@@ -283,6 +286,8 @@ Begin
   MsgFrom := GetStr (#0);
   MsgSubj := GetStr (#0);
   MsgTime := Copy(MsgDate, 12, 5);
+  MsgOrig := PKTOrig;
+  MsgDest := PKTDest;
 
   Tmp := strUpper(Copy(MsgDate, 4, 3));
 
@@ -297,6 +302,7 @@ Begin
   DisposeText;
 
   First         := True;
+//  IsNetmail     := False;
   MsgSize       := 0;
   Result        := True;
   MsgLines      := 1;
@@ -331,10 +337,20 @@ Begin
                    MsgText[MsgLines]^ := '';
 
                    Continue;
-                 End Else
-                   MsgArea := 'NETMAIL';
+                 End Else Begin
+                   MsgArea   := 'NETMAIL';
+//                   IsNetMail := True;
+                 End;
                End;
-
+(*
+               If MsgText[MsgLines]^[1] = #1 Then Begin
+                 If Copy(MsgText[MsgLines]^, 2, 4) = 'INTL' Then
+                   Str2Addr(strWordGet(2, MsgText[MsgLines]^, ' '), MsgDest)
+                 Else
+                 If (Copy(MsgText[MsgLines]^, 2, 5) = 'MSGID') Then
+                   Str2Addr(strWordGet(2, MsgText[MsgLines]^, ' '), MsgOrig);
+               End;
+*)
                Inc (MsgSize, Length(MsgText[MsgLines]^));
                Inc (MsgLines);
 

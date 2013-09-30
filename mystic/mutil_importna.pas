@@ -96,7 +96,7 @@ Begin
       MBase.FileName := strReplace(MBase.FileName, '\', '_');
 
       For Count := 1 to 30 Do
-        If strAddr2Str(bbsCfg.NetAddress[Count]) = INI.ReadString(Header_IMPORTNA, 'netaddress', '') Then Begin
+        If Addr2Str(bbsCfg.NetAddress[Count]) = INI.ReadString(Header_IMPORTNA, 'netaddress', '') Then Begin
           MBase.NetAddr := Count;
           Break;
         End;

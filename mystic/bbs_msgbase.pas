@@ -83,11 +83,11 @@ Uses
 //  BBS_Records,
 //  BBS_Common,
   BBS_DataBase,
-  bbs_Core,
-  bbs_User,
-  bbs_NodeInfo,
-  bbs_NodeList,
-  bbs_cfg_UserEdit;
+  BBS_Core,
+  BBS_User,
+  BBS_NodeInfo,
+  BBS_NodeList,
+  BBS_cfg_UserEdit;
 
 Const
   QwkControlName = 'MYSTICQWK';
@@ -1351,7 +1351,9 @@ Begin
   Until False;
 
   If ReplyBase.NetType = 3 Then Begin
-    MsgBase^.GetOrig(Addr);
+//    If ReplyID <> '' Then
+      If Not Str2Addr(strWordGet(1, ReplyID, ' '), Addr) Then
+        MsgBase^.GetOrig(Addr);
 
     TempStr := NetmailLookup(False, ToWho, Addr2Str(Addr));
 
@@ -1781,6 +1783,7 @@ Var
 
       While Not MsgBase^.EOM Do Begin
         Temp := MsgBase^.GetString(79);
+
         If Temp[1] <> #1 Then WriteLn (TF, Temp);
       End;
 
@@ -2025,12 +2028,16 @@ Var
       CurMsg    := MsgBase^.GetMsgNum;
       Lines     := 0;
       PageStart := 1;
+      ReplyID   := '';
 
       If CurMsg > LastRead Then LastRead := CurMsg;
 
       Session.io.AllowArrow := True;
 
-      // create ReadMessageText function?
+      // create ReadMessageText function?   This can also be used in the
+      // ASCII reader and in fact should be used, because if a more prompt
+      // is interrupted, its possible for a ReplyID to not be set.  RepID
+      // is also not nulled prior to loading a new message.
 
       MsgBase^.MsgTxtStartUp;
 
@@ -2272,6 +2279,7 @@ Var
                   End;
             '?' : Begin
                     Session.io.OutFile ('amsghlp2', True, 0);
+
                     Break;
                   End;
           End;
@@ -2664,6 +2672,10 @@ Var
 
       WereMsgs              := True;
       Session.io.AllowPause := True;
+
+      // should be entirely read in and then filtered for kludge
+      // then displayed based on what was read in.  replyID should
+      // be reset here
 
       While Not MsgBase^.EOM Do Begin
         Str := MsgBase^.GetString(79);

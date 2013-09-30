@@ -95,7 +95,7 @@ Begin
       BundleName := BundlePath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + strLower(DayString[DayOfWeek(CurDateDos)]);
 
       BundleName[Length(BundleName)] := '0';
-      
+
 (*
       BundleName := BundlePath + GetFTNBundleExt(False, GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + Copy(strLower(DayString[DayOfWeek(CurDateDos)]), 1, 2) + '0');
 
@@ -184,7 +184,7 @@ Var
       If IsValidAKA(MsgBase^.GetDestAddr.Zone, MsgBase^.GetDestAddr.Net, MsgBase^.GetDestAddr.Node) Then
         Exit;
 
-    Log (2, '+', '      Export #' + strI2S(MsgBase^.GetMsgNum) + ' to ' + strAddr2Str(EchoNode.Address));
+    Log (2, '+', '      Export #' + strI2S(MsgBase^.GetMsgNum) + ' to ' + Addr2Str(EchoNode.Address));
 
     GetDate (DT.Year, DT.Month, DT.Day, Temp);
     GetTime (DT.Hour, DT.Min,   DT.Sec, Temp);
@@ -287,8 +287,7 @@ Var
       WriteStr ('AREA:' + MBase.EchoTag, #13);
 
     If MBase.NetType = 3 Then Begin
-      WriteStr (#1 + 'INTL ' + strAddr2Str(MsgBase^.GetDestAddr) + ' ' + strAddr2Str(MsgBase^.GetOrigAddr), #13);
-      // Add Via here and do an ELSE TID for nettype <> 3?
+      WriteStr (#1 + 'INTL ' + Addr2Str(MsgBase^.GetDestAddr) + ' ' + Addr2Str(MsgBase^.GetOrigAddr), #13);
     End;
 
     WriteStr (#1 + 'TID: ' + mysSoftwareID + ' ' + mysVersion, #13);
@@ -311,7 +310,8 @@ Var
 
       WriteStr (TempStr1, #13);
       WriteStr (#1 + 'PATH: ' + strI2S(MsgBase^.GetOrigAddr.Net) + '/' + strI2S(MsgBase^.GetOrigAddr.Node), #13);
-    End;
+    End;// Else
+//      WriteStr (#1 + 'Via ' + Addr2Str(MsgBase^.GetOrigAddr) + ' @' + FormatDate(CurDateDT, 'YYYYMMDD.HHIISS') + '.UTC ' + mysSoftwareID + ' ' + mysVersion, #13);
 
     WriteStr (#0#0, #0);
     Close    (F);

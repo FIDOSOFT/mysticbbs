@@ -92,21 +92,26 @@ Begin
   Result := Temp;
 End;
 
-Function Str2Addr (S : String; Var Addr: RecEchoMailAddr) : Boolean;
+Function Str2Addr (S: String; Var Addr: RecEchoMailAddr) : Boolean;
 Var
   A     : Byte;
   B     : Byte;
   C     : Byte;
+  D     : Byte;
   Point : Boolean;
 Begin
   Result := False;
   Point  := True;
 
+  D := Pos('@', S);
   A := Pos(':', S);
   B := Pos('/', S);
   C := Pos('.', S);
 
   If (A = 0) or (B <= A) Then Exit;
+
+  If D > 0 Then
+    Delete (S, D, 255);
 
   If C = 0 Then Begin
     Point      := False;
