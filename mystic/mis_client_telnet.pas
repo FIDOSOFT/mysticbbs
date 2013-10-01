@@ -132,14 +132,15 @@ End;
 {$IFDEF USEFORK}
 Procedure TTelnetServer.Execute;
 Var
-  Num     : LongInt;
-  NI      : TNodeInfoRec;
-  PID     : LongInt;
-  PTYFD   : LongInt;
-  RDFDSET : TFDSet;
-  Count   : LongInt;
-  Buffer  : Array[1..8 * 1024] of Char;
-  MaxFD   : LongInt;
+  Num      : LongInt;
+  NI       : TNodeInfoRec;
+  PID      : LongInt;
+  PTYFD    : LongInt;
+  RDFDSET  : TFDSet;
+  Count    : LongInt;
+  Buffer   : Array[1..8 * 1024] of Char;
+  MaxFD    : LongInt;
+  WaitStat : LongInt;
 Begin
   Client.FTelnetServer := True;
 
@@ -197,6 +198,9 @@ Begin
   Until False;
 
   fpClose (PTYFD);
+
+  Repeat
+  Until fpWaitPID(PID, WaitStat, WUNTRACED) = PID;
 
   NI.Busy   := False;
   NI.IP     := '';
