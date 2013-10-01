@@ -60,7 +60,7 @@ Function  GetFTNFlowName     (Dest: RecEchoMailAddr) : String;
 Function  GetFTNOutPath      (EchoNode: RecEchoMailNode) : String;
 Function  GetNodeByIndex     (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
 Function  GetNodeByRoute     (Dest: RecEchoMailAddr; Var TempNode: RecEchoMailNode) : Boolean;
-Function  IsValidAKA         (Zone, Net, Node: Word) : Boolean;
+Function  IsValidAKA         (Zone, Net, Node, Point: Word) : Boolean;
 
 Implementation
 
@@ -579,20 +579,17 @@ Begin
   Close (F);
 End;
 
-Function IsValidAKA (Zone, Net, Node: Word) : Boolean;
+Function IsValidAKA (Zone, Net, Node, Point: Word) : Boolean;
 Var
   Count : Byte;
 Begin
   Result := False;
 
-  // this doesn't check points because a point is not in the PKT header so
-  // we cannot compare it against the point aspect.  maybe PKT 2.2 fixes
-  // this?  research it someday
-
   For Count := 1 to 30 Do Begin
-    Result := (bbsCfg.NetAddress[Count].Zone = Zone) And
-              (bbsCfg.NetAddress[Count].Net  = Net)  And
-              (bbsCfg.NetAddress[Count].Node = Node);
+    Result := (bbsCfg.NetAddress[Count].Zone  = Zone) And
+              (bbsCfg.NetAddress[Count].Net   = Net)  And
+              (bbsCfg.NetAddress[Count].Node  = Node) And
+              (bbsCfg.NetAddress[Count].Point = Point);
 
     If Result Then Break;
   End;

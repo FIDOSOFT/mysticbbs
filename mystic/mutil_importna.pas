@@ -44,18 +44,12 @@ Begin
   While Not Eof(InFile) Do Begin
     ReadLn(InFile, Str);
 
-    Str := strStripB(Str, ' ');
+    Str := strReplace(strStripB(Str, ' '), #9, ' ');
 
     If (Str[1] = ';') or (Str = '') Then Continue;
 
     TagName  := strStripLow(strWordGet(1, Str, ' '));
     BaseName := strStripLow(strStripB(Copy(Str, Pos(' ', Str), 255), ' '));
-
-//    TagName := strReplace(TagName, '/', '_');
-//    TagName := strReplace(TagName, '\', '_');
-
-//    If Pos(TagName, '/') > 0 Then Continue;
-//    If Pos(TagName, '\') > 0 Then Continue;
 
     ProcessStatus (BaseName, False);
 

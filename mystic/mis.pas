@@ -534,8 +534,6 @@ Begin
     Console.WriteLine('ERROR: No servers are configured as active.');
 
     NodeData.Free;
-    Keyboard.Free;
-    Console.Free;
 
     Halt(10);
   End;

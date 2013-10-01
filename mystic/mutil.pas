@@ -82,7 +82,6 @@ Begin
   BarOne.Free;
   BarAll.Free;
   INI.Free;
-  Console.Free;
 End;
 
 Procedure ApplicationStartup;

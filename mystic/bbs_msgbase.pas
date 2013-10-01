@@ -3896,7 +3896,7 @@ Begin
     End Else
       Msg^.SetMailType (mmtEchoMail);
 
-    Msg^.SetOrig(bbsCfg.NetAddress[mArea.NetAddr]);
+    Msg^.SetOrig (GetMatchedAddress(bbsCfg.NetAddress[mArea.NetAddr], mAddr));
 
     Case mArea.NetType of
       1 : If mArea.QwkConfID = 0 Then

@@ -86,8 +86,6 @@ End;
 Procedure DisposeClasses;
 Begin
   Session.Free;
-  Keyboard.Free;
-  Console.Free;
 End;
 
 Var
@@ -457,7 +455,8 @@ Begin
   ExitProc := @ExitHandle;
 
   If Session.ConfigMode Then Begin
-    Session.NodeNum := 0;
+    Session.NodeNum             := 0;
+    Session.User.ThisUser.Flags := Session.User.ThisUser.Flags XOR UserNoTimeout;
 
     Console.SetWindowTitle ('Mystic Configuration');
 

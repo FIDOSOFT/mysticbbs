@@ -86,6 +86,7 @@ Var
     CurTag   : String;
     MBase    : RecMessageBase;
     Count    : LongInt;
+    Route    : RecEchoMailNode;
   Begin
     If Not PKT.Open(PktFN) Then Begin
       Log (3, '!', '   ' + JustFile(PktFN) + ' is not valid PKT');
@@ -93,7 +94,7 @@ Var
       Exit;
     End;
 
-    If Not IsValidAKA(PKT.PKTDest.Zone, PKT.PKTDest.Net, PKT.PKTDest.Node) Then Begin
+    If Not IsValidAKA(PKT.PKTDest.Zone, PKT.PKTDest.Net, PKT.PKTDest.Node, 0) Then Begin
       Log (3, '!', '   ' + JustFile(PktFN) + ' does not match an AKA');
 
       PKT.Close;
@@ -118,31 +119,44 @@ Var
       If PKT.MsgArea = 'NETMAIL' Then Begin
 
         If Not ProcessedByAreaFix(PKT) Then
-          If GetMBaseByNetZone (PKT.PKTHeader.DestZone, MBase) Then Begin
-            For Count := 1 to ForwardSize Do
-              If strUpper(strStripB(strWordGet(1, ForwardList[Count], ';'), ' ')) = strUpper(PKT.MsgTo) Then
-                PKT.MsgTo := strStripB(strWordGet(2, ForwardList[Count], ';'), ' ');
+          If IsValidAKA(PKT.MsgDest.Zone, PKT.MsgDest.Net, PKT.MsgDest.Node, PKT.MsgDest.Point) Then Begin
 
-            CurTag := '';
+            If GetMBaseByNetZone(PKT.MsgDest.Zone, MBase) Then Begin
+              For Count := 1 to ForwardSize Do
+                If strUpper(strStripB(strWordGet(1, ForwardList[Count], ';'), ' ')) = strUpper(PKT.MsgTo) Then
+                  PKT.MsgTo := strStripB(strWordGet(2, ForwardList[Count], ';'), ' ');
 
-            If MsgBase <> NIL Then Begin
-              MsgBase^.CloseMsgBase;
+              CurTag := '';
 
-              Dispose (MsgBase, Done);
+              If MsgBase <> NIL Then Begin
+                MsgBase^.CloseMsgBase;
 
-              MsgBase := NIL;
+                Dispose (MsgBase, Done);
+
+                MsgBase := NIL;
+              End;
+
+              MessageBaseOpen  (MsgBase, MBase);
+              SavePKTMsgToBase (MsgBase, PKT, True);
+
+              Log (2, '+', '      Netmail from ' + PKT.MsgFrom + ' to ' + PKT.MsgTo);
+
+              Inc (TotalNet);
             End;
-
-            MessageBaseOpen(MsgBase, MBase);
-
-            SavePKTMsgToBase(MsgBase, PKT, True);
-
-            Log (2, '+', '      Netmail from ' + PKT.MsgFrom + ' to ' + PKT.MsgTo);
-
-            Inc (TotalNet);
           End Else
-            Log (3, '!', '   No NETMAIL base for zone ' + strI2S(PKT.PKTHeader.DestZone));
+          If GetNodeByRoute(PKT.MsgDest, Route) Then Begin
+            If Route.Active Then Begin
+              // generate outbound packet name etc etc
+              // add Via to the bottom
+              // write OUT file
+            End;
+            Log (1, '!', '   DEBUG Pass-through netmail located to ' + Addr2Str(Route.Address));
+          End Else
+            Log (2, '!', '   No netmail destination: ' + PKT.MsgTo + ' ' + Addr2Str(PKT.MsgDest));
+            // option to toss to badmsg?
       End Else Begin
+        // Echomail msg
+
         If Dupes.IsDuplicate(PKT.MsgCRC) Then Begin
           Log (3, '!', '      Duplicate message found in ' + PKT.MsgArea);
 

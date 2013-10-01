@@ -64,7 +64,7 @@ Begin
   While Not Eof(InFile) Do Begin
     ReadLn(InFile, Str);
 
-    Str := strStripB(Str, ' ');
+    Str := strReplace(strStripB(Str, ' '), #9, ' ');
 
     If strWordGet(1, strUpper(Str), ' ') <> 'AREA' Then Continue;
 
@@ -96,6 +96,9 @@ Begin
       FBase.ULACS      := INI.ReadString(Header_FILEBONE, 'acs_upload', '');
       FBase.CommentACS := INI.ReadString(Header_FILEBONE, 'acs_comment', '');
       FBase.SysopACS   := INI.ReadString(Header_FILEBONE, 'acs_sysop', 's255');
+
+      FBase.FileName := strReplace(FBase.FileName, '/', '_');
+      FBase.FileName := strReplace(FBase.FileName, '\', '_');
 
       If INI.ReadString(Header_FILEBONE, 'free_files', '0') = '1' Then
         FBase.Flags := FBase.Flags OR FBFreeFiles;

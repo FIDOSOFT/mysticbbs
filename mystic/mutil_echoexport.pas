@@ -181,7 +181,7 @@ Var
     // if netmail is TO someone on this system do not export
 
     If MBase.NetType = 3 Then
-      If IsValidAKA(MsgBase^.GetDestAddr.Zone, MsgBase^.GetDestAddr.Net, MsgBase^.GetDestAddr.Node) Then
+      If IsValidAKA(MsgBase^.GetDestAddr.Zone, MsgBase^.GetDestAddr.Net, MsgBase^.GetDestAddr.Node, MsgBase^.GetDestAddr.Point) Then
         Exit;
 
     Log (2, '+', '      Export #' + strI2S(MsgBase^.GetMsgNum) + ' to ' + Addr2Str(EchoNode.Address));

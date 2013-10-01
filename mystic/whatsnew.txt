@@ -3849,4 +3849,21 @@
  ! Fixed a bug when using spaces in menu filenames which caused the menu
    editor to fail to edit, copy, and delete menus.
 
+ ! When posting a text file to a netmail base using the MX menu command, the
+   origin address was not begin AKA matched with the destination address.
+
+ ! MIS telnet in Linux should no longer create zombie processes.
+
+ + Inactivity timeout is now disabled when running Mystic with the -CFG
+   option from the command line.
+
+ ! MUTIL import of FIDONET.NA will now not blow up if you used tabs instead
+   of spaces to separate echotag with description.
+
+ ! MUTIL import of FIDOBONE.NA will now not blow up if you used tabs instead
+   of spaces to separate tag with description.
+
+ ! MUTIL import of FIDOBONE will now replace / and \ characters when
+   calculating the datafile name, if they exist in the echotag.
+
    <ALPHA 38 RELEASED>

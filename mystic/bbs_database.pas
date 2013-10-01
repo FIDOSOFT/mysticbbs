@@ -700,4 +700,9 @@ Initialization
   Console      := NIL;
   Keyboard     := NIL;
 
+Finalization
+
+  If Assigned(Console)  Then Console.Free;
+  If Assigned(Keyboard) Then Keyboard.Free;
+
 End.

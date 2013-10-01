@@ -19,6 +19,10 @@ design elements/issues.
 
 BUGS AND POSSIBLE ISSUES
 ========================
+! FIDONET.NA import when tab separated causes problems
+! Zombie processes on MIS linux wait() needs to be called to acknowledge that
+  a child is dead?  try it...
+
 - fidonet NA export
 - shift+c key in OSX does not work without shiftlock (rudi)?
 - need to add QWK network ID to all message bases (remove QWK net flag?)

@@ -342,7 +342,7 @@ Begin
 //                   IsNetMail := True;
                  End;
                End;
-(*
+
                If MsgText[MsgLines]^[1] = #1 Then Begin
                  If Copy(MsgText[MsgLines]^, 2, 4) = 'INTL' Then
                    Str2Addr(strWordGet(2, MsgText[MsgLines]^, ' '), MsgDest)
@@ -350,7 +350,7 @@ Begin
                  If (Copy(MsgText[MsgLines]^, 2, 5) = 'MSGID') Then
                    Str2Addr(strWordGet(2, MsgText[MsgLines]^, ' '), MsgOrig);
                End;
-*)
+
                Inc (MsgSize, Length(MsgText[MsgLines]^));
                Inc (MsgLines);
 
