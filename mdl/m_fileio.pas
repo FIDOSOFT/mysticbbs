@@ -63,6 +63,7 @@ Type
   TFileBufferOpenType = (
     fmOpen,
     fmOpenCreate,
+    fmOpenAppend,
     fmCreate
   );
 
@@ -93,7 +94,7 @@ Type
     Procedure   ReadBlock    (Var Buf; Size: LongInt); Overload;
     Procedure   ReadRecord   (Var Buf);
     Procedure   SeekRecord   (RP: LongInt);
-    Procedure   SeekRaw      ( FP : LongInt);
+    Procedure   SeekRaw      (FP: LongInt);
     Procedure   WriteBlock   (Var Buf; Size: LongInt);
     Procedure   WriteRecord  (Var Buf);
 
@@ -596,13 +597,17 @@ Begin
 
   Case OpenType of
     fmOpen       : If Not ioReset (InFile, 1, OpenMode) Then Exit;
-    fmOpenCreate : If Not ioReset (InFile, 1, OpenMode) Then
+    fmOpenCreate,
+    fmOpenAppend : If Not ioReset (InFile, 1, OpenMode) Then
                      If Not FileExist(FN) Then Begin
                        If Not ioReWrite (InFile, 1, OpenMode) Then Exit;
                      End Else
                        Exit;
     fmCreate     : If Not ioReWrite (InFile, 1, OpenMode) Then Exit;
   End;
+
+  If OpenType = fmOpenAppend Then
+    ioSeek (InFile, System.FileSize(InFile));
 
   GetMem (Buffer, BufSize);
 
@@ -706,14 +711,28 @@ Begin
     Offset := BufSize - BufPos;
 
     If Offset > 0 Then
-      Move(Buf, Buffer^[BufPos], Offset);
+      Move (Buf, Buffer^[BufPos], Offset);
+
+    BufRead := BufSize;
 
     FlushBuffer;
+
+    // -----
+    Move (TFileBufferRec(Buf)[Offset], Buffer^[0], Size - Offset);
+
+    BufStart := System.FilePos(InFile);
+    BufEnd   := BufStart + Size - Offset;
+    BufPos   := Size - Offset;
+    BufEOF   := System.EOF(InFile);
+    BufRead  := BufPos;
+
+(*  the above replaces the 3 lines below... but is it reliable?
     FillBuffer;
 
     Move (TFileBufferRec(Buf)[Offset], Buffer^[BufPos], Size - Offset);
 
     BufPos := BufPos + Size - Offset;
+*)
   End Else Begin
     Move (Buf, Buffer^[BufPos], Size);
     Inc  (BufPos, Size);
@@ -778,12 +797,14 @@ End;
 Function TFileBuffer.FileSizeRaw : LongInt;
 Begin
   If BufDirty Then FlushBuffer;
+
   Result := System.FileSize(InFile);
 End;
 
 Function TFileBuffer.FileSizeRecord : LongInt;
 Begin
   If BufDirty Then FlushBuffer;
+
   Result := System.FileSize(InFile) DIV RecSize;
 End;
 
