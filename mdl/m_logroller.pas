@@ -38,7 +38,7 @@ Begin
 
   MaxSize  := Max * 1024;
   MaxLogs  := ML;
-  BufSize  := 4 * 1024;
+  BufSize  := 8 * 1024;
   CurLevel := Level;
   PreFix   := FN;
 
@@ -60,7 +60,7 @@ Var
 Begin
   If CurLevel < LogLevel Then Exit;
 
-  If (MaxSize > 0) And (System.FileSize(LogFile.InFile) > MaxSize) Then Begin
+  If (MaxSize > 0) And (System.FileSize(LogFile.InFile) + LogFile.BufPos > MaxSize) Then Begin
     LogFile.CloseStream;
 
     FileErase (PreFix + '_' + strI2S(MaxLogs) + '.log');
