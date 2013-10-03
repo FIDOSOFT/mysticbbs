@@ -191,7 +191,7 @@ Var
 Begin
   Result := False;
 
-  If GetLineLength(ANSI.Data[Line], 80) >= Rowsize Then Begin
+  If GetLineLength(ANSI.Data[Line], 80) >= RowSize Then Begin
     Result := True;
 
     Exit;
@@ -1347,7 +1347,7 @@ Begin
 
     If JoinLen = 0 Then Break;
 
-    If LineLen + JoinLen <= RowSize Then Begin
+    If LineLen + JoinLen < RowSize Then Begin
       Move       (ANSI.Data[Line + 1], ANSI.Data[Line][LineLen + 2], SizeOf(RecAnsiBufferChar) * JoinLen);
 
       ANSI.Data[Line][LineLen + 1].Ch := ' ';
@@ -1476,7 +1476,8 @@ Begin
                End;
         #32..
         #254 : If (CurLength >= RowSize) and (GetWrapPos(ANSI.Data[CurLine], RowSize, RowSize) = 0) And InsertMode Then Begin
-                 // dont do anything
+                 DoEnter;
+                 DoChar(Ch);
                End Else
                  If (CurX = 1) and (Ch = '/') and (Not DrawMode) Then Begin
                    EditorCommands;
