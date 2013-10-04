@@ -927,6 +927,9 @@ Begin
     If Queue.Add(True, OutPath, DirInfo.Name, FileNewExt(DirInfo.Name, 'pkt')) Then
       Queue.QData[Queue.QSize]^.Extra := OutPath;
 
+    //If Queue.Add(True, OutPath, DirInfo.Name, FileNewExt(GetFTNPktName, 'pkt')) Then
+    //  Queue.QData[Queue.QSize]^.Extra := OutPath;
+
     FindNext (DirInfo);
   End;
 

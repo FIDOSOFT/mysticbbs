@@ -54,11 +54,9 @@ Function  GetMBaseByTag      (Tag: String; Var TempBase: RecMessageBase) : Boole
 Function  GetMBaseByNetZone  (Zone: Word; Var TempBase: RecMessageBase) : Boolean;
 Function  MessageBaseOpen    (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
 Function  SaveMessage        (mArea: RecMessageBase; mFrom, mTo, mSubj: String; mAddr: RecEchoMailAddr; mText: RecMessageText; mLines: Integer) : Boolean;
-Function  GetFTNPKTName      : String;
 Function  GetFTNArchiveName  (Orig, Dest: RecEchoMailAddr) : String;
 Function  GetFTNFlowName     (Dest: RecEchoMailAddr) : String;
 Function  GetFTNOutPath      (EchoNode: RecEchoMailNode) : String;
-Function  GetNodeByIndex     (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
 Function  GetNodeByRoute     (Dest: RecEchoMailAddr; Var TempNode: RecEchoMailNode) : Boolean;
 Function  IsValidAKA         (Zone, Net, Node, Point: Word) : Boolean;
 
@@ -382,17 +380,6 @@ Begin
   Result := True;
 End;
 
-Function GetFTNPKTName : String;
-Var
-  Hour, Min, Sec, hSec  : Word;
-  Year, Month, Day, DOW : Word;
-Begin
-  GetTime (Hour, Min, Sec, hSec);
-  GetDate (Year, Month, Day, DOW);
-
-  Result := strZero(Day) + strZero(Hour) + strZero(Min) + strZero(Sec);
-End;
-
 Function GetFTNArchiveName (Orig, Dest: RecEchoMailAddr) : String;
 Var
   Net  : LongInt;
@@ -443,29 +430,6 @@ Begin;
 
   If EchoNode.Address.Point <> 0 Then
     Result := Result + strI2H((EchoNode.Address.Net SHL 16) OR EchoNode.Address.Node, 8) + '.pnt' + PathChar;
-End;
-
-Function GetNodeByIndex (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
-Var
-  F : File;
-Begin
-  Result := False;
-
-  Assign (F, bbsCfg.DataPath + 'echonode.dat');
-
-  If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
-
-  While Not Eof(F) Do Begin
-    ioRead(F, TempNode);
-
-    If TempNode.Index = Num Then Begin
-      Result := True;
-
-      Break;
-    End;
-  End;
-
-  Close (F);
 End;
 
 Function GetNodeByRoute (Dest: RecEchoMailAddr; Var TempNode: RecEchoMailNode) : Boolean;

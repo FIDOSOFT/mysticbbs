@@ -8,7 +8,6 @@ Uses
   BBS_Core,
   BBS_Records;
 
-Function  GetNodeByIndex       (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
 Procedure AddExportByBase      (Var MBase: RecMessageBase; Idx: LongInt);
 Procedure RemoveExportFromBase (Var MBase: RecMessageBase; Idx: LongInt);
 
@@ -106,29 +105,6 @@ Begin
   End;
 
   Close (MBaseFile);
-End;
-
-Function GetNodeByIndex (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
-Var
-  F : File;
-Begin
-  Result := False;
-
-  Assign (F, bbsCfg.DataPath + 'echonode.dat');
-
-  If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
-
-  While Not Eof(F) Do Begin
-    ioRead(F, TempNode);
-
-    If TempNode.Index = Num Then Begin
-      Result := True;
-
-      Break;
-    End;
-  End;
-
-  Close (F);
 End;
 
 Procedure EditSessionInfo (Var Node: RecEchoMailNode);

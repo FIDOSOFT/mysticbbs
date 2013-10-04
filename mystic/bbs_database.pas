@@ -66,8 +66,10 @@ Function IsThisUser             (U: RecUser; Str: String) : Boolean;
 
 // ECHOMAIL
 
-Function GetFTNBundleExt (IncOnly: Boolean; Str: String) : String;
+Function GetFTNPKTName    : String;
+Function GetFTNBundleExt  (IncOnly: Boolean; Str: String) : String;
 Function GetNodeByAddress (Addr: String; Var TempNode: RecEchoMailNode) : Boolean;
+Function GetNodeByIndex   (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
 Function SaveEchoMailNode (Var TempNode: RecEchoMailNode) : Boolean;
 
 Implementation
@@ -713,6 +715,40 @@ Begin
       Seek    (F, FilePos(F) - 1);
       ioWrite (F, TempNode);
 
+      Result := True;
+
+      Break;
+    End;
+  End;
+
+  Close (F);
+End;
+
+Function GetFTNPKTName : String;
+Var
+  Hour, Min, Sec, hSec  : Word;
+  Year, Month, Day, DOW : Word;
+Begin
+  GetTime (Hour, Min, Sec, hSec);
+  GetDate (Year, Month, Day, DOW);
+
+  Result := strZero(Day) + strZero(Hour) + strZero(Min) + strZero(Sec);
+End;
+
+Function GetNodeByIndex (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
+Var
+  F : File;
+Begin
+  Result := False;
+
+  Assign (F, bbsCfg.DataPath + 'echonode.dat');
+
+  If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
+
+  While Not Eof(F) Do Begin
+    ioRead(F, TempNode);
+
+    If TempNode.Index = Num Then Begin
       Result := True;
 
       Break;
