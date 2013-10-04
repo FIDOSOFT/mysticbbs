@@ -132,7 +132,9 @@ Type
     AreaFixPass : String[20];
     DirInDir    : String[60];
     DirOutDir   : String[60];
-    Res         : Array[1..219] of Byte;
+    LPKTDay     : Byte;
+    LPKTPtr     : Byte;
+    Res         : Array[1..217] of Byte;
   End;
 
   RecQwkNetwork = Record

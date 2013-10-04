@@ -60,6 +60,8 @@ BUGS AND POSSIBLE ISSUES
 
 FUTURE / IDEAS / WORK IN PROGRESS / NOTES
 =========================================
+- Need to add MCI code for Default Protocol
+        - Make function get protocol by Key
 - Make point mail bundles based off of their uplink (your address)?
 - MIS escape confirmation
 - Prompts for CONFIG editors

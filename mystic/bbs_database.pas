@@ -66,8 +66,9 @@ Function IsThisUser             (U: RecUser; Str: String) : Boolean;
 
 // ECHOMAIL
 
+Function GetFTNBundleExt (IncOnly: Boolean; Str: String) : String;
 Function GetNodeByAddress (Addr: String; Var TempNode: RecEchoMailNode) : Boolean;
-Function GetFTNBundleExt  (IncOnly: Boolean; Str: String) : String;
+Function SaveEchoMailNode (Var TempNode: RecEchoMailNode) : Boolean;
 
 Implementation
 
@@ -692,6 +693,33 @@ Begin
       Break;
     End;
   Until False;
+End;
+
+Function SaveEchoMailNode (Var TempNode: RecEchoMailNode) : Boolean;
+Var
+  F  : File;
+  TN : RecEchoMailNode;
+Begin
+  Result := False;
+
+  Assign (F, bbsCfg.DataPath + 'echonode.dat');
+
+  If Not ioReset(F, SizeOf(RecEchoMailNode), fmRWDN) Then Exit;
+
+  While Not Eof(F) Do Begin
+    ioRead(F, TN);
+
+    If TempNode.Index = TN.Index Then Begin
+      Seek    (F, FilePos(F) - 1);
+      ioWrite (F, TempNode);
+
+      Result := True;
+
+      Break;
+    End;
+  End;
+
+  Close (F);
 End;
 
 Initialization

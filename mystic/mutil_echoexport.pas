@@ -66,6 +66,7 @@ Var
   Temp       : String;
   FLOName    : String;
   OrigAddr   : RecEchoMailAddr;
+  CheckInc   : Boolean;
 Begin
   FindFirst (TempPath + '*', AnyFile, DirInfo);
 
@@ -88,32 +89,29 @@ Begin
       OrigAddr.Node := PH.OrigNode;
 
       BundlePath := GetFTNOutPath(EchoNode);
+      CheckInc   := False;
 
       DirCreate (BundlePath);
 
+      If Not (EchoNode.LPKTPtr in [48..57, 97..122]) Then
+        EchoNode.LPKTPtr := 48;
+
+      If EchoNode.LPKTDay <> DayOfWeek(CurDateDos) Then Begin
+        EchoNode.LPKTDay := DayOfWeek(CurDateDos);
+        EchoNode.LPKTPtr := 48;
+      End Else
+        CheckInc := True;
+
       FLOName    := BundlePath + GetFTNFlowName(EchoNode.Address);
-      BundleName := BundlePath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + strLower(DayString[DayOfWeek(CurDateDos)]);
+      BundleName := BundlePath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + Copy(strLower(DayString[DayOfWeek(CurDateDos)]), 1, 2) + Char(EchoNode.LPKTPtr);
 
-      BundleName[Length(BundleName)] := '0';
+      If CheckInc And Not FileExist(BundleName) Then Begin
+        BundleName := GetFTNBundleExt(True, BundleName);
 
-(*
-      BundleName := BundlePath + GetFTNBundleExt(False, GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + Copy(strLower(DayString[DayOfWeek(CurDateDos)]), 1, 2) + '0');
+        EchoNode.LPKTPtr := Byte(BundleName[Length(BundleName)]);
+      End;
 
-      BundleName := BundlePath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + Copy(strLower(DayString[DayOfWeek(CurDateDos)]), 1, 2) + '0';
-      Temp       := BundleName;
-
-      Repeat
-        BundleSize := FileByteSize(BundleName);
-
-        If (BundleSize > 0) and ((BundleSize DIV 1024) >= 250) Then Begin
-          BundleName := GetFTNBundleExt(True, BundleName);
-
-          If BundleName = Temp Then
-            Break;
-        End Else
-          Break;
-      Until False;
-*)
+      SaveEchoMailNode(EchoNode);
 
       Case EchoNode.MailType of
         0 : FLOName := FLOName + '.flo';

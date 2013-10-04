@@ -418,6 +418,8 @@ Begin
           AddStr ({$IFDEF MPLPARSER} 'mbasepacs',     {$ENDIF} iString, 30);
           AddStr ({$IFDEF MPLPARSER} 'mbasesacs',     {$ENDIF} iString, 30);
           AddVar ({$IFDEF MPLPARSER} 'mbasenetaddr',  {$ENDIF} iByte);
+          AddVar ({$IFDEF MPLPARSER} 'mbasenettype',  {$ENDIF} iByte);
+          AddVar ({$IFDEF MPLPARSER} 'mbaseflags',    {$ENDIF} iLongInt);
         End;
     4 : Begin
           {$IFNDEF MPLPARSER} TInterpEngine(S).IdxVarMGroup := X + 1; {$ENDIF}
