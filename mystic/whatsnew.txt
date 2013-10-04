@@ -3866,4 +3866,13 @@
  ! MUTIL import of FIDOBONE will now replace / and \ characters when
    calculating the datafile name, if they exist in the echotag.
 
+ + Changed the filename format used when Mystic generates PKT filenames in
+   bundles and when sending ?UT files:
+
+     Old way: Day of month + Hour + Minutes + Seconds
+     New way: Hex(Day + Seconds past midnight + Hundredth of seconds)
+
+   This allows truely unique names down to the hundred of a second for a one
+   month period.  It solves all collision issues caused by the old way!
+
    <ALPHA 38 RELEASED>

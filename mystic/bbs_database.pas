@@ -724,6 +724,7 @@ Begin
   Close (F);
 End;
 
+(*
 Function GetFTNPKTName : String;
 Var
   Hour, Min, Sec, hSec  : Word;
@@ -733,6 +734,31 @@ Begin
   GetDate (Year, Month, Day, DOW);
 
   Result := strZero(Day) + strZero(Hour) + strZero(Min) + strZero(Sec);
+End;
+*)
+
+Function GetFTNPKTName : String;
+Var
+  Hour, Min, Sec, hSec  : Word;
+  Year, Month, Day, DOW : Word;
+  SecsPast : Cardinal;
+Begin
+
+  // PKT filename format used by Mystic:
+  // 2 digit day of month + seconds past midnight + hundredths of second
+  //
+  // This gives a max possible value of 318640099 and will create unique
+  // packet names for up to one month accurate to the hundredth of a second.
+  // A 1/100th second delay when generating the name guarentees uniqueness.
+  //
+  // This value is then converted to hex to enforce a maximum of 8 characters.
+
+  WaitMS  (10);
+  GetDate (Year, Month, Day, DOW);
+  GetTime (Hour, Min, Sec, hSec);
+
+  SecsPast := ((Hour * 60) * 60) + (Min * 60) + Sec;
+  Result   := strI2H(strS2I(strZero(Day) + strPadL(strI2S(SecsPast), 5, '0') + strZero(hSec)), 8);
 End;
 
 Function GetNodeByIndex (Num: LongInt; Var TempNode: RecEchoMailNode) : Boolean;
