@@ -1265,12 +1265,7 @@ End;
 
 Procedure TInterpEngine.FileWriteLine (Var F: File; Str: String);
 Begin
-  {$IFDEF WINDOWS}
-    Str := Str + #13#10;
-  {$ENDIF}
-  {$IFDEF UNIX}
-    Str := Str + #10;
-  {$ENDIF}
+  Str := Str + LineTerm;
 
   BlockWrite (F, Str[1], Ord(Str[0]));
 
