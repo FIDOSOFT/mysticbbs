@@ -196,7 +196,8 @@ Begin
   Repeat Until Server <> NIL;  // Synchronize with server class
   Repeat Until ServerStatus <> NIL; // Syncronize with status class
 
-  Server.WaitInit('0.0.0.0', Port);
+  //Server.WaitInit('0.0.0.0', Port);
+  Server.WaitInit('::', Port);
 
   If Terminated Then Exit;
 

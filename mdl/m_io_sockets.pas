@@ -1,5 +1,8 @@
 Unit m_io_Sockets;
 
+{$link m_resolve_address.o}
+{$linklib c}
+
 {$I M_OPS.PAS}
 
 {.$DEFINE TNDEBUG}
@@ -59,7 +62,7 @@ Type
     Function    SetBlocking     (Block: Boolean): LongInt;
     Function    WaitForData     (TimeOut: LongInt) : LongInt; Override;
     Function    Connect         (Address: String; Port: Word) : Boolean;
-    Function    ResolveAddress  (Host: String) : LongInt;
+    Function 	ResolveAddress 	(Host: String; Remote_Address: PChar):Integer;
     Procedure   WaitInit        (NetInterface: String; Port: Word);
     Function    WaitConnection  (TimeOut: LongInt) : TIOSocket;
 
@@ -326,7 +329,15 @@ Procedure TIOSocket.TelnetInBuffer (Var Buf: TIOBuffer; Var Len: LongInt);
 
     {$IFDEF TNDEBUG}
       TNLOG ('InBuffer -> Sending data response');
+
+
+
+
+
+
     {$ENDIF}
+
+
   End;
 
 Var
@@ -559,57 +570,83 @@ Begin
   {$ENDIF}
 End;
 
-Function TIOSocket.ResolveAddress (Host: String) : LongInt;
-Var
-  HostEnt : PHostEnt;
-Begin
-  Host    := Host + #0;
-  HostEnt := GetHostByName(@Host[1]);
+Function ResolveAddress_IPv6(Host:PChar; Remote_Address:PChar):Integer; cdecl; external;
 
-  If Assigned(HostEnt) Then
-    Result := PInAddr(HostEnt^.h_addr_list^)^.S_addr
-  Else
-    Result := LongInt(StrToNetAddr(Host));
+Function TIOSocket.ResolveAddress (Host: String; Remote_Address: pchar):Integer;
+Begin
+        Host := Host + Char(0);
+	Result := ResolveAddress_IPv6(@Host, Remote_Address);
 End;
 
 Function TIOSocket.Connect (Address: String; Port: Word) : Boolean;
 Var
-  Sin : TINetSockAddr;
+	Sin6     	:  TINetSockAddr6;
+	Sin4     	:  TINetSockAddr;
+	Remote_Addr 	:  String;
+	Family   	:  Integer;
 Begin
-  Result        := False;
-  FSocketHandle := fpSocket(PF_INET, SOCK_STREAM, 0);
+	Result := False;
+	Family := 0;
+	Remote_Addr := '';
+	
+	Family := ResolveAddress (Address, @Remote_Addr);
 
-  If FSocketHandle = -1 Then Exit;
+	if Family = 0 Then Begin
+		if Pos(Address, ':') > 0 then Begin
+			Family := AF_INET6;
+			Remote_Addr := Address;
+		End else Begin
+			Family := AF_INET;
+			Remote_Addr := Address;
+		End;
+	End;
 
-  FPeerName := Address;
+ 	FSocketHandle := fpSocket(Family, SOCK_STREAM, 0);
+ 	If FSocketHandle = -1 Then Begin
+		Exit;
+	End;
 
-  FillChar(Sin, SizeOf(Sin), 0);
-
-  Sin.sin_Family      := PF_INET;
-  Sin.sin_Port        := htons(Port);
-  Sin.sin_Addr.S_Addr := ResolveAddress(Address);
-
-  FPeerIP := NetAddrToStr(Sin.Sin_Addr);
-  Result  := fpConnect(FSocketHandle, @Sin, SizeOf(Sin)) = 0;
+  	FPeerName := Address;
+        
+	if Family = AF_INET6 then Begin
+		FillChar(Sin6, SizeOf(Sin6), 0);
+		Sin6.sin6_Family   := AF_INET6;
+		Sin6.sin6_Port     := htons(Port);
+		Sin6.sin6_Addr     := StrToNetAddr6(Remote_Addr);
+		FPeerIP 	   := NetAddrToStr6(Sin6.Sin6_addr);
+		Result   	   := fpConnect(FSocketHandle, @Sin6, SizeOf(Sin6)) = 0;
+	End else Begin
+		FillChar(Sin4, SizeOf(Sin4), 0);
+		Sin4.sin_Family    := AF_INET;
+		Sin4.sin_Port      := htons(Port);
+		Sin4.sin_Addr      := StrToNetAddr(Remote_Addr);
+		FPeerIP   	   := NetAddrToStr(Sin4.Sin_addr);
+		Result  	   := fpConnect(FSocketHandle, @Sin4, SizeOf(Sin4)) = 0;
+	End;
 End;
 
 Procedure TIOSocket.WaitInit (NetInterface: String; Port: Word);
 Var
-  SIN : TINetSockAddr;
+  SIN : TINetSockAddr6;
   Opt : LongInt;
 Begin
-  FSocketHandle := fpSocket(PF_INET, SOCK_STREAM, 0);
+  If NetInterface = '0.0.0.0' Then
+  	NetInterface := '::'
+  else if NetInterface = '127.0.0.1' then
+	NetInterface := '::1';
+
+  FSocketHandle := fpSocket(AF_INET6, SOCK_STREAM, 0);
 
   Opt := 1;
 
   fpSetSockOpt (FSocketHandle, SOL_SOCKET, SO_REUSEADDR, @Opt, SizeOf(Opt));
 
-  SIN.sin_family := PF_INET;
-  SIN.sin_port   := htons(Port);
-  SIN.sin_addr   := StrToNetAddr(NetInterface);
+  SIN.sin6_family := AF_INET6;
+  SIN.sin6_port   := htons(Port);
+  SIN.sin6_addr   := StrToNetAddr6(NetInterface);
 
   {$IFDEF TNDEBUG}
-    TNLOG('Attempting to bind to interface ' + NetInterface + ' (' + strI2S(SIN.sin_addr.s_addr) + ')');
+    TNLOG('Attempting to bind to interface ' + NetInterface + ' (' + strI2S(SIN.sin6_addr) + ')');
     TNLOG('WaitInit Bind');
 
     If fpBind(FSocketHandle, @SIN, SizeOf(SIN)) <> 0 Then
@@ -628,9 +665,11 @@ Var
   Sock   : LongInt;
   Client : TIOSocket;
   PHE    : PHostEnt;
-  SIN    : TINetSockAddr;
+  SIN    : TINetSockAddr6;
   Temp   : LongInt;
   SL     : TSockLen;
+  Code   : Integer;
+  Hold	 : LongInt;
 Begin
   Result := NIL;
 
@@ -656,8 +695,26 @@ Begin
 
   If Sock = -1 Then Exit;
 
-  FPeerIP := NetAddrToStr(SIN.sin_addr);
-  PHE     := GetHostByAddr(@SIN.sin_addr, 4, PF_INET);
+  {
+	We Need to Determine if this is actually IPv4 Mapped as Six
+	so that we can display and store the IP 4 Address.  This is 
+	necessary to we can make FTP and BINKP work properly by
+	opening returning ports on IPv4 and not IPv6, which won't work
+        nor clear firewall with input accept established rule, the norm.
+  }
+  FPeerIP := Upcase(NetAddrToStr6(SIN.sin6_addr));
+  if Length (FPeerIP) > 7 Then
+	Begin
+		If Pos('::FFFF:', FPeerIP) = 1 Then			// Is IPv4 mapped in 6?
+		Begin
+			Delete(FPeerIP, 1, 7);				// Strip off ::FFFF:
+                        Delete(FPeerIP, 5, 1);				// Remove middle :
+                        val('$' + FPeerIP, Hold, Code);		        // Convert to IPv4 Addy
+		     	FPeerIP := HostAddrToStr(in_addr(Hold));
+		End;
+	End;
+ 
+  PHE     := GetHostByAddr(@SIN.sin6_addr, 16, AF_INET6);
 
   If Not Assigned(PHE) Then
     FPeerName := 'Unknown'
@@ -668,7 +725,7 @@ Begin
 
   fpGetSockName(FSocketHandle, @SIN, @SL);
 
-  FHostIP := NetAddrToStr(SIN.sin_addr);
+  FHostIP := NetAddrToStr6(SIN.sin6_addr);
   Client  := TIOSocket.Create;
 
   Client.SocketHandle  := Sock;
