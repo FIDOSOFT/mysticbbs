@@ -1,0 +1,15 @@
+Vincent Chapman {
+	N1LQJ@COX.NET
+	4 OCT 2013 
+	Modifed {
+		m_io_sockets.pas
+		m_sockets_class.pas
+		m_socket_server.pas
+	}
+	Created {
+		m_resolve_address.c
+	}
+	Comment {
+		Added IPv6 Support
+	}
+}
