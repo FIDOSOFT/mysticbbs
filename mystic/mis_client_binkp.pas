@@ -969,6 +969,7 @@ Begin
   BinkP := TBinkP.Create (Server, Client, Queue, False, bbsCfg.inetBINKPTimeOut);
 
   BinkP.StatusUpdate := @Status;
+  BinkP.ForceMD5     := bbsCfg.inetBINKPCram5;
 
   If BinkP.DoAuthentication Then Begin
 
@@ -983,8 +984,8 @@ Begin
         Server.Status (ProcessID, 'Queued ' + strI2S(Queue.QSize - Before) + ' files for ' + Addr2Str(BinkP.EchoNode.Address));
 
         BinkP.SetBlockSize := BinkP.EchoNode.binkBlock;
-        BinkP.UseMD5       := BinkP.EchoNode.binkMD5 > 0;
-        BinkP.ForceMD5     := BinkP.EchoNode.binkMD5 = 2;
+//        BinkP.UseMD5       := BinkP.EchoNode.binkMD5 > 0;
+//        BinkP.ForceMD5     := BinkP.EchoNode.binkMD5 = 2;
       End;
     End;
 

@@ -999,6 +999,7 @@ Begin
 
   If Graphics = 0 Then Exit;
 
+
   CurBG  := (Console.TextAttr SHR 4) AND 7;
   CurFG  := Console.TextAttr AND $F;
   Prefix := '';

@@ -79,6 +79,8 @@ Var
   Status      : LongInt;
   ForwardList : Array[1..50] of String[35];
   ForwardSize : Byte = 0;
+  //TwitList    : Array[1..50] of String[35];
+  //TwitSize    : Byte = 0;
 
   Procedure ImportPacketFile (PktFN: String);
   Var
@@ -285,16 +287,13 @@ Var
 
   Procedure ImportPacketBundle (PktBundle: String);
   Var
-    PKTMatched : Boolean;
     DirInfo    : SearchRec;
     NodeFile   : File of RecEchoMailNode;
     EchoNode   : RecEchoMailNode;
-    ArcType    : String[4];
+    ArcType    : String[4] = '';
     Count      : LongInt;
     BundleList : TStringList;
   Begin
-    PKTMatched := False;
-
     Assign (NodeFile, bbsCfg.DataPath + 'echonode.dat');
 
     If ioReset(NodeFile, Sizeof(RecEchoMailNode), fmRWDN) Then Begin
@@ -303,8 +302,7 @@ Var
 
         For Count := 1 to 30 Do Begin
           If strUpper(JustFileName(PktBundle)) = strUpper(GetFTNArchiveName(EchoNode.Address, bbsCfg.NetAddress[Count])) Then Begin
-            PKTMatched := True;
-            ArcType    := EchoNode.ArcType;
+            ArcType := EchoNode.ArcType;
 
             Break;
           End;
@@ -314,7 +312,7 @@ Var
       Close (NodeFile);
     End;
 
-    If Not PKTMatched Then Begin
+    If ArcType = '' Then Begin
       Case GetArchiveType(bbsCfg.InboundPath + PktBundle) of
         'A' : ArcType := 'ARJ';
         'R' : ArcType := 'RAR';
@@ -404,6 +402,22 @@ Begin
 
     ForwardList[ForwardSize] := strStripB(FileExt, ' ');
   Until ForwardSize = 50;
+
+(*  global blacklist.txt  and/or revamp of -mtrash and trashcan.txt
+  FillChar (TwitList, SizeOf(TwitList), #0);
+
+  Ini.SetSequential(True);
+
+  Repeat
+    FileExt := INI.ReadString(Header_ECHOIMPORT, 'twit', '');
+
+    If FileExt = '' Then Break;
+
+    Inc (TwitSize);
+
+    TwitList[TwitSize] := strStripB(FileExt, ' ');
+  Until TwitSize = 50;
+*)
 
   INI.SetSequential(False);
 

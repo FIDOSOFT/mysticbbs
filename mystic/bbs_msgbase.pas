@@ -35,12 +35,11 @@ Type
     Destructor  Destroy; Override;
 
     Function    IsQuotedText        (Str: String) : Boolean;
-//    Function    OpenCreateBase      (Var Msg: PMsgBaseABS; Var Area: RecMessageBase) : Boolean;
+    Procedure   ExportQuoteData     (Var Msg: PMsgBaseABS);
     Procedure   AppendMessageText   (Var Msg: PMsgBaseABS; Lines: Integer; ReplyID: String);
     Procedure   AssignMessageData   (Var Msg: PMsgBaseABS; Var TempBase: RecMessageBase);
     Function    GetBaseByNum        (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Function    GetBaseCompressed   (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
-//    Function    GetBaseByIndex      (Num: LongInt; Var TempBase: RecMessageBase) : Boolean;
     Function    GetMessageStats     (List, ShowPrompt, ShowYou: Boolean; Var ListPtr: LongInt; Var TempBase: RecMessageBase; NoFrom, NoRead: Boolean; Var Total, New, Yours: LongInt) : Boolean;
     Procedure   GetMailStats        (Var Total, UnRead: LongInt);
     Function    GetMatchedAddress   (Orig, Dest: RecEchoMailAddr) : RecEchoMailAddr;
@@ -80,8 +79,6 @@ Implementation
 
 Uses
   m_Strings,
-//  BBS_Records,
-//  BBS_Common,
   BBS_DataBase,
   BBS_Core,
   BBS_User,
@@ -131,6 +128,66 @@ End;
 Destructor TMsgBase.Destroy;
 Begin
   Inherited Destroy;
+End;
+
+Procedure TMsgBase.ExportQuoteData (Var Msg: PMsgBaseABS);
+Var
+  QuoteFile : Text;
+  Initials  : String[4];
+  TempStr   : String;
+  WrapData  : String;
+  DoWrap    : Boolean = True;
+Begin
+  Assign (QuoteFile, Session.TempPath + 'msgtmp');
+
+  {$I-} ReWrite (QuoteFile); {$I+}
+
+  If IoResult = 0 Then Begin
+    Initials := strInitials(MsgBase^.GetFrom) + '> ';
+    TempStr  := Session.GetPrompt(464);
+
+    TempStr := strReplace(TempStr, '|&1', MsgBase^.GetDate);
+    TempStr := strReplace(TempStr, '|&2', MsgBase^.GetFrom);
+    TempStr := strReplace(TempStr, '|&3', Initials);
+
+    WriteLn (QuoteFile, TempStr);
+    WriteLn (QuoteFile, ' ');
+
+    MsgBase^.MsgTxtStartUp;
+
+    WrapData := '';
+
+    While Not MsgBase^.EOM Do Begin
+      TempStr := MsgBase^.GetString(79);
+
+      If TempStr[1] = #1 Then Continue;
+
+      DoWrap := Not IsQuotedText(TempStr);
+
+      If DoWrap Then Begin
+        If WrapData <> '' Then Begin
+          If TempStr = '' Then Begin
+            WriteLn (QuoteFile, ' ' + Initials + strStripB(WrapData, ' '));
+            WriteLn (QuoteFile, ' ' + Initials);
+
+            WrapData := '';
+
+            Continue;
+          End;
+
+          TempStr := strStripB(WrapData, ' ') + ' ' + strStripL(TempStr, ' ');
+        End;
+
+        strWrap (TempStr, WrapData, 74);
+
+        WriteLn (QuoteFile, ' ' + Initials + Copy(TempStr, 1, 75));
+      End Else
+        WriteLn (QuoteFile, ' ' + Initials + Copy(TempStr, 1, 75));
+    End;
+
+    Close (QuoteFile);
+  End;
+
 End;
 
 Function TMsgBase.GetMatchedAddress (Orig, Dest: RecEchoMailAddr) : RecEchoMailAddr;
@@ -1248,10 +1305,6 @@ Var
   Addr      : RecEchomailAddr;
   MsgNew    : PMsgBaseABS;
   TempStr   : String;
-  Initials  : String[4];
-  WrapData  : String;
-  DoWrap    : Boolean = True;
-  QuoteFile : Text;
   Lines     : SmallInt;
   Total     : LongInt;
   ReplyBase : RecMessageBase;
@@ -1372,54 +1425,7 @@ Begin
 
   If Subj = '' Then Exit;
 
-  Assign (QuoteFile, Session.TempPath + 'msgtmp');
-  {$I-} ReWrite (QuoteFile); {$I+}
-
-  If IoResult = 0 Then Begin
-    Initials := strInitials(MsgBase^.GetFrom) + '> ';
-    TempStr  := Session.GetPrompt(464);
-
-    TempStr := strReplace(TempStr, '|&1', MsgBase^.GetDate);
-    TempStr := strReplace(TempStr, '|&2', MsgBase^.GetFrom);
-    TempStr := strReplace(TempStr, '|&3', Initials);
-
-    WriteLn (QuoteFile, TempStr);
-    WriteLn (QuoteFile, ' ');
-
-    MsgBase^.MsgTxtStartUp;
-
-    WrapData := '';
-
-    While Not MsgBase^.EOM Do Begin
-      TempStr := MsgBase^.GetString(79);
-
-      If TempStr[1] = #1 Then Continue;
-
-      DoWrap := Not IsQuotedText(TempStr);
-
-      If DoWrap Then Begin
-        If WrapData <> '' Then Begin
-          If TempStr = '' Then Begin
-            WriteLn (QuoteFile, ' ' + Initials + strStripB(WrapData, ' '));
-            WriteLn (QuoteFile, ' ' + Initials);
-
-            WrapData := '';
-
-            Continue;
-          End;
-
-          TempStr := strStripB(WrapData, ' ') + ' ' + strStripL(TempStr, ' ');
-        End;
-
-        strWrap (TempStr, WrapData, 74);
-
-        WriteLn (QuoteFile, ' ' + Initials + Copy(TempStr, 1, 75));
-      End Else
-        WriteLn (QuoteFile, ' ' + Initials + Copy(TempStr, 1, 75));
-    End;
-
-    Close (QuoteFile);
-  End;
+  ExportQuoteData(MsgBase);
 
   Lines := 0;
 
@@ -1484,10 +1490,7 @@ End;
 
 Procedure TMsgBase.EditMessage;
 Var
-  A        : Integer;
-  Lines    : Integer;
-  Temp1    : String;
-  DestAddr : RecEchoMailAddr;
+  Lines : Integer;
 
   Procedure ReadText;
   Begin
@@ -1508,7 +1511,26 @@ Var
     End;
   End;
 
+Var
+  Count    : LongInt;
+  TempStr  : String;
+  DestAddr : RecEchoMailAddr;
 Begin
+  If MsgBase^.GetRefer > 0 Then Begin
+    Count := MsgBase^.GetMsgNum;
+
+    MsgBase^.SeekFirst(MsgBase^.GetRefer);
+
+    If MsgBase^.SeekFound Then Begin
+      MsgBase^.MsgStartUp;
+
+      ExportQuoteData(MsgBase);
+    End;
+
+    MsgBase^.SeekFirst(Count);
+    MsgBase^.MsgStartUp;
+  End;
+
   ReadText;
 
   Repeat
@@ -1529,20 +1551,20 @@ Begin
               Session.io.OutFull (Session.GetPrompt(297));
 
               If MBase.NetType = 3 Then Begin
-                Temp1 := Session.io.GetInput(30, 30, 11, MsgBase^.GetTo);
+                TempStr := Session.io.GetInput(30, 30, 11, MsgBase^.GetTo);
 
                 Session.io.OutFull (Session.GetPrompt(298));
 
                 If Str2Addr(Session.io.GetInput(20, 20, 12, Addr2Str(DestAddr)), DestAddr) Then Begin
-                  MsgBase^.SetTo(Temp1);
+                  MsgBase^.SetTo(TempStr);
                   MsgBase^.SetDest(DestAddr)
                 End;
               End Else
               If MBase.Flags And MBPrivate <> 0 Then Begin
-                Temp1 := Session.io.GetInput (30, 30, 11, MsgBase^.GetTo);
+                TempStr := Session.io.GetInput (30, 30, 11, MsgBase^.GetTo);
 
-                If Session.User.SearchUser(Temp1, MBase.Flags and MBRealNames <> 0) Then
-                  MsgBase^.SetTo(Temp1);
+                If Session.User.SearchUser(TempStr, MBase.Flags and MBRealNames <> 0) Then
+                  MsgBase^.SetTo(TempStr);
               End Else
                 MsgBase^.SetTo(Session.io.GetInput(30, 30, 11, MsgBase^.GetTo));
             End;
@@ -1553,10 +1575,10 @@ Begin
             End;
       'C' : MsgBase^.SetSent(NOT MsgBase^.IsSent);
       '!' : Begin
-              Temp1 := MsgBase^.GetSubj;
+              TempStr := MsgBase^.GetSubj;
 
-              If Editor(Lines, ColumnValue[Session.Theme.ColumnSize] - 2, mysMaxMsgLines, False, fn_tplMsgEdit, Temp1) Then
-                MsgBase^.SetSubj(Temp1)
+              If Editor(Lines, ColumnValue[Session.Theme.ColumnSize] - 2, mysMaxMsgLines, False, fn_tplMsgEdit, TempStr) Then
+                MsgBase^.SetSubj(TempStr)
               Else
                 ReadText;
             End;
@@ -1564,8 +1586,8 @@ Begin
               If Session.io.GetYN(Session.GetPrompt(300), True) Then Begin
                 MsgBase^.EditMsgInit;
 
-                For A := 1 to Lines Do
-                  MsgBase^.DoStringLn(MsgText[A]);
+                For Count := 1 to Lines Do
+                  MsgBase^.DoStringLn(MsgText[Count]);
 
                 MsgBase^.EditMsgSave;
               End;
@@ -1574,6 +1596,8 @@ Begin
 
     End;
   Until False;
+
+  DirClean (Session.TempPath, '');
 End;
 
 (*

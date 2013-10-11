@@ -74,10 +74,10 @@ Var
   Begin
     Result := False;
 
-    writeln ('debug checking exists ', str, '  files:', ftp.responsedata.count);
+//    writeln ('debug checking exists ', str, '  files:', ftp.responsedata.count);
 
     For Count := 1 to FTP.ResponseData.Count Do Begin
-      writeln('debug    remote: ', FTP.ResponseData.Strings[Count - 1]);
+//      writeln('debug    remote: ', FTP.ResponseData.Strings[Count - 1]);
 
       If strUpper(JustFile(Str)) = strUpper(FTP.ResponseData.Strings[Count - 1]) Then Begin
         Result := True;

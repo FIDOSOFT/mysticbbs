@@ -52,6 +52,7 @@ Begin
   Close   (T);
 End;
 
+(*
 Procedure BundleMessages;
 Var
   F          : File;
@@ -123,6 +124,90 @@ Begin
       ExecuteArchive (TempPath, BundleName, EchoNode.ArcType, TempPath + PKTName, 1);
       FileErase      (TempPath + PKTName);
       AddToFLOQueue  (FLOName, BundleName);
+    End;
+
+    FindNext (DirInfo);
+  End;
+
+  FindClose (DirInfo);
+End;
+*)
+
+Procedure BundleMessages;
+Var
+  F          : File;
+  PH         : RecPKTHeader;
+  DirInfo    : SearchRec;
+  NodeIndex  : LongInt;
+  EchoNode   : RecEchoMailNode;
+  PKTName    : String;
+  BundleName : String;
+  BundlePath : String;
+  BundleSize : Cardinal;
+  Temp       : String;
+  FLOName    : String;
+  OrigAddr   : RecEchoMailAddr;
+  CheckInc   : Boolean;
+Begin
+  FindFirst (TempPath + '*', AnyFile, DirInfo);
+
+  While DosError = 0 Do Begin
+    If DirInfo.Attr AND Directory = 0 Then Begin
+      NodeIndex := strS2I(JustFileExt(DirInfo.Name));
+      PKTName   := JustFileName(DirInfo.Name) + '.pkt';
+
+      GetNodeByIndex (NodeIndex, EchoNode);
+      FileReName     (TempPath + DirInfo.Name, TempPath + PKTName);
+
+      Assign    (F, TempPath + PKTName);
+      Reset     (F, 1);
+      BlockRead (F, PH, SizeOf(PH));
+      Close     (F);
+
+      OrigAddr.Zone := PH.OrigZone;
+      OrigAddr.Net  := PH.OrigNet;
+      OrigAddr.Node := PH.OrigNode;
+
+      BundlePath := GetFTNOutPath(EchoNode);
+      FLOName    := BundlePath + GetFTNFlowName(EchoNode.Address);
+      CheckInc   := False;
+
+      DirCreate (BundlePath);
+
+      Case EchoNode.MailType of
+        0 : FLOName := FLOName + '.flo';
+        1 : FLOName := FLOName + '.clo';
+        2 : FLOName := FLOName + '.dlo';
+        3 : FLOName := FLOName + '.hlo';
+      End;
+
+      If EchoNode.ArcType = '' Then Begin
+        FileReName    (TempPath + PKTName, BundlePath + PKTName);
+        AddToFLOQueue (FLOName, BundlePath + PKTName);
+      End Else Begin
+        If Not (EchoNode.LPKTPtr in [48..57, 97..122]) Then
+          EchoNode.LPKTPtr := 48;
+
+        If EchoNode.LPKTDay <> DayOfWeek(CurDateDos) Then Begin
+          EchoNode.LPKTDay := DayOfWeek(CurDateDos);
+          EchoNode.LPKTPtr := 48;
+        End Else
+          CheckInc := True;
+
+        BundleName := BundlePath + GetFTNArchiveName(OrigAddr, EchoNode.Address) + '.' + Copy(strLower(DayString[DayOfWeek(CurDateDos)]), 1, 2) + Char(EchoNode.LPKTPtr);
+
+        If CheckInc And Not FileExist(BundleName) Then Begin
+          BundleName := GetFTNBundleExt(True, BundleName);
+
+          EchoNode.LPKTPtr := Byte(BundleName[Length(BundleName)]);
+        End;
+
+        SaveEchoMailNode(EchoNode);
+
+        ExecuteArchive (TempPath, BundleName, EchoNode.ArcType, TempPath + PKTName, 1);
+        FileErase      (TempPath + PKTName);
+        AddToFLOQueue  (FLOName, BundleName);
+      End;
     End;
 
     FindNext (DirInfo);
@@ -231,22 +316,29 @@ Var
 
       FillChar (PH, SizeOf(PH), 0);
 
-      PH.OrigZone := MsgBase^.GetOrigAddr.Zone;
-      PH.OrigNet  := MsgBase^.GetOrigAddr.Net;
-      PH.OrigNode := MsgBase^.GetOrigAddr.Node;
-      PH.DestZone := EchoNode.Address.Zone;
-      PH.DestNet  := EchoNode.Address.Net;
-      PH.DestNode := EchoNode.Address.Node;
-      // ^^ does this need to change for netmail too?
-      PH.Year     := DT.Year;
-      PH.Month    := DT.Month;
-      PH.Day      := DT.Day;
-      PH.Hour     := DT.Hour;
-      PH.Minute   := DT.Min;
-      PH.Second   := DT.Sec;
-      PH.PKTType  := 2;
-      PH.ProdCode := 254; // RESEARCH THIS
-      //Password : Array[1..8] of Char;  // RESEARCH THIS
+      PH.OrigZone  := MsgBase^.GetOrigAddr.Zone;
+      PH.OrigNet   := MsgBase^.GetOrigAddr.Net;
+      PH.OrigNode  := MsgBase^.GetOrigAddr.Node;
+      PH.OrigPoint := MsgBase^.GetOrigAddr.Point;
+      PH.DestZone  := EchoNode.Address.Zone;
+      PH.DestNet   := EchoNode.Address.Net;
+      PH.DestNode  := EchoNode.Address.Node;
+      PH.DestPoint := EchoNode.Address.Point;
+      PH.Year      := DT.Year;
+      PH.Month     := DT.Month;
+      PH.Day       := DT.Day;
+      PH.Hour      := DT.Hour;
+      PH.Minute    := DT.Min;
+      PH.Second    := DT.Sec;
+      PH.PKTType   := 2;
+      PH.ProdCode  := 254;
+
+      // Map current V2 values to V2+ values
+
+      PH.ProdCode2 := PH.ProdCode;
+      PH.OrigZone2 := PH.OrigZone;
+      PH.DestZone2 := PH.DestZone;
+      PH.Compat    := $0000000000000001;
 
       BlockWrite (F, PH, SizeOf(PH));
     End;

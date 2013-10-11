@@ -15,7 +15,8 @@ Function strComma     (Num: LongInt) : String;
 Function strI2S       (Num: LongInt) : String;
 Function strH2I       (Str: String) : LongInt;
 Function strI2H       (Num: LongInt; Idx: Byte) : String;
-Function strS2I       (Str: String) : LongInt;
+//Function strI2Base    (Base: Byte; Num: Int64; Pad: Integer) : String;
+Function strS2I       (Str: String) : Int64;
 Function strI2O       (Num: LongInt) : String;
 Function strR2S       (Num: Real; Deci: Byte) : String;
 Function strWordGet   (Num: Byte; Str: String; Ch: Char) : String;
@@ -170,6 +171,23 @@ Begin
   End;
 End;
 
+(*
+Function strI2Base (Base: Byte; Num: Int64; Pad: Integer) : String;
+Const
+  B36Codes = '0123456789abcdefghijklmnopqrstuvwxyz';
+Begin
+  Result := '';
+
+  Repeat
+    Result := B36Codes[Num MOD Base + 1] + Result;
+    Num    := Num DIV Base;
+  Until Num = 0;
+
+  If Pad > 0 Then
+    Result := strPadL(Result, Pad, '0');
+End;
+*)
+
 Function strI2H (Num: LongInt; Idx: Byte) : String;
 Var
   Ch : Char;
@@ -218,12 +236,13 @@ Begin
   Str (Num:0:Deci, Result);
 End;
 
-Function strS2I (Str: String) : LongInt;
+Function strS2I (Str: String) : Int64;
 Var
-  Res : LongInt;
-  Temp : LongInt;
+  Res  : LongInt;
+  Temp : Int64;
 Begin
   Val (strStripB(Str, ' '), Temp, Res);
+
   If Res = 0 Then
     Result := Temp
   Else

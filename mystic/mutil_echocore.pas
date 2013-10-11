@@ -68,7 +68,7 @@ Type
     Cost      : System.Word;
     DateTime  : String[19];
   End;
-
+(*
   RecPKTHeader = Record
     OrigNode : System.Word;
     DestNode : System.Word;
@@ -87,6 +87,36 @@ Type
     OrigZone : System.Word;
     DestZone : System.Word;
     Filler   : Array[1..20] of Char;
+  End;
+*)
+
+  RecPKTHeader = Record
+    OrigNode  : System.Word;
+    DestNode  : System.Word;
+    Year      : System.Word;
+    Month     : System.Word;
+    Day       : System.Word;
+    Hour      : System.Word;
+    Minute    : System.Word;
+    Second    : System.Word;
+    Baud      : System.Word;
+    PKTType   : System.Word;
+    OrigNet   : System.Word;
+    DestNet   : System.Word;
+    ProdCode  : Byte;
+    ProdRev   : Byte;
+    Password  : Array[1..8] of Char;
+    OrigZone  : System.Word;
+    DestZone  : System.Word;
+    Filler    : Array[1..4] of Char;
+    ProdCode2 : Byte;
+    ProdRev2  : Byte;
+    Compat    : System.Word;
+    OrigZone2 : System.Word;
+    DestZone2 : System.Word;
+    OrigPoint : System.Word;
+    DestPoint : System.Word;
+    ProdData  : LongInt;
   End;
 
   RecMsgLine = String[79];
@@ -121,7 +151,28 @@ Type
     Function    GetMessage : Boolean;
   End;
 
+  TPKTWriter = Class
+    MsgFile : TFileBuffer;
+
+    Constructor Create;
+    Destructor  Destroy; Override;
+  End;
+
 Implementation
+
+Constructor TPKTWriter.Create;
+Begin
+  Inherited Create;
+
+  MsgFile := TFileBuffer.Create(8 * 1024);
+End;
+
+Destructor TPKTWriter.Destroy;
+Begin
+  MsgFile.Free;
+
+  Inherited Destroy;
+End;
 
 Constructor TPKTDupe.Create (Max: Cardinal);
 Var
@@ -240,14 +291,16 @@ Begin
 
     Opened := False;
   End Else Begin
-    PKTOrig.Zone := PKTHeader.OrigZone;
-    PKTOrig.Net  := PKTHeader.OrigNet;
-    PKTOrig.Node := PKTHeader.OrigNode;
-    PKTDest.Zone := PKTHeader.DestZone;
-    PKTDest.Net  := PKTHeader.DestNet;
-    PKTDest.Node := PKTHeader.DestNode;
-    Result       := True;
-    Opened       := True;
+    PKTOrig.Zone  := PKTHeader.OrigZone;
+    PKTOrig.Net   := PKTHeader.OrigNet;
+    PKTOrig.Node  := PKTHeader.OrigNode;
+    PKTOrig.Point := PKTHeader.OrigPoint; //V2+
+    PKTDest.Zone  := PKTHeader.DestZone;
+    PKTDest.Net   := PKTHeader.DestNet;
+    PKTDest.Node  := PKTHeader.DestNode;
+    PKTDest.Point := PKTHeader.DestPoint; //V2+
+    Result        := True;
+    Opened        := True;
   End;
 End;
 
@@ -302,7 +355,6 @@ Begin
   DisposeText;
 
   First         := True;
-//  IsNetmail     := False;
   MsgSize       := 0;
   Result        := True;
   MsgLines      := 1;
