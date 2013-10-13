@@ -169,8 +169,31 @@ Var
   MsgBase   : PMsgBaseABS;
 
   Function ParseDateTime (Date, Time : String) : String;
+  Var
+    YY, MM, DD	    : Word;
+    YYS, MMS, DDS   : String;
+    Code	    : Word;
+    myfile	    : TextFile;
   Begin
-    DateSeparator := '-';
+    YY := 0;
+    MM := 0;
+    DD := 0;
+
+    //DateSeparator := '-';  <-- Depreciated
+ 
+    // http://www.freepascal.org/docs-html/rtl/sysutils/strtodatetime.html
+    // BBS Stores strings as mm-dd-yy but default format for StrtoDateTime is dd-mm-yy.
+
+    Val(Copy(Date, 1, 2), MM, Code);
+    Val(Copy(Date, 4, 2), DD, Code);
+    Val(Copy(Date, 7, 2), YY, Code);
+    
+    Str(YY, YYS);
+    Str(MM, MMS);
+    Str(DD, DDS);
+
+    Date := DDS + '-' + MMS + '-' + YYS;
+
     ParseDateTime := FormatDateTime('ddd, dd mmm yyyy hh:nn:ss', StrToDateTime(Date + ' ' + Time));
   End;
 
