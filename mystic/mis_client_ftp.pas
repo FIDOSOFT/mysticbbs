@@ -589,7 +589,7 @@ Procedure TFTPServer.cmdUSER;
 Begin
   ResetSession;
 
-  If SearchForUser(Data, User, UserPos) Then
+  If SearchForUser(Data, User, UserPos, '') Then
     UserName := Data
   Else
     UserPos := -1;

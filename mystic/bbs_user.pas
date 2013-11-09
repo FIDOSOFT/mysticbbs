@@ -5,6 +5,7 @@ Unit bbs_User;
 Interface
 
 Uses
+  sysutils,
   m_FileIO,
   m_Strings,
   m_DateTime,
@@ -25,6 +26,7 @@ Type
     Security     : RecSecurity;
     ThisUser     : RecUser;
     TempUser     : RecUser;
+    EmailUsrChk  : RecUser;
     UserNum      : LongInt;
     AcsOkFlag    : Boolean;
     IgnoreGroup  : Boolean;
@@ -489,13 +491,51 @@ Begin
 End;
 
 Procedure TBBSUser.GetEmail (Edit : Boolean);
+Var
+  Str 		: String;
+  DropOut	: Boolean;
 Begin
-  If Edit Then
-    Session.io.OutFull (Session.GetPrompt(440))
-  Else
-    Session.io.OutFull (Session.GetPrompt(439));
+  DropOut := False;
+  Str := '';
 
-  ThisUser.EMail := Session.io.GetInput(35, 35, 11, ThisUser.Email);
+  While True Do Begin
+	If Edit Then Begin
+		Session.io.OutFull (Session.GetPrompt(440));
+	End Else Begin
+		Session.io.OutFull (Session.GetPrompt(439));
+	End;
+
+	Str := Session.io.GetInput(35, 35, 11, ThisUser.Email);
+        While (Pos(' ', Str) > 0) Do Begin
+		Delete (Str, Pos(' ', Str), 1);
+	End;
+
+        DropOut := True;
+
+	Reset (UserFile);
+	While Not Eof(UserFile) Do Begin
+
+		Read (UserFile, EmailUsrChk);
+		
+		If (strUPPER(str) = strUPPER(EmailUsrChk.Email)) Then Begin
+			If (EmailUsrChk.PermIdx = ThisUser.PermIdx) Then Begin
+				Break;
+			end else begin
+				Session.io.OutFull (Session.GetPrompt(515));
+                                DropOut := False;
+				Break;
+			End;
+		End;			      
+	End;
+	If (DropOut = True) Then Begin
+		Break;
+	End;
+	Close (UserFile);
+  End;
+
+  Close (UserFile);
+
+  ThisUser.EMail := Str;
 End;
 
 Procedure TBBSUser.GetUserNote (Edit : Boolean);

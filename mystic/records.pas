@@ -69,7 +69,7 @@ Const
   mysMaxMenuCmds     = 25;                                      // Max menu commands per item
   mysMaxMenuInput    = 12;
   mysMaxMenuStack    = 8;
-  mysMaxThemeText    = 514;
+  mysMaxThemeText    = 515;
 
   fn_SemFileEchoOut = 'echomail.out';
   fn_SemFileEchoIn  = 'echomail.in';

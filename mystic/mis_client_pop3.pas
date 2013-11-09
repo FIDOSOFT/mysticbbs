@@ -295,7 +295,7 @@ Procedure TPOP3Server.cmdUSER;
 Begin
   ResetSession;
 
-  If SearchForUser(Data, User, UserPos) Then Begin
+  If SearchForUser(Data, User, UserPos, '') Then Begin
     Client.WriteLine(re_SendUserPass);
     UserName := Data;
   End Else

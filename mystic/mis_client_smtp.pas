@@ -79,26 +79,27 @@ End;
 
 Function TSMTPServer.ValidateNameAndDomain (IsFrom: Boolean) : Boolean;
 Var
-  InName   : String;
-  InDomain : String;
+	InName   	: String;
+	InDomain 	: String;
 Begin
-  Result := False;
+	Result := False;
 
-  InName   := strReplace(Copy(Data, Pos('<', Data) + 1, Pos('@', Data) - Pos('<', Data) - 1), '_', ' ');
-  InDomain := Copy(Data, Pos('@', Data) + 1, Pos('>', Data) - Pos('@', Data) - 1);
+	InName   := strReplace(Copy(Data, Pos('<', Data) + 1, Pos('@', Data) - Pos('<', Data) - 1), '_', ' ');
+	InDomain := Copy(Data, Pos('@', Data) + 1, Pos('>', Data) - Pos('@', Data) - 1);
 
-  If IsFrom Then
-    Server.Status(ProcessID, 'User: ' + InName + ' Domain: ' + InDomain);
+	If IsFrom Then
+		Server.Status(ProcessID, 'User: ' + InName + ' Domain: ' + InDomain);
 
-  If InDomain <> bbsCfg.iNetDomain Then Begin
-    Server.Status(ProcessID, 'Refused by domain: ' + InName + '@' + InDomain);
-    Exit;
-  End;
+	Result := SearchForUser(InName, User, UserPos, InName + '@' + InDomain);
+	
+	If (InDomain <> bbsCfg.iNetDomain) and (Result = False) Then Begin
+		Server.Status(ProcessID, 'Refused by domain: ' + InName + '@' + InDomain);
+		Exit;
+	End;
 
-  Result := SearchForUser(InName, User, UserPos);
-
-  If Not Result Then
-    Server.Status(ProcessID, 'Refused by name: ' + InName + '@' + InDomain);
+	If Not Result Then Begin
+		Server.Status(ProcessID, 'Refused by name: ' + InName + '@' + InDomain);
+	End;
 End;
 
 Procedure TSMTPServer.ResetSession;

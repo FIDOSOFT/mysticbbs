@@ -132,7 +132,7 @@ Begin
   NewData := Copy(Data, Pos(' ', Data) + 1, 255);
 
   If NewCmd = 'USER' Then Begin
-    If SearchForUser(NewData, User, UserPos) Then Begin
+    If SearchForUser(NewData, User, UserPos, '') Then Begin
       ClientWriteLine(re_AuthPass);
 
       UserName := NewData;

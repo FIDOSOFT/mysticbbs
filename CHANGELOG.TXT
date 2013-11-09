@@ -13,3 +13,22 @@ Vincent Chapman {
 		Added IPv6 Support
 	}
 }
+
+Vincent Chapman {
+	N1LQJ@COX.NET
+	9 NOV 2013 
+	Modifed {
+		mis.pas.pas
+		mis_common.pas
+		mis_client_pop3.pas
+		mis_client_smtp.pas
+		mis_client_nntp.pas
+		mis_client_ftp.pas
+		records.pas
+		bbs_user.pas
+		bbs_menus.pas
+	}
+	Comment {
+		Added ability to send email to BBS from ISP's email addy.
+	}
+}

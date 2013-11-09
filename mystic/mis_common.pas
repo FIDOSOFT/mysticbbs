@@ -14,7 +14,7 @@ Var
   TempPath : String;
 //  Term     : TTermAnsi;
 
-Function SearchForUser    (UN: String; Var Rec: RecUser; Var RecPos: LongInt) : Boolean;
+Function SearchForUser    (UN: String; Var Rec: RecUser; Var RecPos: LongInt; Email: String) : Boolean;
 Function CheckAccess      (User: RecUser; IgnoreGroup: Boolean; Str: String) : Boolean;
 Function GetSecurityLevel (Level: Byte; SecLevel: RecSecurity) : Boolean;
 
@@ -25,7 +25,7 @@ Uses
   m_DateTime,
   m_Strings;
 
-Function SearchForUser (UN: String; Var Rec: RecUser; Var RecPos: LongInt) : Boolean;
+Function SearchForUser (UN: String; Var Rec: RecUser; Var RecPos: LongInt; Email: String) : Boolean;
 Var
   UserFile : TFileBuffer;
 Begin
@@ -42,7 +42,7 @@ Begin
 
       If Rec.Flags AND UserDeleted <> 0 Then Continue;
 
-      If (UN = strUpper(Rec.RealName)) or (UN = strUpper(Rec.Handle)) Then Begin
+      If (UN = strUpper(Rec.RealName)) or (UN = strUpper(Rec.Handle)) or (((strUpper(Email) = strUpper(Rec.Email)) and (Email <> ''))) Then Begin
         RecPos := UserFile.FilePosRecord;
         Result := True;
         Break;
