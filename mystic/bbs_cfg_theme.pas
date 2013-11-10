@@ -1,3 +1,23 @@
+// ====================================================================
+// Mystic BBS Software               Copyright 1997-2013 By James Coyle
+// ====================================================================
+//
+// This file is part of Mystic BBS.
+//
+// Mystic BBS is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Mystic BBS is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Mystic BBS.  If not, see <http://www.gnu.org/licenses/>.
+//
+// ====================================================================
 Unit bbs_cfg_Theme;
 
 {$I M_OPS.PAS}
@@ -443,12 +463,12 @@ Var
 
     Box.Open (1, 1, 79, 22);
 
-    WriteXY (2, 18, 8, strRep('Ä', 77));
+    WriteXY (2, 18, 8, strRep('Ã„', 77));
     WriteXY (3,  1, 8, '    /    ');
     WriteXY (8,  1, 7, strI2S(TotalPrompt));
     WriteXY (73 - Length(Theme.FileName), 1, 7, ' ' + Theme.FileName + '.txt ');
 
-    WriteXYPipe (1, 23, 112, 79, ' Prompts ³  |01Press |15CTRL |01+ |15T|01op |15B|01ottom |15F|01ind |15A|01gain |15G|01oto |15K|01ut |15P|01aste |15U|01ndo  |00³ ESC/Quit ');
+    WriteXYPipe (1, 23, 112, 79, ' Prompts Â³  |01Press |15CTRL |01+ |15T|01op |15B|01ottom |15F|01ind |15A|01gain |15G|01oto |15K|01ut |15P|01aste |15U|01ndo  |00Â³ ESC/Quit ');
 
     DrawPage(False);
   End;
@@ -818,7 +838,7 @@ Begin
                         FileDescLo   := 11;
 
                         VotingBar.BarLength := 10;
-                        VotingBar.LoChar    := '°';
+                        VotingBar.LoChar    := 'Â°';
                         VotingBar.LoAttr    := 8;
                         VotingBar.HiChar    := #219;
                         VotingBar.HiAttr    := 25;

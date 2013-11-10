@@ -1,3 +1,23 @@
+// ====================================================================
+// Mystic BBS Software               Copyright 1997-2013 By James Coyle
+// ====================================================================
+//
+// This file is part of Mystic BBS.
+//
+// Mystic BBS is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Mystic BBS is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Mystic BBS.  If not, see <http://www.gnu.org/licenses/>.
+//
+// ====================================================================
 Unit BBS_Cfg_MenuEdit;
 
 {$I M_OPS.PAS}
@@ -522,8 +542,8 @@ Begin
   Box.Open (9, 5, 72, 21);
 
   WriteXY (11,  6, 112, 'HotKey     Text                                        C# Ex');
-  WriteXY (11,  7, 112, strRep('Ä', 60));
-  WriteXY (11, 19, 112, strRep('Ä', 60));
+  WriteXY (11,  7, 112, strRep('Ã„', 60));
+  WriteXY (11, 19, 112, strRep('Ã„', 60));
   WriteXY (29, 20, 112, cfgCommandList);
 
   CopyItem := 0;
@@ -689,8 +709,8 @@ Begin
   Box.Open (12, 5, 68, 21);
 
   WriteXY (14,  6, 112, 'Menu Name             Description');
-  WriteXY (14,  7, 112, strRep('Ä', 53));
-  WriteXY (14, 19, 112, strRep('Ä', 53));
+  WriteXY (14,  7, 112, strRep('Ã„', 53));
+  WriteXY (14, 19, 112, strRep('Ã„', 53));
   WriteXY (29, 20, 112, cfgCommandList);
 
   Repeat

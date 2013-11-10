@@ -1,3 +1,24 @@
+// ====================================================================
+// Mystic BBS Software               Copyright 1997-2013 By James Coyle
+// ====================================================================
+//
+// This file is part of Mystic BBS.
+//
+// Mystic BBS is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Mystic BBS is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Mystic BBS.  If not, see <http://www.gnu.org/licenses/>.
+//
+// ====================================================================
+
 Unit bbs_Ansi_MenuForm;
 
 {$I M_OPS.PAS}
@@ -301,14 +322,14 @@ Begin
 
     For A := 0 to 7 Do
       For B := 0 to 15 Do
-        WriteXY (33 + B, 9 + A, B + A * 16, 'þ');
+        WriteXY (33 + B, 9 + A, B + A * 16, 'Ã¾');
 
     WriteXY (37, 18, FG + BG * 16, ' Sample ');
 
-    WriteXYPipe (31 + FG,  8 + BG, 15, 5, 'Û|23ßßß|08Ü');
-    WriteXYPipe (31 + FG,  9 + BG, 15, 5, 'Û|23   |08Û');
-    WriteXYPipe (31 + FG, 10 + BG, 15, 5, '|23ß|08ÜÜÜ|08Û');
-    WriteXY (33 + FG,  9 + BG, FG + BG * 16, 'þ');
+    WriteXYPipe (31 + FG,  8 + BG, 15, 5, 'Ã›|23ÃŸÃŸÃŸ|08Ãœ');
+    WriteXYPipe (31 + FG,  9 + BG, 15, 5, 'Ã›|23   |08Ã›');
+    WriteXYPipe (31 + FG, 10 + BG, 15, 5, '|23ÃŸ|08ÃœÃœÃœ|08Ã›');
+    WriteXY (33 + FG,  9 + BG, FG + BG * 16, 'Ã¾');
 
     Ch := Session.io.GetKey;
 

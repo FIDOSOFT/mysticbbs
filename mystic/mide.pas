@@ -510,7 +510,7 @@ Begin
   Until Done;
 
   Console.ClearEOL;
-  Console.WriteXY (80, Y, colEditStatus, '∞');
+  Console.WriteXY (80, Y, colEditStatus, '¬∞');
 End;
 
 Procedure DrawLine (Y: Byte; S: String);
@@ -550,7 +550,7 @@ Begin
   Box.Open (1, mideTopY, 80, mideBotY);
 
   For A := mideTopY + 1 to mideBotY - 1 Do
-    Console.WriteXY (80, A, colEditStatus, '∞');
+    Console.WriteXY (80, A, colEditStatus, '¬∞');
 
   DrawPage;
 End;
@@ -818,7 +818,7 @@ End;
 
 Procedure DrawStatus;
 Begin
-  Console.WriteXY (1, mideBotY + 1, 112, ' MIDE v' + mideVersion + ' ≥' + strRep(' ', 55) + '≥ ESC/Menu ');
+  Console.WriteXY (1, mideBotY + 1, 112, ' MIDE v' + mideVersion + ' ¬≥' + strRep(' ', 55) + '¬≥ ESC/Menu ');
 End;
 
 Procedure FillScreen;
@@ -826,7 +826,7 @@ Var
   Count : Byte;
 Begin
   For Count := 1 to mideBotY Do
-    Console.WriteXY (1, Count, 8, strRep('∞', 80));
+    Console.WriteXY (1, Count, 8, strRep('¬∞', 80));
 
   DrawStatus;
 End;
@@ -1451,12 +1451,12 @@ Begin
   Box.Open (19, 7, 62, 19);
 
   Console.WriteXY (21,  8,  31, strPadC('MIDE', 40, ' '));
-  Console.WriteXY (21,  9, 112, strRep('ƒ', 40));
+  Console.WriteXY (21,  9, 112, strRep('√Ñ', 40));
   Console.WriteXY (22, 11, 113, 'Copyright (C) ' + mysCopyYear + ' By James Coyle');
   Console.WriteXY (31, 12, 113, 'All Rights Reserved');
   Console.WriteXY (21, 14, 113, strPadC('Version ' + mideVersion + ' (MPL v' + mplVer + ')', 40, ' '));
   Console.WriteXY (32, 16, 113, 'www.mysticbbs.com');
-  Console.WriteXY (21, 17, 112, strRep('ƒ', 40));
+  Console.WriteXY (21, 17, 112, strRep('√Ñ', 40));
   Console.WriteXY (21, 18,  31, strPadC('(PRESS A KEY)', 40, ' '));
 
   Input.ReadKey;
@@ -1484,9 +1484,9 @@ Var
 
     Console.GetScreenImage(X1, 1, X1 + Len, 3, Saved);
 
-    Console.WriteXYPipe (X1, 1, 8, Len, '‹|15‹|11‹‹|03‹‹|09‹|03‹|09' + strRep('‹', Len - 9) + '|08‹');
-    Console.WriteXYPipe (X1 ,2, 8, Len, '›|09|17≤ |15' + Text + ' |00∞|16|08ﬁ');
-    Console.WriteXYPipe (X1, 3, 8, Len, 'ﬂ|01≤|17 |11¿|03ƒƒ|08' + strRep('ƒ', Length(Text) - 4) + '|00ø ±|16|08ﬂ');
+    Console.WriteXYPipe (X1, 1, 8, Len, '√ú|15√ú|11√ú√ú|03√ú√ú|09√ú|03√ú|09' + strRep('√ú', Len - 9) + '|08√ú');
+    Console.WriteXYPipe (X1 ,2, 8, Len, '√ù|09|17¬≤ |15' + Text + ' |00¬∞|16|08√û');
+    Console.WriteXYPipe (X1, 3, 8, Len, '√ü|01¬≤|17 |11√Ä|03√Ñ√Ñ|08' + strRep('√Ñ', Length(Text) - 4) + '|00¬ø ¬±|16|08√ü');
   End;
 
   Procedure BoxClose;
@@ -1516,9 +1516,9 @@ Begin
 
   Console.GetScreenImage(1, 1, 80, 4, Image);
 
-  Console.WriteXY (1, 1,  15, strRep('‹', 80));
+  Console.WriteXY (1, 1,  15, strRep('√ú', 80));
   Console.WriteXY (1, 2, 113, strRep(' ', 80));
-  Console.WriteXY (1, 3,   8, strRep('ﬂ', 80));
+  Console.WriteXY (1, 3,   8, strRep('√ü', 80));
 
   Form := TMenuForm.Create(Console);
 
@@ -1752,9 +1752,9 @@ Begin
             For Count := 1 to 10 Do Begin
               If Count = 10 Then Key := '0' Else Key := strI2S(Count)[1];
               If CurWin[Count] <> NIL Then
-                Form.AddNone(Key, ' ' + Key + ' ≥ ' + strPadR(CurWin[Count]^.FileName, 34, ' '), 38, 4 + Count, 39, CurWin[Count]^.FileName)
+                Form.AddNone(Key, ' ' + Key + ' ¬≥ ' + strPadR(CurWin[Count]^.FileName, 34, ' '), 38, 4 + Count, 39, CurWin[Count]^.FileName)
               Else
-                Form.AddNone(Key, ' ' + Key + ' ≥ Unassigned', 38, 4 + Count, 39, 'Window not opened');
+                Form.AddNone(Key, ' ' + Key + ' ¬≥ Unassigned', 38, 4 + Count, 39, 'Window not opened');
             End;
 
             Res := Form.Execute;
@@ -1890,8 +1890,8 @@ Begin
   Repeat
     If CurWinNum > 0 Then Begin
       With CurWin[CurWinNum]^ Do Begin
-        Console.WriteXY ( 6, mideBotY, colEditBorder, strPadL(strI2S(CurLine), 4, 'Õ') + ':' + strPadR(strI2S(CurX + ScrlX), 3, 'Õ'));
-        Console.WriteXY (80, BarPos, colEditStatus, '∞');
+        Console.WriteXY ( 6, mideBotY, colEditBorder, strPadL(strI2S(CurLine), 4, '√ç') + ':' + strPadR(strI2S(CurX + ScrlX), 3, '√ç'));
+        Console.WriteXY (80, BarPos, colEditStatus, '¬∞');
 
         If CurLine = 1 Then
           BarPos := 2
@@ -1901,7 +1901,7 @@ Begin
         Else
           BarPos := Round(CurLine / TotalLines * (mideWinSize - 4)) + 3;
 
-        Console.WriteXY  (80, BarPos, colEditPosBar, '€');
+        Console.WriteXY  (80, BarPos, colEditPosBar, '√õ');
         Console.CursorXY (CurX + 1, CurY + 1);
       End;
     End;

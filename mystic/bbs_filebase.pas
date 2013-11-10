@@ -1,3 +1,23 @@
+// ====================================================================
+// Mystic BBS Software               Copyright 1997-2013 By James Coyle
+// ====================================================================
+//
+// This file is part of Mystic BBS.
+//
+// Mystic BBS is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Mystic BBS is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Mystic BBS.  If not, see <http://www.gnu.org/licenses/>.
+//
+// ====================================================================
 Unit bbs_FileBase;
 
 {$I M_OPS.PAS}
@@ -3759,9 +3779,9 @@ Begin
 
     Repeat
       Session.io.OutFullLn ('|07|CLFile DIR Editor : ' + strI2S(FilePos(FDirFile)) + ' of ' + strI2S(FileSize(FDirFile)));
-      Session.io.OutFullLn ('|08|$D79Ä');
+      Session.io.OutFullLn ('|08|$D79Ã„');
       Session.io.OutFullLn ('|031) |14' + FDir.FileName);
-      Session.io.OutFullLn ('|08|$D79Ä');
+      Session.io.OutFullLn ('|08|$D79Ã„');
 
       Session.io.OutFullLn ('|032) File Size : |11' + strPadR(strComma(FDir.Size) + ' bytes', 19, ' ') +
               '|033) Uploader  : |11' + FDir.Uploader);
@@ -3784,7 +3804,7 @@ Begin
       End;
 
       Session.io.OutFullLn (Temp);
-      Session.io.OutFullLn ('|08|$D79Ä');
+      Session.io.OutFullLn ('|08|$D79Ã„');
 
       Seek (DataFile, FDir.DescPtr);
 
@@ -3801,7 +3821,7 @@ Begin
           Session.io.OutFullLn (strRep(' ', 17) + Temp);
       End;
 
-      Session.io.OutFullLn ('|08|$D79Ä');
+      Session.io.OutFullLn ('|08|$D79Ã„');
 
       Session.io.OutFull ('|09([) Previous (]) Next         (D) Delete     (I) Import DIZ     (U) Update DIZ' +
             '|CR(M) Move     (V) View Archive (E) Email ULer (Q) Quit: ');
